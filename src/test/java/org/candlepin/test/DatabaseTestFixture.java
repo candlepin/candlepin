@@ -33,8 +33,10 @@ import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.guice.CandlepinRequestScope;
-import org.candlepin.guice.TestPrincipalProviderSetter;
-import org.candlepin.junit.LiquibaseExtension;
+import org.candlepin.guice.JPAInitializer;
+import org.candlepin.guice.TestPrincipalProvider;
+import org.candlepin.guice.ValidationListenerProvider;
+import org.candlepin.junit.DatabaseTestExtension;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificateCurator;
 import org.candlepin.model.AsyncJobStatusCurator;
@@ -89,18 +91,21 @@ import org.candlepin.model.UserCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.pki.CryptoManager;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.Util;
+import org.candlepin.validation.CandlepinMessageInterpolator;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Provides;
 import com.google.inject.persist.PersistFilter;
+import com.google.inject.persist.jpa.JpaPersistModule;
+import com.google.inject.persist.jpa.JpaPersistOptions;
 import com.google.inject.util.Modules;
 
 import org.hibernate.Session;
@@ -108,9 +113,8 @@ import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.junit.jupiter.api.AfterAll;
+import org.hibernate.validator.HibernateValidator;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -122,20 +126,27 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
+import javax.inject.Named;
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.MessageInterpolator;
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
 
 
 
 /**
  * Test fixture for test classes requiring access to the database.
  */
-@ExtendWith(LiquibaseExtension.class)
+@ExtendWith(DatabaseTestExtension.class)
 public class DatabaseTestFixture {
     protected static Logger log = LoggerFactory.getLogger(DatabaseTestFixture.class);
 
@@ -190,8 +201,12 @@ public class DatabaseTestFixture {
     protected MethodLocator methodLocator;
     protected AnnotationLocator annotationLocator;
 
-    private static CryptoManager cryptoManager;
-    private static Injector parentInjector;
+    // No shutdown hook needed: HSQLDB in-memory databases are discarded when the JVM exits,
+    // and normal cleanup is handled by DatabaseTestExtension.afterAll via cleanupParentInjector.
+    private static final ConcurrentHashMap<String, Injector> PARENT_INJECTORS =
+        new ConcurrentHashMap<>();
+
+    private String jdbcUrl;
     protected Injector injector;
     private CandlepinRequestScope cpRequestScope;
 
@@ -200,36 +215,8 @@ public class DatabaseTestFixture {
     protected I18n i18n;
     protected Provider<I18n> i18nProvider;
 
-    @BeforeAll
-    public static void initClass() {
-        // Ensure we have a crypto manager initialized that can bind to to avoid some extra initialization
-        // slowness
-        cryptoManager = CryptoUtil.getCryptoManager();
-
-        parentInjector = Guice.createInjector(new TestingModules.JpaModule());
-        insertValidationEventListeners(parentInjector);
-    }
-
-    /**
-     * There's no way to really get Guice to perform injections on stuff that the JpaPersistModule is
-     * creating, so we resort to grabbing the EntityManagerFactory after the fact and adding the
-     * Validation EventListener ourselves.
-     *
-     * @param inj
-     */
-    private static void insertValidationEventListeners(Injector inj) {
-        Provider<EntityManagerFactory> emfProvider = inj.getProvider(EntityManagerFactory.class);
-        SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) emfProvider.get();
-        EventListenerRegistry registry = sessionFactoryImpl
-            .getServiceRegistry()
-            .getService(EventListenerRegistry.class);
-
-        Provider<BeanValidationEventListener> listenerProvider = inj
-            .getProvider(BeanValidationEventListener.class);
-
-        registry.getEventListenerGroup(EventType.PRE_INSERT).appendListener(listenerProvider.get());
-        registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
-        registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
+    public void setJdbcUrl(String jdbcUrl) {
+        this.jdbcUrl = jdbcUrl;
     }
 
     // Need a before each here and a Liquibase extension...
@@ -239,14 +226,12 @@ public class DatabaseTestFixture {
     }
 
     public void init(boolean beginTransaction) throws Exception {
-        this.config = TestConfig.defaults();
+        Injector parentInjector = getOrCreateParentInjector(this.jdbcUrl);
+        this.config = (DevConfig) parentInjector.getInstance(Configuration.class);
+        TestConfig.resetToDefaults(this.config);
 
-        // Impl note: Creating a new injector on every test invocation causes *every object to be
-        // reconstructed*, even if that object was bound or flagged as a singleton! This can cause major
-        // performance issues for objects with expensive initialization (e.g. CryptoManager).
-        // This should eventually be ripped out and replaced with more consistent DI; however at the time of
-        // writing, our database setup and teardown relies upon this behavior.
-        Module instancedTestModule = Modules.override(new TestingModules.StandardTest(this.config))
+        Module instancedTestModule = Modules.override(
+            new TestingModules.StandardTest(this.config, false))
             .with(this.getGuiceOverrideModule());
         this.injector = parentInjector.createChildInjector(instancedTestModule);
 
@@ -262,9 +247,6 @@ public class DatabaseTestFixture {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.i18nProvider = () -> this.i18n;
 
-        // Because all candlepin operations are running in the CandlepinRequestScope
-        // we'll force the instance creations to be done inside the scope.
-        // Exit the scope to make sure that it is clean before starting the test.
         cpRequestScope.exit();
         cpRequestScope.enter();
         this.injector.injectMembers(this);
@@ -277,6 +259,7 @@ public class DatabaseTestFixture {
 
         if (beginTransaction) {
             this.beginTransaction();
+            this.rulesCurator.updateDbRules();
         }
     }
 
@@ -332,8 +315,9 @@ public class DatabaseTestFixture {
     public void shutdown() {
         cpRequestScope.exit();
 
-        // If we have any pending transactions, we should commit it before we move on
         EntityManager manager = this.getEntityManager();
+
+        // If we have any pending transactions, we should commit it before we move on
         EntityTransaction transaction = manager.getTransaction();
 
         if (transaction.isActive()) {
@@ -345,40 +329,100 @@ public class DatabaseTestFixture {
             }
         }
 
-        // We are using a singleton for the principal in tests. Make sure we clear it out
-        // after every test. TestPrincipalProvider controls the default behavior.
-        TestPrincipalProviderSetter.get().setPrincipal(null);
+        TestPrincipalProvider.clearPrincipal();
         manager.clear();
 
+        Injector parentInjector = getOrCreateParentInjector(this.jdbcUrl);
         reset(parentInjector.getInstance(HttpServletRequest.class));
         reset(parentInjector.getInstance(HttpServletResponse.class));
-    }
-
-    @AfterAll
-    public static void destroy() {
-        parentInjector.getInstance(PersistFilter.class).destroy();
-
-        EntityManager manager = parentInjector.getInstance(EntityManager.class);
-        if (manager.isOpen()) {
-            manager.close();
-        }
-
-        EntityManagerFactory emf = parentInjector.getInstance(EntityManagerFactory.class);
-        if (emf.isOpen()) {
-            emf.close();
-        }
     }
 
     protected Module getGuiceOverrideModule() {
         return new AbstractModule() {
             @Override
             protected void configure() {
-                // Bind to a specific instance of the CryptoManager to avoid spinning up a new instance on
-                // every test. Tests which need new instances can manually construct one using CryptoUtil
-                // or direct construction; or override this module to avoid this fixed binding.
-                bind(CryptoManager.class).toInstance(cryptoManager);
+                /* intentionally left empty */
             }
         };
+    }
+
+    private static Injector getOrCreateParentInjector(String jdbcUrl) {
+        return PARENT_INJECTORS.computeIfAbsent(jdbcUrl, url -> {
+            Injector injector = Guice.createInjector(
+                createJpaModule(url),
+                new TestingModules.PKIModule(),
+                new AbstractModule() {
+                    @Override
+                    protected void configure() {
+                        bind(Configuration.class).toInstance(TestConfig.defaults());
+                    }
+                });
+            insertValidationEventListeners(injector);
+            return injector;
+        });
+    }
+
+    public static void cleanupParentInjector(String jdbcUrl) {
+        Injector injector = PARENT_INJECTORS.remove(jdbcUrl);
+        if (injector != null) {
+            injector.getInstance(PersistFilter.class).destroy();
+            EntityManagerFactory emf = injector.getInstance(EntityManagerFactory.class);
+            if (emf.isOpen()) {
+                emf.close();
+            }
+        }
+    }
+
+    public static AbstractModule createJpaModule(String jdbcUrl) {
+        return new AbstractModule() {
+            @Override
+            protected void configure() {
+                JpaPersistOptions jpaOptions = JpaPersistOptions.builder()
+                    .setAutoBeginWorkOnEntityManagerCreation(true)
+                    .build();
+
+                install(new TestingModules.ServletEnvironmentModule());
+
+                JpaPersistModule jpaPersistModule = new JpaPersistModule("testing", jpaOptions);
+                jpaPersistModule.properties(Map.of("hibernate.connection.url", jdbcUrl));
+                install(jpaPersistModule);
+
+                bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
+                bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
+                bind(JPAInitializer.class).asEagerSingleton();
+            }
+
+            @Provides
+            @Named("ValidationProperties")
+            protected Properties getValidationProperties() {
+                return new Properties();
+            }
+
+            @Provides
+            protected ValidatorFactory getValidationFactory(
+                Provider<MessageInterpolator> interpolatorProvider) {
+
+                return Validation.byProvider(HibernateValidator.class)
+                    .configure()
+                    .messageInterpolator(interpolatorProvider.get())
+                    .buildValidatorFactory();
+            }
+        };
+    }
+
+    private static void insertValidationEventListeners(Injector injector) {
+        Provider<EntityManagerFactory> emfProvider = injector.getProvider(EntityManagerFactory.class);
+        SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) emfProvider.get();
+        EventListenerRegistry registry = sessionFactoryImpl
+            .getServiceRegistry()
+            .getService(EventListenerRegistry.class);
+
+        Provider<BeanValidationEventListener> listenerProvider = injector
+            .getProvider(BeanValidationEventListener.class);
+
+        registry.getEventListenerGroup(EventType.PRE_INSERT).appendListener(listenerProvider.get());
+        registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
+        registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
     }
 
     /**
@@ -799,7 +843,7 @@ public class DatabaseTestFixture {
     }
 
     protected Principal setupPrincipal(Principal p) {
-        TestPrincipalProviderSetter.get().setPrincipal(p);
+        TestPrincipalProvider.setPrincipal(p);
         return p;
     }
 

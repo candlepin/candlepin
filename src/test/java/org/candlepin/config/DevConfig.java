@@ -82,6 +82,11 @@ public class DevConfig implements Configuration {
         return this;
     }
 
+    public DevConfig reset() {
+        this.config.clear();
+        return this;
+    }
+
     public DevConfig clearProperty(String key) {
         this.config.remove(key);
         return this;

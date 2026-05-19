@@ -37,12 +37,10 @@ import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.CandlepinRequestScoped;
 import org.candlepin.guice.HttpMethodMatcher;
 import org.candlepin.guice.I18nProvider;
-import org.candlepin.guice.JPAInitializer;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.ScriptEngineProvider;
 import org.candlepin.guice.TestPrincipalProvider;
 import org.candlepin.guice.TestingScope;
-import org.candlepin.guice.ValidationListenerProvider;
 import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.messaging.CPMSessionFactory;
 import org.candlepin.messaging.impl.noop.NoopContextListener;
@@ -106,7 +104,6 @@ import org.candlepin.util.DateSource;
 import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
-import org.candlepin.validation.CandlepinMessageInterpolator;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -114,14 +111,10 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.persist.PersistService;
 import com.google.inject.persist.UnitOfWork;
-import com.google.inject.persist.jpa.JpaPersistModule;
-import com.google.inject.persist.jpa.JpaPersistOptions;
 import com.google.inject.servlet.RequestScoped;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.hibernate.Session;
-import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
-import org.hibernate.validator.HibernateValidator;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.quartz.SchedulerFactory;
@@ -132,18 +125,13 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.InputStream;
 import java.util.Date;
-import java.util.Objects;
-import java.util.Properties;
 
 import javax.inject.Named;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.validation.MessageInterpolator;
-import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
 
@@ -156,20 +144,9 @@ public class TestingModules {
     }
 
     public static class PKIModule extends AbstractModule {
-        private final Configuration config;
-
-        public PKIModule(Configuration config) {
-            this.config = Objects.requireNonNull(config);
-        }
-
-        public PKIModule() {
-            this(TestConfig.defaults());
-        }
 
         @Override
         public void configure() {
-            bind(Configuration.class).toInstance(this.config);
-
             // Security provider binding
             bind(BouncyCastleSecurityProvider.class);
             bind(java.security.Provider.class).toProvider(BouncyCastleSecurityProvider.class);
@@ -203,38 +180,6 @@ public class TestingModules {
 
             bind(HttpServletRequest.class).toInstance(request);
             bind(HttpServletResponse.class).toInstance(mock(HttpServletResponse.class));
-        }
-    }
-
-    public static class JpaModule extends AbstractModule {
-        @Override
-        public void configure() {
-            // As of Guice 6.0, UnitOfWork is no longer automatically started upon fetching the
-            // EntityManager. This option restores that behavior.
-            JpaPersistOptions jpaOptions = JpaPersistOptions.builder()
-                .setAutoBeginWorkOnEntityManagerCreation(true)
-                .build();
-
-            install(new ServletEnvironmentModule());
-            install(new JpaPersistModule("testing", jpaOptions));
-
-            bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
-            bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
-            bind(JPAInitializer.class).asEagerSingleton();
-        }
-
-        @Provides
-        @Named("ValidationProperties")
-        protected Properties getValidationProperties() {
-            return new Properties();
-        }
-
-        @Provides
-        protected ValidatorFactory getValidationFactory(Provider<MessageInterpolator> interpolatorProvider) {
-            return Validation.byProvider(HibernateValidator.class)
-                .configure()
-                .messageInterpolator(interpolatorProvider.get())
-                .buildValidatorFactory();
         }
     }
 
@@ -294,27 +239,30 @@ public class TestingModules {
 
     public static class StandardTest extends AbstractModule {
         private final Configuration config;
+        private final boolean bindConfiguration;
 
         public StandardTest() {
-            this.config = TestConfig.defaults();
+            this(TestConfig.defaults(), true);
         }
 
         public StandardTest(Configuration config) {
+            this(config, true);
+        }
+
+        public StandardTest(Configuration config, boolean bindConfiguration) {
             this.config = config;
+            this.bindConfiguration = bindConfiguration;
         }
 
         private TestingInterceptor authMethodInterceptor;
 
         @Override
         public void configure() {
-            // Add our PKI bindings
-            install(new PKIModule(this.config));
-
             CandlepinCache mockedCandlepinCache = mock(CandlepinCache.class);
             when(mockedCandlepinCache.getStatusCache()).thenReturn(mock(StatusCache.class));
-            // This is not necessary in the normal module because the config is bound in the
-            // context listener
-            bind(Configuration.class).toInstance(config);
+            if (this.bindConfiguration) {
+                bind(Configuration.class).toInstance(config);
+            }
             // When testing, we are using mock Candlepin cache. It's
             // methods are basically no-op
             bind(CandlepinCache.class).toInstance(mockedCandlepinCache);

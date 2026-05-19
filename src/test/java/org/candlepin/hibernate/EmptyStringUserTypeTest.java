@@ -19,25 +19,26 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.candlepin.junit.DatabaseTestExtension;
+
 import org.hibernate.annotations.Type;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.Properties;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
-import javax.persistence.Persistence;
 import javax.persistence.Table;
 
 
 
 public class EmptyStringUserTypeTest {
-    private EntityManagerFactory emf;
+
+    @RegisterExtension
+    static DatabaseTestExtension db = DatabaseTestExtension.lightweight("testingUserType");
+
     private EntityManager em;
 
     @Entity
@@ -79,20 +80,8 @@ public class EmptyStringUserTypeTest {
     }
 
     @BeforeEach
-    public void setUp() throws Exception {
-        Properties props = new Properties();
-
-        props.put("hibernate.ejb.interceptor",
-            "org.candlepin.hibernate.EmptyStringInterceptor");
-
-        emf =  Persistence.createEntityManagerFactory("testingUserType");
-        em = emf.createEntityManager();
-    }
-
-    @AfterEach
-    public void tearDown() throws Exception {
-        em.close();
-        emf.close();
+    public void setUp() {
+        this.em = db.getEntityManager();
     }
 
     @Test
