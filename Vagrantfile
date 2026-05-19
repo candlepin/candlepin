@@ -74,7 +74,7 @@ end
 
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.synced_folder ".", "/vagrant", type: "sshfs", :owner => 'vagrant', :group => 'vagrant'
+  config.vm.synced_folder ".", "/vagrant", type: "virtiofs", :owner => 'vagrant', :group => 'vagrant'
   config.vm.host_name = "candlepin.example.com"
   config.ssh.forward_agent = true
 
@@ -92,6 +92,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     provider.graphics_type = "spice"
     provider.video_type = "qxl"
     provider.machine_virtual_size = 100
+    provider.memorybacking :access, :mode => "shared"
   end
 
   config.vm.define("el9", autostart: false) do |vm_config|
