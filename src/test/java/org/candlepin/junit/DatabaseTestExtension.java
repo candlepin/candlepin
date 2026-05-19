@@ -14,19 +14,7 @@
  */
 package org.candlepin.junit;
 
-import org.candlepin.TestingModules;
-import org.candlepin.guice.JPAInitializer;
-import org.candlepin.guice.ValidationListenerProvider;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.validation.CandlepinMessageInterpolator;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Provides;
-import com.google.inject.persist.PersistFilter;
-import com.google.inject.persist.jpa.JpaPersistModule;
-import com.google.inject.persist.jpa.JpaPersistOptions;
 
 import liquibase.Liquibase;
 import liquibase.database.Database;
@@ -34,11 +22,6 @@ import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.ClassLoaderResourceAccessor;
 
-import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.validator.HibernateValidator;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -50,17 +33,11 @@ import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.inject.Named;
-import javax.inject.Provider;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import javax.validation.MessageInterpolator;
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
 
 
 /**
@@ -184,12 +161,7 @@ public class DatabaseTestExtension
             CHANGELOG_FILE, new ClassLoaderResourceAccessor(), database);
         liquibase.update("test");
 
-        Injector parentInjector = Guice.createInjector(
-            createJpaModule(this.jdbcUrl));
-        insertValidationEventListeners(parentInjector);
-
         ExtensionContext.Store store = context.getStore(NAMESPACE);
-        store.put("parentInjector", parentInjector);
         store.put("connection", liquibaseConnection);
     }
 
@@ -202,10 +174,7 @@ public class DatabaseTestExtension
 
         Object testInstance = context.getRequiredTestInstance();
         if (testInstance instanceof DatabaseTestFixture fixture) {
-            ExtensionContext classContext = getClassContext(context);
-            ExtensionContext.Store store = classContext.getStore(NAMESPACE);
-            Injector parentInjector = (Injector) store.get("parentInjector");
-            fixture.setParentInjector(parentInjector);
+            fixture.setJdbcUrl(this.jdbcUrl);
         }
     }
 
@@ -245,39 +214,16 @@ public class DatabaseTestExtension
             return;
         }
 
+        DatabaseTestFixture.cleanupParentInjector(this.jdbcUrl);
+
         ExtensionContext.Store store = context.getStore(NAMESPACE);
-        Injector parentInjector = (Injector) store.get("parentInjector");
         JdbcConnection connection = (JdbcConnection) store.get("connection");
-
-        if (parentInjector != null) {
-            parentInjector.getInstance(PersistFilter.class).destroy();
-
-            EntityManagerFactory emf = parentInjector.getInstance(EntityManagerFactory.class);
-            if (emf.isOpen()) {
-                emf.close();
-            }
-        }
 
         if (connection != null) {
             executeUpdate(connection, String.format(DROP_SQL, "PUBLIC"));
             executeUpdate(connection, String.format(DROP_SQL, "LIQUIBASE"));
             executeUpdate(connection, SHUTDOWN_CMD);
         }
-    }
-
-    private static void insertValidationEventListeners(Injector injector) {
-        Provider<EntityManagerFactory> emfProvider = injector.getProvider(EntityManagerFactory.class);
-        SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) emfProvider.get();
-        EventListenerRegistry registry = sessionFactoryImpl
-            .getServiceRegistry()
-            .getService(EventListenerRegistry.class);
-
-        Provider<BeanValidationEventListener> listenerProvider = injector
-            .getProvider(BeanValidationEventListener.class);
-
-        registry.getEventListenerGroup(EventType.PRE_INSERT).appendListener(listenerProvider.get());
-        registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
-        registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
     }
 
     private static void executeUpdate(JdbcConnection connection, String sql) {
@@ -293,42 +239,5 @@ public class DatabaseTestExtension
         return context.getParent()
             .filter(parent -> parent.getTestClass().isPresent())
             .orElse(context);
-    }
-
-    public static AbstractModule createJpaModule(String jdbcUrl) {
-        return new AbstractModule() {
-            @Override
-            protected void configure() {
-                JpaPersistOptions jpaOptions = JpaPersistOptions.builder()
-                    .setAutoBeginWorkOnEntityManagerCreation(true)
-                    .build();
-
-                install(new TestingModules.ServletEnvironmentModule());
-
-                JpaPersistModule jpaPersistModule = new JpaPersistModule("testing", jpaOptions);
-                jpaPersistModule.properties(Map.of("hibernate.connection.url", jdbcUrl));
-                install(jpaPersistModule);
-
-                bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
-                bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
-                bind(JPAInitializer.class).asEagerSingleton();
-            }
-
-            @Provides
-            @Named("ValidationProperties")
-            protected Properties getValidationProperties() {
-                return new Properties();
-            }
-
-            @Provides
-            protected ValidatorFactory getValidationFactory(
-                Provider<MessageInterpolator> interpolatorProvider) {
-
-                return Validation.byProvider(HibernateValidator.class)
-                    .configure()
-                    .messageInterpolator(interpolatorProvider.get())
-                    .buildValidatorFactory();
-            }
-        };
     }
 }

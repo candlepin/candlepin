@@ -30,6 +30,7 @@ import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.junit.DatabaseTestExtension;
 import org.candlepin.service.EventAdapter;
+import org.candlepin.test.DatabaseTestFixture;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -316,7 +317,8 @@ public class CandlepinContextListenerTest {
             @Override
             protected List<Module> getModules(ServletContext context) {
                 List<Module> modules = new LinkedList<>();
-                modules.add(DatabaseTestExtension.createJpaModule(ext.getJdbcUrl()));
+                modules.add(DatabaseTestFixture.createJpaModule(ext.getJdbcUrl()));
+                modules.add(new TestingModules.PKIModule());
 
                 Module testingModule = new TestingModules.StandardTest(config);
                 Module contextListenerTestModule = new ContextListenerTestModule();
