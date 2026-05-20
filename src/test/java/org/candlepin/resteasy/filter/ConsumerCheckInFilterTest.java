@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -16,10 +16,6 @@ package org.candlepin.resteasy.filter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.ConsumerPrincipal;
@@ -34,10 +30,7 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.MethodLocator;
-import org.candlepin.service.EventAdapter;
-import org.candlepin.service.model.CloudCheckInEvent;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.util.ObjectMapperFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
@@ -67,8 +60,6 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
 
     @Mock
     private ResourceInfo mockInfo;
-    @Mock
-    private EventAdapter mockEventAdapter;
     @Mock
     private ContentAccessCertificateCurator caCertificateCurator;
     @Mock
@@ -105,7 +96,7 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
         AnnotationLocator annotationLocator = new AnnotationLocator(methodLocator);
 
         ConsumerManager consumerManager = new ConsumerManager(consumerCurator, caCertificateCurator,
-            envCurator, mockEventAdapter, ObjectMapperFactory.getObjectMapper());
+            envCurator);
         interceptor = new ConsumerCheckInFilter(annotationLocator, consumerManager);
     }
 
@@ -130,9 +121,6 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
 
         Date updatedLastCheckin = p.getConsumer().getLastCheckin();
         assertNotEquals(lastCheckin, updatedLastCheckin);
-
-        // Verify that we did not get a cloud checkin event for this consumer
-        verifyNoInteractions(this.mockEventAdapter);
     }
 
     @Test
@@ -158,9 +146,6 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
 
         Date updatedLastCheckin = p.getConsumer().getLastCheckin();
         assertEquals(lastCheckin, updatedLastCheckin);
-
-        // Verify that we did not get a cloud checkin event for this consumer
-        verifyNoInteractions(this.mockEventAdapter);
     }
 
     @Test
@@ -194,9 +179,6 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
         interceptor.filter(this.getContext());
 
         assertNotEquals(lastCheckin, consumer.getLastCheckin());
-
-        // We should receive an checkin event on the adapter
-        verify(this.mockEventAdapter, times(1)).publish(any(CloudCheckInEvent.class));
     }
 
     @Test
