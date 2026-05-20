@@ -13,32 +13,33 @@ requires that YourKit has been installed on the host before provisioning.
 
 ## Prerequisites
 Running the Candlepin Vagrant development image requires an up-to-date version of Vagrant, Ansible,
-vagrant-sshfs, and, optionally, vagrant-hostmanager. Further, an appropriate Vagrant backend must
+virtiofsd, and, optionally, vagrant-hostmanager. Further, an appropriate Vagrant backend must
 be installed on Linux hosts.
 
 On Fedora installations, the following command can be run to install the necessary packages:
 
-`sudo dnf install vagrant vagrant-libvirt vagrant-hostmanager vagrant-sshfs ansible`
+`sudo dnf install vagrant vagrant-libvirt vagrant-hostmanager virtiofsd ansible`
 
 
 
 ## Getting Started
 Once the prerequisites are installed, the Vagrant image can be brought up with the `vagrant up`
-command. By default this will bring up the el9 box, or you can specify it
-during the `up` operation:
+command. You must specify the target box during the `up` operation:
 
 `vagrant up el9`
+`vagrant up el10`
 
-After the box is brought up, you can connect to it with the `vagrant ssh` command. If no box is
-specified, it will default to the el9 box:
+After the box is brought up, you can connect to it with the `vagrant ssh` command:
 
 `vagrant ssh el9`
+`vagrant ssh el10`
 
 When the box is no longer needed, it can be destroyed with the `vagrant destroy` command. If no
 box is specified, all Candlepin Vagrant boxes will be destroyed, so it's probably best to specify
 exactly which box to destroy when doing so:
 
 `vagrant destroy el9`
+`vagrant destroy el10`
 
 This is the basic lifecycle of a Vagrant box. For more details on managing boxes, see the Vagrant
 CLI documentation linked below [1].

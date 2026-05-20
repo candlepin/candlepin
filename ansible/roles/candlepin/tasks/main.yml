@@ -14,6 +14,15 @@
   tags:
     - always
 
+- name: "Include EL10 tasks"
+  ansible.builtin.include_tasks:
+    file: el10/el10_tasks.yml
+  when:
+    - ansible_distribution in ["CentOS", "RedHat"]
+    - ansible_distribution_major_version == "10"
+  tags:
+    - always
+
 - name: "Include Candlepin debug tasks"
   ansible.builtin.import_tasks: common/cp_debugging.yml
   when:
