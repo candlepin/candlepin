@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -18,24 +18,17 @@ package org.candlepin.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCloudData;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.service.EventAdapter;
-import org.candlepin.service.model.CloudCheckInEvent;
-import org.candlepin.test.TestUtil;
 import org.candlepin.util.NonNullLinkedHashSet;
-import org.candlepin.util.ObjectMapperFactory;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -43,11 +36,8 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import tools.jackson.databind.ObjectMapper;
-
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,70 +52,13 @@ public class ConsumerManagerTest {
     @Mock
     private ContentAccessCertificateCurator contentAccessCertificateCurator;
     @Mock
-    private EventAdapter eventAdapter;
-    @Mock
     private EnvironmentCurator envCurator;
-
-    private ObjectMapper objectMapper;
-
-    @BeforeEach
-    public void setUp() {
-        this.objectMapper = ObjectMapperFactory.getObjectMapper();
-    }
 
     @Test
     public void testUpdateLastCheckInWithNullArgument() {
         ConsumerManager consumerManager = buildConsumerManager();
 
         assertThrows(IllegalArgumentException.class, () -> consumerManager.updateLastCheckIn(null));
-    }
-
-    @Test
-    public void testUpdateLastCheckInWithoutCloudData() {
-        ConsumerManager consumerManager = buildConsumerManager();
-        Consumer consumer = new Consumer();
-        doReturn(consumer).when(consumerCurator).merge(any(Consumer.class));
-
-        consumerManager.updateLastCheckIn(consumer);
-
-        verify(consumerCurator).merge(consumer);
-        verify(eventAdapter, never()).publish(any());
-    }
-
-    @Test
-    public void testUpdateLastCheckInWithCloudData() {
-        ConsumerManager consumerManager = buildConsumerManager();
-        Consumer consumer = createConsumer();
-        ConsumerCloudData consumerCloudData = createConsumerCloudData();
-        consumerCloudData.setConsumer(consumer);
-        consumer.setConsumerCloudData(consumerCloudData);
-
-        doReturn(consumer).when(consumerCurator).merge(any(Consumer.class));
-
-        consumerManager.updateLastCheckIn(consumer);
-
-        verify(consumerCurator).merge(consumer);
-        verify(eventAdapter).publish(any(CloudCheckInEvent.class));
-    }
-
-    @Test
-    public void testPublishCloudCheckInEvent() {
-        ConsumerManager consumerManager = buildConsumerManager();
-        Consumer consumer = createConsumer();
-        ConsumerCloudData consumerCloudData = createConsumerCloudData();
-        consumerCloudData.setConsumer(consumer);
-        consumer.setConsumerCloudData(consumerCloudData);
-
-        doReturn(consumer).when(consumerCurator).merge(any(Consumer.class));
-
-        consumerManager.updateLastCheckIn(consumer);
-
-        verify(consumerCurator).merge(consumer);
-        verify(eventAdapter).publish(argThat(event ->
-            event instanceof CloudCheckInEvent &&
-                ((CloudCheckInEvent) event).getConsumerUuid()
-                    .equals(consumerCloudData.getConsumer().getUuid())
-        ));
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
@@ -170,6 +103,7 @@ public class ConsumerManagerTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testSetConsumersEnvironmentsWithAllConsumersAlreadyInEnvironments() {
         Owner owner = new Owner()
             .setKey("owner");
@@ -199,6 +133,7 @@ public class ConsumerManagerTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testSetConsumersEnvironmentsWithDifferentPriorityOrder() {
         Owner owner = new Owner()
             .setKey("owner");
@@ -249,6 +184,7 @@ public class ConsumerManagerTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testSetConsumersEnvironments() {
         Owner owner = new Owner()
             .setKey("owner");
@@ -277,19 +213,7 @@ public class ConsumerManagerTest {
     }
 
     private ConsumerManager buildConsumerManager() {
-        return new ConsumerManager(consumerCurator, contentAccessCertificateCurator, envCurator, eventAdapter,
-            objectMapper);
+        return new ConsumerManager(consumerCurator, contentAccessCertificateCurator, envCurator);
     }
 
-    private Consumer createConsumer() {
-        return new Consumer()
-            .setUuid(TestUtil.randomString("uuid"))
-            .setLastCheckin(new Date());
-    }
-
-    private ConsumerCloudData createConsumerCloudData() {
-        return new ConsumerCloudData()
-            .setCloudAccountId(TestUtil.randomString("cloudAccountId"))
-            .setCloudProviderShortName(TestUtil.randomString("AWS"));
-    }
 }

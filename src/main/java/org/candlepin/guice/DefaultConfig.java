@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -18,14 +18,12 @@ import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
-import org.candlepin.service.EventAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.impl.DefaultCloudRegistrationAdapter;
 import org.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
-import org.candlepin.service.impl.DefaultEventAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
@@ -54,7 +52,6 @@ class DefaultConfig extends AbstractModule {
         bind(ManifestFileService.class).to(DBManifestService.class);
         bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
         bind(CloudRegistrationAdapter.class).to(DefaultCloudRegistrationAdapter.class);
-        bind(EventAdapter.class).to(DefaultEventAdapter.class);
 
         bind(SubjectKeyIdentifierWriter.class).to(BouncyCastleSubjectKeyIdentifierWriter.class);
     }

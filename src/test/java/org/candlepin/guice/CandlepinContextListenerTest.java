@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -29,7 +29,6 @@ import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.junit.LiquibaseExtension;
-import org.candlepin.service.EventAdapter;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -70,7 +69,6 @@ public class CandlepinContextListenerTest {
     private ServletContext ctx;
     private ResteasyDeployment resteasyDeployment;
     private boolean configRead;
-    private EventAdapter mockEventAdapter;
 
     @BeforeEach
     public void init() {
@@ -81,7 +79,6 @@ public class CandlepinContextListenerTest {
 
         hqlistener = mock(ActiveMQContextListener.class);
         executorService = mock(ScheduledExecutorService.class);
-        mockEventAdapter = mock(EventAdapter.class);
         configRead = false;
 
         listener = createContextListener();
@@ -237,35 +234,6 @@ public class CandlepinContextListenerTest {
     }
 
     @Test
-    public void ensureEventAdapterIsInitialized() {
-        prepareForInitialization();
-        // we actually have to call contextInitialized before we
-        // can call contextDestroyed, otherwise the listener's
-        // member variables will be null.
-        listener.contextInitialized(evt);
-
-        verify(mockEventAdapter).initialize();
-    }
-
-    @Test
-    public void ensureEventAdapterIsShutdown() {
-        // backup jdbc drivers before calling contextDestroyed method
-        Enumeration<Driver> drivers = DriverManager.getDrivers();
-
-        prepareForInitialization();
-        // we actually have to call contextInitialized before we
-        // can call contextDestroyed, otherwise the listener's
-        // member variables will be null.
-        listener.contextInitialized(evt);
-        listener.contextDestroyed(evt);
-
-        // re-register drivers
-        registerDrivers(drivers);
-
-        verify(mockEventAdapter).shutdown();
-    }
-
-    @Test
     public void exitStageLeft() {
         assertThat(listener.getStage(ctx))
             .isEqualTo(Stage.PRODUCTION);
@@ -355,7 +323,6 @@ public class CandlepinContextListenerTest {
         protected void configure() {
             bind(ActiveMQContextListener.class).toInstance(hqlistener);
             bind(ScheduledExecutorService.class).toInstance(executorService);
-            bind(EventAdapter.class).toInstance(mockEventAdapter);
         }
     }
 

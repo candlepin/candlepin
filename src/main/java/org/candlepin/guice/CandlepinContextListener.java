@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -29,7 +29,6 @@ import org.candlepin.logging.LoggingConfigurator;
 import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.resteasy.ResourceLocatorMap;
-import org.candlepin.service.EventAdapter;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -109,7 +108,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
     private ActiveMQContextListener activeMQContextListener;
     private JobManager jobManager;
-    private EventAdapter eventAdapter;
     private LoggerContextListener loggerListener;
 
     // a bit of application-initialization code. Not sure if this is the
@@ -216,9 +214,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
         loggerListener = injector.getInstance(LoggerContextListener.class);
 
-        eventAdapter = injector.getInstance(EventAdapter.class);
-        eventAdapter.initialize();
-
         this.injector = injector;
     }
 
@@ -262,8 +257,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
                 log.info("Failed to de-registering driver {}", driver, e);
             }
         }
-
-        eventAdapter.shutdown();
 
         if (config.getBoolean(ACTIVEMQ_ENABLED)) {
             activeMQContextListener.contextDestroyed(injector);
