@@ -80,7 +80,9 @@ import java.security.KeyException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.time.OffsetDateTime;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -421,6 +423,7 @@ class AnonymousCertificateGeneratorTest {
             .setProductIds(productIds)
             .setCloudProviderShortName("aws");
 
+        OffsetDateTime now = OffsetDateTime.now();
         AnonymousContentAccessCertificate actual = this.generator.generate(consumer);
 
         assertThat(actual)
@@ -429,8 +432,9 @@ class AnonymousCertificateGeneratorTest {
             .isNotNull()
             .extracting(CertificateSerial::getExpiration)
             .asInstanceOf(InstanceOfAssertFactories.DATE)
-            .isAfterOrEqualTo(TestUtil.createDateOffset(0, 0, certDuration))
-            .isBefore(TestUtil.createDateOffset(0, 0, certDuration + 1));
+            .isAfterOrEqualTo(Date.from(now.minusHours(1).plusDays(certDuration)
+                .minusMinutes(5).toInstant()))
+            .isBefore(Date.from(now.plusDays(certDuration).toInstant()));
     }
 
     @Test
