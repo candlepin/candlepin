@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -76,20 +76,20 @@ public class CdnManagerTest extends DatabaseTestFixture {
     @Test
     public void deleteCdnUpdatesPoolAssociation() {
         Cdn cdn = createCdn("MyTestCdn");
+        String cdnLabel = cdn.getLabel();
 
         Owner owner = this.createOwner();
 
         Product product = this.createProduct();
-        Pool pool = createPool(owner, product);
-        pool.setCdn(cdn);
-        poolCurator.create(pool);
+        Pool pool = this.createPool(owner, product)
+            .setCdn(cdn);
         assertNotNull(pool.getCdn());
 
-        manager.deleteCdn(cdn);
-        assertNull(cdnCurator.getByLabel(cdn.getLabel()));
-        poolCurator.clear();
+        this.manager.deleteCdn(cdn);
 
-        Pool updatedPool = poolCurator.get(pool.getId());
+        assertNull(this.cdnCurator.getByLabel(cdnLabel));
+
+        Pool updatedPool = this.poolCurator.get(pool.getId());
         assertNull(updatedPool.getCdn());
     }
 

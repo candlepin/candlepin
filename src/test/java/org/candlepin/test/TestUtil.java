@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -79,8 +79,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 
 
 /**
@@ -803,6 +803,7 @@ public class TestUtil {
         EntityTransaction transaction = new EntityTransaction() {
             private boolean active;
             private boolean rollbackOnly;
+            private Integer timeout;
 
             @Override
             public void begin() {
@@ -846,6 +847,16 @@ public class TestUtil {
             @Override
             public void setRollbackOnly() {
                 this.rollbackOnly = true;
+            }
+
+            @Override
+            public void setTimeout(Integer timeout) {
+                this.timeout = timeout;
+            }
+
+            @Override
+            public Integer getTimeout() {
+                return this.timeout;
             }
         };
 

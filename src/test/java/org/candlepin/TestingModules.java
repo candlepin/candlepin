@@ -42,7 +42,6 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.ScriptEngineProvider;
 import org.candlepin.guice.TestPrincipalProvider;
 import org.candlepin.guice.TestingScope;
-import org.candlepin.guice.ValidationListenerProvider;
 import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.messaging.CPMSessionFactory;
 import org.candlepin.messaging.impl.noop.NoopContextListener;
@@ -118,7 +117,6 @@ import com.google.inject.servlet.RequestScoped;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.hibernate.Session;
-import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -133,16 +131,16 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.Properties;
 
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.MessageInterpolator;
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
+import jakarta.inject.Named;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidatorFactory;
 
 
 /**
@@ -216,7 +214,6 @@ public class TestingModules {
             install(new ServletEnvironmentModule());
             install(new JpaPersistModule("testing", jpaOptions));
 
-            bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
             bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
             bind(JPAInitializer.class).asEagerSingleton();
         }

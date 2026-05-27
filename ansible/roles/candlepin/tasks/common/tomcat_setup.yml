@@ -1,0 +1,125 @@
+---
+# A manual installation of Tomcat using the Tomcat distribution archive.
+# This task requires the {{ tomcat_version }} variable to be set with the targeted Tomcat version.
+
+- name: "Check if Tomcat is already installed"
+  ansible.builtin.stat:
+    path: "/var/lib/tomcat/bin/catalina.sh"
+  register: tomcat_installed
+
+- name: "Download and install Tomcat"
+  when: not tomcat_installed.stat.exists
+  become: true
+  block:
+    - name: "Download Tomcat"
+      ansible.builtin.get_url:
+        url: "https://archive.apache.org/dist/tomcat/tomcat-10/v{{ tomcat_version }}/bin/apache-tomcat-{{ tomcat_version }}.tar.gz"
+        dest: "/tmp/apache-tomcat-{{ tomcat_version }}.tar.gz"
+        checksum: "sha512:https://archive.apache.org/dist/tomcat/tomcat-10/v{{ tomcat_version }}/bin/apache-tomcat-{{ tomcat_version }}.tar.gz.sha512"
+
+    - name: "Create /var/lib/tomcat directory"
+      ansible.builtin.file:
+        path: "/var/lib/tomcat"
+        state: directory
+        mode: 0755
+
+    - name: "Extract"
+      ansible.builtin.unarchive:
+        src: "/tmp/apache-tomcat-{{ tomcat_version }}.tar.gz"
+        dest: "/var/lib/tomcat"
+        remote_src: yes
+        extra_opts:
+          - --strip-components=1
+
+    - name: "Create /etc/tomcat directory"
+      ansible.builtin.file:
+        path: "/etc/tomcat"
+        state: directory
+        mode: 0755
+
+    - name: "Copy server.xml file"
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../.github/containers/server.xml"
+        dest: "/etc/tomcat/server.xml"
+        mode: 0755
+
+    - name: "Create server.xml symlink"
+      ansible.builtin.file:
+        src: "/etc/tomcat/server.xml"
+        dest: "/var/lib/tomcat/conf/server.xml"
+        state: link
+        force: yes
+
+    - name: "Create /var/cache/tomcat/temp directory"
+      ansible.builtin.file:
+        path: "/var/cache/tomcat/temp"
+        state: directory
+        mode: 0755
+
+    - name: "Create tomcat group"
+      ansible.builtin.group:
+        name: tomcat
+        gid: 10000
+        state: present
+
+    - name: "Create tomcat user"
+      ansible.builtin.user:
+        name: tomcat
+        uid: 10001
+        group: tomcat
+        shell: /sbin/nologin
+        create_home: no
+        state: present
+
+    - name: "Add vagrant user to tomcat group"
+      ansible.builtin.user:
+        name: vagrant
+        groups: tomcat
+        append: yes
+
+    - name: Set Tomcat directory permissions
+      ansible.builtin.file:
+        path: "/var/lib/tomcat"
+        owner: tomcat
+        group: tomcat
+        recurse: yes
+
+    - name: "Create tomcat.conf file"
+      ansible.builtin.copy:
+        dest: "/var/lib/tomcat/tomcat.conf"
+        content: |
+          TOMCAT_CFG_LOADED="1"
+          TOMCATS_BASE="/var/lib/tomcats/"
+          JAVA_HOME="/usr/lib/jvm/java-25-openjdk"
+          CATALINA_HOME="/var/lib/tomcat"
+          CATALINA_TMPDIR="/var/cache/tomcat/temp"
+          SECURITY_MANAGER="false"
+
+        mode: 0755
+
+    - name: "Create tomcat systemd service file"
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/tomcat.service
+        content: |
+          [Service]
+          Type=simple
+
+          EnvironmentFile=/var/lib/tomcat/tomcat.conf
+          ExecStart=/var/lib/tomcat/bin/catalina.sh run
+          ExecStop=/var/lib/tomcat/bin/catalina.sh stop
+          SuccessExitStatus=143
+          User=tomcat
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: "Create setenv.sh and remote debugging JVM arguments"
+      become: true
+      ansible.builtin.blockinfile:
+        path: "/var/lib/tomcat/bin/setenv.sh"
+        block: |
+          CATALINA_OPTS="${CATALINA_OPTS} -Xdebug -Xrunjdwp:transport=dt_socket,address=*:8000,server=y,suspend=n"
+        state: present
+        create: true
+        mode: 0755
+        group: tomcat

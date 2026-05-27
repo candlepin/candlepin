@@ -16,7 +16,7 @@ package org.candlepin.pki.impl.bc;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 
 

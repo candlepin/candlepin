@@ -37,8 +37,7 @@
       - git
       - java-25-openjdk-devel
       - make
-      - openssl
-      - tomcat
+      - openssl-devel
       - tomcat-native
       - platform-python
       - python3
@@ -54,6 +53,9 @@
   tags:
     - base_deps
     - candlepin
+
+- name: "Setup Tomcat"
+  ansible.builtin.include_tasks: ../common/tomcat_setup.yml
 
 - name: "Enable post-quantum crypto policy"
   become: true
@@ -77,16 +79,6 @@
 - name: "Configure alternatives: javac"
   ansible.builtin.shell: sh -c 'sudo alternatives --install /usr/bin/javac javac /usr/lib/jvm/java-25-openjdk-*/bin/javac 1'
   changed_when: false
-  tags:
-    - base_deps
-    - candlepin
-
-- name: "Update Tomcat configuration to use Java 25"
-  become: true
-  ansible.builtin.lineinfile:
-    dest: /etc/tomcat/tomcat.conf
-    regexp: "JAVA_HOME="
-    line: "JAVA_HOME=\"/usr/lib/jvm/java-25-openjdk\""
   tags:
     - base_deps
     - candlepin

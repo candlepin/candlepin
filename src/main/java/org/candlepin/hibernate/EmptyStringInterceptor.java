@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,8 +14,8 @@
  */
 package org.candlepin.hibernate;
 
-import org.hibernate.EmptyInterceptor;
-import org.hibernate.type.StringType;
+import org.hibernate.Interceptor;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ import java.io.Serializable;
  * consistent across Candlepin versions.  I don't want the situation where Candlepin X does store
  * string but Candlepin X+1 does not.
  */
-public class EmptyStringInterceptor extends EmptyInterceptor {
+public class EmptyStringInterceptor implements Interceptor {
     private static Logger log = LoggerFactory.getLogger(EmptyStringInterceptor.class);
 
     @Override
@@ -54,7 +54,10 @@ public class EmptyStringInterceptor extends EmptyInterceptor {
     private boolean convertEmptyStringToNull(Object[] state, String[] propertyNames, Type[] types) {
         boolean modified = false;
         for (int i = 0; i < types.length; i++) {
-            if (types[i] instanceof StringType && "".equals(state[i])) {
+            // Check if the type represents a String, but skip CustomTypes
+            // which wrap UserTypes, because we our UserType implementations should handle those conversions
+            if (types[i].getReturnedClass() == String.class && "".equals(state[i]) &&
+                !(types[i] instanceof CustomType)) {
                 log.debug("Attempting to write an empty string to the database for field \"{}\"; " +
                     "Substituting null instead", propertyNames[i]);
 

@@ -1,0 +1,90 @@
+FROM quay.io/centos/centos:stream10 as builder
+
+ARG WAR_FILE
+
+USER root
+
+# Update and install dependencies
+RUN dnf -y --setopt install_weak_deps=False update && \
+    dnf -y --setopt install_weak_deps=False install java-25-openjdk-devel openssl wget unzip && \
+    dnf clean all
+
+# Prepare Tomcat
+ARG TOMCAT_VERSION=10.1.49
+COPY apache-tomcat-${TOMCAT_VERSION}.tar.gz /tmp/
+RUN tar xzf /tmp/apache-tomcat-${TOMCAT_VERSION}.tar.gz -C /tmp && \
+    mkdir /opt/tomcat && \
+    mv /tmp/apache-tomcat-${TOMCAT_VERSION}/* /opt/tomcat/
+
+# Prepare Candlepin
+RUN mkdir -p /app/build
+WORKDIR /app/build
+COPY ${WAR_FILE} ./candlepin.war
+
+# Prepare development certs
+RUN mkdir -p /app/certs
+WORKDIR /app/certs
+COPY ./bin/deployment/gen_certs.sh .
+RUN ./gen_certs.sh --pq --cert_dir ./ --hostname candlepin; \
+    rm gen_certs.sh;
+
+FROM quay.io/centos/centos:stream10
+LABEL author="Josh Albrecht <jalbrech@redhat.com>"
+
+USER root
+
+# Update and install dependencies
+RUN dnf -y update && \
+    dnf -y update ca-certificates && \
+    dnf install -y epel-release && \
+    dnf install -y java-25-openjdk-headless tomcat-native openssl openssl-devel initscripts && \
+    dnf clean all
+
+# Enable post-quantum algorithms (ML-DSA, ML-KEM) for OpenSSL/TLS
+RUN update-crypto-policies --set DEFAULT:TEST-PQ
+
+ENV JAVA_HOME=/usr/lib/jvm/jre-25-openjdk
+ENV JRE_HOME=/usr/lib/jvm/jre-25-openjdk
+ENV LD_LIBRARY_PATH=/usr/lib64
+ENV CATALINA_OPTS=-Djakarta.net.ssl.trustStore=$JAVA_HOME/lib/security/cacerts
+ENV CATALINA_OPTS="$CATALINA_OPTS -agentlib:jdwp=transport=dt_socket,server=y,address=*:8000,suspend=n"
+
+# Tomcat Setup
+COPY --from=builder /opt/tomcat/ /opt/tomcat/
+RUN mkdir -p /etc/candlepin/certs; \
+    ln -s /etc/candlepin/certs/* /etc/pki/ca-trust/source/anchors; \
+    mkdir -p /var/cache/candlepin/sync; \
+    groupadd -g 10000 tomcat; \
+    useradd -g tomcat -u 10001 tomcat; \
+    chown -R tomcat.tomcat /opt/tomcat; \
+    chown -R tomcat.tomcat /var/log/; \
+    chown -R tomcat.tomcat /var/lib/; \
+    chown -R tomcat.tomcat /etc/candlepin/; \
+    chown -R tomcat:tomcat /var/cache/; \
+    chown -R tomcat:tomcat  /etc/pki/; \
+    chmod -R 775 /opt/tomcat/webapps; \
+    chmod -R 775 /var/log/;
+
+# Candlepin install
+COPY --from=builder /app/build /opt/tomcat/webapps
+
+# Candlepin configuration (run ./gradlew generateConfig before docker build)
+COPY build/candlepin.conf /etc/candlepin/candlepin.conf
+
+# Setup development certificate and key
+WORKDIR /etc/candlepin/certs
+COPY --from=builder /app/certs /etc/candlepin/certs
+# Add the certificate to the Java trust store
+RUN ln -s /etc/candlepin/certs/*.crt /etc/pki/ca-trust/source/anchors --force; \
+    update-ca-trust;
+
+COPY ./.github/containers/server.xml /opt/tomcat/conf
+
+WORKDIR /opt/tomcat/bin
+
+USER root
+
+# Expose ports for tomcat, candlepin, postgres and mariadb
+EXPOSE 8080 8443 5432 3306
+
+ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "run"]

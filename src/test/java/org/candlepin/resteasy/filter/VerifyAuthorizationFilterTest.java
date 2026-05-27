@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -63,15 +63,16 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ResourceInfo;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.UriInfo;
+
 import javax.security.auth.x500.X500Principal;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.UriInfo;
 
 
 
@@ -164,7 +165,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         when(cert.getSubjectX500Principal()).thenReturn(dn);
 
         certs[0] = cert;
-        mockReq.setAttribute("javax.servlet.request.X509Certificate", certs);
+        mockReq.setAttribute("jakarta.servlet.request.X509Certificate", certs);
 
         Principal p = sslAuth.getPrincipal(mockReq);
         when(mockSecurityContext.getUserPrincipal()).thenReturn(p);
@@ -200,7 +201,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         when(cert.getSubjectX500Principal()).thenReturn(dn);
 
         certs[0] = cert;
-        mockReq.setAttribute("javax.servlet.request.X509Certificate", certs);
+        mockReq.setAttribute("jakarta.servlet.request.X509Certificate", certs);
 
         Principal p = sslAuth.getPrincipal(mockReq);
         when(mockSecurityContext.getUserPrincipal()).thenReturn(p);
@@ -226,7 +227,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
             .when(cert).getSubjectX500Principal();
         X509Certificate[] certs = new X509Certificate[1];
         certs[0] = cert;
-        mockReq.setAttribute("javax.servlet.request.X509Certificate", certs);
+        mockReq.setAttribute("jakarta.servlet.request.X509Certificate", certs);
 
         doReturn(sslAuth.getPrincipal(mockReq)).when(mockSecurityContext).getUserPrincipal();
 
@@ -257,7 +258,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         doReturn(new X500Principal("CN=123, C=US, L=Raleigh")).when(cert).getSubjectX500Principal();
         X509Certificate[] certs = new X509Certificate[1];
         certs[0] = cert;
-        mockReq.setAttribute("javax.servlet.request.X509Certificate", certs);
+        mockReq.setAttribute("jakarta.servlet.request.X509Certificate", certs);
 
         doReturn(new AnonymousCloudConsumerPrincipal(consumer)).when(mockSecurityContext).getUserPrincipal();
 
@@ -280,7 +281,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         doReturn(new X500Principal("CN=123, C=US, L=Raleigh")).when(cert).getSubjectX500Principal();
         X509Certificate[] certs = new X509Certificate[1];
         certs[0] = cert;
-        mockReq.setAttribute("javax.servlet.request.X509Certificate", certs);
+        mockReq.setAttribute("jakarta.servlet.request.X509Certificate", certs);
 
         doReturn(sslAuth.getPrincipal(mockReq)).when(mockSecurityContext).getUserPrincipal();
 
@@ -308,7 +309,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         doReturn(new X500Principal("CN=123, C=US, L=Raleigh")).when(cert).getSubjectX500Principal();
         X509Certificate[] certs = new X509Certificate[1];
         certs[0] = cert;
-        mockReq.setAttribute("javax.servlet.request.X509Certificate", certs);
+        mockReq.setAttribute("jakarta.servlet.request.X509Certificate", certs);
 
         doReturn(new AnonymousCloudConsumerPrincipal(consumer)).when(mockSecurityContext).getUserPrincipal();
 

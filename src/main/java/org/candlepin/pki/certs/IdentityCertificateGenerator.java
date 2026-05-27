@@ -40,8 +40,8 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Objects;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 
 /**

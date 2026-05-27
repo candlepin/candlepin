@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -17,11 +17,11 @@ package org.candlepin.auth;
 import java.net.URI;
 import java.util.List;
 
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 
 /**
  * Fake implementation of {@link UriInfo} for easier stubbing of requests.
@@ -139,6 +139,11 @@ class FakeUriInfo implements UriInfo {
 
     public void addPathParam(String key, String value) {
         this.pathParams.add(key, value);
+    }
+
+    @Override
+    public String getMatchedResourceTemplate() {
+        return null;
     }
 
 }

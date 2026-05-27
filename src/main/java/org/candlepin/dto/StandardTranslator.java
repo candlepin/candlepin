@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -136,7 +136,7 @@ import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.service.model.UserInfo;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * The StandardTranslator is a SimpleModelTranslator that comes pre-configured to handle most, if

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -20,7 +20,7 @@ import com.google.inject.Provider;
 
 import org.jboss.resteasy.core.ResteasyContext;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 /**
  * Guice provider that pulls the principal out of the ResteasyProviderFactory's context.
