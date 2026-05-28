@@ -16,10 +16,8 @@ package org.candlepin.spec.entitlements;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerInstalledProductDTO;
-import org.candlepin.dto.api.client.v1.EntitlementDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
@@ -37,8 +35,6 @@ import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
-import tools.jackson.databind.JsonNode;
 
 import java.util.Map;
 import java.util.Set;
@@ -69,143 +65,6 @@ public class RamSpecTest {
 
         assertThat(systemClient.consumers().bindProduct(system.getUuid(), ramPool.getProductId()))
             .singleElement();
-    }
-
-    @Test
-    public void shouldBeValidConsumerStatusWhenConsumerRamIsCovered() {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        PoolDTO ramPool = createRamProductAndPool(owner);
-        ConsumerDTO system = userClient.consumers().createConsumer(
-            Consumers.random(owner)
-            .facts(Map.of("system.certificate_version", "3.1",
-            // Simulate 8 GB of RAM as would be returned from system fact (kb)
-            "memory.memtotal", "8000000"))
-            .installedProducts(Set.of(new ConsumerInstalledProductDTO()
-            .productId(ramPool.getProductId())
-            .productName(ramPool.getProductName()))));
-        ApiClient systemClient = ApiClients.ssl(system);
-
-        assertThat(systemClient.consumers().bindProduct(system.getUuid(), ramPool.getProductId()))
-            .singleElement();
-
-        assertThat(systemClient.consumers().getComplianceStatus(system.getUuid(), null))
-            .isNotNull()
-            .returns("valid", ComplianceStatusDTO::getStatus)
-            .returns(true, ComplianceStatusDTO::getCompliant)
-            .returns(true, x -> x.getCompliantProducts().containsKey(ramPool.getProductId()));
-    }
-
-    @Test
-    public void shouldBePartialConsumerStatusWhenConsumerRamIsNotCovered() {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        PoolDTO ramPool = createRamProductAndPool(owner);
-        ConsumerDTO system = userClient.consumers().createConsumer(
-            Consumers.random(owner)
-            .facts(Map.of("system.certificate_version", "3.1",
-            // Simulate 16 GB of RAM as would be returned from system fact (kb)
-            "memory.memtotal", "16000000"))
-            .installedProducts(Set.of(new ConsumerInstalledProductDTO()
-            .productId(ramPool.getProductId())
-            .productName(ramPool.getProductName()))));
-        ApiClient systemClient = ApiClients.ssl(system);
-
-        assertThat(systemClient.consumers().bindPool(system.getUuid(), ramPool.getId(), 1))
-            .singleElement();
-
-        assertThat(systemClient.consumers().getComplianceStatus(system.getUuid(), null))
-            .isNotNull()
-            .returns("partial", ComplianceStatusDTO::getStatus)
-            .returns(false, ComplianceStatusDTO::getCompliant)
-            .returns(true, x -> x.getPartiallyCompliantProducts().containsKey(ramPool.getProductId()));
-    }
-
-    @Test
-    public void shouldBePartialConsumerStatusWhenConsumerRamCoveredButNotSockets() {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        PoolDTO ramSocketPool = createRamSocketProductAndPool(owner);
-        ConsumerDTO system = userClient.consumers().createConsumer(
-            Consumers.random(owner)
-            .facts(Map.of("system.certificate_version", "3.1",
-            // Simulate 8 GB of RAM as would be returned from system fact (kb)
-            // which should be covered by the enitlement when consumed.
-            "memory.memtotal", "8000000",
-            // Simulate system having 12 sockets which won't be covered after consuming
-            // the entitlement
-            "cpu.cpu_socket(s)", "12"))
-            .installedProducts(Set.of(new ConsumerInstalledProductDTO()
-            .productId(ramSocketPool.getProductId())
-            .productName(ramSocketPool.getProductName()))));
-        ApiClient systemClient = ApiClients.ssl(system);
-
-        assertThat(systemClient.consumers().bindPool(system.getUuid(), ramSocketPool.getId(), 1))
-            .singleElement();
-
-        assertThat(systemClient.consumers().getComplianceStatus(system.getUuid(), null))
-            .isNotNull()
-            .returns("partial", ComplianceStatusDTO::getStatus)
-            .returns(false, ComplianceStatusDTO::getCompliant)
-            .returns(true, x -> x.getPartiallyCompliantProducts().containsKey(ramSocketPool.getProductId()));
-    }
-
-    @Test
-    public void shouldBePartialConsumerStatusWhenConsumerSocketsCoveredButNotRam() {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        PoolDTO ramSocketPool = createRamSocketProductAndPool(owner);
-        ConsumerDTO system = userClient.consumers().createConsumer(
-            Consumers.random(owner)
-            .facts(Map.of("system.certificate_version", "3.1",
-            // Simulate 16 GB of RAM as would be returned from system fact (kb)
-            // which will not be covered by the enitlement when consumed.
-            "memory.memtotal", "16000000",
-            // Simulate system having 4 sockets which will be covered after consuming
-            // the entitlement
-            "cpu.cpu_socket(s)", "4"))
-            .installedProducts(Set.of(new ConsumerInstalledProductDTO()
-            .productId(ramSocketPool.getProductId())
-            .productName(ramSocketPool.getProductName()))));
-        ApiClient systemClient = ApiClients.ssl(system);
-
-        assertThat(systemClient.consumers().bindPool(system.getUuid(), ramSocketPool.getId(), 1))
-            .singleElement();
-
-        assertThat(systemClient.consumers().getComplianceStatus(system.getUuid(), null))
-            .isNotNull()
-            .returns("partial", ComplianceStatusDTO::getStatus)
-            .returns(false, ComplianceStatusDTO::getCompliant)
-            .returns(true, x -> x.getPartiallyCompliantProducts().containsKey(ramSocketPool.getProductId()));
-    }
-
-    @Test
-    public void shouldBeValidConsumerStatusWhenBothRamAndSocketsAreCovered() {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        PoolDTO ramSocketPool = createRamSocketProductAndPool(owner);
-        ConsumerDTO system = userClient.consumers().createConsumer(
-            Consumers.random(owner)
-            .facts(Map.of("system.certificate_version", "3.1",
-            // Simulate 8 GB of RAM as would be returned from system fact (kb)
-            // which will be covered by the enitlement when consumed.
-            "memory.memtotal", "8000000",
-            // Simulate system having 4 sockets which will be covered after consuming
-            // the entitlement
-            "cpu.cpu_socket(s)", "4"))
-            .installedProducts(Set.of(new ConsumerInstalledProductDTO()
-            .productId(ramSocketPool.getProductId())
-            .productName(ramSocketPool.getProductName()))));
-        ApiClient systemClient = ApiClients.ssl(system);
-
-        assertThat(systemClient.consumers().bindProduct(system.getUuid(), ramSocketPool.getProductId()))
-            .singleElement();
-
-        assertThat(systemClient.consumers().getComplianceStatus(system.getUuid(), null))
-            .isNotNull()
-            .returns("valid", ComplianceStatusDTO::getStatus)
-            .returns(true, ComplianceStatusDTO::getCompliant)
-            .returns(true, x -> x.getCompliantProducts().containsKey(ramSocketPool.getProductId()));
     }
 
     @Test
@@ -270,127 +129,6 @@ public class RamSpecTest {
         // Perform healing
         assertThat(systemClient.consumers().autoBind(system.getUuid()))
             .singleElement();
-    }
-
-    // Ram stacking tests
-
-    @Test
-    public void shouldBeGreenConsumerStatusWhenStackingASingleRamEntitlement() {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        PoolDTO stackableRamPool = createStackableRamProductAndPool(owner);
-        ConsumerDTO system = userClient.consumers().createConsumer(
-            Consumers.random(owner)
-            .facts(Map.of("system.certificate_version", "3.1",
-            // Simulate 2 GB of RAM as would be returned from system fact (kb)
-            // which will be covered by the enitlement when consumed.
-            "memory.memtotal", "2000000",
-            // Since cert v3 is disabled by default, configure consumer bypass.
-            "system.testing", "true"))
-            .installedProducts(Set.of(new ConsumerInstalledProductDTO()
-            .productId(stackableRamPool.getProductId())
-            .productName(stackableRamPool.getProductName()))));
-        ApiClient systemClient = ApiClients.ssl(system);
-
-        assertThat(systemClient.consumers().bindPool(system.getUuid(), stackableRamPool.getId(), 1))
-            .singleElement();
-
-        assertThat(systemClient.consumers().getComplianceStatus(system.getUuid(), null))
-            .isNotNull()
-            .returns("valid", ComplianceStatusDTO::getStatus)
-            .returns(true, ComplianceStatusDTO::getCompliant)
-            .returns(true, x -> x.getCompliantProducts().containsKey(stackableRamPool.getProductId()));
-    }
-
-    @Test
-    public void shouldBeGreenConsumerStatusWhenStackingASingleRamEntitlementWithProperQuantity() {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        PoolDTO stackableRamPool = createStackableRamProductAndPool(owner);
-        ConsumerDTO system = userClient.consumers().createConsumer(
-            Consumers.random(owner)
-            .facts(Map.of("system.certificate_version", "3.1",
-            // Simulate 4 GB of RAM as would be returned from system fact (kb)
-            // which will be covered by the enitlement when consumed.
-            "memory.memtotal", "4000000",
-            // Since cert v3 is disabled by default, configure consumer bypass.
-            "system.testing", "true"))
-            .installedProducts(Set.of(new ConsumerInstalledProductDTO()
-            .productId(stackableRamPool.getProductId())
-            .productName(stackableRamPool.getProductName()))));
-        ApiClient systemClient = ApiClients.ssl(system);
-
-        assertThat(systemClient.consumers().bindPool(system.getUuid(), stackableRamPool.getId(), 2))
-            .singleElement();
-
-        assertThat(systemClient.consumers().getComplianceStatus(system.getUuid(), null))
-            .isNotNull()
-            .returns("valid", ComplianceStatusDTO::getStatus)
-            .returns(true, ComplianceStatusDTO::getCompliant)
-            .returns(true, x -> x.getCompliantProducts().containsKey(stackableRamPool.getProductId()));
-    }
-
-    @Test
-    public void shouldCompletelyConverRamProductsWithAutobind() {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        PoolDTO stackableRamPool = createStackableRamProductAndPool(owner);
-        ConsumerDTO system = userClient.consumers().createConsumer(
-            Consumers.random(owner)
-            .facts(Map.of("system.certificate_version", "3.1",
-            // Simulate 4 GB of RAM as would be returned from system fact (kb)
-            // which will be covered by the enitlement when consumed.
-            "memory.memtotal", "4000000",
-            // Since cert v3 is disabled by default, configure consumer bypass.
-            "system.testing", "true"))
-            .installedProducts(Set.of(new ConsumerInstalledProductDTO()
-            .productId(stackableRamPool.getProductId())
-            .productName(stackableRamPool.getProductName()))));
-        ApiClient systemClient = ApiClients.ssl(system);
-
-        JsonNode result = systemClient.consumers().autoBind(system.getUuid());
-        assertThat(result).isNotNull().singleElement();
-        EntitlementDTO entitlement = ApiClient.MAPPER.convertValue(result.get(0), EntitlementDTO.class);
-        assertThat(entitlement).returns(2, EntitlementDTO::getQuantity);
-
-        assertThat(systemClient.consumers().getComplianceStatus(system.getUuid(), null))
-            .isNotNull()
-            .returns("valid", ComplianceStatusDTO::getStatus)
-            .returns(true, ComplianceStatusDTO::getCompliant)
-            .returns(true, x -> x.getCompliantProducts().containsKey(stackableRamPool.getProductId()));
-    }
-
-    @Test
-    public void shouldAddRamEntitlemnetsToCoverConsumerOnHeal() {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        PoolDTO stackableRamPool = createStackableRamProductAndPool(owner);
-        ConsumerDTO system = userClient.consumers().createConsumer(
-            Consumers.random(owner)
-            .facts(Map.of("system.certificate_version", "3.1",
-            // Simulate 4 GB of RAM as would be returned from system fact (kb)
-            // which will be covered by the enitlement when consumed.
-            "memory.memtotal", "4000000",
-            // Since cert v3 is disabled by default, configure consumer bypass.
-            "system.testing", "true"))
-            .installedProducts(Set.of(new ConsumerInstalledProductDTO()
-            .productId(stackableRamPool.getProductId())
-            .productName(stackableRamPool.getProductName()))));
-        ApiClient systemClient = ApiClients.ssl(system);
-
-        assertThat(systemClient.consumers().bindPool(system.getUuid(), stackableRamPool.getId(), 1))
-            .singleElement();
-
-        JsonNode result = systemClient.consumers().autoBind(system.getUuid());
-        assertThat(result).isNotNull().singleElement();
-        EntitlementDTO entitlement = ApiClient.MAPPER.convertValue(result.get(0), EntitlementDTO.class);
-        assertThat(entitlement).returns(1, EntitlementDTO::getQuantity);
-
-        assertThat(systemClient.consumers().getComplianceStatus(system.getUuid(), null))
-            .isNotNull()
-            .returns("valid", ComplianceStatusDTO::getStatus)
-            .returns(true, ComplianceStatusDTO::getCompliant)
-            .returns(true, x -> x.getCompliantProducts().containsKey(stackableRamPool.getProductId()));
     }
 
     private PoolDTO createRamProductAndPool(OwnerDTO owner) {

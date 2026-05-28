@@ -15,14 +15,11 @@
 package org.candlepin.spec.entitlements;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.candlepin.spec.bootstrap.assertions.ComplianceAssert.assertThatCompliance;
 
-import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.client.v1.EntitlementDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
-import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
@@ -94,118 +91,6 @@ public class CoreSpecTest {
 
         assertThat(entitlements)
             .hasSize(1);
-    }
-
-    @Test
-    public void shouldBeValidWhenConsumerCoreIsCovered() {
-        ProductDTO product = createCoreProduct();
-        admin.owners().createPool(this.owner.getKey(), Pools.random(product));
-        ConsumerDTO consumer = admin.consumers().createConsumer(
-            Consumers.random(this.owner)
-                .putFactsItem(Facts.CertificateVersion.key(), "3.2"));
-        ApiClient consumerClient = ApiClients.ssl(consumer);
-
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
-        consumerClient.consumers().bindProduct(consumer.getUuid(), product);
-
-        ComplianceStatusDTO complianceStatus = consumerClient.consumers()
-            .getComplianceStatus(consumer.getUuid(), null);
-        assertThatCompliance(complianceStatus)
-            .isNotNull()
-            .isValid()
-            .isCompliant()
-            .hasCompliantProducts(product);
-    }
-
-    @Test
-    public void shouldBePartialWhenConsumerCoreIsNotCovered() {
-        ProductDTO product = createCoreProduct();
-        PoolDTO pool = admin.owners().createPool(this.owner.getKey(), Pools.random(product));
-        ConsumerDTO consumer = admin.consumers().createConsumer(
-            Consumers.random(this.owner)
-                .putFactsItem(Facts.CertificateVersion.key(), "3.2")
-                .putFactsItem(Facts.CoresPerSocket.key(), "32"));
-        ApiClient consumerClient = ApiClients.ssl(consumer);
-
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
-        consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
-
-        ComplianceStatusDTO complianceStatus = consumerClient.consumers()
-            .getComplianceStatus(consumer.getUuid(), null);
-        assertThatCompliance(complianceStatus)
-            .isNotNull()
-            .isPartial()
-            .isNotCompliant()
-            .hasPartiallyCompliantProducts(product);
-    }
-
-    @Test
-    public void shouldBePartialWhenConsumerCoreCoveredButNotSockets() {
-        ProductDTO product = createCoreAndSocketProduct();
-        PoolDTO pool = admin.owners().createPool(this.owner.getKey(), Pools.random(product));
-        ConsumerDTO consumer = admin.consumers().createConsumer(
-            Consumers.random(this.owner)
-                .putFactsItem(Facts.CertificateVersion.key(), "3.2")
-                .putFactsItem(Facts.CoresPerSocket.key(), "2")
-                .putFactsItem(Facts.CpuSockets.key(), "8"));
-        ApiClient consumerClient = ApiClients.ssl(consumer);
-
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
-        consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
-
-        ComplianceStatusDTO complianceStatus = consumerClient.consumers()
-            .getComplianceStatus(consumer.getUuid(), null);
-        assertThatCompliance(complianceStatus)
-            .isNotNull()
-            .isPartial()
-            .isNotCompliant()
-            .hasPartiallyCompliantProducts(product);
-    }
-
-    @Test
-    public void shouldBePartialWhenConsumerSocketsCoveredButNotCore() {
-        ProductDTO product = createCoreAndSocketProduct();
-        PoolDTO pool = admin.owners().createPool(this.owner.getKey(), Pools.random(product));
-        ConsumerDTO consumer = admin.consumers().createConsumer(
-            Consumers.random(this.owner)
-                .putFactsItem(Facts.CertificateVersion.key(), "3.2")
-                .putFactsItem(Facts.CoresPerSocket.key(), "8")
-                .putFactsItem(Facts.CpuSockets.key(), "4"));
-        ApiClient consumerClient = ApiClients.ssl(consumer);
-
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
-        consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
-
-        ComplianceStatusDTO complianceStatus = consumerClient.consumers()
-            .getComplianceStatus(consumer.getUuid(), null);
-        assertThatCompliance(complianceStatus)
-            .isNotNull()
-            .isPartial()
-            .isNotCompliant()
-            .hasPartiallyCompliantProducts(product);
-    }
-
-    @Test
-    public void shouldBeValidWhenBothCoreAndSocketsAreCovered() {
-        ProductDTO product = createCoreAndSocketProduct();
-        PoolDTO pool = admin.owners().createPool(this.owner.getKey(), Pools.random(product));
-        ConsumerDTO consumer = admin.consumers().createConsumer(
-            Consumers.random(this.owner)
-                .putFactsItem(Facts.CertificateVersion.key(), "3.2")
-                .putFactsItem(Facts.CoresPerSocket.key(), "4")
-                .putFactsItem(Facts.CpuSockets.key(), "4"));
-        ApiClient consumerClient = ApiClients.ssl(consumer);
-
-        updateInstalledProducts(consumerClient, consumer, Set.of(Products.toInstalled(product)));
-        consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
-
-        ComplianceStatusDTO complianceStatus = consumerClient.consumers()
-            .getComplianceStatus(consumer.getUuid(), null);
-        assertThatCompliance(complianceStatus)
-            .isNotNull()
-            .isValid()
-            .isCompliant()
-            .hasCompliantProducts(product);
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2025 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -23,6 +23,7 @@ import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.asser
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
@@ -1446,6 +1447,46 @@ public class ConsumerResourceSpecTest {
             .extracting(ConsumerDTO::getOwner)
             .isNotNull()
             .returns(false, NestedOwnerDTO::getAnonymous);
+    }
+
+    @Test
+    public void shouldReturnDisabledStatusWhenRetrievingComplianceStatus() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+
+        ApiClient client = ApiClients.ssl(consumer);
+
+        // The compliance status endpoint now returns a static response regardless of the UUID that is
+        // provided to improve performance.
+
+        ComplianceStatusDTO actual = client.consumers().getComplianceStatus(consumer.getUuid());
+        assertThat(actual)
+            .isNotNull()
+            .returns("disabled", ComplianceStatusDTO::getStatus)
+            .returns(null, ComplianceStatusDTO::getDate)
+            .returns(true, ComplianceStatusDTO::getCompliant)
+            .returns(null, ComplianceStatusDTO::getCompliantUntil)
+            .satisfies(status -> assertTrue(status.getProductComplianceDateRanges().isEmpty()))
+            .satisfies(status -> assertTrue(status.getReasons().isEmpty()))
+            .satisfies(status -> assertTrue(status.getCompliantProducts().isEmpty()))
+            .satisfies(status -> assertTrue(status.getNonCompliantProducts().isEmpty()))
+            .satisfies(status -> assertTrue(status.getPartialStacks().isEmpty()));
+
+        // We should get the same static response for unknown consumers
+
+        actual = client.consumers().getComplianceStatus(StringUtil.random("unknown-"));
+        assertThat(actual)
+            .isNotNull()
+            .returns("disabled", ComplianceStatusDTO::getStatus)
+            .returns(null, ComplianceStatusDTO::getDate)
+            .returns(true, ComplianceStatusDTO::getCompliant)
+            .returns(null, ComplianceStatusDTO::getCompliantUntil)
+            .satisfies(status -> assertTrue(status.getProductComplianceDateRanges().isEmpty()))
+            .satisfies(status -> assertTrue(status.getReasons().isEmpty()))
+            .satisfies(status -> assertTrue(status.getCompliantProducts().isEmpty()))
+            .satisfies(status -> assertTrue(status.getNonCompliantProducts().isEmpty()))
+            .satisfies(status -> assertTrue(status.getPartialStacks().isEmpty()));
     }
 
     private UserDTO createUserTypeAllAccess(ApiClient client, OwnerDTO owner) {

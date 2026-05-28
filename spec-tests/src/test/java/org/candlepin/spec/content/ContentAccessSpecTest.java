@@ -31,7 +31,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.CertificateSerialDTO;
-import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
 import org.candlepin.dto.api.client.v1.ContentToPromoteDTO;
@@ -1831,13 +1830,6 @@ public class ContentAccessSpecTest {
         assertThat(status)
             .isNotNull()
             .returns("disabled", SystemPurposeComplianceStatusDTO::getStatus);
-
-        // compliance status
-        ComplianceStatusDTO complianceStatus = consumerClient.consumers()
-            .getComplianceStatus(consumer.getUuid(), null);
-        assertThat(complianceStatus)
-            .isNotNull()
-            .returns("disabled", ComplianceStatusDTO::getStatus);
     }
 
     @Test
