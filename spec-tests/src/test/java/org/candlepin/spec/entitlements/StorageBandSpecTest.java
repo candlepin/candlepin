@@ -15,10 +15,8 @@
 package org.candlepin.spec.entitlements;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.candlepin.dto.api.client.v1.AttributeDTO;
-import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.client.v1.EntitlementDTO;
@@ -71,53 +69,6 @@ public class StorageBandSpecTest {
             .returns(512L, PoolDTO::getQuantity);
     }
 
-    // band.storage.usage fact is in TB
-    @Test
-    public void shouldSystemStatusBeValidWhenAllStorageBandUsageIsCovered() {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO cephProduct = createCephProductAndPool(owner);
-
-        ConsumerDTO system = userClient.consumers().createConsumer(
-            Consumers.random(owner)
-            .type(ConsumerTypes.System.value())
-            .facts(Map.of("band.storage.usage", "256"))
-            .installedProducts(Set.of(new ConsumerInstalledProductDTO()
-            .productId(cephProduct.getId()).productName(cephProduct.getName()))));
-        ApiClient systemClient = ApiClients.ssl(system);
-
-        assertNotNull(systemClient.consumers().bindPool(system.getUuid(),
-            userClient.pools().listPoolsByOwnerAndProduct(owner.getId(),
-            cephProduct.getId()).get(0).getId(), 256));
-        assertThat(systemClient.consumers().getComplianceStatus(system.getUuid(), null))
-            .isNotNull()
-            .returns("valid", ComplianceStatusDTO::getStatus)
-            .returns(true, ComplianceStatusDTO::getCompliant);
-    }
-
-    @Test
-    public void shouldSystemStatusShouldBePartialWhenOnlyPartOfTheStorageBandUsageIsCovered() {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO cephProduct = createCephProductAndPool(owner);
-
-        ConsumerDTO system = userClient.consumers().createConsumer(
-            Consumers.random(owner)
-            .type(ConsumerTypes.System.value())
-            .facts(Map.of("band.storage.usage", "256"))
-            .installedProducts(Set.of(new ConsumerInstalledProductDTO()
-            .productId(cephProduct.getId()).productName(cephProduct.getName()))));
-        ApiClient systemClient = ApiClients.ssl(system);
-
-        assertNotNull(systemClient.consumers().bindPool(system.getUuid(),
-            userClient.pools().listPoolsByOwnerAndProduct(owner.getId(),
-            cephProduct.getId()).get(0).getId(), 128));
-        assertThat(systemClient.consumers().getComplianceStatus(system.getUuid(), null))
-            .isNotNull()
-            .returns("partial", ComplianceStatusDTO::getStatus)
-            .returns(false, ComplianceStatusDTO::getCompliant);
-    }
-
     @Test
     public void shouldStorageBandEntitlementsFromSameSubscriptionCanBeStackedToCoverEntireSystem() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
@@ -137,102 +88,15 @@ public class StorageBandSpecTest {
 
         // Partial stack
         systemClient.consumers().bindPool(system.getUuid(), cephPool.getId(), 128);
-        assertThat(systemClient.consumers().getComplianceStatus(system.getUuid(), null))
-            .isNotNull()
-            .returns("partial", ComplianceStatusDTO::getStatus)
-            .returns(false, ComplianceStatusDTO::getCompliant);
 
         // Complete the stack
         systemClient.consumers().bindPool(system.getUuid(), cephPool.getId(), 128);
-        assertThat(systemClient.consumers().getComplianceStatus(system.getUuid(), null))
-            .isNotNull()
-            .returns("valid", ComplianceStatusDTO::getStatus)
-            .returns(true, ComplianceStatusDTO::getCompliant);
 
         List<EntitlementDTO> entitilements = userClient.consumers().listEntitlements(system.getUuid());
         assertThat(entitilements)
             .hasSize(2)
             .filteredOn(x -> x.getQuantity() == 128)
             .hasSize(2);
-    }
-
-    @Test
-    public void shouldStorageBandEntitlementsAutoAttachCorrectQuantity() {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO cephProduct = createCephProductAndPool(owner);
-
-        ConsumerDTO system = userClient.consumers().createConsumer(
-            Consumers.random(owner)
-            .type(ConsumerTypes.System.value())
-            .facts(Map.of("band.storage.usage", "256"))
-            .installedProducts(Set.of(new ConsumerInstalledProductDTO()
-            .productId(cephProduct.getId()).productName(cephProduct.getName()))));
-        ApiClient systemClient = ApiClients.ssl(system);
-
-        assertThat(systemClient.consumers().bindProduct(system.getUuid(), cephProduct.getId()))
-            .singleElement()
-            .returns(256, x -> x.get("quantity").asInt());
-
-        assertThat(systemClient.consumers().getComplianceStatus(system.getUuid(), null))
-            .isNotNull()
-            .returns("valid", ComplianceStatusDTO::getStatus)
-            .returns(true, ComplianceStatusDTO::getCompliant);
-    }
-
-    @Test
-    public void shouldStorageBandEntitlementsWillAutoHealCorrectly() {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO cephProduct = createCephProductAndPool(owner);
-
-        ConsumerDTO system = userClient.consumers().createConsumer(
-            Consumers.random(owner)
-            .type(ConsumerTypes.System.value())
-            .facts(Map.of("band.storage.usage", "256"))
-            .installedProducts(Set.of(new ConsumerInstalledProductDTO()
-            .productId(cephProduct.getId()).productName(cephProduct.getName()))));
-        ApiClient systemClient = ApiClients.ssl(system);
-
-        PoolDTO cephPool = userClient.pools().listPoolsByOwnerAndProduct(owner.getId(),
-            cephProduct.getId()).get(0);
-
-        assertThat(systemClient.consumers().bindPool(system.getUuid(), cephPool.getId(), 56))
-            .singleElement()
-            .returns(56, x -> x.get("quantity").asInt());
-
-        assertThat(systemClient.consumers().bindProduct(system.getUuid(), cephProduct.getId()))
-            .singleElement()
-            .returns(200, x -> x.get("quantity").asInt());
-
-        assertThat(systemClient.consumers().getComplianceStatus(system.getUuid(), null))
-            .isNotNull()
-            .returns("valid", ComplianceStatusDTO::getStatus)
-            .returns(true, ComplianceStatusDTO::getCompliant);
-    }
-
-    @Test
-    public void shouldStorageBandEntitlementAutoAttachWithoutFactSetConsumesOneEntitlement() {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO cephProduct = createCephProductAndPool(owner);
-
-        ConsumerDTO system = userClient.consumers().createConsumer(
-            Consumers.random(owner)
-            .type(ConsumerTypes.System.value())
-            .facts(Map.of())
-            .installedProducts(Set.of(new ConsumerInstalledProductDTO()
-            .productId(cephProduct.getId()).productName(cephProduct.getName()))));
-        ApiClient systemClient = ApiClients.ssl(system);
-
-        assertThat(systemClient.consumers().autoBind(system.getUuid()))
-            .singleElement()
-            .returns(1, x -> x.get("quantity").asInt());
-
-        assertThat(systemClient.consumers().getComplianceStatus(system.getUuid(), null))
-            .isNotNull()
-            .returns("valid", ComplianceStatusDTO::getStatus)
-            .returns(true, ComplianceStatusDTO::getCompliant);
     }
 
     private ProductDTO createCephProductAndPool(OwnerDTO owner) {

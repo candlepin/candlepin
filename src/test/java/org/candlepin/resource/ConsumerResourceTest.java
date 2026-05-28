@@ -2661,4 +2661,24 @@ public class ConsumerResourceTest {
         assertNull(result.getUpstreamConsumer());
         assertEquals(owner.getKey(), result.getKey());
     }
+
+    @Test
+    public void testGetComplianceStatusReturnsStaticResponse() {
+        String consumerUuid = TestUtil.randomString();
+
+        ComplianceStatusDTO actual = this.consumerResource.getComplianceStatus(consumerUuid, null);
+
+        assertThat(actual)
+            .isNotNull()
+            .returns(ComplianceStatus.GRAY, ComplianceStatusDTO::getStatus)
+            .returns(null, ComplianceStatusDTO::getDate)
+            .returns(true, ComplianceStatusDTO::getCompliant)
+            .returns(null, ComplianceStatusDTO::getCompliantUntil)
+            .satisfies(status -> assertTrue(status.getPartiallyCompliantProducts().isEmpty()))
+            .satisfies(status -> assertTrue(status.getProductComplianceDateRanges().isEmpty()))
+            .satisfies(status -> assertTrue(status.getReasons().isEmpty()))
+            .satisfies(status -> assertTrue(status.getCompliantProducts().isEmpty()))
+            .satisfies(status -> assertTrue(status.getNonCompliantProducts().isEmpty()))
+            .satisfies(status -> assertTrue(status.getPartialStacks().isEmpty()));
+    }
 }

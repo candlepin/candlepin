@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import org.candlepin.dto.api.client.v1.AttributeDTO;
-import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.client.v1.EntitlementDTO;
@@ -363,60 +362,6 @@ public class UnmappedGuestSpecTest {
         assertThat(ents).hasSize(1);
 
         assertEquals("UNMAPPED_GUEST", ents.get(0).getPool().getType());
-    }
-
-    @Test
-    public void shouldComplianceStatusForEntitledUnmappedGuestBePartial() throws Exception {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO virtLimitProduct = createVirtLimitPool(owner);
-
-        String uuid = StringUtil.random("system");
-        ConsumerDTO guest = createGuest(owner, userClient, uuid, virtLimitProduct);
-        ApiClient guestClient = ApiClients.ssl(guest);
-
-        List<PoolDTO> allPools = userClient.owners().listOwnerPoolsByProduct(
-            owner.getKey(), virtLimitProduct.getId());
-        PoolDTO unmapped = allPools.stream()
-            .filter(x -> x.getType().equals("UNMAPPED_GUEST"))
-            .collect(Collectors.toList()).get(0);
-        guestClient.consumers().bindPool(guest.getUuid(), unmapped.getId(), 1);
-
-        ComplianceStatusDTO complianceStatus = guestClient.consumers().getComplianceStatus(guest.getUuid(),
-            null);
-        assertThat(complianceStatus)
-            .returns("partial", ComplianceStatusDTO::getStatus)
-            .returns(false, ComplianceStatusDTO::getCompliant);
-        assertThat(complianceStatus.getReasons()).hasSize(1);
-    }
-
-    @Test
-    public void shouldComplianceStatusForEntitledUnmappedGuestBePartialWithoutInstalledProduct()
-        throws Exception {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO virtLimitProduct = createVirtLimitPool(owner);
-
-        String uuid = StringUtil.random("system");
-        ConsumerDTO guest = createGuest(owner, userClient, uuid, null);
-        ApiClient guestClient = ApiClients.ssl(guest);
-
-        List<PoolDTO> allPools = userClient.owners().listOwnerPoolsByProduct(
-            owner.getKey(), virtLimitProduct.getId());
-        PoolDTO unmapped = allPools.stream()
-            .filter(x -> x.getType().equals("UNMAPPED_GUEST"))
-            .collect(Collectors.toList()).get(0);
-        guestClient.consumers().bindPool(guest.getUuid(), unmapped.getId(), 1);
-        List<EntitlementDTO> ents = guestClient.consumers().listEntitlements(
-            guest.getUuid(), null, true, List.of(), null, null, null, null);
-        assertThat(ents).hasSize(1);
-
-        ComplianceStatusDTO complianceStatus = guestClient.consumers().getComplianceStatus(
-            guest.getUuid(), null);
-        assertThat(complianceStatus)
-            .returns("partial", ComplianceStatusDTO::getStatus)
-            .returns(false, ComplianceStatusDTO::getCompliant);
-        assertThat(complianceStatus.getReasons()).hasSize(1);
     }
 
     private ProductDTO createVirtLimitPool(OwnerDTO owner) throws InterruptedException {

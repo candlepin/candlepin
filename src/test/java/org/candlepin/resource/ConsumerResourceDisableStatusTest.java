@@ -78,33 +78,6 @@ public class ConsumerResourceDisableStatusTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void complianceStatusWhenGoldenTicketDisabled() {
-        owner.setContentAccessMode("entitlement");
-        ownerCurator.merge(owner);
-        ComplianceStatusDTO status = consumerResource.getComplianceStatus(consumer.getUuid(), null);
-        assertEquals("invalid", status.getStatus());
-        assertEquals(1, status.getNonCompliantProducts().size());
-        assertEquals("red", consumerResource.getConsumer(consumer.getUuid())
-            .getInstalledProducts().iterator().next().getStatus());
-    }
-
-    @Test
-    public void complianceStatusWhenGoldenTicketReenabled() {
-        owner.setContentAccessMode("entitlement");
-        ownerCurator.merge(owner);
-        ComplianceStatusDTO status = consumerResource.getComplianceStatus(consumer.getUuid(), null);
-        assertEquals("invalid", status.getStatus());
-
-        owner.setContentAccessMode("org_environment");
-        ownerCurator.merge(owner);
-        status = consumerResource.getComplianceStatus(consumer.getUuid(), null);
-        assertEquals("disabled", status.getStatus());
-        assertEquals(0, status.getNonCompliantProducts().size());
-        assertEquals("gray", consumerResource.getConsumer(consumer.getUuid())
-            .getInstalledProducts().iterator().next().getStatus());
-    }
-
-    @Test
     public void systemPurposeStatusWhenGoldenTicketEnabled() {
         SystemPurposeComplianceStatusDTO status = consumerResource
             .getSystemPurposeComplianceStatus(consumer.getUuid(), null);

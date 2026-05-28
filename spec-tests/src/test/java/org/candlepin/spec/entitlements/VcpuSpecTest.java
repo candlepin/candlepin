@@ -15,10 +15,8 @@
 package org.candlepin.spec.entitlements;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.candlepin.dto.api.client.v1.AttributeDTO;
-import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
@@ -54,32 +52,6 @@ public class VcpuSpecTest {
         client = ApiClients.admin();
         ownerApi = client.owners();
         ownerProductApi = client.ownerProducts();
-    }
-
-    @Test
-    public void shouldConsumerStatusBeValidWhenConsumerVCPUsAreCovered() throws Exception {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
-        ProductDTO vcpuProduct = createVcpuProuductAndPool(owner);
-
-        ConsumerDTO system = userClient.consumers().createConsumer(
-            Consumers.random(owner)
-            .type(ConsumerTypes.System.value())
-            .facts(Map.of("system.certificate_version", "3.2",
-            // Simulate 8 cores as would be returned from system fact
-            "cpu.core(s)_per_socket", "8",
-            "virt.is_guest", "true"))
-            .installedProducts(Set.of(new ConsumerInstalledProductDTO()
-            .productId(vcpuProduct.getId()).productName(vcpuProduct.getName()))));
-        ApiClient systemClient = ApiClients.ssl(system);
-        assertNotNull(systemClient.consumers().bindProduct(system.getUuid(), vcpuProduct.getId()));
-
-        ComplianceStatusDTO status = systemClient.consumers().getComplianceStatus(system.getUuid(), null);
-        assertThat(status)
-            .isNotNull()
-            .returns("valid", ComplianceStatusDTO::getStatus)
-            .returns(true, ComplianceStatusDTO::getCompliant)
-            .doesNotReturn(null, x -> x.getCompliantProducts().get(vcpuProduct.getId()));
     }
 
     @Test

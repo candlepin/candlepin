@@ -3320,17 +3320,25 @@ public class ConsumerResource implements ConsumerApi {
         return release;
     }
 
-    @Override
-    @Transactional
-    public ComplianceStatusDTO getComplianceStatus(@Verify(Consumer.class) String uuid,
-        OffsetDateTime onDate) {
-        ComplianceStatus status = null;
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-        Date date = Util.toDate(onDate);
-        status = this.complianceRules.getStatus(consumer, date);
+    private static final ComplianceStatusDTO GET_COMPLIANCE_STATUS_RESPONSE = new ComplianceStatusDTO()
+        .compliant(true)
+        .status(ComplianceStatus.GRAY)
+        .partiallyCompliantProducts(Map.of())
+        .productComplianceDateRanges(Map.of())
+        .reasons(Set.of())
+        .compliantProducts(Map.of())
+        .nonCompliantProducts(Set.of())
+        .partialStacks(Map.of());
 
-        return this.translator.translate(status, ComplianceStatusDTO.class);
+    @Override
+    @SecurityHole
+    @Transactional
+    public ComplianceStatusDTO getComplianceStatus(String uuid, OffsetDateTime onDate) {
+
+        // We are returning a static response here and short circuiting legacy entitlement mode logic to
+        // improve performance
+
+        return GET_COMPLIANCE_STATUS_RESPONSE;
     }
 
     @Override
