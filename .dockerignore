@@ -1,0 +1,6 @@
+*
+!apache-tomcat-*.tar.gz
+!build/libs/candlepin.war
+!build/candlepin.conf
+!bin/deployment/gen_certs.sh
+!.github/containers/server.xml

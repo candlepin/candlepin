@@ -85,6 +85,6 @@ WORKDIR /opt/tomcat/bin
 USER root
 
 # Expose ports for tomcat, candlepin, postgres and mariadb
-EXPOSE 8080 8443 5432 3306
+EXPOSE 8000 8443 5432 3306
 
 ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "run"]
