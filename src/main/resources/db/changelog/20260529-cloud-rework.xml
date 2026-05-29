@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="20260529-1" author="jalbrech">
+        <createTable tableName="cp_consumer_cloud_offerings">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="consumer_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="offering_id" type="varchar(15)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cloud_provider_short_name" type="varchar(15)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="cp_consumer_cloud_offerings"
+                                 baseColumnNames="consumer_id"
+                                 referencedTableName="cp_consumer"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE" constraintName="fk_cp_consumer_cloud_offerings_consumer_id"/>
+    </changeSet>
+
+    <changeSet id="20260529-2" author="jalbrech">
+        <createIndex indexName="idx_cloud_account_offering" tableName="cp_consumer_cloud_offerings">
+            <column name="consumer_id"/>
+            <column name="offering_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Add cloud account information to cp_consumer -->
+
+    <changeSet id="20260529-3" author="jalbrech">
+        <addColumn tableName="cp_consumer">
+            <column name="cloud_account_id" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="cp_consumer">
+            <column name="cloud_provider_short_name" type="varchar(15)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- TODO: Migrate the data from cp_consumer_cloud_data to the new table and cp_consumer_table -->
+
+    <!-- TODO: Drop cp_consumer_cloud_data -->
+
+</databaseChangeLog>

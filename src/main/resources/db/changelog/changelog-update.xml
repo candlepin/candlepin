@@ -212,4 +212,5 @@
     <include file="db/changelog/202601081203540-add-key-pair-algorithm.xml" />
     <include file="db/changelog/20260313183000-add_consumer_crypto_capabilities.xml" />
     <include file="db/changelog/20260320144500-add_anon_cloud_consumer_crypto_capabilities.xml" />
+    <include file="db/changelog/20260529-cloud-rework.xml" />
 </databaseChangeLog>
