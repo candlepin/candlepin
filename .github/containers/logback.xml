@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <contextName>candlepin</contextName>
+
+    <turboFilter class="org.candlepin.logging.LoggerAndMDCFilter">
+        <key>logLevel</key>
+        <topLogger>org.candlepin</topLogger>
+        <OnMatch>ACCEPT</OnMatch>
+    </turboFilter>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{ISO8601} [thread=%thread] [%X{requestType}=%X{requestUuid}, %replace(job_key=%X{jobKey}, ){'job_key=, ', ''}org=%X{org}, csid=%X{csid}] %-5p %c - %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="STDOUT"/>
+    </appender>
+
+    <appender name="AUDITLOG" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{ISO8601} %m</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNC-AUDITLOG" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="AUDITLOG"/>
+    </appender>
+
+    <logger name="org.candlepin" level="INFO"/>
+    <logger name="org.candlepin.audit.LoggingListener.AuditLog" level="INFO" additivity="false">
+        <appender-ref ref="ASYNC-AUDITLOG"/>
+    </logger>
+
+    <!-- Silence the hibernate deprecation warnings -->
+    <logger name="org.hibernate.orm.deprecation" level="DEBUG" additivity="false"/>
+
+    <root level="WARN">
+        <appender-ref ref="ASYNC"/>
+    </root>
+</configuration>

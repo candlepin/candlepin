@@ -17,9 +17,11 @@ RUN tar xzf /tmp/apache-tomcat-${TOMCAT_VERSION}.tar.gz -C /tmp && \
     mv /tmp/apache-tomcat-${TOMCAT_VERSION}/* /opt/tomcat/
 
 # Prepare Candlepin
-RUN mkdir -p /app/build
+RUN mkdir -p /app/build/candlepin
 WORKDIR /app/build
 COPY ${WAR_FILE} ./candlepin.war
+WORKDIR /app/build/candlepin
+RUN jar xvf /app/build/candlepin.war
 
 # Prepare development certs
 RUN mkdir -p /app/certs
@@ -79,6 +81,7 @@ RUN ln -s /etc/candlepin/certs/*.crt /etc/pki/ca-trust/source/anchors --force; \
     update-ca-trust;
 
 COPY ./.github/containers/server.xml /opt/tomcat/conf
+COPY ./.github/containers/logback.xml /opt/tomcat/webapps/candlepin/WEB-INF/classes/logback.xml
 
 WORKDIR /opt/tomcat/bin
 

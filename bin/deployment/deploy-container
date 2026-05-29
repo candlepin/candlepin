@@ -110,11 +110,11 @@ export WAR_FILE="${WAR_FILE:-build/libs/candlepin.war}"
 # Tear down existing containers if -g was passed
 if [ "$TEARDOWN" -eq 1 ]; then
     echo "Tearing down existing containers..."
-    podman compose -f "$COMPOSE_FILE" down --volumes
+    podman-compose -f "$COMPOSE_FILE" down --volumes
 fi
 
 # Start the containers
 echo "Starting containers..."
-podman compose -f "$COMPOSE_FILE" up --build -d --wait
+podman-compose -f "$COMPOSE_FILE" up --build -d
 
 echo "Candlepin is running at https://localhost:8443/candlepin"
