@@ -30,7 +30,7 @@
     </changeSet>
 
     <changeSet id="20260529-2" author="jalbrech">
-        <createIndex indexName="idx_cloud_account_offering" tableName="cp_consumer_cloud_offerings">
+        <createIndex indexName="idx_consumer_cloud_offerings" tableName="cp_consumer_cloud_offerings">
             <column name="consumer_id"/>
             <column name="offering_id"/>
         </createIndex>

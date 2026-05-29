@@ -353,9 +353,8 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @Column(name = "reg_auth_method")
     private AuthenticationMethod registrationAuthenticationMethod;
 
-    @OneToOne(mappedBy = "consumer",
-        orphanRemoval = true, cascade = { CascadeType.ALL })
-    private ConsumerCloudData consumerCloudData;
+    @OneToMany(mappedBy = "consumer", orphanRemoval = true, cascade = { CascadeType.ALL })
+    private List<ConsumerCloudOffering> cloudOfferings;
 
     // At some point we can look at encapsulating these crypto capabilities in an object and deduplicating on
     // them or something, but for now, we'll store them as individual fields.
@@ -369,6 +368,14 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @Column(name = "signature_algorithm_oids")
     @Size(max = ALGORITHM_OIDS_MAX_LENGTH)
     private String supportedSignatureAlgorithmOids;
+
+    @Column(name = "cloud_account_id")
+    @Size(max = 255)
+    private String cloudAccountId;
+
+    @Column(name = "cloud_provider_short_name")
+    @Size(max = 15)
+    private String cloudProviderShortName;
 
     public Consumer() {
         this.addOns = new HashSet<>();
@@ -1447,17 +1454,13 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
         return this.registrationAuthenticationMethod.getDescription();
     }
 
-    public Consumer setConsumerCloudData(ConsumerCloudData consumerCloudData) {
-        this.consumerCloudData = consumerCloudData;
-        if (this.consumerCloudData != null) {
-            this.consumerCloudData.setConsumer(this);
-        }
-
+    public Consumer setCloudOfferings(List<ConsumerCloudOffering> offerings) {
+        this.cloudOfferings = offerings;
         return this;
     }
 
-    public ConsumerCloudData getConsumerCloudData() {
-        return this.consumerCloudData;
+    public List<ConsumerCloudOffering> getCloudOfferings() {
+        return this.cloudOfferings;
     }
 
     public boolean checkForCloudIdentifierFacts(Map<String, String> incomingFacts) {
@@ -1502,6 +1505,24 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
             this.environmentIds.put(this.environmentIds.size(), environment.getId());
         }
 
+        return this;
+    }
+
+    public String getCloudAccountId() {
+        return this.cloudAccountId;
+    }
+
+    public Consumer setCloudAccountId(String accountId) {
+        this.cloudAccountId = accountId;
+        return this;
+    }
+
+    public String getCloudProviderShortName() {
+        return this.cloudProviderShortName;
+    }
+
+    public Consumer setCloudProviderShortName(String cloudProviderShortName) {
+        this.cloudProviderShortName = cloudProviderShortName;
         return this;
     }
 

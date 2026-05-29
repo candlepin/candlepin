@@ -21,11 +21,14 @@ import static org.candlepin.model.CloudIdentifierFacts.AWS_INSTANCE_ID;
 import static org.candlepin.model.CloudIdentifierFacts.AWS_MARKETPLACE_PRODUCT_CODES;
 import static org.candlepin.model.CloudIdentifierFacts.AWS_SHORT_NAME;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import org.candlepin.util.Util;
 
 public class AWSProviderFactParser implements CloudProviderFactParser {
 
@@ -55,7 +58,18 @@ public class AWSProviderFactParser implements CloudProviderFactParser {
             .map(facts::get)
             .filter(Objects::nonNull)
             .toList();
-        return offeringIds.isEmpty() ? Optional.empty() : Optional.of(offeringIds);
+
+        if (offeringIds.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // TODO: This may not be comma-separated in the actual facts
+        List<String> allOfferingIds = new ArrayList<>();
+        for (String value : offeringIds) {
+            allOfferingIds.addAll(Util.toList(value));
+        }
+
+        return Optional.of(allOfferingIds);
     }
 
     /**

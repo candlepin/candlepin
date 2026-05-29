@@ -1448,6 +1448,15 @@ public class ConsumerResourceSpecTest {
             .returns(false, NestedOwnerDTO::getAnonymous);
     }
 
+    @Test
+    public void testCloudConsumers() {
+        ApiClient adminClient = ApiClients.admin();
+
+        for (int i = 0; i < 10; i++) {
+            adminClient.consumers().createConsumer(Consumers.randomAWS(owner));
+        }
+    }
+
     private UserDTO createUserTypeAllAccess(ApiClient client, OwnerDTO owner) {
         return UserUtil.createWith(client,
             Permissions.USERNAME_CONSUMERS.all(owner),

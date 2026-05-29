@@ -62,6 +62,11 @@ public final class Consumers {
         cloudFacts.put("aws_instance_id", StringUtil.random("instance-"));
         cloudFacts.put("aws_account_id", StringUtil.random("cloud-account-"));
 
+        String offering1 = StringUtil.random("offering-");
+        String offering2 = StringUtil.random("offering-");
+
+        cloudFacts.put("aws_marketplace_product_codes", offering1 + "," + offering2);
+
         consumer.facts(cloudFacts);
 
         return consumer;

@@ -18,10 +18,10 @@ package org.candlepin.resource.util;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCloudData;
-
+import org.candlepin.model.ConsumerCloudOffering;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -49,41 +49,16 @@ public class ConsumerCloudDataBuilder {
         this.i18n = i18n;
     }
 
-    /**
-     * Builds a {@link ConsumerCloudData} object based on the facts from the given consumer.
-     *
-     * @param consumer the consumer whose facts will be used for building the cloud data.
-     * @return an {@link Optional} containing the {@link ConsumerCloudData} if a supported
-     *         cloud provider is found or an empty {@link Optional} if no supported provider is found.
-     */
-    public Optional<ConsumerCloudData> build(Consumer consumer) {
+    public Optional<CloudData> build(Consumer consumer) {
         return buildConsumerCloudData(consumer.getFacts());
     }
 
-    /**
-     * Builds a {@link ConsumerCloudData} object based on the facts from the given consumer DTO.
-     *
-     * @param consumer the consumer DTO whose facts will be used for building the cloud data.
-     * @return an {@link Optional} containing the {@link ConsumerCloudData} if a supported cloud
-     *         provider is found, or an empty {@link Optional} if no supported provider is found.
-     */
-    public Optional<ConsumerCloudData> build(ConsumerDTO consumer) {
+
+    public Optional<CloudData> build(ConsumerDTO consumer) {
         return buildConsumerCloudData(consumer.getFacts());
     }
 
-    /**
-     * Processes the provided facts and builds a {@link ConsumerCloudData} object if exactly one
-     * {@link CloudProviderFactParser} supports the facts.
-     * <p>
-     * If more than one parser supports the facts, a {@link BadRequestException} is thrown.
-     * If no parser supports the facts, an empty {@link Optional} is returned.
-     * </p>
-     *
-     * @param facts the map of cloud provider facts.
-     * @return an {@link Optional} containing the {@link ConsumerCloudData} or an empty {@link Optional}.
-     * @throws BadRequestException if more than one parser supports the provided facts.
-     */
-    private Optional<ConsumerCloudData> buildConsumerCloudData(Map<String, String> facts) {
+    private Optional<CloudData> buildConsumerCloudData(Map<String, String> facts) {
         List<CloudProviderFactParser> supportedParsers = parsers.stream()
             .filter(parser -> parser.isSupported(facts))
             .toList();
@@ -97,23 +72,26 @@ public class ConsumerCloudDataBuilder {
             return Optional.empty();
         }
 
-        return Optional.of(createConsumerCloudData(supportedParsers.get(0), facts));
+        return this.createConsumerCloudData(supportedParsers.get(0), facts);
     }
 
-    /**
-     * Creates a {@link ConsumerCloudData} object using the provided {@link CloudProviderFactParser}
-     * and facts.
-     *
-     * @param parser the cloud provider fact parser that supports the provided facts.
-     * @param facts  the map of cloud provider facts.
-     * @return a fully constructed {@link ConsumerCloudData} object.
-     */
-    private ConsumerCloudData createConsumerCloudData(
+    private Optional<CloudData> createConsumerCloudData(
         CloudProviderFactParser parser, Map<String, String> facts) {
-        return new ConsumerCloudData()
-            .setCloudAccountId(parser.getAccountId(facts).orElse(null))
-            .setCloudInstanceId(parser.getInstanceId(facts).orElse(null))
-            .setCloudOfferingIds(parser.getOfferingIds(facts).orElse(List.of()))
-            .setCloudProviderShortName(parser.getShortName());
+
+        List<String> rawOfferings = parser.getOfferingIds(facts).orElse(List.of());
+        if (rawOfferings.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new CloudData(
+            parser.getAccountId(facts).orElse(null),
+            parser.getInstanceId(facts).orElse(null),
+            rawOfferings,
+            parser.getShortName()));
     }
+
+    public record CloudData (String accountId, String instanceId, List<String> offerings, String providerShortName) {
+
+    }
+
 }

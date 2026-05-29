@@ -89,7 +89,8 @@ import org.candlepin.model.Certificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerActivationKey;
 import org.candlepin.model.ConsumerCapability;
-import org.candlepin.model.ConsumerCloudData;
+import org.candlepin.model.ConsumerCloudOffering;
+import org.candlepin.model.ConsumerCloudOfferingCurator;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
@@ -143,6 +144,7 @@ import org.candlepin.resource.server.v1.ConsumerApi;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerCloudDataBuilder;
+import org.candlepin.resource.util.ConsumerCloudDataBuilder.CloudData;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.EntitlementEnvironmentFilter;
@@ -1051,7 +1053,25 @@ public class ConsumerResource implements ConsumerApi {
 
         Consumer created = createConsumerFromDTO(dto, ctype, principal, userName, owner, activationKeys,
             identityCertCreation);
-        created.setConsumerCloudData(consumerCloudDataBuilder.build(created).orElse(null));
+
+        Optional<CloudData> cloudData = consumerCloudDataBuilder.build(created);
+        if (cloudData.isPresent()) {
+            CloudData data = cloudData.get();
+
+            List<ConsumerCloudOffering> cloudOfferings = new ArrayList<>();
+            for (String offeringId : data.offerings()) {
+                ConsumerCloudOffering cloudOffering = new ConsumerCloudOffering();
+                cloudOffering.setConsumer(created);
+                cloudOffering.setOfferingId(offeringId);
+                cloudOffering.setCloudProviderShortName(data.providerShortName());
+
+                cloudOfferings.add(cloudOffering);
+            }
+
+            created.setCloudOfferings(cloudOfferings);
+            created.setCloudAccountId(data.accountId());
+            created.setCloudProviderShortName(data.providerShortName());
+        }
 
         if (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal) {
             AnonymousCloudConsumer anonCloudConsumer = anonymPrincipal.getAnonymousCloudConsumer();
@@ -1673,14 +1693,14 @@ public class ConsumerResource implements ConsumerApi {
         if (performConsumerUpdates(dto, toUpdate, guestMigration)) {
             if (toUpdate.checkForCloudIdentifierFacts(dto.getFacts())) {
                 log.warn("Detected change in cloud identifier fact for consumer: {}", toUpdate.getUuid());
-                Optional<ConsumerCloudData> changed = consumerCloudDataBuilder.build(dto);
-                ConsumerCloudData cloudData = toUpdate.getConsumerCloudData();
-                if (cloudData != null) {
-                    changed.ifPresent(cloudData::updateFrom);
-                }
-                else {
-                    changed.ifPresent(toUpdate::setConsumerCloudData);
-                }
+                // Optional<ConsumerCloudData> changed = consumerCloudDataBuilder.build(dto);
+                // ConsumerCloudData cloudData = toUpdate.getConsumerCloudData();
+                // if (cloudData != null) {
+                //     changed.ifPresent(cloudData::updateFrom);
+                // }
+                // else {
+                //     changed.ifPresent(toUpdate::setConsumerCloudData);
+                // }
             }
 
             try {
