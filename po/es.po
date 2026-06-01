@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-03 07:34+0000\n"
-"PO-Revision-Date: 2026-05-02 14:10+0000\n"
+"PO-Revision-Date: 2026-05-05 06:59+0000\n"
 "Last-Translator: \"Fco. Javier F. Serrador\" <fserrador@gmail.com>\n"
 "Language-Team: Spanish <https://translate.fedoraproject.org/projects/"
 "candlepin/master/es/>\n"
@@ -961,16 +961,12 @@ msgstr ""
 "Solicitud es tipo de proveedor de nube ausente (p.ej., amazon, gcp, azure)"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:142
-#, fuzzy
-#| msgid ""
-#| "Unable to persist consumer: cryptographic capabilities exceed data "
-#| "storage capabilities"
 msgid ""
 "Unable to process authorization request: cryptographic capabilities exceed "
 "data storage capabilities"
 msgstr ""
-"No es posible persistir consumidor: las capacidades de cifrado superan las "
-"capacidades de almacén de datos"
+"No es posible procesar autorización requerida: capacidades de cifrado "
+"superan capacidades de almacenaje de datos"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:159
 msgid ""

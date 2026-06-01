@@ -2,13 +2,14 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # Pavel Borecki <pavel.borecki@gmail.com>, 2025, 2026.
+# John Sefler <jsefler@redhat.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-03 07:34+0000\n"
-"PO-Revision-Date: 2026-01-30 09:58+0000\n"
-"Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
+"PO-Revision-Date: 2026-05-30 00:02+0000\n"
+"Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Czech <https://translate.fedoraproject.org/projects/candlepin/"
 "master/cs/>\n"
 "Language: cs\n"
@@ -16,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: Weblate 5.15.2\n"
+"X-Generator: Weblate 2026.5\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -396,11 +397,10 @@ msgid "Unexpected error from Cloud Registration Service: {0}"
 msgstr "Neočekávaná chyba ze služby cloudové registrace: {0}"
 
 #: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:104
-#, fuzzy
-#| msgid "Unable to create entitlement certificate archive"
 msgid ""
 "Unable to generate a usable certificate from Entitlement Certificate Service"
-msgstr "Nebylo možné vytvořit archiv s certifikátem nároku"
+msgstr ""
+"Nebylo možné vytvořit použitelný certifikát ze služby certifikátů nároků"
 
 #: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:108
 #, java-format
@@ -525,7 +525,7 @@ msgid ""
 msgstr ""
 "Příliš mnoho sad obsahu pro certifikát {0}. Tento problém možná řeší "
 "dostupnost novějšího klienta. Více informací viz znalostní báze https://"
-"access.redhat.com/knowledge/node/12900"
+"access.redhat.com/knowledge/node/129003"
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:93
 #, java-format
@@ -871,6 +871,8 @@ msgid ""
 "Unable to process authorization request: cryptographic capabilities exceed "
 "data storage capabilities"
 msgstr ""
+"Nebylo možné zpracovat neautorizovaný požadavek: kryptografické schopnosti "
+"překračují možnosti ukládání dat"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:159
 msgid ""
@@ -994,6 +996,8 @@ msgid ""
 "Unable to persist consumer: cryptographic capabilities exceed data storage "
 "capabilities"
 msgstr ""
+"Nebylo možné trvale uložit konzumenta: kryptografické schopnosti překračují "
+"možnosti ukládání dat"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1193
 #, java-format
@@ -1024,7 +1028,7 @@ msgstr "Název systému nemůže začínat na znak #"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1423
 #, java-format
 msgid "Name of the consumer should be shorter than {0} characters."
-msgstr ""
+msgstr "Název spotřebitele by měl být kratší než {0} znaků."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1430
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1434
@@ -1135,10 +1139,11 @@ msgstr ""
 "Nebylo možné získat certifikát pro přístup k obsahu pro spotřebitele: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2408
-#, fuzzy, java-format
-#| msgid "Unable to create content access payload"
+#, java-format
 msgid "Unable to generate usable content access payload for consumer: {0}"
-msgstr "Nebylo možné vytvořit náklad přístupu k obsahu"
+msgstr ""
+"Nebylo možné vytvořit použitelný náklad přístupu k obsahu pro spotřebitele: "
+"{0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2420
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2603
@@ -1155,10 +1160,9 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2504
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2644
-#, fuzzy, java-format
-#| msgid "Unable to find upstream certificate for entitlement: {0}"
+#, java-format
 msgid "Unable to generate usable certificates for consumer: {0}"
-msgstr "Nebylo možné najít nadřazený certifikát pro nárok: {0}"
+msgstr "Nebylo možné vytvořit použitelný certifikát pro spotřebitele: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2536
 msgid "Cannot create export for anonymous cloud consumer"
@@ -1169,10 +1173,9 @@ msgid "Unable to create entitlement certificate archive"
 msgstr "Nebylo možné vytvořit archiv s certifikátem nároku"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2556
-#, fuzzy, java-format
-#| msgid "Problem generating ueber cert for owner {0}"
+#, java-format
 msgid "Unable to generate usable export for consumer: {0}"
-msgstr "Problém při vytváření ueber certifikátu pro vlastníka {0}"
+msgstr "Nebylo možné vytvořit použitelný export pro spotřebitele: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2664
 msgid "Cannot bind by multiple parameters."
@@ -1244,11 +1247,9 @@ msgstr "Nebylo možné vytvořit archiv s exportem"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:3099
 #: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:261
-#, fuzzy, java-format
-#| msgid "Cannot retrieve content access certificate for consumer: {0}"
+#, java-format
 msgid "Unable to determine the signature scheme for consumer: {0}"
-msgstr ""
-"Nebylo možné získat certifikát pro přístup k obsahu pro spotřebitele: {0}"
+msgstr "Nebylo možné zjistit schéma signatury pro spotřebitele: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:3252
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:3257
@@ -1259,10 +1260,9 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:3260
 #: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:208
-#, fuzzy, java-format
-#| msgid "Unable to find upstream certificate for entitlement: {0}"
+#, java-format
 msgid "Unable to generate ID certificate for consumer: {0}"
-msgstr "Nebylo možné najít nadřazený certifikát pro nárok: {0}"
+msgstr "Nebylo možné vytvořit identifikační certifikát pro spotřebitele: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:3297
 #, java-format
@@ -1669,10 +1669,8 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:304
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1782
-#, fuzzy
-#| msgid "Owner key is null or empty."
 msgid "Owner key is null or empty"
-msgstr "Klíč vlastníka je nula nebo prázdný."
+msgstr "Klíč vlastníka je nula nebo prázdný"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:309
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1793
@@ -1831,6 +1829,8 @@ msgid ""
 "Unable to generate an ueber certificate compatible with the provided "
 "cryptographic capabilities"
 msgstr ""
+"Nebylo možné vytvořit ueber certifikát kompatibilní s poskytnutými "
+"kryptografickými schopnostmi"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1813
 #, java-format
@@ -2233,10 +2233,8 @@ msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "Archiv neobsahuje požadovaný soubor consumer_export.zip"
 
 #: src/main/java/org/candlepin/sync/Importer.java:471
-#, fuzzy
-#| msgid "Unable to find upstream certificate for entitlement: {0}"
 msgid "Unable to read certificates to validate manifest"
-msgstr "Nebylo možné najít nadřazený certifikát pro nárok: {0}"
+msgstr "Nebylo možné číst certifikáty pro ověření manifestu"
 
 #: src/main/java/org/candlepin/sync/Importer.java:476
 #: src/main/java/org/candlepin/sync/Importer.java:480
@@ -2256,7 +2254,7 @@ msgstr "Archiv {0} není správně komprimovaný soubor nebo je prázdný"
 
 #: src/main/java/org/candlepin/sync/Importer.java:541
 msgid "Archive signed by an untrusted certificate"
-msgstr ""
+msgstr "Archiv podepsán nedůvěryhodným certifikátem"
 
 #: src/main/java/org/candlepin/sync/Importer.java:572
 msgid "Archive failed signature check"
