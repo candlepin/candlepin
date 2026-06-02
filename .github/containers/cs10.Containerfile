@@ -1,7 +1,5 @@
 FROM quay.io/centos/centos:stream10 as builder
 
-ARG WAR_FILE
-
 USER root
 
 # Update and install dependencies
@@ -15,11 +13,6 @@ COPY apache-tomcat-${TOMCAT_VERSION}.tar.gz /tmp/
 RUN tar xzf /tmp/apache-tomcat-${TOMCAT_VERSION}.tar.gz -C /tmp && \
     mkdir /opt/tomcat && \
     mv /tmp/apache-tomcat-${TOMCAT_VERSION}/* /opt/tomcat/
-
-# Prepare Candlepin
-RUN mkdir -p /app/build
-WORKDIR /app/build
-COPY ${WAR_FILE} ./candlepin.war
 
 # Prepare development certs
 RUN mkdir -p /app/certs
@@ -40,14 +33,12 @@ RUN dnf -y update && \
     dnf install -y java-25-openjdk-headless tomcat-native openssl openssl-devel initscripts && \
     dnf clean all
 
-# Enable post-quantum algorithms (ML-DSA, ML-KEM) for OpenSSL/TLS
-RUN update-crypto-policies --set DEFAULT:TEST-PQ
-
 ENV JAVA_HOME=/usr/lib/jvm/jre-25-openjdk
 ENV JRE_HOME=/usr/lib/jvm/jre-25-openjdk
 ENV LD_LIBRARY_PATH=/usr/lib64
 ENV CATALINA_OPTS=-Djakarta.net.ssl.trustStore=$JAVA_HOME/lib/security/cacerts
-ENV CATALINA_OPTS="$CATALINA_OPTS -agentlib:jdwp=transport=dt_socket,server=y,address=*:8000,suspend=n"
+ENV CATALINA_OPTS="$CATALINA_OPTS -agentlib:jdwp=transport=dt_socket,server=y,address=*:8000,suspend=n \
+    -Dlogback.configurationFile=/opt/tomcat/conf/logback-override.xml"
 
 # Tomcat Setup
 COPY --from=builder /opt/tomcat/ /opt/tomcat/
@@ -56,20 +47,14 @@ RUN mkdir -p /etc/candlepin/certs; \
     mkdir -p /var/cache/candlepin/sync; \
     groupadd -g 10000 tomcat; \
     useradd -g tomcat -u 10001 tomcat; \
-    chown -R tomcat.tomcat /opt/tomcat; \
-    chown -R tomcat.tomcat /var/log/; \
-    chown -R tomcat.tomcat /var/lib/; \
-    chown -R tomcat.tomcat /etc/candlepin/; \
+    chown -R tomcat:tomcat /opt/tomcat; \
+    chown -R tomcat:tomcat /var/log/; \
+    chown -R tomcat:tomcat /var/lib/; \
+    chown -R tomcat:tomcat /etc/candlepin/; \
     chown -R tomcat:tomcat /var/cache/; \
     chown -R tomcat:tomcat  /etc/pki/; \
     chmod -R 775 /opt/tomcat/webapps; \
     chmod -R 775 /var/log/;
-
-# Candlepin install
-COPY --from=builder /app/build /opt/tomcat/webapps
-
-# Candlepin configuration (run ./gradlew generateConfig before docker build)
-COPY build/candlepin.conf /etc/candlepin/candlepin.conf
 
 # Setup development certificate and key
 WORKDIR /etc/candlepin/certs
@@ -79,6 +64,14 @@ RUN ln -s /etc/candlepin/certs/*.crt /etc/pki/ca-trust/source/anchors --force; \
     update-ca-trust;
 
 COPY ./.github/containers/server.xml /opt/tomcat/conf
+COPY ./.github/containers/logback.xml /opt/tomcat/conf/logback-override.xml
+
+# Candlepin configuration
+COPY build/candlepin.conf /etc/candlepin/candlepin.conf
+
+# Candlepin install (last step because it changes on every code edit)
+ARG WAR_FILE
+COPY ${WAR_FILE} /opt/tomcat/webapps/candlepin.war
 
 WORKDIR /opt/tomcat/bin
 

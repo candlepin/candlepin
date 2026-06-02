@@ -69,6 +69,9 @@ buildconf/scripts/import_products.json
 .ruby-gemset
 .bundle
 
+# Spec test config written by deploy-container
+.candlepin_spec.conf
+
 # Vagrant
 .vagrant/
 

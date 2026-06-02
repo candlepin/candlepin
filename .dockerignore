@@ -4,6 +4,7 @@
 !build/candlepin.conf
 !bin/deployment/gen_certs.sh
 !.github/containers/server.xml
+!.github/containers/logback.xml
 !candlepin-*-redhat-*.war
 !build/libs/candlepin-*-redhat-*.war
 !containers/server.xml
