@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9-minimal:latest as builder
+FROM registry.access.redhat.com/ubi10-minimal:latest as builder
 
 ARG WAR_FILE
 
@@ -9,8 +9,8 @@ RUN microdnf -y update && \
 USER root
 
 # Prepare Tomcat
-ARG TOMCAT_VERSION=9.0.110
-RUN wget https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz; \
+ARG TOMCAT_VERSION=10.1.49
+RUN wget https://archive.apache.org/dist/tomcat/tomcat-10/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz; \
     tar xzf apache-tomcat-${TOMCAT_VERSION}.tar.gz; \
     mkdir /opt/tomcat; \
     mv apache-tomcat-${TOMCAT_VERSION}/* /opt/tomcat/
@@ -29,7 +29,7 @@ RUN ./gen_certs.sh --pq --cert_dir /app/certs --hostname candlepin --force && \
 
 ################################# Production Image #################################
 
-FROM registry.access.redhat.com/ubi9-minimal:latest as production
+FROM registry.access.redhat.com/ubi10-minimal:latest as production
 
 ARG BUILD_DATE
 ARG VERSION
@@ -48,7 +48,7 @@ USER root
 # Update and install dependencies
 RUN microdnf -y update && \
     microdnf -y update ca-certificates && \
-    microdnf install -y java-25-openjdk-headless initscripts && \
+    microdnf install -y java-25-openjdk-headless openssl openssl-devel initscripts && \
     microdnf clean all
 
 ENV JAVA_HOME=/usr/lib/jvm/jre-25-openjdk
@@ -62,10 +62,10 @@ RUN mkdir -p /etc/candlepin/certs; \
     mkdir -p /var/cache/candlepin/sync; \
     groupadd -g 10000 tomcat; \
     useradd -g tomcat -u 10001 tomcat; \
-    chown -R tomcat.tomcat /opt/tomcat; \
-    chown -R tomcat.tomcat /var/log/; \
-    chown -R tomcat.tomcat /var/lib/; \
-    chown -R tomcat.tomcat /etc/candlepin/; \
+    chown -R tomcat:tomcat /opt/tomcat; \
+    chown -R tomcat:tomcat /var/log/; \
+    chown -R tomcat:tomcat /var/lib/; \
+    chown -R tomcat:tomcat /etc/candlepin/; \
     chown -R tomcat:tomcat /var/cache/; \
     chown -R tomcat:tomcat  /etc/pki/; \
     chmod -R 775 /opt/tomcat/webapps; \
@@ -94,7 +94,8 @@ This is a development image and not intended for production use."
 
 USER root
 
-ENV CATALINA_OPTS="$CATALINA_OPTS -Xdebug -Xrunjdwp:transport=dt_socket,address=*:8000,server=y,suspend=n"
+ENV CATALINA_OPTS="$CATALINA_OPTS -Xdebug -Xrunjdwp:transport=dt_socket,address=*:8000,server=y,suspend=n \
+    -Dlogback.configurationFile=/opt/tomcat/conf/logback-override.xml"
 
 # Copy the generated candlepin.conf (run ./gradlew generateConfig before docker build)
 COPY build/candlepin.conf /etc/candlepin/candlepin.conf
@@ -110,7 +111,7 @@ RUN ln -s /etc/candlepin/certs/*.crt /etc/pki/ca-trust/source/anchors --force; \
     update-ca-trust;
 
 COPY ./containers/server.xml /opt/tomcat/conf
-COPY ./containers/logback.xml /opt/tomcat/logback-override.xml
+COPY ./containers/logback.xml /opt/tomcat/conf/logback-override.xml
 
 WORKDIR /opt/tomcat/bin
 
