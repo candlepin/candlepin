@@ -44,8 +44,9 @@ BuildRequires: selinux-policy-doc
 
 Requires: java-25-headless >= 1:25.0.0
 Requires: wget
-# TODO: remove the version restriction on Tomcat once CP supports the Java EE namespace changes
-Requires: tomcat < 1:10.0.0
+Requires: tomcat
+Requires: openssl
+Requires: openssl-devel
 Requires: javapackages-tools
 
 %description
