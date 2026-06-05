@@ -26,7 +26,21 @@ checkstyle {
     maxErrors = 0
 }
 
+// Don't compile when running checkstyle commands
+tasks.withType(Checkstyle).configureEach {
+    classpath = files()
+    dependsOn = []
+}
+
 checkstyleMain.exclude("**/i18n/Messages*")
+
+// Run checkstyle only on specific files/packages when using the -Pinclude= argument
+if (project.hasProperty('include')) {
+    tasks.withType(Checkstyle).configureEach {
+        // Only lint the given files/packages
+        include(project.property('include').toString().split(','))
+    }
+}
 
 // Create a single checkstyle task to make it easier to run the checkstyleMain
 // and checkstyleTest targets at once.
