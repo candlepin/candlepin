@@ -75,21 +75,26 @@ class TomcatSetup(object):
         self.comment_pattern = '<!--\s*?<Connector port="8443".*?-->'
         self.existing_pattern = '<Connector port="8443".*?</Connector>|<Connector port="8443".*?/>'
         self.https_conn = """
-        <Connector port="8443" protocol="HTTP/1.1"
-            scheme="https"
-            secure="true"
-            SSLEnabled="true"
-            maxThreads="150">
+  <Service name="Catalina">
+    <Connector port="8443"
+        protocol="org.apache.coyote.http11.Http11NioProtocol"
+        scheme="https"
+        secure="true"
+        SSLEnabled="true"
+        maxThreads="150"
+        compression="on"
+        compressableMimeType="application/json,text/html,text/xml">
 
             <SSLHostConfig certificateVerification="optional"
-                protocols="+TLSv1,+TLSv1.1,+TLSv1.2"
-                sslProtocol="TLS">
+                protocols="+TLSv1.2,+TLSv1.3"
+                caCertificateFile="/etc/candlepin/certs/candlepin-ca-bundle.crt">
 
-                <Certificate
-                    certificateFile="/etc/candlepin/certs/candlepin-ca.crt"
-                    certificateKeyFile="/etc/candlepin/certs/candlepin-ca.key"
-                    type="RSA"
-                />
+                <Certificate certificateFile="/etc/candlepin/certs/candlepin-mldsa-65-ca.crt"
+                    certificateKeyFile="/etc/candlepin/certs/candlepin-mldsa-65-ca.key"
+                    type="MLDSA" />
+                <Certificate certificateFile="/etc/candlepin/certs/candlepin-rsa-ca.crt"
+                    certificateKeyFile="/etc/candlepin/certs/candlepin-rsa-ca.key"
+                    type="RSA" />
             </SSLHostConfig>
         </Connector>"""
         self.main_conf = '/etc/tomcat/tomcat.conf'
