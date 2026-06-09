@@ -9,6 +9,10 @@ set -euo pipefail
 usage() {
     cat <<HELP
 usage: deploy-container [options]
+       deploy-container down [-m] [-p N]
+
+SUBCOMMANDS:
+  down  tear down containers and volumes, then exit
 
 OPTIONS:
   -g    tear down existing containers before starting (resets database)
@@ -16,37 +20,83 @@ OPTIONS:
   -M    include test extension for manifest generation
   -a    auto-deploy a generated candlepin.conf
   -m    use MySQL/MariaDB instead of PostgreSQL
+  -f    force certificate regeneration
+  -p N  port offset for running multiple instances from different checkout directories
+        in parallel (default: 0) each offset adds the argument passed to the base ports
+        (8443, 8000, 5432/3306) e.g. -p 2 maps to host ports 8445, 8002, 5434/3308
 HELP
 }
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+export PROJECT_NAME="$(basename "$REPO_ROOT")"
+
+# Handle the 'down' subcommand
+if [ "${1:-}" = "down" ]; then
+    shift
+    USE_MYSQL=0
+    while getopts ":mp:" opt; do
+        case $opt in
+            m  ) USE_MYSQL=1 ;;
+            ?  ) usage; exit ;;
+        esac
+    done
+
+    if [ "$USE_MYSQL" -eq 1 ]; then
+        COMPOSE_FILE="${REPO_ROOT}/.github/containers/mariadb.docker-compose.yml"
+    else
+        COMPOSE_FILE="${REPO_ROOT}/.github/containers/postgres.docker-compose.yml"
+    fi
+
+    echo "Tearing down containers..."
+    podman compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" down --volumes
+
+    echo "Removing .candlepin_spec.conf..."
+    rm "${REPO_ROOT}/.candlepin_spec.conf"
+
+    exit 0
+fi
 
 TEARDOWN=0
 HOSTEDTEST=0
 MANIFESTGEN=0
 AUTOCONF=0
+FORCE_CERTS=0
 USE_MYSQL=0
+PORT_OFFSET=0
 
-while getopts ":gHMam" opt; do
+while getopts ":gHMafmp:" opt; do
     case $opt in
         g  ) TEARDOWN=1 ;;
         H  ) HOSTEDTEST=1 ;;
         M  ) MANIFESTGEN=1 ;;
         a  ) AUTOCONF=1 ;;
+        f  ) FORCE_CERTS=1 ;;
         m  ) USE_MYSQL=1 ;;
+        p  ) PORT_OFFSET="$OPTARG" ;;
         ?  ) usage; exit ;;
     esac
 done
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+if ! [[ "$PORT_OFFSET" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: -p requires a non-negative integer, got: '$PORT_OFFSET'" >&2
+    exit 1
+fi
+
+export CP_PORT=$(( 8443 + PORT_OFFSET ))
+export CP_DEBUG_PORT=$(( 8000 + PORT_OFFSET ))
 
 if [ "$USE_MYSQL" -eq 1 ]; then
     COMPOSE_FILE="${REPO_ROOT}/.github/containers/mariadb.docker-compose.yml"
     DATABASE_SERVER="-Pdatabase_server=mysql"
     DB_HOST="mariadb"
+    export DB_PORT=$(( 3306 + PORT_OFFSET ))
 else
     COMPOSE_FILE="${REPO_ROOT}/.github/containers/postgres.docker-compose.yml"
     DATABASE_SERVER="-Pdatabase_server=postgres"
     DB_HOST="postgres"
+    export DB_PORT=$(( 5432 + PORT_OFFSET ))
 fi
 CONTAINERFILE="${REPO_ROOT}/.github/containers/cs10.Containerfile"
 
@@ -110,11 +160,28 @@ export WAR_FILE="${WAR_FILE:-build/libs/candlepin.war}"
 # Tear down existing containers if -g was passed
 if [ "$TEARDOWN" -eq 1 ]; then
     echo "Tearing down existing containers..."
-    podman compose -f "$COMPOSE_FILE" down --volumes
+    podman compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" down --volumes
 fi
+
+# Build the container image directly (podman respects .dockerignore; docker-compose classic builder does not)
+echo "Building container image..."
+BUILD_ARGS=(--build-arg WAR_FILE="$WAR_FILE")
+if [ "$FORCE_CERTS" -eq 1 ]; then
+    BUILD_ARGS+=(--no-cache)
+fi
+
+podman build -t "${PROJECT_NAME}-candlepin" \
+    "${BUILD_ARGS[@]}" \
+    -f "$CONTAINERFILE" \
+    "$REPO_ROOT"
 
 # Start the containers
 echo "Starting containers..."
-podman compose -f "$COMPOSE_FILE" up --build -d --wait
+podman compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" up -d --wait
 
-echo "Candlepin is running at https://localhost:8443/candlepin"
+# Persist the port so that ./gradlew spec targets the right instance
+cat > "${REPO_ROOT}/.candlepin_spec.conf" <<EOF
+spec.test.client.port=${CP_PORT}
+EOF
+
+echo "Candlepin is running at https://localhost:${CP_PORT}/candlepin"

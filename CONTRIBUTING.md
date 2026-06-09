@@ -100,11 +100,16 @@ by the GitHub Actions spec-test setup.
 ./bin/deployment/deploy-container -Ma           # redeploy Candlepin in Standalone mode
 ./bin/deployment/deploy-container -HMag         # redeploy Candlepin & Postgres in Hosted mode if the schema changed
 ./bin/deployment/deploy-container -Mag          # redeploy Candlepin & Postgres in Standalone mode if the schema changed
-podman container rm -f candlepin postgres       # Stop containers
+./bin/deployment/deploy-container -f            # redeploy Candlepin in Standalone mode and regenerate the certificates
+./bin/deployment/deploy-container down          # tear down containers and volumes
 
 # in case of query changes that need to be
 # tested in MariaDB as well, add the -m flag:
 ./bin/deployment/deploy-container -HMagm        # redeploy Candlepin & Mariadb in Hosted mode if the schema changed
+
+# run a second instance in parallel (from a different checkout directory),
+# using -p to offset host ports (8443, 8000, 5432/3306):
+./bin/deployment/deploy-container -HMag -p 2    # ports: 8445, 8002, 5434
 ```
 
 ## Building Candlepin

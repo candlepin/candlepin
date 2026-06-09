@@ -36,9 +36,12 @@ Assumes `podman` & either of `docker-compose` or `podman-compose` are installed.
 ```bash
 ./bin/deployment/deploy-container -HMag         # redeploy Candlepin & Postgres in Hosted mode
 ./bin/deployment/deploy-container -Ma           # redeploy Candlepin & Postgres in Standalone mode
-podman container rm -f candlepin postgres       # Remove containers
+./bin/deployment/deploy-container down          # tear down containers and volumes
+
+# Run a second instance in parallel (from a different checkout directory):
+./bin/deployment/deploy-container -HMag -p 2    # ports offset by 2: https://localhost:8445, debug 8002, db 5434
 ```
-Access at `https://localhost:8443/candlepin`.
+Access at `https://localhost:8443/candlepin` (default, with `-p 0` or no `-p`).
 
 ## Development Setup (Vagrant VM)
 
