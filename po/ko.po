@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-03 07:34+0000\n"
-"PO-Revision-Date: 2026-04-24 10:58+0000\n"
+"PO-Revision-Date: 2026-05-05 16:19+0000\n"
 "Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ko/>\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17\n"
+"X-Generator: Weblate 5.17.1\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -922,15 +922,10 @@ msgstr ""
 "폼, 애저)"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:142
-#, fuzzy
-#| msgid ""
-#| "Unable to persist consumer: cryptographic capabilities exceed data "
-#| "storage capabilities"
 msgid ""
 "Unable to process authorization request: cryptographic capabilities exceed "
 "data storage capabilities"
-msgstr ""
-"소비자를 유지 할 수 없습니다: 암호화 기능이 자료 저장 기능을 초과합니다"
+msgstr "권한 요청을 처리 할 수 없습니다: 암호화 기능이 자료 저장 기능을 초과합니다"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:159
 msgid ""
