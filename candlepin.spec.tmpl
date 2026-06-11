@@ -44,8 +44,9 @@ BuildRequires: selinux-policy-doc
 
 Requires: java-25-headless >= 1:25.0.0
 Requires: wget
-# TODO: remove the version restriction on Tomcat once CP supports the Java EE namespace changes
-Requires: tomcat < 1:10.0.0
+Requires: tomcat
+Requires: openssl
+Requires: openssl-devel
 Requires: javapackages-tools
 
 %description
@@ -131,8 +132,6 @@ touch %{buildroot}/%{_sysconfdir}/%{name}/%{name}.conf
 %{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/tomcat/
 %{__unzip} %{SOURCE1} -d %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}
 
-%{__ln_s} /etc/candlepin/certs/keystore %{buildroot}/%{_sysconfdir}/tomcat/keystore
-
 ## /var/lib dir for hornetq state
 %{__install} -d -m 755 %{buildroot}/%{_sharedstatedir}/%{name}
 
@@ -210,8 +209,6 @@ fi
 %{_sharedstatedir}/tomcat/webapps/%{name}/*
 %{_sharedstatedir}/%{name}
 %{_localstatedir}/cache/%{name}
-%config(noreplace) %{_sysconfdir}/tomcat/keystore
-
 %defattr(600,tomcat,tomcat,-)
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
 ## log dir needs to be group root or not group writeable
