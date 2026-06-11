@@ -95,7 +95,7 @@ jobs:
       - name: Create Candlepin and database containers
         shell: bash
         run: |
-          WAR_FILE=$(find ./build/libs -name 'candlepin*.war' | head -n 1)
+          WAR_FILE=build/libs/candlepin.war
           echo "WAR_FILE=$WAR_FILE" > ./.github/containers/.env
           docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml --env-file ./.github/containers/.env up --build -d --wait
 
