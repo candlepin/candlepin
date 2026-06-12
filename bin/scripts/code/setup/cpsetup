@@ -21,31 +21,21 @@ This script should be idempotent, as puppet will re-run this to keep
 the server functional.
 """
 
-from __future__ import print_function
 from optparse import OptionParser
+from subprocess import getstatusoutput
+from http.client import HTTPSConnection
 
 import sys
 import os.path, os
 import socket
+import ssl
 import re
 import time
-
-try:
-    from commands import getstatusoutput
-except ImportError:
-    from subprocess import getstatusoutput
-
-try:
-    from httplib import HTTPConnection
-except ImportError:
-    from http.client import HTTPConnection
+import xml.etree.ElementTree as ET
 
 CANDLEPIN_CONF = '/etc/candlepin/candlepin.conf'
 
-if os.path.exists('/usr/sbin/tomcat') and not os.path.exists('/usr/sbin/tomcat6'):
-    TOMCAT = 'tomcat'
-else:
-    TOMCAT = 'tomcat6'
+TOMCAT = 'tomcat'
 
 
 def run_command(command):
@@ -70,43 +60,50 @@ def run_command_with_sudo(command, **kwargs):
 
 
 class TomcatSetup(object):
-    def __init__(self, conf_dir, keystorepwd):
+    def __init__(self, conf_dir):
         self.conf_dir = conf_dir
-        self.comment_pattern = '<!--\s*?<Connector port="8443".*?-->'
-        self.existing_pattern = '<Connector port="8443".*?</Connector>|<Connector port="8443".*?/>'
-        self.https_conn = """
-        <Connector port="8443" protocol="HTTP/1.1"
-            scheme="https"
-            secure="true"
-            SSLEnabled="true"
-            maxThreads="150">
-
-            <SSLHostConfig certificateVerification="optional"
-                protocols="+TLSv1,+TLSv1.1,+TLSv1.2"
-                sslProtocol="TLS">
-
-                <Certificate
-                    certificateFile="/etc/candlepin/certs/candlepin-ca.crt"
-                    certificateKeyFile="/etc/candlepin/certs/candlepin-ca.key"
-                    type="RSA"
-                />
-            </SSLHostConfig>
-        </Connector>"""
         self.main_conf = '/etc/tomcat/tomcat.conf'
-        self.main_comment_pattern = '^#\s*JAVA_HOME.*'
+        self.main_comment_pattern = r'^#\s*JAVA_HOME.*'
         self.main_existing_pattern = '^JAVA_HOME.*'
         self.new_java_home = 'JAVA_HOME="/usr/lib/jvm/jre-25-openjdk"'
 
-    def _backup_config(self, conf_dir):
+    @staticmethod
+    def _backup_config(conf_dir):
         run_command('cp %s/server.xml %s/server.xml.original' % (conf_dir, conf_dir))
 
-    def _replace_current(self, original):
-        regex = re.compile(self.existing_pattern, re.DOTALL)
-        return regex.sub(self.https_conn, original, 1)
+    @staticmethod
+    def _build_connector_element():
+        connector = ET.Element('Connector')
+        connector.set('port', '8443')
+        connector.set('protocol', 'org.apache.coyote.http11.Http11NioProtocol')
+        connector.set('scheme', 'https')
+        connector.set('secure', 'true')
+        connector.set('SSLEnabled', 'true')
+        connector.set('maxThreads', '150')
+        connector.set('compression', 'on')
+        connector.set('compressableMimeType', 'application/json,text/html,text/xml')
 
-    def _replace_commented(self, original):
-        regex = re.compile(self.comment_pattern, re.DOTALL)
-        return regex.sub(self.https_conn, original, 1)
+        ssl_host_config = ET.SubElement(connector, 'SSLHostConfig')
+        ssl_host_config.set('certificateVerification', 'optional')
+        ssl_host_config.set('protocols', '+TLSv1.2,+TLSv1.3')
+        ssl_host_config.set('caCertificateFile',
+            '/etc/candlepin/certs/candlepin-ca-bundle.crt')
+
+        cert_mldsa = ET.SubElement(ssl_host_config, 'Certificate')
+        cert_mldsa.set('certificateFile',
+            '/etc/candlepin/certs/candlepin-mldsa-65-ca.crt')
+        cert_mldsa.set('certificateKeyFile',
+            '/etc/candlepin/certs/candlepin-mldsa-65-ca.key')
+        cert_mldsa.set('type', 'MLDSA')
+
+        cert_rsa = ET.SubElement(ssl_host_config, 'Certificate')
+        cert_rsa.set('certificateFile',
+            '/etc/candlepin/certs/candlepin-rsa-ca.crt')
+        cert_rsa.set('certificateKeyFile',
+            '/etc/candlepin/certs/candlepin-rsa-ca.key')
+        cert_rsa.set('type', 'RSA')
+
+        return connector
 
     def _replace_current_main(self, original):
         regex = re.compile(self.main_existing_pattern, re.MULTILINE)
@@ -125,23 +122,49 @@ class TomcatSetup(object):
             file.write("JAVA_OPTS=\"$JAVA_OPTS -Dcom.redhat.fips=false\"\n")
 
     def update_config(self):
-        # Edit server.xml
+        # Edit server.xml using an XML parser instead of fragile regex
         self._backup_config(self.conf_dir)
-        original_file = open(os.path.join(self.conf_dir, 'server.xml'), 'r')
-        original = original_file.read()
+        server_xml = os.path.join(self.conf_dir, 'server.xml')
+        with open(server_xml, 'rb') as f:
+            data = f.read()
 
-        # TODO: This isn't consistent. It will replace a commented-out version of the config
-        # before replacing an uncommented version of it, but due to regex limitations, attempting
-        # to flip this will just replace commented out blocks as if they weren't commented out.
-        # Replace this with a proper html/xml node parser.
-        if re.search(self.comment_pattern, original, re.DOTALL):
-            updated = self._replace_commented(original)
-        else:
-            updated = self._replace_current(original)
+        if b'<!DOCTYPE' in data:
+            raise ValueError('DOCTYPE declarations are not allowed in server.xml')
 
-        original_file.close()
-        with open(os.path.join(self.conf_dir, 'server.xml'), 'w') as config:
-            config.write(updated)
+        parser = ET.XMLParser(
+            target=ET.TreeBuilder(insert_comments=True))
+        tree = ET.ElementTree(ET.fromstring(data, parser=parser))
+        root = tree.getroot()
+
+        service = root.find('.//Service')
+        if service is None:
+            raise Exception("Could not find <Service> element in server.xml")
+
+        for connector in service.findall('Connector[@port="8443"]'):
+            service.remove(connector)
+
+        service.insert(0, self._build_connector_element())
+
+        # Ensure the OpenSSLLifecycleListener is present (required for
+        # NIO connector with ML-DSA certificates). Remove any commented-out
+        # version first, then add the real element if missing.
+        openssl_listener = 'org.apache.catalina.core.OpenSSLLifecycleListener'
+        for child in list(root):
+            if callable(child.tag) and openssl_listener in (child.text or ''):
+                root.remove(child)
+
+        if not root.findall("Listener[@className='%s']" % openssl_listener):
+            listener = ET.Element('Listener')
+            listener.set('className', openssl_listener)
+            listeners = root.findall('Listener')
+            if listeners:
+                last_idx = list(root).index(listeners[-1])
+                root.insert(last_idx + 1, listener)
+            else:
+                root.insert(0, listener)
+
+        ET.indent(tree, space='    ')
+        tree.write(server_xml, encoding='UTF-8', xml_declaration=True)
 
         # Edit tomcat.conf
         with open(self.main_conf, 'r') as original_main_file:
@@ -160,25 +183,31 @@ class TomcatSetup(object):
         # Write extra config file to conf.d to disable FIPS in this TC instance:
         self._write_disable_fips_conf()
 
-    def fix_perms(self):
+    @staticmethod
+    def fix_perms():
         run_command("chmod g+x /var/log/" + TOMCAT)
         run_command("chmod g+x /etc/" + TOMCAT + "/")
         run_command("chown tomcat:tomcat -R /var/lib/" + TOMCAT)
-        run_command("chown tomcat:tomcat -R /var/lib/" + TOMCAT)
         run_command("chown tomcat:tomcat -R /var/cache/" + TOMCAT)
 
-    def stop(self):
+    @staticmethod
+    def stop():
         run_command("/sbin/service " + TOMCAT + " stop")
 
-    def restart(self):
+    @staticmethod
+    def restart():
         run_command("/sbin/service " + TOMCAT + " restart")
 
-    def wait_for_startup(self):
+    @staticmethod
+    def wait_for_startup():
         print("Waiting for tomcat to restart...")
-        conn = HTTPConnection('localhost:8080')
-        for x in range(1,5):
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        for x in range(1, 5):
             time.sleep(5)
             try:
+                conn = HTTPSConnection('localhost', 8443, context=context)
                 conn.request('GET', "/candlepin/")
                 if conn.getresponse().status == 200:
                     break
@@ -189,73 +218,103 @@ class TomcatSetup(object):
 class CertSetup(object):
     def __init__(self):
         self.cert_home = '/etc/candlepin/certs'
-        self.cert_name = 'candlepin-ca'
+        self.ca_trust_anchors = '/etc/pki/ca-trust/source/anchors'
+        self.ca_chain_bundle = os.path.join(self.ca_trust_anchors,
+            'cp-ca-chain.pem')
 
-        self.noise_file = '{cert_home}/noise.bin'.format(cert_home=self.cert_home)
-        self.password_file = '{cert_home}/cppw.txt'.format(cert_home=self.cert_home)
+        self.rsa_cert = os.path.join(self.cert_home, 'candlepin-rsa-ca.crt')
+        self.rsa_key = os.path.join(self.cert_home, 'candlepin-rsa-ca.key')
 
-        self.req_config_file = '{cert_home}/req.cnf'.format(cert_home=self.cert_home)
-        self.ca_key = '{cert_home}/{cert_name}.key'.format(cert_home=self.cert_home, cert_name=self.cert_name)
-        self.ca_pub_key = '{cert_home}/{cert_name}-pub.key'.format(cert_home=self.cert_home, cert_name=self.cert_name)
-        self.ca_cert = '{cert_home}/{cert_name}.crt'.format(cert_home=self.cert_home, cert_name=self.cert_name)
+        self.mldsa_cert = os.path.join(self.cert_home,
+            'candlepin-mldsa-65-ca.crt')
+        self.mldsa_key = os.path.join(self.cert_home,
+            'candlepin-mldsa-65-ca.key')
+
+        self.ca_bundle = os.path.join(self.cert_home,
+            'candlepin-ca-bundle.crt')
+        self.legacy_cert = os.path.join(self.cert_home, 'candlepin-ca.crt')
+        self.legacy_key = os.path.join(self.cert_home, 'candlepin-ca.key')
 
         self.ca_cert_days = 365
-        self.cert_bit_length = 4096
+        self.key_bits = 4096
+
+    @staticmethod
+    def _build_openssl_config():
+        hostname = socket.gethostname()
+        return (
+            "[ req ]\n"
+            "string_mask = utf8only\n"
+            "distinguished_name = req_dn\n"
+            "prompt = no\n"
+            "x509_extensions = v3_ext\n"
+            "\n"
+            "[ req_dn ]\n"
+            "CN=Candlepin Server CA\n"
+            "OU=Candlepin\n"
+            "O=Red Hat\n"
+            "\n"
+            "[ v3_ext ]\n"
+            "subjectKeyIdentifier = hash\n"
+            "authorityKeyIdentifier = keyid:always, issuer:always\n"
+            "basicConstraints = critical, CA:true\n"
+            "keyUsage = critical, keyCertSign, digitalSignature, cRLSign\n"
+            "subjectAltName = IP:127.0.0.1,DNS:localhost,DNS:%s\n"
+            % hostname
+        )
 
     def generate(self):
         if not os.path.exists(self.cert_home):
             run_command_with_sudo('mkdir -p %s' % self.cert_home)
 
-        if os.path.exists(self.ca_key) and os.path.exists(self.ca_cert):
+        if os.path.exists(self.rsa_cert):
             print("Certificates already exist, skipping...")
             return
 
-        args = {
-            'hostname': socket.gethostname(),
-            'interface_ip': run_command_with_sudo('hostname -I | cut -d \' \' -f 1'),
-            'cert_home': self.cert_home,
-            'cert_name': self.cert_name,
-            'noise_file': self.noise_file,
-            'password_file': self.password_file,
-            'req_config_file': self.req_config_file,
-            'ca_key': self.ca_key,
-            'ca_pub_key': self.ca_pub_key,
-            'ca_cert': self.ca_cert,
-            'ca_cert_days': self.ca_cert_days,
-            'cert_bit_length': self.cert_bit_length,
-        }
+        print("Generating CA certs and keys...")
 
-        print("Generating CA certs and keys... ")
+        run_command_with_sudo('rm -rf %s' % self.cert_home)
+        run_command_with_sudo('mkdir -p %s' % self.cert_home)
 
-        # Commands copied directly from gen_certs.sh
-        run_command_with_sudo('rm -rf {cert_home}', **args)
-        run_command_with_sudo('mkdir -p {cert_home}', **args)
-        run_command_with_sudo('openssl rand -out {noise_file} {cert_bit_length}', **args)
-        run_command_with_sudo('openssl rand -base64 -out {password_file} 24', **args)
-        run_command_with_sudo('openssl genpkey -out {ca_key} -pass "file:{password_file}" -algorithm rsa -pkeyopt rsa_keygen_bits:{cert_bit_length}', **args)
-        run_command_with_sudo('openssl pkey -pubout -in {ca_key} -out {ca_pub_key}', **args)
+        config_file = os.path.join(self.cert_home, 'req.cnf')
+        with open(config_file, 'w') as f:
+            f.write(self._build_openssl_config())
 
-        # Write cert generation config
-        with open(self.req_config_file, 'w') as cnf:
-            cnf.write('[req]\n')
-            cnf.write('distinguished_name = req\n')
-            cnf.write('x509_extensions = v3_ext\n')
-            cnf.write('[v3_ext]\n')
-            cnf.write('subjectKeyIdentifier = hash\n')
-            cnf.write('authorityKeyIdentifier = keyid, issuer\n')
-            cnf.write('basicConstraints = critical, CA:true\n')
-            cnf.write('subjectAltName = @san\n')
-            cnf.write('[san]\n')
-            cnf.write('IP.1 = 127.0.0.1\n')
-            cnf.write('IP.2 = {interface_ip}\n'.format(**args))
-            cnf.write('DNS.1 = localhost\n')
-            cnf.write('DNS.2 = {hostname}\n'.format(**args))
+        # Generate self-signed RSA certificate
+        run_command_with_sudo(
+            'openssl req -new -x509 -days %d -out %s'
+            ' -newkey rsa:%d -nodes -keyout %s'
+            ' -config %s'
+            % (self.ca_cert_days, self.rsa_cert,
+               self.key_bits, self.rsa_key, config_file))
 
-        run_command_with_sudo('openssl req -new -x509 -days {ca_cert_days} -key {ca_key} -out {ca_cert} ' +
-            '-subj "/CN={hostname}/C=US/L=Raleigh/" -config {req_config_file}', **args)
-        run_command_with_sudo('chmod a+r {cert_home}/*', **args)
-        run_command_with_sudo('cp -f {ca_cert} "/etc/pki/ca-trust/source/anchors/{cert_name}.crt"', **args)
-        run_command_with_sudo('update-ca-trust', **args)
+        # Generate self-signed ML-DSA-65 certificate
+        run_command_with_sudo(
+            'openssl req -new -x509 -days %d -out %s'
+            ' -newkey mldsa65 -nodes -keyout %s'
+            ' -config %s'
+            % (self.ca_cert_days, self.mldsa_cert,
+               self.mldsa_key, config_file))
+
+        # Legacy symlinks pointing to RSA certs
+        run_command_with_sudo(
+            'ln -sf candlepin-rsa-ca.crt %s' % self.legacy_cert)
+        run_command_with_sudo(
+            'ln -sf candlepin-rsa-ca.key %s' % self.legacy_key)
+
+        # Combined CA certificate bundle for client verification
+        run_command_with_sudo(
+            'sh -c "cat %s %s > %s"'
+            % (self.rsa_cert, self.mldsa_cert, self.ca_bundle))
+
+        run_command_with_sudo('chmod a+r %s/*' % self.cert_home)
+
+        # Add both certs to system CA trust
+        run_command_with_sudo(
+            'sh -c "cat %s %s > %s"'
+            % (self.rsa_cert, self.mldsa_cert, self.ca_chain_bundle))
+        run_command_with_sudo('update-ca-trust')
+
+        os.remove(config_file)
 
 
 class PostgresqlConf(object):
@@ -300,6 +359,22 @@ def write_candlepin_conf(options):
     f.write('jpa.config.hibernate.connection.password=%s\n' % options.password)
     if options.webapp_prefix:
         f.write('\ncandlepin.export.webapp.prefix=%s\n' % options.webapp_prefix)
+
+    f.write('\ncandlepin.crypto.schemes=mldsa65,rsa\n')
+    f.write('candlepin.crypto.default_scheme=legacy\n')
+
+    f.write('\ncandlepin.crypto.scheme.rsa.cert=/etc/candlepin/certs/candlepin-ca.crt\n')
+    f.write('candlepin.crypto.scheme.rsa.key=/etc/candlepin/certs/candlepin-ca.key\n')
+    f.write('candlepin.crypto.scheme.rsa.signature_algorithm=SHA256withRSA\n')
+    f.write('candlepin.crypto.scheme.rsa.key_algorithm=RSA\n')
+    f.write('candlepin.crypto.scheme.rsa.key_size=4096\n')
+
+    f.write('\ncandlepin.crypto.scheme.mldsa65.cert=/etc/candlepin/certs/candlepin-mldsa-65-ca.crt\n')
+    f.write('candlepin.crypto.scheme.mldsa65.key=/etc/candlepin/certs/candlepin-mldsa-65-ca.key\n')
+    f.write('candlepin.crypto.scheme.mldsa65.signature_algorithm=ML-DSA-65\n')
+    f.write('candlepin.crypto.scheme.mldsa65.key_algorithm=ML-DSA-65\n')
+
+    f.write('\ncandlepin.db.database_manage_on_startup=Manage\n')
     f.close()
 
 
@@ -327,9 +402,6 @@ def main(argv):
     parser.add_option("-w", "--webapp-prefix",
                   dest="webapp_prefix",
                   help="the web application prefix to use for export origin [host:port/prefix]")
-    parser.add_option("-k", "--keystorepwd",
-                  dest="keystorepwd", default="password",
-                  help="the keystore password to use for the tomcat configuration")
     parser.add_option("-p", "--password",
                   dest="password", default=os.getenv('CANDLEPIN_DB_PASSWORD', 'candlepin'),
                   help="Database password. When missing environment variable 'CANDLEPIN_DB_PASSWORD' is read. Defaults to 'candlepin'.")
@@ -339,7 +411,7 @@ def main(argv):
     (options, args) = parser.parse_args()
 
     # Stop tomcat before we wipe the DB otherwise you get errors from pg
-    tsetup = TomcatSetup('/etc/' + TOMCAT, options.keystorepwd)
+    tsetup = TomcatSetup('/etc/' + TOMCAT)
     tsetup.fix_perms()
     if not options.skip_service:
         tsetup.stop()
@@ -378,7 +450,7 @@ def main(argv):
     if not options.skip_service:
         tsetup.restart()
         tsetup.wait_for_startup()
-        run_command("wget -qO- http://localhost:8080/candlepin/admin/init")
+        run_command("wget -qO- https://localhost:8443/candlepin/admin/init")
 
     print("Candlepin has been configured.")
 
