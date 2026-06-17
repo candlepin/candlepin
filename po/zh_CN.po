@@ -6,6 +6,7 @@
 # John Sefler <jsefler@redhat.com>, 2023.
 # Jingge Chen <mariocanfly@hotmail.com>, 2023.
 # Stepan Bakaj <sbakaj@redhat.com>, 2026.
+# Nikos Moumoulidis <nmoumoul@redhat.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
@@ -454,11 +455,10 @@ msgid "Unexpected error from Cloud Registration Service: {0}"
 msgstr "来自云注册服务的意外错误：{0}"
 
 #: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:104
-#, fuzzy
 #| msgid "Unable to create entitlement certificate archive"
 msgid ""
 "Unable to generate a usable certificate from Entitlement Certificate Service"
-msgstr "无法创建权利证书归档"
+msgstr "无法从权利证书服务生成可用的证书"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
@@ -473,9 +473,7 @@ msgid ""
 "You must first accept Red Hat''s Terms and conditions. Please visit {0} . "
 "You may have to log out of and back into the  Customer Portal in order to "
 "see the terms."
-msgstr ""
-"您需要首先接受红帽的条款和条件。请访问 {0}。您可能需要退出并重新登录到客户门"
-"户网站才能查看相关条款。"
+msgstr "您需要首先接受红帽的条款和条件。请访问 {0}。您可能需要退出并重新登录到客户门户网站才能查看相关条款。"
 
 #: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:119
 #, java-format
@@ -559,9 +557,7 @@ msgstr "数据库中没有找到规则文件"
 msgid ""
 "This endpoint does not support returning {0} elements in a single request; "
 "please apply paging with a page size no larger than {1}"
-msgstr ""
-"这个端点不支持在单个请求中返回 {0} 个元素，请使用分页功能以使页的大小不超过 "
-"{1}"
+msgstr "这个端点不支持在单个请求中返回 {0} 个元素，请使用分页功能以使页的大小不超过 {1}"
 
 #: src/main/java/org/candlepin/paging/PagingUtil.java:133
 #: src/main/java/org/candlepin/paging/PagingUtil.java:269
@@ -579,9 +575,7 @@ msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
 "to address this problem. See knowledge database https://access.redhat.com/"
 "knowledge/node/129003 for more information."
-msgstr ""
-"证书 {0} 太多内容集。一个较新的客户端可能会解决这个问题。如需更多信息，请参阅"
-"知识库的数据库 https://access.redhat.com/knowledge/node/129003。"
+msgstr "证书 {0} 太多内容集。一个较新的客户端可能会解决这个问题。如需更多信息，请参阅知识库的数据库 https://access.redhat.com/knowledge/node/129003。"
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:93
 #, java-format
@@ -657,9 +651,7 @@ msgid ""
 "Guest has not been reported on any host and is using a temporary unmapped "
 "guest subscription. For more information, please see https://"
 "access.redhat.com/solutions/1592573"
-msgstr ""
-"尚未报告任何主机的虚拟机，并使用临时的未映射客户机订阅。如需更多信息，请参阅 "
-"https://access.redhat.com/solutions/1592573"
+msgstr "尚未报告任何主机的虚拟机，并使用临时的未映射客户机订阅。如需更多信息，请参阅 https://access.redhat.com/solutions/1592573"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
@@ -902,7 +894,7 @@ msgstr "请求缺少云供应商类型（如 amazon、gcp、azure）"
 msgid ""
 "Unable to process authorization request: cryptographic capabilities exceed "
 "data storage capabilities"
-msgstr ""
+msgstr "无法处理授权请求：加密能力超过数据存储能力"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:159
 msgid ""
@@ -970,7 +962,7 @@ msgstr "机构 {0} 不存在"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:425
 msgid "Consumer package profile uploads are not implemented"
-msgstr ""
+msgstr "消费者软件包配置集上传没有实现"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
@@ -1023,7 +1015,7 @@ msgstr "无效的单元类型： {0}"
 msgid ""
 "Unable to persist consumer: cryptographic capabilities exceed data storage "
 "capabilities"
-msgstr ""
+msgstr "无法持久保留消费者：加密能力超过数据存储能力"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1193
 #, java-format
@@ -1055,7 +1047,7 @@ msgstr "系统名称不能以 # 字符开头"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1423
 #, java-format
 msgid "Name of the consumer should be shorter than {0} characters."
-msgstr ""
+msgstr "消费者的名称应短于 {0} 个字符。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1166,10 +1158,10 @@ msgid "Cannot retrieve content access certificate for consumer: {0}"
 msgstr "无法为消费者检索内容访问证书：{0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2408
-#, fuzzy, java-format
+#, java-format
 #| msgid "Unable to create content access payload"
 msgid "Unable to generate usable content access payload for consumer: {0}"
-msgstr "无法创建内容访问有效负载"
+msgstr "无法为消费者生成可用的内容访问负载: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2420
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2603
@@ -1184,10 +1176,10 @@ msgstr "无法为消费者检索或创建匿名内容访问证书"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2504
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2644
-#, fuzzy, java-format
+#, java-format
 #| msgid "Unable to find upstream certificate for entitlement: {0}"
 msgid "Unable to generate usable certificates for consumer: {0}"
-msgstr "无法找到权利的上游证书： {0}"
+msgstr "无法为消费者生成可用的证书： {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2536
 msgid "Cannot create export for anonymous cloud consumer"
@@ -1200,10 +1192,10 @@ msgstr "无法创建权利证书归档"
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2556
-#, fuzzy, java-format
+#, java-format
 #| msgid "Problem generating ueber cert for owner {0}"
 msgid "Unable to generate usable export for consumer: {0}"
-msgstr "为所有者生成 ueber 证书的问题 {0}"
+msgstr "无法为消费者生成可用的导出内容: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1237,9 +1229,7 @@ msgstr "忽略要自动附加的请求。对于机构 \"{0}\"，它被禁用。"
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
 "the hypervisor autobind setting."
-msgstr ""
-"忽略自动附加的请求。它对 org \"{0}\" 禁用，因为 hypervisor autobind 设置被禁"
-"用。"
+msgstr "忽略自动附加的请求。它对 org \"{0}\" 禁用，因为 hypervisor autobind 设置被禁用。"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2860
 #, java-format
@@ -1275,10 +1265,10 @@ msgstr "无法创建导出归档"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:3099
 #: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:261
-#, fuzzy, java-format
+#, java-format
 #| msgid "Cannot retrieve content access certificate for consumer: {0}"
 msgid "Unable to determine the signature scheme for consumer: {0}"
-msgstr "无法为消费者检索内容访问证书：{0}"
+msgstr "无法确定该消费者的签名方案：{0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:3252
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:3257
@@ -1288,10 +1278,10 @@ msgstr "为单元重新生成 ID 证书的问题 {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:3260
 #: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:208
-#, fuzzy, java-format
+#, java-format
 #| msgid "Unable to find upstream certificate for entitlement: {0}"
 msgid "Unable to generate ID certificate for consumer: {0}"
-msgstr "无法找到权利的上游证书： {0}"
+msgstr "无法为消费者生成 ID 证书：{0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:3297
 #, java-format
@@ -1677,10 +1667,9 @@ msgstr "在被一个或多个产品引用时，无法删除产品 \"{0}\""
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:304
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1782
-#, fuzzy
 #| msgid "Owner key is null or empty."
 msgid "Owner key is null or empty"
-msgstr "owner key 为 null 或空。"
+msgstr "拥有者密钥为 null 或空"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:309
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1793
@@ -1834,7 +1823,7 @@ msgstr "为异步处理存储上传存档时出错"
 msgid ""
 "Unable to generate an ueber certificate compatible with the provided "
 "cryptographic capabilities"
-msgstr ""
+msgstr "无法生成与所提供加密能力兼容的 ueber 证书"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
@@ -2061,9 +2050,7 @@ msgid ""
 "soon. You will be notified via email once it is available. If you have any "
 "questions, additional information can be found here: https://"
 "access.redhat.com/kb/docs/DOC-53864."
-msgstr ""
-"您的订阅正在被处理，应该很快可用。在可用时您会接收到电子邮件通知。如果有任何"
-"问题，请访问 https://access.redhat.com/kb/docs/DOC-53864。"
+msgstr "您的订阅正在被处理，应该很快可用。在可用时您会接收到电子邮件通知。如果有任何问题，请访问 https://access.redhat.com/kb/docs/DOC-53864。"
 
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
 #, java-format
@@ -2258,10 +2245,9 @@ msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "归档不包含所需的 consumer_export.zip 文件"
 
 #: src/main/java/org/candlepin/sync/Importer.java:471
-#, fuzzy
 #| msgid "Unable to find upstream certificate for entitlement: {0}"
 msgid "Unable to read certificates to validate manifest"
-msgstr "无法找到权利的上游证书： {0}"
+msgstr "无法读取证书以验证清单"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author leahliu
@@ -2283,7 +2269,7 @@ msgstr "归档 {0} 不是正确压缩文件或者为空"
 
 #: src/main/java/org/candlepin/sync/Importer.java:541
 msgid "Archive signed by an untrusted certificate"
-msgstr ""
+msgstr "由不受信任的证书签名的存档"
 
 #: src/main/java/org/candlepin/sync/Importer.java:572
 msgid "Archive failed signature check"
@@ -2554,6 +2540,3 @@ msgstr "必须是有效的 URL"
 
 #~ msgid "activation key ID is null or empty"
 #~ msgstr "激活码 ID 为 null 或是空"
-
-#~ msgid "Organization-agnostic content write operations are not supported."
-#~ msgstr "不支持与组织无关内容的写入操作。"
