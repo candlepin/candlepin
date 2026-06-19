@@ -88,11 +88,16 @@ For code style, see: [CLAUDE.md#code-style](CLAUDE.md#code-style)
 If you have not done so on this machine, you need to:
 
 - Install Git and configure your GitHub access
-- Development environment instructions can be found in [candlepinproject.org](https://www.candlepinproject.org/docs/candlepin/developer_deployment.html#developer-deployment)
-  which include a vagrant/ansible VM setup (with `vagrant up el9`). Alternatively see [Active Development Container](#run-active-development-container).
+- Install the following packages: podman, docker-compose, java-25-openjdk-devel gettext
+- Make sure java 25 is the default with 'alternatives': `sudo alternatives --config java` & `sudo alternatives --config javac`
+- The `./bin/deployment/deploy-container` script is used for development (see [Active Development Container](#run-active-development-container)).
+
+### Deprecated/Legacy setup (vagrant/ansible)
+For working with older candlepin versions (before 5.0.0), you must use the legacy vagrant/ansible setup which is now
+deprecated. Instructions for setting that up can be found in [candlepinproject.org](https://www.candlepinproject.org/docs/candlepin/developer_deployment.html#vagrant)
 
 ### Run Active Development Container
-Assuming `podman` & either of `docker-compose` or `podman-compose` are installed, the following script can be
+Assuming `podman` & `docker-compose` are installed, the following script can be
 used to deploy a Candlepin and MariaDB/Postgres container. It uses the Containerfile and compose files used
 by the GitHub Actions spec-test setup.
 ```bash

@@ -2,6 +2,9 @@
 The Vagrantfile included with Candlepin is designed to provide a standardized testing and
 development environment, based on various versions of CentOS.
 
+**IMPORTANT: THE VAGRANT/ANSIBLE SETUP IS CONSIDERED DEPRECATED, AND WILL BE REMOVED IN THE FUTURE.
+The only reason it is not deleted yet is to allow users to work with older candlepin versions/branches (before 5.0.0).**
+
 By default, it will map in the Candlepin repo from which the Vagrant box is built, update the
 system packages, install any Candlepin dependencies (including PostgreSQL and MariaDB), and
 set up the user environment to be immediately usable.
