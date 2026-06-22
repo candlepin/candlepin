@@ -30,9 +30,9 @@ Gradle wrapper (`./gradlew`) is the build tool. Assumes JDK 25 is installed.
 ./gradlew checkstyle                                        # Checkstyle on all code
 ```
 
-## Running Locally (Dev Container)
+## Development Setup (Dev Container)
 
-Assumes `podman` & either of `docker-compose` or `podman-compose` are installed.
+Assumes `podman` & `docker-compose` are installed.
 ```bash
 ./bin/deployment/deploy-container -HMag         # redeploy Candlepin & Postgres in Hosted mode
 ./bin/deployment/deploy-container -Ma           # redeploy Candlepin & Postgres in Standalone mode
@@ -42,12 +42,6 @@ Assumes `podman` & either of `docker-compose` or `podman-compose` are installed.
 ./bin/deployment/deploy-container -HMag -p 2    # ports offset by 2: https://localhost:8445, debug 8002, db 5434
 ```
 Access at `https://localhost:8443/candlepin` (default, with `-p 0` or no `-p`).
-
-## Development Setup (Vagrant VM)
-
-Uses vagrant & ansible.
-Do NOT run vagrant commands, unless asked (humans only).
-Use [Running Locally](#running-locally-dev-container) instead.
 
 ## Architecture
 

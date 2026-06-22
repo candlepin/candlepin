@@ -1,5 +1,8 @@
 VAGRANTFILE_API_VERSION = "2"
 
+# IMPORTANT: THIS FILE IS NOW CONSIDERED DEPRECATED, AND WILL BE REMOVED IN THE FUTURE.
+# The only reason it is not deleted yet is to allow users to work with older candlepin versions/branches (before 5.0.0).
+
 ANSIBLE_TAGS_VAR = "ansible_tags"
 ANSIBLE_SKIP_TAGS_VAR = "ansible_skip_tags"
 ANSIBLE_VAR_PREFIX = "cp_"
