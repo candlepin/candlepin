@@ -216,6 +216,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         this.factValidator = Objects.requireNonNull(factValidator);
         this.cachedHostsProvider = Objects.requireNonNull(cachedHostsProvider);
         this.principalProvider = Objects.requireNonNull(principalProvider);
+
+        System.out.println("TESTING: Consumer curator created");
     }
 
     @Override

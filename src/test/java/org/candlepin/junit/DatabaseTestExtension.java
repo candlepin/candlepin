@@ -214,7 +214,7 @@ public class DatabaseTestExtension
             return;
         }
 
-        DatabaseTestFixture.cleanupParentInjector(this.jdbcUrl);
+        // DatabaseTestFixture.cleanupParentInjector(this.jdbcUrl);
 
         ExtensionContext.Store store = context.getStore(NAMESPACE);
         JdbcConnection connection = (JdbcConnection) store.get("connection");

@@ -100,6 +100,7 @@ import org.candlepin.validation.CandlepinMessageInterpolator;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
@@ -146,6 +147,7 @@ import javax.validation.ValidatorFactory;
 /**
  * Test fixture for test classes requiring access to the database.
  */
+@ExtendWith(GuiceExtension.class)
 @ExtendWith(DatabaseTestExtension.class)
 public class DatabaseTestFixture {
     protected static Logger log = LoggerFactory.getLogger(DatabaseTestFixture.class);
@@ -154,60 +156,107 @@ public class DatabaseTestFixture {
     private static final String DEFAULT_ACCOUNT = "ACC123";
     private static final String DEFAULT_ORDER = "ORD222";
 
+    @Inject
     protected DevConfig config;
 
+    @Inject
     protected ActivationKeyCurator activationKeyCurator;
+    @Inject
     protected ActivationKeyContentOverrideCurator activationKeyContentOverrideCurator;
+    @Inject
     protected AnonymousCloudConsumerCurator anonymousCloudConsumerCurator;
+    @Inject
     protected AnonymousContentAccessCertificateCurator anonymousContentAccessCertCurator;
+    @Inject
     protected AsyncJobStatusCurator asyncJobCurator;
+    @Inject
     protected CdnCurator cdnCurator;
+    @Inject
     protected CertificateSerialCurator certSerialCurator;
 
+    @Inject
     protected ConsumerCurator consumerCurator;
+    @Inject
     protected ConsumerTypeCurator consumerTypeCurator;
+    @Inject
     protected ConsumerContentOverrideCurator consumerContentOverrideCurator;
+    @Inject
     protected ContentAccessCertificateCurator caCertCurator;
+    @Inject
     protected ContentAccessPayloadCurator caPayloadCurator;
+    @Inject
     protected ContentCurator contentCurator;
+    @Inject
     protected DeletedConsumerCurator deletedConsumerCurator;
+    @Inject
     protected DistributorVersionCurator distributorVersionCurator;
+    @Inject
     protected EntitlementCurator entitlementCurator;
+    @Inject
     protected EntitlementCertificateCurator entitlementCertificateCurator;
+    @Inject
     protected EnvironmentCurator environmentCurator;
+    @Inject
     protected EnvironmentContentCurator environmentContentCurator;
+    @Inject
     protected EnvironmentContentOverrideCurator environmentContentOverrideCurator;
+    @Inject
     protected ExporterMetadataCurator exporterMetadataCurator;
+    @Inject
     protected GuestIdCurator guestIdCurator;
+    @Inject
     protected IdentityCertificateCurator identityCertificateCurator;
+    @Inject
     protected ImportRecordCurator importRecordCurator;
+    @Inject
     protected KeyPairDataCurator keyPairDataCurator;
+    @Inject
     protected ManifestFileRecordCurator manifestFileRecordCurator;
+    @Inject
     protected OwnerCurator ownerCurator;
+    @Inject
     protected OwnerInfoCurator ownerInfoCurator;
+    @Inject
     protected PermissionBlueprintCurator permissionBlueprintCurator;
+    @Inject
     protected ProductCertificateCurator productCertificateCurator;
+    @Inject
     protected ProductCurator productCurator;
+    @Inject
     protected PoolCurator poolCurator;
+    @Inject
     protected RoleCurator roleCurator;
+    @Inject
     protected RulesCurator rulesCurator;
+    @Inject
     protected SubscriptionsCertificateCurator subscriptionsCertificateCurator;
+    @Inject
     protected UeberCertificateCurator ueberCertificateCurator;
+    @Inject
     protected UserCurator userCurator;
 
+    @Inject
     protected PermissionFactory permissionFactory;
+    @Inject
     protected ModelTranslator modelTranslator;
+    @Inject
     protected ResourceLocatorMap locatorMap;
+    @Inject
     protected MethodLocator methodLocator;
+    @Inject
     protected AnnotationLocator annotationLocator;
+
+    @Inject
+    private Injector parentInjector;
+    protected Injector injector;
+
 
     // No shutdown hook needed: HSQLDB in-memory databases are discarded when the JVM exits,
     // and normal cleanup is handled by DatabaseTestExtension.afterAll via cleanupParentInjector.
-    private static final ConcurrentHashMap<String, Injector> PARENT_INJECTORS =
-        new ConcurrentHashMap<>();
+    // private static final ConcurrentHashMap<String, Injector> PARENT_INJECTORS =
+    //     new ConcurrentHashMap<>();
 
     private String jdbcUrl;
-    protected Injector injector;
     private CandlepinRequestScope cpRequestScope;
 
     protected TestingInterceptor securityInterceptor;
@@ -226,14 +275,30 @@ public class DatabaseTestFixture {
     }
 
     public void init(boolean beginTransaction) throws Exception {
-        Injector parentInjector = getOrCreateParentInjector(this.jdbcUrl);
+        // Injector parentInjector = getOrCreateParentInjector(this.jdbcUrl);
         this.config = (DevConfig) parentInjector.getInstance(Configuration.class);
         TestConfig.resetToDefaults(this.config);
 
+        // TODO: This is not correct
         Module instancedTestModule = Modules.override(
-            new TestingModules.StandardTest(this.config, false))
+            new TestingModules.StandardTest(this.config, false),
+            createJpaModule(this.jdbcUrl),
+            new TestingModules.PKIModule(),
+            new AbstractModule() {
+                @Override
+                protected void configure() {
+                    bind(Configuration.class).toInstance(TestConfig.defaults());
+                }
+            })
             .with(this.getGuiceOverrideModule());
-        this.injector = parentInjector.createChildInjector(instancedTestModule);
+
+        // this.injector = parentInjector.createChildInjector(instancedTestModule);
+
+        // TODO: This is not working
+        this.injector = parentInjector.createChildInjector(Modules.override(new TestingModules.MockJpaModule()).with(createJpaModule(this.jdbcUrl)));
+
+        insertValidationEventListeners(this.injector);
+        this.injector.injectMembers(this);
 
         methodLocator = new MethodLocator(injector);
         methodLocator.init();
@@ -242,14 +307,17 @@ public class DatabaseTestFixture {
         locatorMap.init();
 
         annotationLocator = new AnnotationLocator(methodLocator);
-        loadFromInjector();
+        // loadFromInjector();
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.i18nProvider = () -> this.i18n;
 
+        this.cpRequestScope = injector.getInstance(CandlepinRequestScope.class);
+        this.securityInterceptor = this.injector.getInstance(TestingInterceptor.class);
+
         cpRequestScope.exit();
         cpRequestScope.enter();
-        this.injector.injectMembers(this);
+        // this.injector.injectMembers(this);
 
         dateSource = (DateSourceForTesting) this.injector.getInstance(DateSource.class);
         dateSource.currentDate(TestUtil.createDate(2010, 1, 1));
@@ -261,54 +329,6 @@ public class DatabaseTestFixture {
             this.beginTransaction();
             this.rulesCurator.updateDbRules();
         }
-    }
-
-    private void loadFromInjector() {
-        securityInterceptor = this.injector.getInstance(TestingInterceptor.class);
-        permissionFactory = this.injector.getInstance(PermissionFactory.class);
-        modelTranslator = this.injector.getInstance(ModelTranslator.class);
-        cpRequestScope = this.injector.getInstance(CandlepinRequestScope.class);
-        activationKeyCurator = this.injector.getInstance(ActivationKeyCurator.class);
-        activationKeyContentOverrideCurator = this.injector
-            .getInstance(ActivationKeyContentOverrideCurator.class);
-        anonymousCloudConsumerCurator = this.injector
-            .getInstance(AnonymousCloudConsumerCurator.class);
-        anonymousContentAccessCertCurator = this.injector
-            .getInstance(AnonymousContentAccessCertificateCurator.class);
-        asyncJobCurator = this.injector.getInstance(AsyncJobStatusCurator.class);
-        cdnCurator = this.injector.getInstance(CdnCurator.class);
-        certSerialCurator = this.injector.getInstance(CertificateSerialCurator.class);
-        consumerCurator = this.injector.getInstance(ConsumerCurator.class);
-        consumerTypeCurator = this.injector.getInstance(ConsumerTypeCurator.class);
-        consumerContentOverrideCurator = this.injector.getInstance(ConsumerContentOverrideCurator.class);
-        caCertCurator = this.injector.getInstance(ContentAccessCertificateCurator.class);
-        caPayloadCurator = this.injector.getInstance(ContentAccessPayloadCurator.class);
-        contentCurator = this.injector.getInstance(ContentCurator.class);
-        deletedConsumerCurator = this.injector.getInstance(DeletedConsumerCurator.class);
-        distributorVersionCurator = this.injector.getInstance(DistributorVersionCurator.class);
-        entitlementCurator = this.injector.getInstance(EntitlementCurator.class);
-        entitlementCertificateCurator = this.injector.getInstance(EntitlementCertificateCurator.class);
-        environmentCurator = this.injector.getInstance(EnvironmentCurator.class);
-        environmentContentCurator = this.injector.getInstance(EnvironmentContentCurator.class);
-        environmentContentOverrideCurator = this.injector
-            .getInstance(EnvironmentContentOverrideCurator.class);
-        exporterMetadataCurator = this.injector.getInstance(ExporterMetadataCurator.class);
-        guestIdCurator = this.injector.getInstance(GuestIdCurator.class);
-        identityCertificateCurator = this.injector.getInstance(IdentityCertificateCurator.class);
-        importRecordCurator = this.injector.getInstance(ImportRecordCurator.class);
-        keyPairDataCurator = injector.getInstance(KeyPairDataCurator.class);
-        manifestFileRecordCurator = this.injector.getInstance(ManifestFileRecordCurator.class);
-        ownerCurator = this.injector.getInstance(OwnerCurator.class);
-        ownerInfoCurator = this.injector.getInstance(OwnerInfoCurator.class);
-        permissionBlueprintCurator = this.injector.getInstance(PermissionBlueprintCurator.class);
-        productCertificateCurator = this.injector.getInstance(ProductCertificateCurator.class);
-        productCurator = this.injector.getInstance(ProductCurator.class);
-        poolCurator = this.injector.getInstance(PoolCurator.class);
-        roleCurator = this.injector.getInstance(RoleCurator.class);
-        rulesCurator = this.injector.getInstance(RulesCurator.class);
-        subscriptionsCertificateCurator = this.injector.getInstance(SubscriptionsCertificateCurator.class);
-        ueberCertificateCurator = this.injector.getInstance(UeberCertificateCurator.class);
-        userCurator = this.injector.getInstance(UserCurator.class);
     }
 
     @AfterEach
@@ -332,7 +352,7 @@ public class DatabaseTestFixture {
         TestPrincipalProvider.clearPrincipal();
         manager.clear();
 
-        Injector parentInjector = getOrCreateParentInjector(this.jdbcUrl);
+        // Injector parentInjector = getOrCreateParentInjector(this.jdbcUrl);
         reset(parentInjector.getInstance(HttpServletRequest.class));
         reset(parentInjector.getInstance(HttpServletResponse.class));
     }
@@ -346,32 +366,32 @@ public class DatabaseTestFixture {
         };
     }
 
-    private static Injector getOrCreateParentInjector(String jdbcUrl) {
-        return PARENT_INJECTORS.computeIfAbsent(jdbcUrl, url -> {
-            Injector injector = Guice.createInjector(
-                createJpaModule(url),
-                new TestingModules.PKIModule(),
-                new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        bind(Configuration.class).toInstance(TestConfig.defaults());
-                    }
-                });
-            insertValidationEventListeners(injector);
-            return injector;
-        });
-    }
+    // private static Injector getOrCreateParentInjector(String jdbcUrl) {
+    //     return PARENT_INJECTORS.computeIfAbsent(jdbcUrl, url -> {
+    //         Injector injector = Guice.createInjector(
+    //             createJpaModule(url),
+    //             new TestingModules.PKIModule(),
+    //             new AbstractModule() {
+    //                 @Override
+    //                 protected void configure() {
+    //                     bind(Configuration.class).toInstance(TestConfig.defaults());
+    //                 }
+    //             });
+    //         insertValidationEventListeners(injector);
+    //         return injector;
+    //     });
+    // }
 
-    public static void cleanupParentInjector(String jdbcUrl) {
-        Injector injector = PARENT_INJECTORS.remove(jdbcUrl);
-        if (injector != null) {
-            injector.getInstance(PersistFilter.class).destroy();
-            EntityManagerFactory emf = injector.getInstance(EntityManagerFactory.class);
-            if (emf.isOpen()) {
-                emf.close();
-            }
-        }
-    }
+    // public static void cleanupParentInjector(String jdbcUrl) {
+    //     Injector injector = PARENT_INJECTORS.remove(jdbcUrl);
+    //     if (injector != null) {
+    //         injector.getInstance(PersistFilter.class).destroy();
+    //         EntityManagerFactory emf = injector.getInstance(EntityManagerFactory.class);
+    //         if (emf.isOpen()) {
+    //             emf.close();
+    //         }
+    //     }
+    // }
 
     public static AbstractModule createJpaModule(String jdbcUrl) {
         return new AbstractModule() {
