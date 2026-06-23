@@ -243,7 +243,7 @@ public class OwnerProductResource implements OwnerProductApi {
 
         if (!forbiddenIds.isEmpty()) {
             throw new ForbiddenException(
-                this.i18n.tr("Cannot attach content defined outside of the organization's namespace: {0}",
+                this.i18n.tr("Cannot attach content defined outside of the organization''s namespace: {0}",
                     forbiddenIds));
         }
 
@@ -413,7 +413,7 @@ public class OwnerProductResource implements OwnerProductApi {
 
         if (!forbiddenIds.isEmpty()) {
             throw new ForbiddenException(
-                this.i18n.tr("Cannot attach product defined outside of the organization's namespace: {0}",
+                this.i18n.tr("Cannot attach product defined outside of the organization''s namespace: {0}",
                     forbiddenIds));
         }
     }
