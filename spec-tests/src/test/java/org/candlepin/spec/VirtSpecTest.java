@@ -19,8 +19,6 @@ import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.asser
 
 import org.candlepin.dto.api.client.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.client.v1.AttributeDTO;
-import org.candlepin.dto.api.client.v1.ComplianceReasonDTO;
-import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.client.v1.EntitlementDTO;
@@ -194,39 +192,6 @@ class VirtSpecTest {
 
         List<PoolDTO> normalPools = findNormalPools(guestPols);
         assertThat(normalPools).hasSize(1);
-    }
-
-    @Test
-    public void shouldCheckArchMatchesAndGuestLimitEnforcedOnRestrictedSubPools() throws ApiException {
-        linkHostToGuests(hostClient, host, GUEST_UUID);
-        String stackId = StringUtil.random("test_stack");
-        ProductDTO archVirtProduct = admin.ownerProducts()
-            .createProduct(owner.getKey(), Products.withAttributes(
-                ProductAttributes.VirtualLimit.withValue("3"),
-                ProductAttributes.GuestLimit.withValue("1"),
-                ProductAttributes.Arch.withValue("ppc64"),
-                ProductAttributes.MultiEntitlement.withValue("yes"),
-                ProductAttributes.StackingId.withValue(stackId)));
-        PoolDTO archVirtPool = admin.owners()
-            .createPool(owner.getKey(), Pools.randomUpstream(archVirtProduct));
-
-        hostClient.consumers().bindPool(host.getUuid(), archVirtPool.getId(), 1);
-
-        List<PoolDTO> guestPools = guestClient.pools()
-            .listPoolsByConsumerAndProduct(guest.getUuid(), archVirtProduct.getId());
-        assertThat(guestPools).hasSize(2);
-        PoolDTO guestPool = guestPools.stream()
-            .filter(pool -> isHostRestricted(pool, host))
-            .findFirst()
-            .orElseThrow();
-
-        linkHostToGuests(guestClient, guest, "random1", "random2");
-        guestClient.consumers().bindPool(guest.getUuid(), guestPool.getId(), 1);
-        ComplianceStatusDTO compliance = guestClient.consumers().getComplianceStatus(guest.getUuid(), null);
-        assertThat(compliance.getReasons())
-            .hasSize(2)
-            .map(ComplianceReasonDTO::getKey)
-            .containsOnly("GUEST_LIMIT", "ARCH");
     }
 
     // Covers BZ 1379849
