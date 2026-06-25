@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 
-import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERUTF8String;
@@ -27,20 +26,29 @@ import org.bouncycastle.asn1.DERUTF8String;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.DataFormatException;
-import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
+
 
 
 public final class CertificateUtil {
+
+    /** Regular expression for finding the delimiters for the entitlement data in a certificate */
+    private static final Pattern REGEX_ENTITLEMENT_DATA = Pattern
+        .compile("-----(?:BEGIN|END) ENTITLEMENT DATA-----");
 
     private CertificateUtil() {
         throw new UnsupportedOperationException();
@@ -118,17 +126,18 @@ public final class CertificateUtil {
     }
 
     /**
-     * Decodes and uncompresses a certificate body into a {@link JsonNode}.
+     * Decodes and uncompresses a certificate's entitlement body into a {@link JsonNode}.
      * Note that this will fail if you forgot to make your consumer V3 capable
      *
      * @param certificate
-     *  the encoded and compressed body of the certificate
+     *  the base-64 encoded, compressed certificate data
      *
      * @param mapper
-     *  used to parse the json
+     *  A jackson ObjectMapper to use to parse the entitlement JSON data
      *
      * @return
-     *  the certificate json
+     *  A JsonNode representing the root of the entitlement data, or null if the certificate did not contain
+     *  any entitlement data.
      *
      * @throws IOException
      *  if unable to decompress the body of the certificate or parse the json
@@ -141,33 +150,25 @@ public final class CertificateUtil {
             return null;
         }
 
+        // Trim off any extra double-serialization artifacts that may be present
         certificate = certificate.replace("\"", "")
             .replace("\\n", Character.toString((char) 10));
 
         // Retrieve the compressed data body
-        certificate = certificate.split("-----BEGIN ENTITLEMENT DATA-----")[1];
-        certificate = certificate.split("-----END ENTITLEMENT DATA-----")[0];
-        byte[] compressedBody = fromBase64(certificate.getBytes());
+        String[] chunks = REGEX_ENTITLEMENT_DATA.split(certificate, 3);
+        if (chunks.length < 3) {
+            return null;
+        }
+
+        byte[] compressedBody = Base64.getMimeDecoder().decode(chunks[1]);
 
         // Decompress the data
-        Inflater decompressor = new Inflater();
-        decompressor.setInput(compressedBody);
-        byte[] decompressedBody = new byte[48000];
-        int decompressedSize;
-        try {
-            decompressedSize = decompressor.inflate(decompressedBody);
+        try (InputStream istream = new InflaterInputStream(new ByteArrayInputStream(compressedBody))) {
+            return mapper.readTree(istream);
         }
-        catch (DataFormatException e) {
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
-        decompressor.end();
-
-        return mapper.readTree(new String(decompressedBody, 0, decompressedSize));
-    }
-
-    private static byte[] fromBase64(byte[] data) {
-        Base64 base64 = new Base64();
-        return base64.decode(data);
     }
 
     public static byte[] compressedContentExtensionValueFromCert(String certString, String extensionId)
