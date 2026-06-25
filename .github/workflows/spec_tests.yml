@@ -73,7 +73,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/cache/restore@v5
+      - uses: actions/cache/restore@v6
         id: restore-tomcat
         with:
           path: apache-tomcat-${{ env.TOMCAT_VERSION }}.tar.gz
@@ -86,7 +86,7 @@ jobs:
                 -O apache-tomcat-${{ env.TOMCAT_VERSION }}.tar.gz
           fi
 
-      - uses: actions/cache/save@v5
+      - uses: actions/cache/save@v6
         if: steps.restore-tomcat.outputs.cache-matched-key == '' # If cache is not present save tomcat to cache
         with:
           path: apache-tomcat-${{ env.TOMCAT_VERSION }}.tar.gz
