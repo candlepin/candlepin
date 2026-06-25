@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.8.1
+Version: 4.8.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,10 @@ fi
 
 #raw
 %changelog
+* Thu Jun 25 2026 candlepin-bot 4.8.2-1
+- CANDLEPIN-1215: Updated GET compliance status to return static response
+  (jalbrech@redhat.com)
+
 * Mon May 04 2026 Nikos Moumoulidis <nmoumoul@redhat.com> 4.8.1-1
 - Add new translations using Weblate (hosted@weblate.org)
 - updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
