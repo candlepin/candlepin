@@ -30,8 +30,6 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
 import org.slf4j.Logger;
@@ -1015,16 +1013,20 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             .distinct()
             .toList();
 
-        // Fetch the entities from the DB...
-        if (ordered.size() > 0) {
-            return this.currentSession()
-                .byMultipleIds(entityClass)
-                .enableOrderedReturn(false)
-                .with(new LockOptions(LockMode.PESSIMISTIC_WRITE))
-                .multiLoad(ordered);
+        if (ordered.isEmpty()) {
+            return new ArrayList<>();
         }
 
-        return new ArrayList<>();
+        EntityManager entityManager = this.getEntityManager();
+        List<E> result = new ArrayList<>();
+        for (Serializable id : ids) {
+            E entity = entityManager.find(entityClass, id, LockModeType.PESSIMISTIC_WRITE);
+            if (entity != null) {
+                result.add(entity);
+            }
+        }
+
+        return result;
     }
 
     /**

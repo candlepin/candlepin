@@ -16,7 +16,6 @@ package org.candlepin.spec.entitlements;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.candlepin.dto.api.client.v1.AttributeDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
@@ -30,9 +29,11 @@ import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
+import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
+import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -70,68 +71,71 @@ public class EntitlementResourceConcurrentSpecTest {
     @Test
     public void shouldAllowConcurrentRequests() {
         ProductDTO product = Products.random();
-        product.setAttributes(List.of(new AttributeDTO().name("multi-entitlement").value("yes")));
+        product.setAttributes(List.of(ProductAttributes.MultiEntitlement.withValue("yes")));
         product = ownerProductApi.createProduct(owner.getKey(), product);
         PoolDTO pool = Pools.random().productId(product.getId()).quantity(50L);
         pool = ownerClient.createPool(owner.getKey(), pool);
 
         String poolId = pool.getId();
         List<Runnable> threads = List.of(
-            () -> registerAndConsume(poolId, "system", 5),
-            () -> registerAndConsume(poolId, "candlepin", 7),
-            () -> registerAndConsume(poolId, "system", 6),
-            () -> registerAndConsume(poolId, "candlepin", 11));
+            () -> registerAndConsume(poolId, ConsumerTypes.System.label(), 5),
+            () -> registerAndConsume(poolId, ConsumerTypes.Candlepin.label(), 7),
+            () -> registerAndConsume(poolId, ConsumerTypes.System.label(), 6),
+            () -> registerAndConsume(poolId, ConsumerTypes.Candlepin.label(), 11));
 
         runAllThreads(threads);
 
-        PoolDTO thePool = poolApi.getPool(pool.getId(), null, null);
-        assertEquals(29, thePool.getConsumed());
-        assertEquals(18, thePool.getExported());
+        PoolDTO actual = poolApi.getPool(pool.getId(), null, null);
+
+        assertEquals(29, actual.getConsumed());
+        assertEquals(18, actual.getExported());
     }
 
     @Test
     public void shouldNotAllowOverConsumption() {
         ProductDTO product = Products.random();
-        product.setAttributes(List.of(new AttributeDTO().name("multi-entitlement").value("yes")));
+        product.setAttributes(List.of(ProductAttributes.MultiEntitlement.withValue("yes")));
         product = ownerProductApi.createProduct(owner.getKey(), product);
         PoolDTO pool = Pools.random().productId(product.getId()).quantity(3L);
         pool = ownerClient.createPool(owner.getKey(), pool);
 
         String poolId = pool.getId();
         List<Runnable> threads = List.of(
-            () -> registerAndConsume(poolId, "candlepin", 1),
-            () -> registerAndConsume(poolId, "system", 1),
-            () -> registerAndConsume(poolId, "candlepin", 1),
-            () -> registerAndConsume(poolId, "candlepin", 1),
-            () -> registerAndConsume(poolId, "candlepin", 1));
+            () -> registerAndConsume(poolId, ConsumerTypes.Candlepin.label(), 1),
+            () -> registerAndConsume(poolId, ConsumerTypes.System.label(), 1),
+            () -> registerAndConsume(poolId, ConsumerTypes.Candlepin.label(), 1),
+            () -> registerAndConsume(poolId, ConsumerTypes.Candlepin.label(), 1),
+            () -> registerAndConsume(poolId, ConsumerTypes.Candlepin.label(), 1));
 
         runAllThreads(threads);
 
-        PoolDTO thePool = poolApi.getPool(pool.getId(), null, null);
-        assertEquals(3, thePool.getConsumed());
+        PoolDTO actual = poolApi.getPool(pool.getId(), null, null);
+
+        assertEquals(3, actual.getConsumed());
     }
 
     @Test
     public void shouldEndAtZeroConsumption() {
         ProductDTO product = Products.random();
-        product.setAttributes(List.of(new AttributeDTO().name("multi-entitlement").value("yes")));
+        product.setAttributes(List.of(ProductAttributes.MultiEntitlement.withValue("yes")));
         product = ownerProductApi.createProduct(owner.getKey(), product);
         PoolDTO pool = Pools.random().productId(product.getId()).quantity(3L);
         pool = ownerClient.createPool(owner.getKey(), pool);
 
         String poolId = pool.getId();
         List<Runnable> threads = List.of(
-            () -> registerConsumeUnregister(poolId, "candlepin", 1),
-            () -> registerConsumeUnregister(poolId, "system", 1),
-            () -> registerConsumeUnregister(poolId, "candlepin", 1),
-            () -> registerConsumeUnregister(poolId, "system", 1),
-            () -> registerConsumeUnregister(poolId, "candlepin", 1));
+            () -> registerConsumeUnregister(poolId, ConsumerTypes.Candlepin.label(), 1),
+            () -> registerConsumeUnregister(poolId, ConsumerTypes.System.label(), 1),
+            () -> registerConsumeUnregister(poolId, ConsumerTypes.Candlepin.label(), 1),
+            () -> registerConsumeUnregister(poolId, ConsumerTypes.System.label(), 1),
+            () -> registerConsumeUnregister(poolId, ConsumerTypes.Candlepin.label(), 1));
 
         runAllThreads(threads);
 
-        PoolDTO thePool = poolApi.getPool(pool.getId(), null, null);
-        assertEquals(0, thePool.getConsumed());
-        assertEquals(0, thePool.getExported());
+        PoolDTO actual = poolApi.getPool(pool.getId(), null, null);
+
+        assertEquals(0, actual.getConsumed());
+        assertEquals(0, actual.getExported());
     }
 
     private static void runAllThreads(Collection<Runnable> threads) {

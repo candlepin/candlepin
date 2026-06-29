@@ -98,7 +98,8 @@ public class OwnerManager {
         log.info("Cleaning up owner: {}", owner);
 
         Collection<String> consumerIds = this.ownerCurator.getConsumerIds(owner);
-        Collection<Consumer> consumers = this.consumerCurator.lockAndLoad(consumerIds);
+        Collection<Consumer> consumers = this.consumerCurator.getConsumers(consumerIds);
+        this.consumerCurator.lock(consumers);
 
         for (Consumer consumer : consumers) {
             log.info("Removing all entitlements for consumer: {}", consumer);
