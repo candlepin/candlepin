@@ -1,5 +1,5 @@
 [versions]
-artemis = "2.54.0"
+artemis = "2.55.0"
 bouncycastle = "1.84"
 guice = "7.0.0"
 hibernate = "6.6.50.Final"
