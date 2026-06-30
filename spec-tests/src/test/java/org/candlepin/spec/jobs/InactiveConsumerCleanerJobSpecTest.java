@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -41,6 +41,7 @@ import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Isolated;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -51,6 +52,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * These tests are run in insolation because it is possible that an inactive consumer cleaner job from one
+ * test can delete consumers from another test if they are run in parallel. This can lead to sporadic test
+ * failures.
+ */
+
+@Isolated
 @SpecTest
 public class InactiveConsumerCleanerJobSpecTest {
 
