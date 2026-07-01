@@ -97,6 +97,7 @@ public class SecurityHoleAuthorizationFilterTest {
         Injector injector = Guice.createInjector(
             new TestingModules.MockJpaModule(),
             new TestingModules.ServletEnvironmentModule(),
+            new TestingModules.PKIModule(),
             new TestingModules.StandardTest());
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 

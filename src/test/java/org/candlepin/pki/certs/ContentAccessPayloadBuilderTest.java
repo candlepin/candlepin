@@ -38,6 +38,7 @@ import org.candlepin.util.X509V3ExtensionUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -63,10 +64,14 @@ import java.util.zip.InflaterInputStream;
 
 public class ContentAccessPayloadBuilderTest extends DatabaseTestFixture {
 
-    // The crypto manager we'll use for these tests
-    private static final CryptoManager CRYPTO_MANAGER = CryptoUtil.getCryptoManager();
+    private CryptoManager cryptoManager;
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    @BeforeEach
+    public void setUp() {
+        this.cryptoManager = this.injector.getInstance(CryptoManager.class);
+    }
 
     private static Stream<Arguments> schemeSource() {
         return CryptoUtil.SUPPORTED_SCHEMES.values()
@@ -84,7 +89,7 @@ public class ContentAccessPayloadBuilderTest extends DatabaseTestFixture {
 
     private ContentAccessPayloadBuilder buildContentAccessPayloadBuilder() {
         return new ContentAccessPayloadBuilder(
-            CRYPTO_MANAGER,
+            this.cryptoManager,
             this.buildEntitlementPayloadGenerator(),
             this.buildV3ExtensionUtil(),
             this.contentCurator,
@@ -228,7 +233,7 @@ public class ContentAccessPayloadBuilderTest extends DatabaseTestFixture {
         byte[] content = this.parsePayloadSection(payload.getPayload(), contentHeader, contentFooter);
         byte[] signature = this.parsePayloadSection(payload.getPayload(), signatureHeader, signatureFooter);
 
-        boolean valid = CRYPTO_MANAGER.getSignatureValidator(scheme)
+        boolean valid = this.cryptoManager.getSignatureValidator(scheme)
             .forSignature(signature)
             .validate(content);
 

@@ -112,4 +112,9 @@ public final class TestConfig {
             .setPropertiesFrom(DEFAULT_CONFIG);
     }
 
+    public static void resetToDefaults(DevConfig config) {
+        config.reset()
+            .setPropertiesFrom(DEFAULT_CONFIG);
+    }
+
 }

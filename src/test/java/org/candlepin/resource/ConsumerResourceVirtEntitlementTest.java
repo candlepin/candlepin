@@ -18,9 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
-import org.candlepin.config.DevConfig;
-import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.PoolService;
@@ -80,6 +77,12 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
     @Override
     public void init() throws Exception {
         super.init(false);
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
+        this.config.setProperty(ConfigProperties.CONSUMER_FACTS_MATCHER, "^virt.*");
+        this.config.setProperty(ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN,
+            "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
+        this.config.setProperty(ConfigProperties.CONSUMER_PERSON_NAME_PATTERN,
+            "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
 
         poolService = injector.getInstance(PoolService.class);
         consumerResource = injector.getInstance(ConsumerResource.class);
@@ -259,14 +262,6 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
     private static class ConsumerResourceVirtEntitlementModule extends AbstractModule {
         @Override
         protected void configure() {
-            DevConfig config = TestConfig.defaults();
-            config.setProperty(ConfigProperties.STANDALONE, "false");
-            config.setProperty(ConfigProperties.CONSUMER_FACTS_MATCHER, "^virt.*");
-            config.setProperty(ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN,
-                "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
-            config.setProperty(ConfigProperties.CONSUMER_PERSON_NAME_PATTERN,
-                "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
-            bind(Configuration.class).toInstance(config);
             bind(Enforcer.class).to(EntitlementRules.class);
         }
     }
