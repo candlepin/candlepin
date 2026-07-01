@@ -4,14 +4,14 @@
 # 김인수 <simmon@nplob.com>, 2021, 2022, 2023, 2024, 2025, 2026.
 # Pino Toscano <ptoscano@redhat.com>, 2022.
 # Jiri Hnidek <jiri.hnidek@gmail.com>, 2022.
-# John Sefler <jsefler@redhat.com>, 2022.
+# John Sefler <jsefler@redhat.com>, 2022, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-03 07:34+0000\n"
-"PO-Revision-Date: 2026-05-05 16:19+0000\n"
-"Last-Translator: 김인수 <simmon@nplob.com>\n"
+"PO-Revision-Date: 2026-06-23 20:33+0000\n"
+"Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ko/>\n"
 "Language: ko\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17.1\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -2196,7 +2196,7 @@ msgstr "매개변수 \"{0}\"는 양의 정수여야 합니다"
 
 #: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:123
 msgid "the order parameter must be either \"ascending\" or \"descending\""
-msgstr "order 매개변수는 ''오름차순'' 또는 ''내림차순''이어야 합니다"
+msgstr "order 매개변수는 \"오름차순\" 또는 \"내림차순\"이어야 합니다"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -2470,7 +2470,7 @@ msgstr "과거의 날짜이어야 합니다"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:68
 msgid "must match \"{regexp}\""
-msgstr "''{regexp}''과(와) 일치해야 합니다"
+msgstr "\"{regexp}\"과(와) 일치해야 합니다"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:70
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:76

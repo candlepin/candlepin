@@ -3,13 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 # Didik Supriadi <didiksupriadi41@gmail.com>, 2021, 2022.
 # Arif Budiman <arifpedia@gmail.com>, 2026.
+# eko ikhyar <ikhyar.com@gmail.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-05-03 07:34+0000\n"
-"PO-Revision-Date: 2026-05-01 03:59+0000\n"
-"Last-Translator: Arif Budiman <arifpedia@gmail.com>\n"
+"PO-Revision-Date: 2026-06-24 09:17+0000\n"
+"Last-Translator: eko ikhyar <ikhyar.com@gmail.com>\n"
 "Language-Team: Indonesian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/id/>\n"
 "Language: id\n"
@@ -17,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17.1\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -403,11 +404,11 @@ msgid "Unexpected error from Cloud Registration Service: {0}"
 msgstr "Kesalahan tak terduga dari Layanan Registrasi Cloud: {0}"
 
 #: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:104
-#, fuzzy
-#| msgid "Unable to create entitlement certificate archive"
 msgid ""
 "Unable to generate a usable certificate from Entitlement Certificate Service"
-msgstr "Tidak dapat membuat arsip sertifikat entitlement"
+msgstr ""
+"Tidak dapat menghasilkan sertifikat yang dapat digunakan dari Layanan "
+"Sertifikat Hak Akses"
 
 #: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:108
 #, java-format
@@ -889,6 +890,8 @@ msgid ""
 "Unable to process authorization request: cryptographic capabilities exceed "
 "data storage capabilities"
 msgstr ""
+"Permintaan otorisasi tidak dapat diproses: kemampuan kriptografi melebihi "
+"kemampuan penyimpanan data"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:159
 msgid ""
@@ -1012,6 +1015,8 @@ msgid ""
 "Unable to persist consumer: cryptographic capabilities exceed data storage "
 "capabilities"
 msgstr ""
+"Konsumen tidak dapat dipertahankan: kemampuan kriptografi melebihi kemampuan "
+"penyimpanan data"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1193
 #, java-format
