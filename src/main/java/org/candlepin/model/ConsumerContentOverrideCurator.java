@@ -16,6 +16,8 @@ package org.candlepin.model;
 
 import org.hibernate.query.NativeQuery;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -110,8 +112,14 @@ public class ConsumerContentOverrideCurator extends
                 }
             };
 
-            override.setCreated((Date) row[0])
-                .setUpdated((Date) row[1]);
+            /**
+             * As of Hibernate 7, native queries now return java.time classes instead of java.sql classes
+             * for date/time types.
+             */
+            LocalDateTime created = (LocalDateTime) row[0];
+            LocalDateTime updated = (LocalDateTime) row[1];
+            override.setCreated(Date.from(created.atZone(ZoneId.systemDefault()).toInstant()))
+                .setUpdated(Date.from(updated.atZone(ZoneId.systemDefault()).toInstant()));
 
             override.setContentLabel(contentLabel)
                 .setName(attribName)

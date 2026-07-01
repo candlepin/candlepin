@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,6 +14,10 @@
  */
 package org.candlepin.junit;
 
+import org.candlepin.jpa.PersistenceUnit;
+import org.candlepin.jpa.PersistenceXml;
+import org.candlepin.jpa.PersistenceXmlParser;
+
 import liquibase.Liquibase;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
@@ -22,8 +26,6 @@ import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 
-import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
-import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -36,7 +38,6 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
-import java.util.Collections;
 
 /**
  * The LiquibaseExtension class performs initialization and teardown of a temporary database for use
@@ -55,6 +56,9 @@ public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, 
     private static final String DROP_SQL = "DROP SCHEMA IF EXISTS %s CASCADE";
     private static final String SHUTDOWN_CMD = "SHUTDOWN";
 
+    private static final String TESTING_PERSISTENCE_UNIT_NAME = "testing";
+    private static final String CONNECTION_URL_KEY = "hibernate.connection.url";
+
     private Liquibase liquibase;
     private ResourceAccessor accessor;
     private Database database;
@@ -66,7 +70,7 @@ public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, 
         try {
             this.hsqldbDir = this.setupTempDirectory();
 
-            String connectionUrl = getJdbcUrl("testing");
+            String connectionUrl = getJdbcUrl(TESTING_PERSISTENCE_UNIT_NAME);
             Connection jdbcConnection = DriverManager.getConnection(connectionUrl, "sa", "");
             this.connection = new JdbcConnection(jdbcConnection);
             this.database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(this.connection);
@@ -128,15 +132,17 @@ public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, 
         truncatePublicSchema();
     }
 
-    private String getJdbcUrl(String persistenceUnit) {
-        for (ParsedPersistenceXmlDescriptor unit :
-            PersistenceXmlParser.locatePersistenceUnits(Collections.emptyMap())) {
-            if (unit.getName().equals("testing")) {
-                return unit.getProperties().getProperty("hibernate.connection.url");
-            }
+    private String getJdbcUrl(String persistenceUnit) throws IOException {
+        PersistenceXml persistence = PersistenceXmlParser.parse();
+        if (persistence == null) {
+            throw new RuntimeException("Unable to parse persistence.xml file");
         }
-        throw new RuntimeException("Couldn't locate persistence unit " + persistenceUnit + " in your " +
-            "persistence.xml!");
+
+        PersistenceUnit unit = persistence.getUnit(persistenceUnit)
+            .orElseThrow(() -> new RuntimeException("Unable to retrieve the testing persistence unit"));
+
+        return unit.getPropertyValue(CONNECTION_URL_KEY)
+            .orElseThrow(() -> new RuntimeException("Unable to retrieve jdbc URL from persistence unit properties"));
     }
 
     public void runUpdate() throws LiquibaseException {

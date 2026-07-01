@@ -2,9 +2,9 @@
 artemis = "2.55.0"
 bouncycastle = "1.84"
 guice = "7.0.0"
-hibernate = "6.6.50.Final"
-hibernate-validator = "8.0.3.Final"
-jackson = "3.1.3"
+hibernate = "7.4.2.Final"
+hibernate-validator = "9.1.1.Final"
+jackson = "3.2.0"
 jaxb = "4.0.9"
 junit = "6.1.1"
 okhttp3 = "5.4.0"
@@ -47,15 +47,16 @@ hibernate = { module = "jakarta.persistence:jakarta.persistence-api", version = 
 # force-upgraded security overrides to avoid earlier versions vulnerable to CVE-2026-27727
 mchange-c3p0 = { module = "com.mchange:c3p0", version = "0.14.1" }
 mchange-commons-java = { module = "com.mchange:mchange-commons-java", version = "0.6.1" }
-hibernate-c3p0 = { module = "org.hibernate:hibernate-c3p0", version.ref = "hibernate" }
-hibernate-jcache = { module = "org.hibernate:hibernate-jcache", version.ref = "hibernate" }
-hibernate-jpamodelgen = { module = "org.hibernate:hibernate-jpamodelgen", version.ref = "hibernate" }
+hibernate-c3p0 = { module = "org.hibernate.orm:hibernate-c3p0", version.ref = "hibernate" }
+hibernate-jcache = { module = "org.hibernate.orm:hibernate-jcache", version.ref = "hibernate" }
+hibernate-jpamodelgen = { module = "org.hibernate.orm:hibernate-jpamodelgen", version.ref = "hibernate" }
+hibernate-scan-jandex = { module = "org.hibernate.orm:hibernate-scan-jandex", version.ref = "hibernate" }
 hibernate-validator = { module = "org.hibernate.validator:hibernate-validator", version.ref = "hibernate-validator" }
 hibernate-validator-processor = { module = "org.hibernate.validator:hibernate-validator-annotation-processor", version.ref = "hibernate-validator" }
 hsqldb = { module = "org.hsqldb:hsqldb", version = "2.7.4" }
 jakarta-el = { module = "org.glassfish:jakarta.el", version = "4.0.2" }
 jackson-databind = { module = "tools.jackson.core:jackson-databind", version.ref = "jackson" }
-jackson-hibernate = { module = "tools.jackson.datatype:jackson-datatype-hibernate6", version.ref = "jackson" }
+jackson-hibernate = { module = "tools.jackson.datatype:jackson-datatype-hibernate7", version.ref = "jackson" }
 jackson-jaxb = { module = "tools.jackson.module:jackson-module-jaxb-annotations", version.ref = "jackson" }
 jackson-jaxrs = { module = "tools.jackson.jakarta.rs:jackson-jakarta-rs-json-provider", version.ref = "jackson" }
 jackson-xml = { module = "tools.jackson.dataformat:jackson-dataformat-xml", version.ref = "jackson" }

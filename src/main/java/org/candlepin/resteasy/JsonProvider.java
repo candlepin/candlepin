@@ -45,7 +45,7 @@ import tools.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.module.SimpleModule;
 import tools.jackson.databind.ser.std.SimpleFilterProvider;
-import tools.jackson.datatype.hibernate6.Hibernate6Module;
+import tools.jackson.datatype.hibernate7.Hibernate7Module;
 import tools.jackson.jakarta.rs.json.JacksonJsonProvider;
 import tools.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
@@ -83,8 +83,8 @@ public class JsonProvider extends JacksonJsonProvider {
         // Note: Jdk8Module and JavaTimeModule are no longer needed in Jackson 3.x
         // as their functionality is built into jackson-databind
 
-        Hibernate6Module hbm = new Hibernate6Module();
-        hbm.enable(Hibernate6Module.Feature.FORCE_LAZY_LOADING);
+        Hibernate7Module hbm = new Hibernate7Module();
+        hbm.enable(Hibernate7Module.Feature.FORCE_LAZY_LOADING);
 
         SimpleModule customModule = new SimpleModule("CustomModule", new Version(1, 0, 0, null, null,
             null));
