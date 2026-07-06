@@ -20,8 +20,6 @@ import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
-
 /**
  * This interceptor changes empty strings to null before they are written to the
  * database.  This change is necessary because Oracle treats the empty string
@@ -37,16 +35,19 @@ public class EmptyStringInterceptor implements Interceptor {
     private static Logger log = LoggerFactory.getLogger(EmptyStringInterceptor.class);
 
     @Override
-    public boolean onFlushDirty(Object entity, Serializable id,
-        Object[] currentState, Object[] previousState, String[] propertyNames,
+    public boolean onFlushDirty(
+        Object entity,
+        Object id,
+        Object[] currentState,
+        Object[] previousState,
+        String[] propertyNames,
         Type[] types) {
 
         return convertEmptyStringToNull(currentState, propertyNames, types);
     }
 
     @Override
-    public boolean onSave(Object entity, Serializable id, Object[] state,
-        String[] propertyNames, Type[] types) {
+    public boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
 
         return convertEmptyStringToNull(state, propertyNames, types);
     }
