@@ -15,13 +15,6 @@ dependencies {
 
     // Plugins are not yet available in convention plugins, so we have to load it here.
     implementation(libs.test.logger.plugin)
-
-    // Fix for transitive dependency conflict between openapi and owasp
-    configurations.configureEach {
-        resolutionStrategy {
-            force 'org.yaml:snakeyaml:1.33'
-        }
-    }
 }
 
 gradlePlugin {
