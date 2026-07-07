@@ -276,7 +276,6 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> {
      *
      * @return a reference to this EntitlementDTO object.
      */
-    @JsonIgnore
     public EntitlementDTO setStartDate(Date startDate) {
         this.startDate = startDate;
         return this;
@@ -299,7 +298,6 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> {
      *
      * @return a reference to this EntitlementDTO object.
      */
-    @JsonIgnore
     public EntitlementDTO setEndDate(Date endDate) {
         this.endDate = endDate;
         return this;

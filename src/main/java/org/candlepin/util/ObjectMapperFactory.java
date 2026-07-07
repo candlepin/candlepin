@@ -30,7 +30,7 @@ import tools.jackson.databind.introspect.AnnotationIntrospectorPair;
 import tools.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.ser.std.SimpleFilterProvider;
-import tools.jackson.datatype.hibernate6.Hibernate6Module;
+import tools.jackson.datatype.hibernate7.Hibernate7Module;
 import tools.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
 
@@ -53,11 +53,8 @@ public class ObjectMapperFactory implements Provider<ObjectMapper> {
      *  a new ObjectMapper instance
      */
     public static ObjectMapper getObjectMapper() {
-        // Note: Jdk8Module and JavaTimeModule are no longer needed in Jackson 3.x
-        // as their functionality is built into jackson-databind
-
-        Hibernate6Module hbm = new Hibernate6Module();
-        hbm.enable(Hibernate6Module.Feature.FORCE_LAZY_LOADING);
+        Hibernate7Module hbm = new Hibernate7Module();
+        hbm.enable(Hibernate7Module.Feature.FORCE_LAZY_LOADING);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
@@ -89,8 +86,8 @@ public class ObjectMapperFactory implements Provider<ObjectMapper> {
     }
 
     public static ObjectMapper getSyncObjectMapper(Configuration config) {
-        Hibernate6Module hbm = new Hibernate6Module();
-        hbm.enable(Hibernate6Module.Feature.FORCE_LAZY_LOADING);
+        Hibernate7Module hbm = new Hibernate7Module();
+        hbm.enable(Hibernate7Module.Feature.FORCE_LAZY_LOADING);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();

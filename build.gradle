@@ -145,6 +145,7 @@ dependencies {
 
     // Hibernate
     implementation(libs.hibernate.c3p0)
+    implementation(libs.hibernate.scan.jandex)
     configurations.all {
         resolutionStrategy {
             // mchange-c3p0 and mchange-commons-java are transitive dependencies but added here as

@@ -24,8 +24,6 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.type.NumericBooleanConverter;
 import org.xnap.commons.i18n.I18n;
 
@@ -256,8 +254,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @Fetch(FetchMode.SUBSELECT)
     private Map<String, String> attributes;
 
-    @OneToMany(mappedBy = "pool")
-    @LazyCollection(LazyCollectionOption.EXTRA)
+    @OneToMany(mappedBy = "pool", fetch = FetchType.LAZY)
     private Set<Entitlement> entitlements;
 
     @Size(max = 255)
