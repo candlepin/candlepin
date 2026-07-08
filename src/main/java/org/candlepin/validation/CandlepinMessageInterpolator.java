@@ -83,7 +83,7 @@ public class CandlepinMessageInterpolator implements MessageInterpolator {
         msgs.put("{org.hibernate.validator.constraints.SafeHtml.message}",
             new ValidationMessage(I18n.marktr("may have unsafe HTML content")));
         msgs.put("{org.hibernate.validator.constraints.ScriptAssert.message}",
-            new ValidationMessage(I18n.marktr("script expression \"{0}\" didn't evaluate to true"),
+            new ValidationMessage(I18n.marktr("script expression \"{0}\" didn''t evaluate to true"),
                 "script"));
         msgs.put("{org.hibernate.validator.constraints.URL.message}",
             new ValidationMessage(I18n.marktr("must be a valid URL")));
