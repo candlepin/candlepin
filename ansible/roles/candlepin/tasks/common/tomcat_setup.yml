@@ -5,17 +5,32 @@
 - name: "Check if Tomcat is already installed"
   ansible.builtin.stat:
     path: "/var/lib/tomcat/bin/catalina.sh"
-  register: tomcat_installed
+  register: candlepin_tomcat_installed
 
 - name: "Download and install Tomcat"
-  when: not tomcat_installed.stat.exists
+  when: not candlepin_tomcat_installed.stat.exists
   become: true
   block:
     - name: "Download Tomcat"
-      ansible.builtin.get_url:
-        url: "https://archive.apache.org/dist/tomcat/tomcat-10/v{{ tomcat_version }}/bin/apache-tomcat-{{ tomcat_version }}.tar.gz"
-        dest: "/tmp/apache-tomcat-{{ tomcat_version }}.tar.gz"
-        checksum: "sha512:https://archive.apache.org/dist/tomcat/tomcat-10/v{{ tomcat_version }}/bin/apache-tomcat-{{ tomcat_version }}.tar.gz.sha512"
+      ansible.builtin.command:
+        cmd: >-
+          curl -fsSL -o /tmp/apache-tomcat-{{ tomcat_version }}.tar.gz
+          https://archive.apache.org/dist/tomcat/tomcat-10/v{{ tomcat_version }}/bin/apache-tomcat-{{ tomcat_version }}.tar.gz
+      args:
+        creates: "/tmp/apache-tomcat-{{ tomcat_version }}.tar.gz"
+
+    - name: "Download Tomcat checksum"
+      ansible.builtin.command:
+        cmd: >-
+          curl -fsSL -o /tmp/apache-tomcat-{{ tomcat_version }}.tar.gz.sha512
+          https://archive.apache.org/dist/tomcat/tomcat-10/v{{ tomcat_version }}/bin/apache-tomcat-{{ tomcat_version }}.tar.gz.sha512
+      args:
+        creates: "/tmp/apache-tomcat-{{ tomcat_version }}.tar.gz.sha512"
+
+    - name: "Verify Tomcat checksum"
+      ansible.builtin.shell:
+        cmd: "cd /tmp && sha512sum -c apache-tomcat-{{ tomcat_version }}.tar.gz.sha512"
+      changed_when: false
 
     - name: "Create /var/lib/tomcat directory"
       ansible.builtin.file:
@@ -77,12 +92,15 @@
         groups: tomcat
         append: yes
 
-    - name: Set Tomcat directory permissions
+    - name: Set directory permissions
       ansible.builtin.file:
-        path: "/var/lib/tomcat"
+        path: "{{ item }}"
         owner: tomcat
         group: tomcat
         recurse: yes
+      loop:
+        - /var/lib/tomcat
+        - /var/cache/tomcat
 
     - name: "Create tomcat.conf file"
       ansible.builtin.copy:
@@ -94,7 +112,6 @@
           CATALINA_HOME="/var/lib/tomcat"
           CATALINA_TMPDIR="/var/cache/tomcat/temp"
           SECURITY_MANAGER="false"
-
         mode: 0755
 
     - name: "Create tomcat systemd service file"
@@ -112,6 +129,7 @@
 
           [Install]
           WantedBy=multi-user.target
+        mode: 0755
 
     - name: "Create setenv.sh and remote debugging JVM arguments"
       become: true
