@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-03 07:34+0000\n"
+"POT-Creation-Date: 2026-07-09 08:08+0000\n"
 "PO-Revision-Date: 2026-05-03 13:31+0000\n"
 "Last-Translator: Léane GRASSER <leane.grasser@proton.me>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
@@ -315,11 +315,11 @@ msgstr "Erreur OAuth rencontrée. Message interne : {0}"
 msgid "Error getting OAuth unit key"
 msgstr "Erreur lors de l’obtention de la clé d’unité OAuth"
 
-#: src/main/java/org/candlepin/auth/SSLAuth.java:96
+#: src/main/java/org/candlepin/auth/SSLAuth.java:97
 msgid "Invalid Certificate Type"
 msgstr "Type de certificat non valide"
 
-#: src/main/java/org/candlepin/auth/UserAuth.java:54
+#: src/main/java/org/candlepin/auth/UserAuth.java:56
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1468
 #: src/main/java/org/candlepin/resource/RoleResource.java:115
 #: src/main/java/org/candlepin/resource/UserResource.java:92
@@ -555,27 +555,27 @@ msgstr ""
 msgid "Unit with ID \"{0}\" could not be found."
 msgstr "Le type d’unité avec l’ID {0} est introuvable."
 
-#: src/main/java/org/candlepin/model/Pool.java:163
+#: src/main/java/org/candlepin/model/Pool.java:161
 msgid "Other"
 msgstr "Autre"
 
-#: src/main/java/org/candlepin/model/Pool.java:164
+#: src/main/java/org/candlepin/model/Pool.java:162
 msgid "Standard"
 msgstr "Standard"
 
-#: src/main/java/org/candlepin/model/Pool.java:165
+#: src/main/java/org/candlepin/model/Pool.java:163
 msgid "Instance Based"
 msgstr "Par instance"
 
-#: src/main/java/org/candlepin/model/Pool.java:166
+#: src/main/java/org/candlepin/model/Pool.java:164
 msgid "Stackable"
 msgstr "Superposable"
 
-#: src/main/java/org/candlepin/model/Pool.java:167
+#: src/main/java/org/candlepin/model/Pool.java:165
 msgid "Stackable only with other subscriptions"
 msgstr "Superposable uniquement avec d’autres abonnements"
 
-#: src/main/java/org/candlepin/model/Pool.java:168
+#: src/main/java/org/candlepin/model/Pool.java:166
 msgid "Multi-Entitleable"
 msgstr "Multidroits"
 
@@ -1422,7 +1422,7 @@ msgstr "Impossible de générer un certificat d’ID pour le consommateur : {0}
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "Le système avec l’UUID {0} n’est pas un invité virtuel."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3379
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3387
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "L’archive de suppression pour l’hyperviseur « {0} » est introuvable."
@@ -1757,8 +1757,11 @@ msgstr ""
 "partir des ID : {1}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:246
+#, fuzzy, java-format
+#| msgid ""
+#| "Cannot attach content defined outside of the organization's namespace: {0}"
 msgid ""
-"Cannot attach content defined outside of the organization's namespace: {0}"
+"Cannot attach content defined outside of the organization''s namespace: {0}"
 msgstr ""
 "Impossible d’assigner du contenu défini en dehors de l’espace de noms de "
 "l’organisation : {0}"
@@ -1786,8 +1789,11 @@ msgstr ""
 "à partir des ID : {1}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:416
+#, fuzzy, java-format
+#| msgid ""
+#| "Cannot attach product defined outside of the organization's namespace: {0}"
 msgid ""
-"Cannot attach product defined outside of the organization's namespace: {0}"
+"Cannot attach product defined outside of the organization''s namespace: {0}"
 msgstr ""
 "Impossible d’assigner un produit défini en dehors de l’espace de noms de "
 "l’organisation : {0}"
@@ -2447,37 +2453,37 @@ msgstr "Un ou plusieurs abonnements inactifs trouvés dans le fichier."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:366
+#: src/main/java/org/candlepin/sync/Importer.java:367
 msgid "Wrong metadata type"
 msgstr "Type de métadonnées erroné"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:375
+#: src/main/java/org/candlepin/sync/Importer.java:376
 msgid "Invalid owner"
 msgstr "Propriétaire non valide"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:388
+#: src/main/java/org/candlepin/sync/Importer.java:389
 msgid "Import is older than existing data"
 msgstr "L’import est moins récent que les données existantes"
 
-#: src/main/java/org/candlepin/sync/Importer.java:407
+#: src/main/java/org/candlepin/sync/Importer.java:408
 msgid "Import is the same as existing data"
 msgstr "L’import est le même que les données existantes"
 
-#: src/main/java/org/candlepin/sync/Importer.java:441
+#: src/main/java/org/candlepin/sync/Importer.java:442
 msgid "The provided manifest has no content in the exported consumer archive"
 msgstr ""
 "Le manifeste fourni n’a pas de contenu dans les archives grand public "
 "exportées"
 
-#: src/main/java/org/candlepin/sync/Importer.java:466
+#: src/main/java/org/candlepin/sync/Importer.java:467
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "L’archive ne contient pas le fichier consumer_export.zip requis"
 
-#: src/main/java/org/candlepin/sync/Importer.java:471
+#: src/main/java/org/candlepin/sync/Importer.java:472
 msgid "Unable to read certificates to validate manifest"
 msgstr ""
 "Impossible de lire les certificats nécessaires pour la validation du "
@@ -2485,52 +2491,52 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
-#: src/main/java/org/candlepin/sync/Importer.java:476
-#: src/main/java/org/candlepin/sync/Importer.java:480
+#: src/main/java/org/candlepin/sync/Importer.java:477
+#: src/main/java/org/candlepin/sync/Importer.java:481
 msgid "Failed to import archive"
 msgstr "Échec de l’import de l’archive"
 
-#: src/main/java/org/candlepin/sync/Importer.java:484
-#: src/main/java/org/candlepin/sync/Importer.java:941
+#: src/main/java/org/candlepin/sync/Importer.java:485
+#: src/main/java/org/candlepin/sync/Importer.java:942
 msgid "Unable to extract export archive"
 msgstr "Impossible d’extraire l’archive d’export"
 
-#: src/main/java/org/candlepin/sync/Importer.java:531
-#: src/main/java/org/candlepin/sync/Importer.java:856
+#: src/main/java/org/candlepin/sync/Importer.java:532
+#: src/main/java/org/candlepin/sync/Importer.java:857
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr ""
 "L’archive {0} est un fichier qui n’est pas compressé correctement ou est vide"
 
-#: src/main/java/org/candlepin/sync/Importer.java:541
+#: src/main/java/org/candlepin/sync/Importer.java:542
 msgid "Archive signed by an untrusted certificate"
 msgstr "Archive signée par un certificat non validé"
 
-#: src/main/java/org/candlepin/sync/Importer.java:572
+#: src/main/java/org/candlepin/sync/Importer.java:573
 msgid "Archive failed signature check"
 msgstr "La vérification de la signature de l’archive a échoué"
 
-#: src/main/java/org/candlepin/sync/Importer.java:586
+#: src/main/java/org/candlepin/sync/Importer.java:587
 msgid "The archive does not contain the required signature file"
 msgstr "L’archive ne contient pas le fichier signature requis"
 
-#: src/main/java/org/candlepin/sync/Importer.java:615
+#: src/main/java/org/candlepin/sync/Importer.java:616
 msgid "The archive does not contain the required meta.json file"
 msgstr "L’archive ne contient pas le fichier meta.json requis"
 
-#: src/main/java/org/candlepin/sync/Importer.java:620
+#: src/main/java/org/candlepin/sync/Importer.java:621
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "L’archive ne contient pas le répertoire consumer_types requis"
 
-#: src/main/java/org/candlepin/sync/Importer.java:625
+#: src/main/java/org/candlepin/sync/Importer.java:626
 msgid "The archive does not contain the required consumer.json file"
 msgstr "L’archive ne contient pas le fichier consumer.json requis"
 
-#: src/main/java/org/candlepin/sync/Importer.java:631
+#: src/main/java/org/candlepin/sync/Importer.java:632
 msgid "The archive does not contain the required entitlements directory"
 msgstr "L’archive ne contient pas le répertoire des droits d’accès requis"
 
-#: src/main/java/org/candlepin/sync/Importer.java:869
+#: src/main/java/org/candlepin/sync/Importer.java:870
 #, java-format
 msgid "Entry is outside of the target directory: {0}"
 msgstr "L’entrée ne se situe pas dans le répertoire cible : {0}"
@@ -2679,8 +2685,9 @@ msgid "may have unsafe HTML content"
 msgstr "peut avoir un contenu HTML non sécurisé"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:86
-#, java-format
-msgid "script expression \"{0}\" didn't evaluate to true"
+#, fuzzy, java-format
+#| msgid "script expression \"{0}\" didn't evaluate to true"
+msgid "script expression \"{0}\" didn''t evaluate to true"
 msgstr "l’expression de script « {0} » n’a pas été évaluée comme vraie"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89

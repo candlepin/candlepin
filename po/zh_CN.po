@@ -3,7 +3,7 @@
 # Sundeep Anand <suanand@redhat.com>, 2021, 2022.
 # Charles Lee <lchopn@gmail.com>, 2021, 2023.
 # Transtats <suanand@redhat.com>, 2022.
-# John Sefler <jsefler@redhat.com>, 2023.
+# John Sefler <jsefler@redhat.com>, 2023, 2026.
 # Jingge Chen <mariocanfly@hotmail.com>, 2023.
 # Stepan Bakaj <sbakaj@redhat.com>, 2026.
 # Nikos Moumoulidis <nmoumoul@redhat.com>, 2026.
@@ -11,9 +11,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-03 07:34+0000\n"
-"PO-Revision-Date: 2023-12-21 18:37+0000\n"
-"Last-Translator: Charles Lee <lchopn@gmail.com>\n"
+"POT-Creation-Date: 2026-07-09 08:08+0000\n"
+"PO-Revision-Date: 2026-06-24 14:17+0000\n"
+"Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
 "projects/candlepin/master/zh_CN/>\n"
 "Language: zh_CN\n"
@@ -21,7 +21,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.3\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -311,11 +311,11 @@ msgstr "遇到 OAuth 错误。内部消息是： {0}"
 msgid "Error getting OAuth unit key"
 msgstr "获取 OAuth 单元密钥时出错"
 
-#: src/main/java/org/candlepin/auth/SSLAuth.java:96
+#: src/main/java/org/candlepin/auth/SSLAuth.java:97
 msgid "Invalid Certificate Type"
 msgstr "无效的证书类型"
 
-#: src/main/java/org/candlepin/auth/UserAuth.java:54
+#: src/main/java/org/candlepin/auth/UserAuth.java:56
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1468
 #: src/main/java/org/candlepin/resource/RoleResource.java:115
 #: src/main/java/org/candlepin/resource/UserResource.java:92
@@ -455,7 +455,6 @@ msgid "Unexpected error from Cloud Registration Service: {0}"
 msgstr "来自云注册服务的意外错误：{0}"
 
 #: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:104
-#| msgid "Unable to create entitlement certificate archive"
 msgid ""
 "Unable to generate a usable certificate from Entitlement Certificate Service"
 msgstr "无法从权利证书服务生成可用的证书"
@@ -473,7 +472,9 @@ msgid ""
 "You must first accept Red Hat''s Terms and conditions. Please visit {0} . "
 "You may have to log out of and back into the  Customer Portal in order to "
 "see the terms."
-msgstr "您需要首先接受红帽的条款和条件。请访问 {0}。您可能需要退出并重新登录到客户门户网站才能查看相关条款。"
+msgstr ""
+"您需要首先接受红帽的条款和条件。请访问 {0}。您可能需要退出并重新登录到客户门"
+"户网站才能查看相关条款。"
 
 #: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:119
 #, java-format
@@ -524,27 +525,27 @@ msgstr "UUID {0} 的系统是一个虚拟客户端。它没有客户机。"
 msgid "Unit with ID \"{0}\" could not be found."
 msgstr "无法找到 ID 为 \"{0}\" 的单元。"
 
-#: src/main/java/org/candlepin/model/Pool.java:163
+#: src/main/java/org/candlepin/model/Pool.java:161
 msgid "Other"
 msgstr "其他"
 
-#: src/main/java/org/candlepin/model/Pool.java:164
+#: src/main/java/org/candlepin/model/Pool.java:162
 msgid "Standard"
 msgstr "Standard （标准）"
 
-#: src/main/java/org/candlepin/model/Pool.java:165
+#: src/main/java/org/candlepin/model/Pool.java:163
 msgid "Instance Based"
 msgstr "基于实例"
 
-#: src/main/java/org/candlepin/model/Pool.java:166
+#: src/main/java/org/candlepin/model/Pool.java:164
 msgid "Stackable"
 msgstr "可堆栈"
 
-#: src/main/java/org/candlepin/model/Pool.java:167
+#: src/main/java/org/candlepin/model/Pool.java:165
 msgid "Stackable only with other subscriptions"
 msgstr "只适用于其他订阅"
 
-#: src/main/java/org/candlepin/model/Pool.java:168
+#: src/main/java/org/candlepin/model/Pool.java:166
 msgid "Multi-Entitleable"
 msgstr "多权利"
 
@@ -557,7 +558,9 @@ msgstr "数据库中没有找到规则文件"
 msgid ""
 "This endpoint does not support returning {0} elements in a single request; "
 "please apply paging with a page size no larger than {1}"
-msgstr "这个端点不支持在单个请求中返回 {0} 个元素，请使用分页功能以使页的大小不超过 {1}"
+msgstr ""
+"这个端点不支持在单个请求中返回 {0} 个元素，请使用分页功能以使页的大小不超过 "
+"{1}"
 
 #: src/main/java/org/candlepin/paging/PagingUtil.java:133
 #: src/main/java/org/candlepin/paging/PagingUtil.java:269
@@ -575,7 +578,9 @@ msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
 "to address this problem. See knowledge database https://access.redhat.com/"
 "knowledge/node/129003 for more information."
-msgstr "证书 {0} 太多内容集。一个较新的客户端可能会解决这个问题。如需更多信息，请参阅知识库的数据库 https://access.redhat.com/knowledge/node/129003。"
+msgstr ""
+"证书 {0} 太多内容集。一个较新的客户端可能会解决这个问题。如需更多信息，请参阅"
+"知识库的数据库 https://access.redhat.com/knowledge/node/129003。"
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:93
 #, java-format
@@ -651,7 +656,9 @@ msgid ""
 "Guest has not been reported on any host and is using a temporary unmapped "
 "guest subscription. For more information, please see https://"
 "access.redhat.com/solutions/1592573"
-msgstr "尚未报告任何主机的虚拟机，并使用临时的未映射客户机订阅。如需更多信息，请参阅 https://access.redhat.com/solutions/1592573"
+msgstr ""
+"尚未报告任何主机的虚拟机，并使用临时的未映射客户机订阅。如需更多信息，请参阅 "
+"https://access.redhat.com/solutions/1592573"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
@@ -1159,7 +1166,6 @@ msgstr "无法为消费者检索内容访问证书：{0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2408
 #, java-format
-#| msgid "Unable to create content access payload"
 msgid "Unable to generate usable content access payload for consumer: {0}"
 msgstr "无法为消费者生成可用的内容访问负载: {0}"
 
@@ -1177,7 +1183,6 @@ msgstr "无法为消费者检索或创建匿名内容访问证书"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2504
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2644
 #, java-format
-#| msgid "Unable to find upstream certificate for entitlement: {0}"
 msgid "Unable to generate usable certificates for consumer: {0}"
 msgstr "无法为消费者生成可用的证书： {0}"
 
@@ -1193,7 +1198,6 @@ msgstr "无法创建权利证书归档"
 # keys, author xhuang
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2556
 #, java-format
-#| msgid "Problem generating ueber cert for owner {0}"
 msgid "Unable to generate usable export for consumer: {0}"
 msgstr "无法为消费者生成可用的导出内容: {0}"
 
@@ -1229,7 +1233,9 @@ msgstr "忽略要自动附加的请求。对于机构 \"{0}\"，它被禁用。"
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
 "the hypervisor autobind setting."
-msgstr "忽略自动附加的请求。它对 org \"{0}\" 禁用，因为 hypervisor autobind 设置被禁用。"
+msgstr ""
+"忽略自动附加的请求。它对 org \"{0}\" 禁用，因为 hypervisor autobind 设置被禁"
+"用。"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2860
 #, java-format
@@ -1266,7 +1272,6 @@ msgstr "无法创建导出归档"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:3099
 #: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:261
 #, java-format
-#| msgid "Cannot retrieve content access certificate for consumer: {0}"
 msgid "Unable to determine the signature scheme for consumer: {0}"
 msgstr "无法确定该消费者的签名方案：{0}"
 
@@ -1279,7 +1284,6 @@ msgstr "为单元重新生成 ID 证书的问题 {0}"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:3260
 #: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:208
 #, java-format
-#| msgid "Unable to find upstream certificate for entitlement: {0}"
 msgid "Unable to generate ID certificate for consumer: {0}"
 msgstr "无法为消费者生成 ID 证书：{0}"
 
@@ -1288,7 +1292,7 @@ msgstr "无法为消费者生成 ID 证书：{0}"
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "UUID {0} 的系统不是虚拟客户机。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3379
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3387
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "未找到虚拟机监控程序 \"{0}\" 的删除记录。"
@@ -1588,8 +1592,11 @@ msgid ""
 msgstr "无法使用 ID 在命名空间 \"{0}\" 中找到一个或多个内容： {1}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:246
+#, fuzzy, java-format
+#| msgid ""
+#| "Cannot attach content defined outside of the organization's namespace: {0}"
 msgid ""
-"Cannot attach content defined outside of the organization's namespace: {0}"
+"Cannot attach content defined outside of the organization''s namespace: {0}"
 msgstr "无法附加在机构命名空间外定义的内容: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:373
@@ -1611,8 +1618,11 @@ msgid ""
 msgstr "无法在命名空间 \"{0}\" 中找到 ID 为 {1} 的一个或多个产品"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:416
+#, fuzzy, java-format
+#| msgid ""
+#| "Cannot attach product defined outside of the organization's namespace: {0}"
 msgid ""
-"Cannot attach product defined outside of the organization's namespace: {0}"
+"Cannot attach product defined outside of the organization''s namespace: {0}"
 msgstr "无法附加在机构命名空间外定义的产品: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:449
@@ -1667,7 +1677,6 @@ msgstr "在被一个或多个产品引用时，无法删除产品 \"{0}\""
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:304
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1782
-#| msgid "Owner key is null or empty."
 msgid "Owner key is null or empty"
 msgstr "拥有者密钥为 null 或空"
 
@@ -1931,7 +1940,7 @@ msgstr "用户 {0} 无法访问单元 {1}"
 #: src/main/java/org/candlepin/resource/PoolResource.java:149
 #, java-format
 msgid "owner: {0}"
-msgstr "Owner: {0}"
+msgstr "所有者：{0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -2050,7 +2059,9 @@ msgid ""
 "soon. You will be notified via email once it is available. If you have any "
 "questions, additional information can be found here: https://"
 "access.redhat.com/kb/docs/DOC-53864."
-msgstr "您的订阅正在被处理，应该很快可用。在可用时您会接收到电子邮件通知。如果有任何问题，请访问 https://access.redhat.com/kb/docs/DOC-53864。"
+msgstr ""
+"您的订阅正在被处理，应该很快可用。在可用时您会接收到电子邮件通知。如果有任何"
+"问题，请访问 https://access.redhat.com/kb/docs/DOC-53864。"
 
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
 #, java-format
@@ -2216,86 +2227,85 @@ msgstr "在文件中找到一个或多个不活跃的订阅。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:366
+#: src/main/java/org/candlepin/sync/Importer.java:367
 msgid "Wrong metadata type"
 msgstr "元数据类型错误"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:375
+#: src/main/java/org/candlepin/sync/Importer.java:376
 msgid "Invalid owner"
 msgstr "无效的所有者"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:388
+#: src/main/java/org/candlepin/sync/Importer.java:389
 msgid "Import is older than existing data"
 msgstr "导入比现有数据旧的"
 
-#: src/main/java/org/candlepin/sync/Importer.java:407
+#: src/main/java/org/candlepin/sync/Importer.java:408
 msgid "Import is the same as existing data"
 msgstr "导入与现有数据相同"
 
-#: src/main/java/org/candlepin/sync/Importer.java:441
+#: src/main/java/org/candlepin/sync/Importer.java:442
 msgid "The provided manifest has no content in the exported consumer archive"
 msgstr "提供的清单在导出的消费者存档中没有内容"
 
-#: src/main/java/org/candlepin/sync/Importer.java:466
+#: src/main/java/org/candlepin/sync/Importer.java:467
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "归档不包含所需的 consumer_export.zip 文件"
 
-#: src/main/java/org/candlepin/sync/Importer.java:471
-#| msgid "Unable to find upstream certificate for entitlement: {0}"
+#: src/main/java/org/candlepin/sync/Importer.java:472
 msgid "Unable to read certificates to validate manifest"
 msgstr "无法读取证书以验证清单"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author leahliu
-#: src/main/java/org/candlepin/sync/Importer.java:476
-#: src/main/java/org/candlepin/sync/Importer.java:480
+#: src/main/java/org/candlepin/sync/Importer.java:477
+#: src/main/java/org/candlepin/sync/Importer.java:481
 msgid "Failed to import archive"
 msgstr "导入归档失败"
 
-#: src/main/java/org/candlepin/sync/Importer.java:484
-#: src/main/java/org/candlepin/sync/Importer.java:941
+#: src/main/java/org/candlepin/sync/Importer.java:485
+#: src/main/java/org/candlepin/sync/Importer.java:942
 msgid "Unable to extract export archive"
 msgstr "无法提取导出存档"
 
-#: src/main/java/org/candlepin/sync/Importer.java:531
-#: src/main/java/org/candlepin/sync/Importer.java:856
+#: src/main/java/org/candlepin/sync/Importer.java:532
+#: src/main/java/org/candlepin/sync/Importer.java:857
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "归档 {0} 不是正确压缩文件或者为空"
 
-#: src/main/java/org/candlepin/sync/Importer.java:541
+#: src/main/java/org/candlepin/sync/Importer.java:542
 msgid "Archive signed by an untrusted certificate"
 msgstr "由不受信任的证书签名的存档"
 
-#: src/main/java/org/candlepin/sync/Importer.java:572
+#: src/main/java/org/candlepin/sync/Importer.java:573
 msgid "Archive failed signature check"
 msgstr "归档失败的签名检查"
 
-#: src/main/java/org/candlepin/sync/Importer.java:586
+#: src/main/java/org/candlepin/sync/Importer.java:587
 msgid "The archive does not contain the required signature file"
 msgstr "归档不包含所需的签名文件"
 
-#: src/main/java/org/candlepin/sync/Importer.java:615
+#: src/main/java/org/candlepin/sync/Importer.java:616
 msgid "The archive does not contain the required meta.json file"
 msgstr "归档不包含所需的 meta.json 文件"
 
-#: src/main/java/org/candlepin/sync/Importer.java:620
+#: src/main/java/org/candlepin/sync/Importer.java:621
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "归档不包含所需的 consumer_types 目录"
 
-#: src/main/java/org/candlepin/sync/Importer.java:625
+#: src/main/java/org/candlepin/sync/Importer.java:626
 msgid "The archive does not contain the required consumer.json file"
 msgstr "归档不包含所需的 consumer.json 文件"
 
-#: src/main/java/org/candlepin/sync/Importer.java:631
+#: src/main/java/org/candlepin/sync/Importer.java:632
 msgid "The archive does not contain the required entitlements directory"
 msgstr "归档不包含所需的授权目录"
 
-#: src/main/java/org/candlepin/sync/Importer.java:869
+#: src/main/java/org/candlepin/sync/Importer.java:870
 #, java-format
 msgid "Entry is outside of the target directory: {0}"
 msgstr "条目在目标目录之外: {0}"
@@ -2437,8 +2447,9 @@ msgid "may have unsafe HTML content"
 msgstr "可能具有不安全的 HTML 内容"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:86
-#, java-format
-msgid "script expression \"{0}\" didn't evaluate to true"
+#, fuzzy, java-format
+#| msgid "script expression \"{0}\" didn't evaluate to true"
+msgid "script expression \"{0}\" didn''t evaluate to true"
 msgstr "脚本表达式 \"{0}\" 不评估为 true"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89

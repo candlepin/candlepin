@@ -3,13 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 # Didik Supriadi <didiksupriadi41@gmail.com>, 2021, 2022.
 # Arif Budiman <arifpedia@gmail.com>, 2026.
+# eko ikhyar <ikhyar.com@gmail.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-03 07:34+0000\n"
-"PO-Revision-Date: 2026-05-01 03:59+0000\n"
-"Last-Translator: Arif Budiman <arifpedia@gmail.com>\n"
+"POT-Creation-Date: 2026-07-09 08:08+0000\n"
+"PO-Revision-Date: 2026-06-24 09:17+0000\n"
+"Last-Translator: eko ikhyar <ikhyar.com@gmail.com>\n"
 "Language-Team: Indonesian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/id/>\n"
 "Language: id\n"
@@ -17,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17.1\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -253,11 +254,11 @@ msgstr "Terjadi kesalahan OAuth. Pesan internal adalah: {0}"
 msgid "Error getting OAuth unit key"
 msgstr "Terjadi kesalahan saat mendapatkan kunci unit OAuth"
 
-#: src/main/java/org/candlepin/auth/SSLAuth.java:96
+#: src/main/java/org/candlepin/auth/SSLAuth.java:97
 msgid "Invalid Certificate Type"
 msgstr "Jenis Sertifikat Tidak Valid"
 
-#: src/main/java/org/candlepin/auth/UserAuth.java:54
+#: src/main/java/org/candlepin/auth/UserAuth.java:56
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1468
 #: src/main/java/org/candlepin/resource/RoleResource.java:115
 #: src/main/java/org/candlepin/resource/UserResource.java:92
@@ -403,11 +404,11 @@ msgid "Unexpected error from Cloud Registration Service: {0}"
 msgstr "Kesalahan tak terduga dari Layanan Registrasi Cloud: {0}"
 
 #: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:104
-#, fuzzy
-#| msgid "Unable to create entitlement certificate archive"
 msgid ""
 "Unable to generate a usable certificate from Entitlement Certificate Service"
-msgstr "Tidak dapat membuat arsip sertifikat entitlement"
+msgstr ""
+"Tidak dapat menghasilkan sertifikat yang dapat digunakan dari Layanan "
+"Sertifikat Hak Akses"
 
 #: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:108
 #, java-format
@@ -477,27 +478,27 @@ msgstr ""
 msgid "Unit with ID \"{0}\" could not be found."
 msgstr "Unit dengan ID \"{0}\" tidak dapat ditemukan."
 
-#: src/main/java/org/candlepin/model/Pool.java:163
+#: src/main/java/org/candlepin/model/Pool.java:161
 msgid "Other"
 msgstr "Lainnya"
 
-#: src/main/java/org/candlepin/model/Pool.java:164
+#: src/main/java/org/candlepin/model/Pool.java:162
 msgid "Standard"
 msgstr "Standar"
 
-#: src/main/java/org/candlepin/model/Pool.java:165
+#: src/main/java/org/candlepin/model/Pool.java:163
 msgid "Instance Based"
 msgstr "Berbasis Instans"
 
-#: src/main/java/org/candlepin/model/Pool.java:166
+#: src/main/java/org/candlepin/model/Pool.java:164
 msgid "Stackable"
 msgstr "Dapat ditumpuk"
 
-#: src/main/java/org/candlepin/model/Pool.java:167
+#: src/main/java/org/candlepin/model/Pool.java:165
 msgid "Stackable only with other subscriptions"
 msgstr "Hanya dapat ditumpuk dengan langganan lain"
 
-#: src/main/java/org/candlepin/model/Pool.java:168
+#: src/main/java/org/candlepin/model/Pool.java:166
 msgid "Multi-Entitleable"
 msgstr "Dapat diberi entitlement ganda"
 
@@ -889,6 +890,8 @@ msgid ""
 "Unable to process authorization request: cryptographic capabilities exceed "
 "data storage capabilities"
 msgstr ""
+"Permintaan otorisasi tidak dapat diproses: kemampuan kriptografi melebihi "
+"kemampuan penyimpanan data"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:159
 msgid ""
@@ -1012,6 +1015,8 @@ msgid ""
 "Unable to persist consumer: cryptographic capabilities exceed data storage "
 "capabilities"
 msgstr ""
+"Konsumen tidak dapat dipertahankan: kemampuan kriptografi melebihi kemampuan "
+"penyimpanan data"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1193
 #, java-format
@@ -1282,7 +1287,7 @@ msgstr "Tidak dapat menghasilkan sertifikat ID untuk konsumen: {0}"
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "Sistem dengan UUID {0} bukan guest virtual."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3379
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3387
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "Catatan penghapusan untuk hypervisor \"{0}\" tidak ditemukan."
@@ -1596,8 +1601,11 @@ msgstr ""
 "ID: {1}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:246
+#, fuzzy, java-format
+#| msgid ""
+#| "Cannot attach content defined outside of the organization's namespace: {0}"
 msgid ""
-"Cannot attach content defined outside of the organization's namespace: {0}"
+"Cannot attach content defined outside of the organization''s namespace: {0}"
 msgstr ""
 "Tidak dapat melampirkan konten yang didefinisikan di luar namespace "
 "organisasi: {0}"
@@ -1624,8 +1632,11 @@ msgstr ""
 "ID: {1}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:416
+#, fuzzy, java-format
+#| msgid ""
+#| "Cannot attach product defined outside of the organization's namespace: {0}"
 msgid ""
-"Cannot attach product defined outside of the organization's namespace: {0}"
+"Cannot attach product defined outside of the organization''s namespace: {0}"
 msgstr ""
 "Tidak dapat melampirkan produk yang didefinisikan di luar namespace "
 "organisasi: {0}"
@@ -2222,81 +2233,81 @@ msgstr "Tidak ditemukan langganan aktif di dalam file."
 msgid "One or more inactive subscriptions found in the file."
 msgstr "Ditemukan satu atau lebih langganan tidak aktif di dalam file."
 
-#: src/main/java/org/candlepin/sync/Importer.java:366
+#: src/main/java/org/candlepin/sync/Importer.java:367
 msgid "Wrong metadata type"
 msgstr "Tipe metadata salah"
 
-#: src/main/java/org/candlepin/sync/Importer.java:375
+#: src/main/java/org/candlepin/sync/Importer.java:376
 msgid "Invalid owner"
 msgstr "Pemilik tidak valid"
 
-#: src/main/java/org/candlepin/sync/Importer.java:388
+#: src/main/java/org/candlepin/sync/Importer.java:389
 msgid "Import is older than existing data"
 msgstr "Impor lebih lama daripada data yang ada"
 
-#: src/main/java/org/candlepin/sync/Importer.java:407
+#: src/main/java/org/candlepin/sync/Importer.java:408
 msgid "Import is the same as existing data"
 msgstr "Impor sama dengan data yang ada"
 
-#: src/main/java/org/candlepin/sync/Importer.java:441
+#: src/main/java/org/candlepin/sync/Importer.java:442
 msgid "The provided manifest has no content in the exported consumer archive"
 msgstr ""
 "Manifest yang diberikan tidak memiliki konten dalam arsip konsumen yang "
 "diekspor"
 
-#: src/main/java/org/candlepin/sync/Importer.java:466
+#: src/main/java/org/candlepin/sync/Importer.java:467
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "Arsip tidak berisi file consumer_export.zip yang diperlukan"
 
-#: src/main/java/org/candlepin/sync/Importer.java:471
+#: src/main/java/org/candlepin/sync/Importer.java:472
 msgid "Unable to read certificates to validate manifest"
 msgstr "Tidak dapat membaca sertifikat untuk memvalidasi manifes"
 
-#: src/main/java/org/candlepin/sync/Importer.java:476
-#: src/main/java/org/candlepin/sync/Importer.java:480
+#: src/main/java/org/candlepin/sync/Importer.java:477
+#: src/main/java/org/candlepin/sync/Importer.java:481
 msgid "Failed to import archive"
 msgstr "Gagal mengimpor arsip"
 
-#: src/main/java/org/candlepin/sync/Importer.java:484
-#: src/main/java/org/candlepin/sync/Importer.java:941
+#: src/main/java/org/candlepin/sync/Importer.java:485
+#: src/main/java/org/candlepin/sync/Importer.java:942
 msgid "Unable to extract export archive"
 msgstr "Tidak dapat mengekstrak arsip ekspor"
 
-#: src/main/java/org/candlepin/sync/Importer.java:531
-#: src/main/java/org/candlepin/sync/Importer.java:856
+#: src/main/java/org/candlepin/sync/Importer.java:532
+#: src/main/java/org/candlepin/sync/Importer.java:857
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "Arsip {0} bukan file yang terkompresi dengan benar atau kosong"
 
-#: src/main/java/org/candlepin/sync/Importer.java:541
+#: src/main/java/org/candlepin/sync/Importer.java:542
 msgid "Archive signed by an untrusted certificate"
 msgstr "Arsip ditandatangani oleh sertifikat yang tidak tepercaya"
 
-#: src/main/java/org/candlepin/sync/Importer.java:572
+#: src/main/java/org/candlepin/sync/Importer.java:573
 msgid "Archive failed signature check"
 msgstr "Arsip gagal pemeriksaan tanda tangan"
 
-#: src/main/java/org/candlepin/sync/Importer.java:586
+#: src/main/java/org/candlepin/sync/Importer.java:587
 msgid "The archive does not contain the required signature file"
 msgstr "Arsip tidak berisi file tanda tangan yang diperlukan"
 
-#: src/main/java/org/candlepin/sync/Importer.java:615
+#: src/main/java/org/candlepin/sync/Importer.java:616
 msgid "The archive does not contain the required meta.json file"
 msgstr "Arsip tidak berisi file meta.json yang diperlukan"
 
-#: src/main/java/org/candlepin/sync/Importer.java:620
+#: src/main/java/org/candlepin/sync/Importer.java:621
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "Arsip tidak berisi direktori consumer_types yang diperlukan"
 
-#: src/main/java/org/candlepin/sync/Importer.java:625
+#: src/main/java/org/candlepin/sync/Importer.java:626
 msgid "The archive does not contain the required consumer.json file"
 msgstr "Arsip tidak berisi file consumer.json yang diperlukan"
 
-#: src/main/java/org/candlepin/sync/Importer.java:631
+#: src/main/java/org/candlepin/sync/Importer.java:632
 msgid "The archive does not contain the required entitlements directory"
 msgstr "Arsip tidak berisi direktori entitlements yang diperlukan"
 
-#: src/main/java/org/candlepin/sync/Importer.java:869
+#: src/main/java/org/candlepin/sync/Importer.java:870
 #, java-format
 msgid "Entry is outside of the target directory: {0}"
 msgstr "Entri berada di luar direktori target: {0}"
@@ -2441,8 +2452,9 @@ msgid "may have unsafe HTML content"
 msgstr "mungkin memiliki konten HTML yang tidak aman"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:86
-#, java-format
-msgid "script expression \"{0}\" didn't evaluate to true"
+#, fuzzy, java-format
+#| msgid "script expression \"{0}\" didn't evaluate to true"
+msgid "script expression \"{0}\" didn''t evaluate to true"
 msgstr "ekspresi skrip \"{0}\" tidak dievaluasi menjadi true"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
