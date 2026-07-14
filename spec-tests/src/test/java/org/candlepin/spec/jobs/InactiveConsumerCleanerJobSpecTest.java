@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertGone;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
@@ -48,8 +49,10 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 /**
@@ -57,13 +60,13 @@ import java.util.UUID;
  * test can delete consumers from another test if they are run in parallel. This can lead to sporadic test
  * failures.
  */
-
 @Isolated
 @SpecTest
 public class InactiveConsumerCleanerJobSpecTest {
 
     private static final String JOB_KEY = "InactiveConsumerCleanerJob";
     private static final int DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS = 397;
+    private static final int DEFAULT_ANON_OWNER_LAST_CHECKED_IN_RETENTION_IN_DAYS = 30;
 
     private static ConsumerClient consumerApi;
     private static DeletedConsumerApi deletedConsumerApi;
@@ -94,6 +97,17 @@ public class InactiveConsumerCleanerJobSpecTest {
             .minus(DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS + 10, ChronoUnit.DAYS);
         Instant activeTime = Instant.now()
             .minus(DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS - 10, ChronoUnit.DAYS);
+        Instant anonymousOwnerInactiveTime = Instant.now()
+            .minus(DEFAULT_ANON_OWNER_LAST_CHECKED_IN_RETENTION_IN_DAYS + 10, ChronoUnit.DAYS);
+        Instant anonymousOwnerActiveTime = Instant.now()
+            .minus(DEFAULT_ANON_OWNER_LAST_CHECKED_IN_RETENTION_IN_DAYS - 10, ChronoUnit.DAYS);
+
+        Map<String, ConsumerDTO> inactiveConsumers = new HashMap<>();
+        Map<String, ConsumerDTO> activeConsumers = new HashMap<>();
+
+        // Point in time before we create our consumers. We will use this date time for retrieving
+        // deleted consumers.
+        OffsetDateTime deletedConsumersCreationDate = OffsetDateTime.now();
 
         ConsumerDTO consumerWithManifest = Consumers.random(owner, ConsumerTypes.Candlepin)
             .lastCheckin(inactiveTime.atOffset(ZoneOffset.UTC));
@@ -104,48 +118,74 @@ public class InactiveConsumerCleanerJobSpecTest {
         ConsumerDTO activeConsumer2 = Consumers.random(owner)
             .lastCheckin(activeTime.atOffset(ZoneOffset.UTC));
 
-        ConsumerDTO inactiveConsumer = consumerApi.createConsumer(Consumers.random(owner)
-            .lastCheckin(inactiveTime.atOffset(ZoneOffset.UTC)));
         consumerWithManifest = consumerApi
             .createConsumer(consumerWithManifest, null, owner.getKey(), null, false);
         consumerWithEntitlement = consumerApi
             .createConsumer(consumerWithEntitlement, null, owner.getKey(), null, false);
         activeConsumer = consumerApi.createConsumer(activeConsumer, null, owner.getKey(), null, false);
         activeConsumer2 = consumerApi.createConsumer(activeConsumer2, null, owner.getKey(), null, false);
-
         createProductAndPoolForConsumer(consumerWithEntitlement);
+        activeConsumers.put(consumerWithManifest.getUuid(), consumerWithManifest);
+        activeConsumers.put(consumerWithEntitlement.getUuid(), consumerWithEntitlement);
+        activeConsumers.put(activeConsumer.getUuid(), activeConsumer);
+        activeConsumers.put(activeConsumer2.getUuid(), activeConsumer2);
+
+        ConsumerDTO inactiveConsumer = consumerApi.createConsumer(Consumers.random(owner)
+            .lastCheckin(inactiveTime.atOffset(ZoneOffset.UTC)));
+        inactiveConsumers.put(inactiveConsumer.getUuid(), inactiveConsumer);
+
+        // Create an active and inactive consumer for an anonymous owner.
+        // The retention policy is different for consumers in anonymous owners.
+        OwnerDTO anonOwner = ownerApi.createOwner(Owners.randomSca().anonymous(true));
+        ConsumerDTO activeConsumerFromAnonOwner = consumerApi.createConsumer(Consumers.random(anonOwner)
+            .lastCheckin(anonymousOwnerActiveTime.atOffset(ZoneOffset.UTC)));
+        activeConsumers.put(activeConsumerFromAnonOwner.getUuid(), activeConsumerFromAnonOwner);
+
+        ConsumerDTO inactiveConsumerFromAnonOwner = consumerApi.createConsumer(Consumers.random(anonOwner)
+            .lastCheckin(anonymousOwnerInactiveTime.atOffset(ZoneOffset.UTC)));
+        inactiveConsumers.put(inactiveConsumerFromAnonOwner.getUuid(), inactiveConsumerFromAnonOwner);
 
         String jobId = jobsClient.scheduleJob(JOB_KEY).getId();
         AsyncJobStatusDTO status = jobsClient.waitForJob(jobId);
         assertThatJob(status)
             .isFinished();
 
-        // Verify that the inactive consumer has been deleted.
-        final String inactiveConsumer1Uuid = inactiveConsumer.getUuid();
-        assertGone(() -> consumerApi.getConsumer(inactiveConsumer1Uuid));
-        // Verify that the inactive consumer has been moved to the deleted_consumers table.
-        List<DeletedConsumerDTO> deletedConsumers = deletedConsumerApi
-            .listByDate(inactiveConsumer.getCreated(), 1, 50, "desc", "created");
-        // Assert that other tests might have created an inactive consumer
-        assertThat(deletedConsumers).hasSizeGreaterThanOrEqualTo(1);
-        Optional<DeletedConsumerDTO> deletedConsumer = deletedConsumers.stream()
-            .filter(consumer -> inactiveConsumer.getUuid().equals(consumer.getConsumerUuid()))
-            .findFirst();
-        assertThat(deletedConsumer)
-            .isPresent()
-            .hasValueSatisfying(consumer -> {
-                assertThat(consumer.getConsumerName()).isEqualTo(inactiveConsumer.getName());
-                assertThat(consumer.getOwnerId()).isEqualTo(inactiveConsumer.getOwner().getId());
-                assertThat(consumer.getOwnerKey()).isEqualTo(inactiveConsumer.getOwner().getKey());
-                assertThat(consumer.getOwnerDisplayName())
-                    .isEqualTo(inactiveConsumer.getOwner().getDisplayName());
-            });
+        // Verify that the inactive consumers have been deleted
+        for (String uuid : inactiveConsumers.keySet()) {
+            assertGone(() -> consumerApi.getConsumer(uuid));
+        }
 
-        // Verify that the active consumers have not been deleted.
-        compareConsumers(consumerWithManifest, consumerApi.getConsumer(consumerWithManifest.getUuid()));
-        compareConsumers(consumerWithEntitlement, consumerApi.getConsumer(consumerWithEntitlement.getUuid()));
-        compareConsumers(activeConsumer, consumerApi.getConsumer(activeConsumer.getUuid()));
-        compareConsumers(activeConsumer2, consumerApi.getConsumer(activeConsumer2.getUuid()));
+        // Verify that the inactive consumers have been moved to the deleted_consumers table
+        List<DeletedConsumerDTO> deletedConsumers = deletedConsumerApi
+            .listByDate(deletedConsumersCreationDate, 1, 50, "desc", "created");
+        // Assert that other tests might have created an inactive consumer
+        assertThat(deletedConsumers).hasSizeGreaterThanOrEqualTo(inactiveConsumers.size());
+
+        List<DeletedConsumerDTO> actual = deletedConsumers.stream()
+            .filter(consumer -> inactiveConsumers.keySet().contains(consumer.getConsumerUuid()))
+            .toList();
+
+        // Make sure we have the exact size that we are expecting so that we do not have any extra or missing
+        // deletions
+        assertEquals(inactiveConsumers.size(), actual.size());
+
+        for (DeletedConsumerDTO deletedConsumer : actual) {
+            ConsumerDTO expected = inactiveConsumers.get(deletedConsumer.getConsumerUuid());
+            assertNotNull(expected);
+
+            assertThat(deletedConsumer)
+                .returns(expected.getUuid(), DeletedConsumerDTO::getConsumerUuid)
+                .returns(expected.getName(), DeletedConsumerDTO::getConsumerName)
+                .returns(expected.getOwner().getId(), DeletedConsumerDTO::getOwnerId)
+                .returns(expected.getOwner().getKey(), DeletedConsumerDTO::getOwnerKey)
+                .returns(expected.getOwner().getDisplayName(), DeletedConsumerDTO::getOwnerDisplayName)
+                .returns("admin", DeletedConsumerDTO::getPrincipalName);
+        }
+
+        // Verify that the active consumers have not been deleted
+        for (Entry<String, ConsumerDTO> entry : activeConsumers.entrySet()) {
+            compareConsumers(entry.getValue(), consumerApi.getConsumer(entry.getKey()));
+        }
     }
 
     @Test

@@ -636,6 +636,9 @@ public class ConfigProperties {
             this.put(jobConfig(InactiveConsumerCleanerJob.JOB_KEY,
                 InactiveConsumerCleanerJob.CFG_ANON_CLOUD_CONSUMER_RETENTION),
                 Integer.toString(InactiveConsumerCleanerJob.DEFAULT_ANON_CLOUD_CONSUMER_RETENTION));
+            this.put(jobConfig(InactiveConsumerCleanerJob.JOB_KEY,
+                InactiveConsumerCleanerJob.CFG_ANON_OWNER_LAST_CHECKED_IN_RETENTION_IN_DAYS),
+                Integer.toString(InactiveConsumerCleanerJob.DEFAULT_ANON_OWNER_LAST_CHECKED_IN_RETENTION_IN_DAYS));
 
             // JobCleaner
             this.put(jobConfig(JobCleaner.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
