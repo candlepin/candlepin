@@ -52,7 +52,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
 import java.lang.reflect.Field;
@@ -69,6 +68,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import jakarta.persistence.EntityManager;
@@ -2163,13 +2164,13 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             .returns(null, InactiveConsumerRecord::isOwnerAnonymous);
     }
 
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(booleans = {true, false})
-    public void testGetInactiveConsumersShouldPopulateAnonymousFieldBasedOnOwner(boolean anonymous) {
+    @Test
+    public void testGetInactiveConsumersShouldRetrieveConsumerFromNonAnonymousOwners() {
+        Owner owner = this.createOwner();
+
         Owner anonOwner = TestUtil.createOwner(TestUtil.randomString(), TestUtil.randomString())
             .setId(null)
-            .setAnonymous(anonymous);
-
+            .setAnonymous(true);
         anonOwner = this.ownerCurator.create(anonOwner);
 
         Instant lastCheckedInRetention = Instant.now()
@@ -2177,25 +2178,24 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Instant nonCheckedInRetention = Instant.now()
             .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_UPDATED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
 
-        Consumer inactiveConsumer = new Consumer()
-            .setName("inactiveConsumer")
-            .setUsername("testUser")
-            .setOwner(anonOwner)
-            .setType(ct);
-        Instant lastCheckedIn = Instant.ofEpochMilli(lastCheckedInRetention.toEpochMilli() - 86400L);
-        inactiveConsumer.setLastCheckin(Date.from(lastCheckedIn));
-        inactiveConsumer = consumerCurator.create(inactiveConsumer);
+        Instant inactiveLastCheckedIn = lastCheckedInRetention.minus(5, ChronoUnit.DAYS);
 
-        List<InactiveConsumerRecord> actual = consumerCurator.getInactiveConsumers(lastCheckedInRetention,
-            nonCheckedInRetention);
+        // Create an inactive consumer in a regular SCA owner.
+        Consumer expectedInactiveConsumer = this.createConsumer(owner, inactiveLastCheckedIn);
+
+        // Create an inactive consumer in an anonymous owner. This consumer should not be returned.
+        this.createConsumer(anonOwner, inactiveLastCheckedIn);
+
+        List<InactiveConsumerRecord> actual = this.consumerCurator
+            .getInactiveConsumers(lastCheckedInRetention, nonCheckedInRetention);
 
         assertThat(actual)
             .isNotNull()
             .singleElement()
-            .returns(inactiveConsumer.getId(), InactiveConsumerRecord::consumerId)
-            .returns(inactiveConsumer.getUuid(), InactiveConsumerRecord::consumerUuid)
-            .returns(inactiveConsumer.getOwnerKey(), InactiveConsumerRecord::ownerKey)
-            .returns(anonymous, InactiveConsumerRecord::isOwnerAnonymous);
+            .returns(expectedInactiveConsumer.getId(), InactiveConsumerRecord::consumerId)
+            .returns(expectedInactiveConsumer.getUuid(), InactiveConsumerRecord::consumerUuid)
+            .returns(expectedInactiveConsumer.getOwnerKey(), InactiveConsumerRecord::ownerKey)
+            .returns(null, InactiveConsumerRecord::isOwnerAnonymous);
     }
 
     @Test
@@ -2249,6 +2249,141 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             nonCheckedInRetention);
 
         assertEquals(0, actual.size());
+    }
+
+    @Test
+    public void testGetInactiveConsumersFromAnonOwnersWithNullLastCheckedInRetention() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            this.consumerCurator.getInactiveConsumersFromAnonOwners(null);
+        });
+    }
+
+    @Test
+    public void testGetInactiveConsumersFromAnonOwners() {
+        Instant lastCheckedInRetention = Instant.now()
+            .minus(InactiveConsumerCleanerJob.DEFAULT_ANON_OWNER_LAST_CHECKED_IN_RETENTION_IN_DAYS,
+                ChronoUnit.DAYS);
+        Instant inactiveLastCheckedIn = lastCheckedInRetention.minus(5, ChronoUnit.DAYS);
+        Instant activeLastCheckedIn = lastCheckedInRetention.plus(5, ChronoUnit.DAYS);
+
+        int numberOfOwners = 4;
+        int numberOfConsumers = 3;
+        Map<String, Consumer> expectedConsumers = new HashMap<>();
+        boolean anonymous = true;
+
+        for (int i = 0; i < numberOfOwners; i++) {
+            Owner owner = this.ownerCurator.create(TestUtil.createOwner(TestUtil.randomString(), TestUtil.randomString())
+                .setId(null)
+                .setAnonymous(anonymous));
+
+            Map<String, Consumer> inactiveConsumers =
+                Stream.generate(() -> this.createConsumer(owner, inactiveLastCheckedIn))
+                    .limit(numberOfConsumers)
+                    .collect(Collectors.toMap(Consumer::getId, Function.identity()));
+
+            // Create active consumers
+            for (int j = 0; j < numberOfConsumers; j++) {
+                this.createConsumer(owner, activeLastCheckedIn);
+            }
+
+            // We expect only inactive consumers from anonymous owners to be returned
+            if (anonymous) {
+                expectedConsumers.putAll(inactiveConsumers);
+            }
+
+            // Make half of the owners anonymous
+            anonymous = !anonymous;
+        }
+
+        List<InactiveConsumerRecord> actual = this.consumerCurator
+            .getInactiveConsumersFromAnonOwners(lastCheckedInRetention);
+
+        assertEquals(expectedConsumers.size(), actual.size(), "unexpected number of inactive consumers");
+
+        // Verify that all of the expected consumers are returned
+        for (InactiveConsumerRecord inactiveRecord : actual) {
+            assertNotNull(inactiveRecord);
+
+            Consumer expected = expectedConsumers.get(inactiveRecord.consumerId());
+
+            assertNotNull(expected);
+            assertThat(inactiveRecord)
+                .returns(expected.getId(), InactiveConsumerRecord::consumerId)
+                .returns(expected.getUuid(), InactiveConsumerRecord::consumerUuid)
+                .returns(expected.getOwnerKey(), InactiveConsumerRecord::ownerKey)
+                .returns(true, InactiveConsumerRecord::isOwnerAnonymous);
+        }
+    }
+
+    @Test
+    public void testGetInactiveConsumersFromAnonOwnersWithNonCheckedInSystems() {
+        Instant lastCheckedInRetention = Instant.now()
+            .minus(InactiveConsumerCleanerJob.DEFAULT_ANON_OWNER_LAST_CHECKED_IN_RETENTION_IN_DAYS + 5,
+                ChronoUnit.DAYS);
+        Instant inactiveLastCheckedIn = lastCheckedInRetention.minus(5, ChronoUnit.DAYS);
+
+        Owner anonymousOwner = this.ownerCurator.create(TestUtil.createOwner(TestUtil.randomString(), TestUtil.randomString())
+            .setId(null)
+            .setAnonymous(true));
+
+        // Create a consumer with no check-in time and inactive updated date time
+        Consumer inactiveConsumer = new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("user-"))
+            .setOwner(anonymousOwner)
+            .setType(ct);
+        inactiveConsumer = this.consumerCurator.create(inactiveConsumer);
+        this.setConsumerUpdateTime(inactiveConsumer.getUuid(), inactiveLastCheckedIn);
+
+        // Create a consumer with no check-in time and the updated date set to now which should be considered
+        // an active consumer.
+        Consumer activeConsumer = new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("user-"))
+            .setOwner(anonymousOwner)
+            .setType(ct);
+        activeConsumer = this.consumerCurator.create(activeConsumer);
+
+        List<InactiveConsumerRecord> actual = this.consumerCurator
+            .getInactiveConsumersFromAnonOwners(lastCheckedInRetention);
+
+        assertThat(actual)
+            .isNotNull()
+            .singleElement()
+            .returns(inactiveConsumer.getUuid(), InactiveConsumerRecord::consumerUuid);
+    }
+
+    /**
+     * Directly sets a Consumer's updated date time to the privided instant using a native query.
+     * This method flushes and clears after executing the update statement.
+     *
+     * @param consumerUuid
+     *  the UUID of the consumer to update
+     *
+     * @param updated
+     *  the instant that the Consumer's updated date will be set to
+     */
+    private void setConsumerUpdateTime(String consumerUuid, Instant updated) {
+        String updateStatement = "UPDATE cp_consumer SET updated = :updated WHERE uuid = :uuid";
+
+        this.getEntityManager().createNativeQuery(updateStatement)
+            .setParameter("updated", Date.from(updated))
+            .setParameter("uuid", consumerUuid)
+            .executeUpdate();
+
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+    }
+
+    private Consumer createConsumer(Owner owner, Instant checkIn) {
+        Consumer consumer = new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("user-"))
+            .setOwner(owner)
+            .setType(ct)
+            .setLastCheckin(Date.from(checkIn));
+
+        return this.consumerCurator.create(consumer);
     }
 
     @Test

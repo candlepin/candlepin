@@ -67,6 +67,10 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
     public static final String CFG_LAST_UPDATED_IN_RETENTION_IN_DAYS = "last_updated_retention_in_days";
     public static final int DEFAULT_LAST_UPDATED_IN_RETENTION_IN_DAYS = 30;
 
+    public static final String CFG_ANON_OWNER_LAST_CHECKED_IN_RETENTION_IN_DAYS =
+        "last_checked_in_anon_org_retention_in_days";
+    public static final int DEFAULT_ANON_OWNER_LAST_CHECKED_IN_RETENTION_IN_DAYS = 30;
+
     public static final String CFG_ANON_CLOUD_CONSUMER_RETENTION = "anon_cloud_consumer_retention";
     public static final int DEFAULT_ANON_CLOUD_CONSUMER_RETENTION = 15; // In days
 
@@ -110,18 +114,24 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
     public void execute(JobExecutionContext context) throws JobExecutionException {
         Instant lastCheckedInRetention = this.getRetentionDate(CFG_LAST_CHECKED_IN_RETENTION_IN_DAYS);
         Instant nonCheckedInRetention = this.getRetentionDate(CFG_LAST_UPDATED_IN_RETENTION_IN_DAYS);
+        Instant anonOrgLastCheckInRetention =
+            this.getRetentionDate(CFG_ANON_OWNER_LAST_CHECKED_IN_RETENTION_IN_DAYS);
         int batchSize = this.getBatchSize();
 
         int deletedConsumers =
             this.deleteInactiveConsumers(lastCheckedInRetention, nonCheckedInRetention, batchSize);
+
+        int deletedConsumerFromAnonOrgs =
+            this.deleteInactiveConsumersFromAnonymousOwners(anonOrgLastCheckInRetention, batchSize);
 
         Instant anonymousConsumerRetention = this.getRetentionDate(CFG_ANON_CLOUD_CONSUMER_RETENTION);
         int deletedAnonymousCloudConsumers =
             this.deleteInactiveAnonymousCloudConsumers(anonymousConsumerRetention, batchSize);
 
         String result = String.format(
-            "%s complete; %d consumers removed and %d anonymous cloud consumers removed",
-            JOB_NAME, deletedConsumers, deletedAnonymousCloudConsumers);
+            "%s complete; %d consumers removed, %d consumers removed from anonymous owners, " +
+            "and %d anonymous cloud consumers removed",
+            JOB_NAME, deletedConsumers, deletedConsumerFromAnonOrgs, deletedAnonymousCloudConsumers);
 
         log.info(result);
         context.setJobResult(result);
@@ -152,6 +162,7 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
      * @return
      *  the number of consumers that have been deleted.
      */
+    @SuppressWarnings("unchecked")
     private Integer deleteInactiveConsumers(Object... args) {
         if (args == null || args.length < 1) {
             log.trace("No arguments sent to transactional operation");
@@ -200,6 +211,19 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
         }
 
         return deletedConsumers;
+    }
+
+    private int deleteInactiveConsumersFromAnonymousOwners(Instant lastCheckedInRetention, int batchSize) {
+        log.info("Fetching inactive consumers from anonymous owners using the last checkin retention date: {}",
+            lastCheckedInRetention);
+
+        List<InactiveConsumerRecord> inactiveConsumers = this.consumerCurator
+            .getInactiveConsumersFromAnonOwners(lastCheckedInRetention);
+
+        String entityDescription = "inactive consumers from anonymous owners";
+
+        return this.deleteInBatches(inactiveConsumers, batchSize, entityDescription,
+            this::deleteInactiveConsumers);
     }
 
     private int deleteInactiveAnonymousCloudConsumers(Instant retention, int batchSize) {

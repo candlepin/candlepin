@@ -223,6 +223,11 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
         int activeLastCheckin = InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS - 10;
         int inactiveLastCheckin = InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS + 10;
 
+        int activeLastCheckinAnonymousOwner = InactiveConsumerCleanerJob
+            .DEFAULT_ANON_OWNER_LAST_CHECKED_IN_RETENTION_IN_DAYS - 10;
+        int inactiveLastCheckinAnonymousOwner = InactiveConsumerCleanerJob
+            .DEFAULT_ANON_OWNER_LAST_CHECKED_IN_RETENTION_IN_DAYS + 10;
+
         Map<Owner, List<Consumer>> activeConsumersMap = new HashMap<>();
         Map<Owner, List<Consumer>> inactiveConsumersMap = new HashMap<>();
         Map<String, Owner> ownerMap = new HashMap<>();
@@ -232,16 +237,21 @@ public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
             Owner owner = this.createOwner(TestUtil.randomString(), TestUtil.randomString())
                 .setAnonymous(anonymous);
 
+            // Determine which date is considered active and which date is considered inactive since the
+            // retention date is different for consumers in anonymous owners.
+            int activeCheckIn = anonymous ? activeLastCheckinAnonymousOwner : activeLastCheckin;
+            int inactiveCheckIn = anonymous ? inactiveLastCheckinAnonymousOwner : inactiveLastCheckin;
+
             // Set half the owners to an anonymous state
             anonymous = !anonymous;
 
             List<Consumer> activeConsumers =
-                Stream.generate(() -> this.createConsumer(owner, activeLastCheckin))
+                Stream.generate(() -> this.createConsumer(owner, activeCheckIn))
                     .limit(10)
                     .toList();
 
             List<Consumer> inactiveConsumers =
-                Stream.generate(() -> this.createConsumer(owner, inactiveLastCheckin))
+                Stream.generate(() -> this.createConsumer(owner, inactiveCheckIn))
                     .limit(10)
                     .toList();
 

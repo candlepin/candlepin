@@ -1091,7 +1091,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     /**
      * Retrieves records of inactive consumers based on the provided last check-in and last-updated retention
-     * dates.
+     * dates. This method does not consider consumers that belong to anonymous owners.
      * <p>
      * A given consumer is considered inactive if it is a non-manifest consumer, with no active entitlements,
      * and either (a) the consumer's last check-in is older than the provided last-checked-in retention date,
@@ -1127,6 +1127,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             "  JOIN consumer.owner owner " +
             "  LEFT JOIN consumer.entitlements ent " +
             "WHERE ent IS NULL " +
+            "  AND (owner.anonymous = false OR owner.anonymous IS NULL) " +
             "  AND LOWER(type.manifest) = 'n' " +
             "  AND (consumer.lastCheckin < :lastCheckedInRetention OR " +
             "    (consumer.lastCheckin IS NULL AND consumer.updated < :nonCheckedInRetention)) " +
@@ -1136,6 +1137,38 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .createQuery(jpql, InactiveConsumerRecord.class)
             .setParameter("lastCheckedInRetention", Date.from(lastCheckedInRetention))
             .setParameter("nonCheckedInRetention", Date.from(lastUpdatedRetention))
+            .getResultList();
+    }
+
+    /**
+     * Retrieves records of inactive consumers that belong to anonymous owners based on the provided last
+     * check-in retention date.
+     * <p>
+     * A consumer is considered inactive if their last check-in date is before the provided last check-in
+     * retention date, or if the consumer's updated date is before provided last check-in retention date if
+     * the consumer has not checked-in.
+     *
+     * @param lastCheckedInRetention
+     *  the point in time that dictates if a consumer in an anonymous owner is considered inactive or not
+     *
+     * @return a list of {@link InactiveConsumerRecord}s representing the consumers to be considered inactive
+     */
+    public List<InactiveConsumerRecord> getInactiveConsumersFromAnonOwners(Instant lastCheckedInRetention) {
+        if (lastCheckedInRetention == null) {
+            throw new IllegalArgumentException("Last checked-in retention date cannot be null.");
+        }
+
+        String jpql = "SELECT new org.candlepin.model.InactiveConsumerRecord(consumer.id, consumer.uuid, " +
+            "owner.key, owner.anonymous) " +
+            "FROM Consumer consumer " +
+            "  JOIN consumer.owner owner " +
+            "WHERE owner.anonymous = true " +
+            "  AND COALESCE(consumer.lastCheckin, consumer.updated) < :lastCheckedInRetention " +
+            "ORDER BY owner.key, consumer.uuid";
+
+        return this.getEntityManager()
+            .createQuery(jpql, InactiveConsumerRecord.class)
+            .setParameter("lastCheckedInRetention", Date.from(lastCheckedInRetention))
             .getResultList();
     }
 
