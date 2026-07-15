@@ -12,6 +12,7 @@ concurrency:
 
 env:
   TOMCAT_VERSION: 10.1.49
+  BUILD_CONTEXT: ${{ github.workspace }}
 
 jobs:
   spec_tests:
@@ -97,7 +98,7 @@ jobs:
         run: |
           WAR_FILE=build/libs/candlepin.war
           echo "WAR_FILE=$WAR_FILE" > ./containers/.env
-          docker compose -f ./containers/local-dev/${{ matrix.database }}.docker-compose.yml --env-file ./containers/.env up --build -d --wait
+          docker compose -f ./containers/local-dev/${{ matrix.database }}.docker-compose.yml --env-file ./containers/.env up -d --wait
 
       - name: Run Spec tests
         run: ./gradlew spec
