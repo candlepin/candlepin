@@ -98,8 +98,9 @@ deprecated. Instructions for setting that up can be found in [candlepinproject.o
 
 ### Run Active Development Container
 Assuming `podman` & `docker-compose` are installed, the following script can be
-used to deploy a Candlepin and MariaDB/Postgres container. It uses the Containerfile and compose files used
-by the GitHub Actions spec-test setup.
+used to deploy a Candlepin and MariaDB/Postgres container. It uses the Containerfile and compose files found
+in the `containers/active-dev` directory.
+
 ```bash
 ./bin/deployment/deploy-container -HMa          # redeploy Candlepin in Hosted mode
 ./bin/deployment/deploy-container -Ma           # redeploy Candlepin in Standalone mode

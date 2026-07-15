@@ -16,10 +16,10 @@ services:
       retries: 10
 
   candlepin:
-    # image: quay.io/candlepin/candlepin:dev-latest
+    image: quay.io/candlepin/candlepin:dev-latest
     build:
       context: ${BUILD_CONTEXT:-.}
-      dockerfile: ./containers/local-dev/cs10.Containerfile
+      dockerfile: ./containers/active-dev/cs10.Containerfile
       args:
       - WAR_FILE=${WAR_FILE}
     ports:
