@@ -5,5 +5,5 @@
 !build/candlepin.conf
 !bin/deployment/gen_certs.sh
 !candlepin-*.war
-!containers/server.xml
-!containers/logback.xml
+!containers/common/server.xml
+!containers/common/logback.xml

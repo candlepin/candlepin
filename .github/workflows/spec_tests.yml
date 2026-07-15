@@ -97,7 +97,7 @@ jobs:
         run: |
           WAR_FILE=build/libs/candlepin.war
           echo "WAR_FILE=$WAR_FILE" > ./containers/.env
-          docker compose -f ./containers/${{ matrix.database }}.docker-compose.yml --env-file ./containers/.env up --build -d --wait
+          docker compose -f ./containers/local-dev/${{ matrix.database }}.docker-compose.yml --env-file ./containers/.env up --build -d --wait
 
       - name: Run Spec tests
         run: ./gradlew spec
@@ -114,8 +114,8 @@ jobs:
         if: failure()
         shell: bash
         run: |
-          docker compose -f ./containers/${{ matrix.database }}.docker-compose.yml cp candlepin:/var/log/candlepin/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/candlepin/
-          docker compose -f ./containers/${{ matrix.database }}.docker-compose.yml cp candlepin:/opt/tomcat/logs/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/tomcat/
+          docker compose -f ./containers/local-dev/${{ matrix.database }}.docker-compose.yml cp candlepin:/var/log/candlepin/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/candlepin/
+          docker compose -f ./containers/local-dev/${{ matrix.database }}.docker-compose.yml cp candlepin:/opt/tomcat/logs/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/tomcat/
 
       - name: Collect postgress logs on failure
         if: failure() && matrix.database == 'postgres'
@@ -139,4 +139,4 @@ jobs:
       - if: always()
         name: Stop containers
         shell: bash
-        run: docker compose -f ./containers/${{ matrix.database }}.docker-compose.yml down
+        run: docker compose -f ./containers/local-dev/${{ matrix.database }}.docker-compose.yml down

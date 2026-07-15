@@ -15,6 +15,7 @@ services:
       retries: 10
 
   candlepin:
+    # image: quay.io/candlepin/candlepin:dev-latest
     build:
       context: ${BUILD_CONTEXT:-.}
       dockerfile: ./containers/local-dev/cs10.Containerfile
