@@ -63,8 +63,8 @@ COPY --from=builder /app/certs /etc/candlepin/certs
 RUN ln -s /etc/candlepin/certs/*.crt /etc/pki/ca-trust/source/anchors --force; \
     update-ca-trust;
 
-COPY ./.github/containers/server.xml /opt/tomcat/conf
-COPY ./.github/containers/logback.xml /opt/tomcat/conf/logback-override.xml
+COPY ./containers/common/server.xml /opt/tomcat/conf
+COPY ./containers/common/logback.xml /opt/tomcat/conf/logback-override.xml
 
 # Candlepin configuration
 COPY build/candlepin.conf /etc/candlepin/candlepin.conf

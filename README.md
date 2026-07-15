@@ -18,7 +18,7 @@ The build and contribution instructions are available in the [contribution guide
 [CLAUDE.md](CLAUDE.md) is available for AI tools.
 
 # Versioned Candlepin Containers
-See [containers/README.md](containers/README.md) for full documentation on running and configuring versioned/tagged
+See [containers/release/README.md](containers/release/README.md) for full documentation on running and configuring versioned/tagged
 Candlepin container images (production, development) that are published in quay.io.
 
 # Issue tracker
