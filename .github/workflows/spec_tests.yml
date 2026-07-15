@@ -96,8 +96,8 @@ jobs:
         shell: bash
         run: |
           WAR_FILE=build/libs/candlepin.war
-          echo "WAR_FILE=$WAR_FILE" > ./.github/containers/.env
-          docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml --env-file ./.github/containers/.env up --build -d --wait
+          echo "WAR_FILE=$WAR_FILE" > ./containers/.env
+          docker compose -f ./containers/${{ matrix.database }}.docker-compose.yml --env-file ./containers/.env up --build -d --wait
 
       - name: Run Spec tests
         run: ./gradlew spec
@@ -114,16 +114,16 @@ jobs:
         if: failure()
         shell: bash
         run: |
-          docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml cp candlepin:/var/log/candlepin/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/candlepin/
-          docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml cp candlepin:/opt/tomcat/logs/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/tomcat/
+          docker compose -f ./containers/${{ matrix.database }}.docker-compose.yml cp candlepin:/var/log/candlepin/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/candlepin/
+          docker compose -f ./containers/${{ matrix.database }}.docker-compose.yml cp candlepin:/opt/tomcat/logs/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/tomcat/
 
       - name: Collect postgress logs on failure
         if: failure() && matrix.database == 'postgres'
-        run: docker compose -f ./.github/containers/postgres.docker-compose.yml cp postgres:/var/log/postgresql/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/postgresql/
+        run: docker compose -f ./containers/local-dev/postgres.docker-compose.yml cp postgres:/var/log/postgresql/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/postgresql/
 
       - name: Collect mariadb logs on failure
         if: failure() && matrix.database == 'mariadb'
-        run: docker compose -f ./.github/containers/mariadb.docker-compose.yml cp mariadb:/var/log/mysql/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/mysql/
+        run: docker compose -f ./containers/local-dev/mariadb.docker-compose.yml cp mariadb:/var/log/mysql/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/mysql/
 
       - name: Tar logs
         if: failure()
@@ -139,4 +139,4 @@ jobs:
       - if: always()
         name: Stop containers
         shell: bash
-        run: docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml down
+        run: docker compose -f ./containers/${{ matrix.database }}.docker-compose.yml down

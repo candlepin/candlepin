@@ -44,9 +44,9 @@ if [ "${1:-}" = "down" ]; then
     done
 
     if [ "$USE_MYSQL" -eq 1 ]; then
-        COMPOSE_FILE="${REPO_ROOT}/.github/containers/mariadb.docker-compose.yml"
+        COMPOSE_FILE="${REPO_ROOT}/containers/local-dev/mariadb.docker-compose.yml"
     else
-        COMPOSE_FILE="${REPO_ROOT}/.github/containers/postgres.docker-compose.yml"
+        COMPOSE_FILE="${REPO_ROOT}/containers/local-dev/postgres.docker-compose.yml"
     fi
 
     echo "Tearing down containers..."
@@ -88,17 +88,17 @@ export CP_PORT=$(( 8443 + PORT_OFFSET ))
 export CP_DEBUG_PORT=$(( 8000 + PORT_OFFSET ))
 
 if [ "$USE_MYSQL" -eq 1 ]; then
-    COMPOSE_FILE="${REPO_ROOT}/.github/containers/mariadb.docker-compose.yml"
+    COMPOSE_FILE="${REPO_ROOT}/containers/local-dev/mariadb.docker-compose.yml"
     DATABASE_SERVER="-Pdatabase_server=mysql"
     DB_HOST="mariadb"
     export DB_PORT=$(( 3306 + PORT_OFFSET ))
 else
-    COMPOSE_FILE="${REPO_ROOT}/.github/containers/postgres.docker-compose.yml"
+    COMPOSE_FILE="${REPO_ROOT}/containers/local-dev/postgres.docker-compose.yml"
     DATABASE_SERVER="-Pdatabase_server=postgres"
     DB_HOST="postgres"
     export DB_PORT=$(( 5432 + PORT_OFFSET ))
 fi
-CONTAINERFILE="${REPO_ROOT}/.github/containers/cs10.Containerfile"
+CONTAINERFILE="${REPO_ROOT}/containers/local-dev/cs10.Containerfile"
 
 # Extract the Tomcat version from the Containerfile
 TOMCAT_VERSION=$(sed -n 's/^ARG TOMCAT_VERSION=\([^ ]*\)/\1/p' "$CONTAINERFILE")
@@ -154,7 +154,7 @@ if [ "$AUTOCONF" -eq 1 ]; then
 fi
 
 # add default env variables
-export GITHUB_WORKSPACE="${GITHUB_WORKSPACE:-$REPO_ROOT}"
+export BUILD_CONTEXT="${BUILD_CONTEXT:-$REPO_ROOT}"
 export WAR_FILE="${WAR_FILE:-build/libs/candlepin.war}"
 
 # Tear down existing containers if -g was passed

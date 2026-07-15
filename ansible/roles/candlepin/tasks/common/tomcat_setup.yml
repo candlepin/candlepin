@@ -54,7 +54,7 @@
 
     - name: "Copy server.xml file"
       ansible.builtin.copy:
-        src: "{{ playbook_dir }}/../.github/containers/server.xml"
+        src: "{{ playbook_dir }}/../containers/server.xml"
         dest: "/etc/tomcat/server.xml"
         mode: 0755
 
