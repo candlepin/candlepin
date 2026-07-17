@@ -1,23 +1,24 @@
 services:
-  postgres:
-    image: postgres:latest
+  mariadb:
+    image: mariadb:10.6.14
+    command: --transaction-isolation=READ-COMMITTED --innodb-print-all-deadlocks=ON
     environment:
-      POSTGRES_USER: candlepin
-      POSTGRES_PASSWORD: candlepin
-      POSTGRES_DB: candlepin
-      POSTGRES_HOST_AUTH_METHOD: trust
+      MARIADB_USER: candlepin
+      MARIADB_PASSWORD: candlepin
+      MARIADB_DATABASE: candlepin
+      MARIADB_ROOT_PASSWORD: candlepin
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_PORT:-3306}:3306"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U candlepin -d candlepin"]
+      test: ["CMD-SHELL", "mysqladmin ping -ucandlepin -pcandlepin"]
       interval: 2s
       timeout: 5s
       retries: 10
 
   candlepin:
     build:
-      context: ${GITHUB_WORKSPACE}
-      dockerfile: ./.github/containers/cs10.Containerfile
+      context: ${BUILD_CONTEXT:-.}
+      dockerfile: ./containers/active-dev/cs10.Containerfile
       args:
       - WAR_FILE=${WAR_FILE}
     ports:
@@ -30,5 +31,5 @@ services:
       retries: 10
       start_period: 30s
     depends_on:
-      postgres:
+      mariadb:
         condition: service_healthy
