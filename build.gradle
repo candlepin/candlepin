@@ -18,6 +18,7 @@ plugins {
     id "org.candlepin.gradle.gettext"
     id "org.candlepin.gradle.msgfmt"
     id "org.candlepin.gradle.SpecVersion"
+    id "org.candlepin.gradle.PomGenerator"
     id "checkstyle-conventions"
     id "test-logging-conventions"
 }
@@ -251,8 +252,10 @@ repositories {
     mavenCentral()
 
     maven {
-        url = "https://repo.jenkins-ci.org/public/"
         url = "https://repository.jboss.org/nexus/content/groups/public/"
+    }
+    maven {
+        url = "https://repo.jenkins-ci.org/public/"
     }
 }
 
@@ -469,14 +472,6 @@ war {
     from("./api") {
         include "candlepin-api-spec.yaml"
         into("docs")
-    }
-    from("$buildDir/generated/api/src/main/openapi") {
-        include "openapi.yaml"
-        into("WEB-INF/classes")
-    }
-    from("$buildDir/generated/json") {
-        include "openapi.json"
-        into("WEB-INF/classes")
     }
 
     doLast {
