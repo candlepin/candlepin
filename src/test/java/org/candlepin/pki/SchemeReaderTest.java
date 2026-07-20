@@ -397,9 +397,11 @@ public class SchemeReaderTest {
         config.clearProperty(ConfigProperties.CRYPTO_DEFAULT_SCHEME);
 
         SchemeReader reader = this.buildSchemeReader(config);
-        Scheme output = reader.readDefaultScheme();
+        Scheme defaultScheme = reader.readDefaultScheme();
+        Scheme legacyScheme = reader.readLegacyScheme();
 
-        assertThat(output)
+        assertThat(defaultScheme)
+            .isEqualTo(legacyScheme)
             .returns(SchemeReader.LEGACY_SCHEME, Scheme::name)
             .returns(scheme.privateKey(), Scheme::privateKey)
             .returns(scheme.certificate(), Scheme::certificate)
@@ -511,10 +513,6 @@ public class SchemeReaderTest {
             .hasMessageContaining("Unable to read certificate");
     }
 
-    // Impl note: currently the "read legacy" tests all use readDefaultScheme with a configuration that points
-    // the default scheme to the legacy scheme. In the future if readScheme is made public, these tests should
-    // be updated to directly target it instead of fetching it indirectly.
-
     @Test
     public void testReadLegacySchemeDefaultsToLegacyConfigEntries() throws Exception {
         // At the time of writing, our legacy scheme is RSA
@@ -534,10 +532,10 @@ public class SchemeReaderTest {
         config.setProperty(ConfigProperties.CRYPTO_SCHEMES, SchemeReader.LEGACY_SCHEME);
         config.setProperty(ConfigProperties.CRYPTO_DEFAULT_SCHEME, SchemeReader.LEGACY_SCHEME);
 
-        SchemeReader schemeReader = this.buildSchemeReader(config);
-        Scheme defaultScheme = schemeReader.readDefaultScheme();
+        SchemeReader reader = this.buildSchemeReader(config);
+        Scheme output = reader.readLegacyScheme();
 
-        assertThat(defaultScheme)
+        assertThat(output)
             .isNotNull()
             .returns(legacyScheme.certificate(), Scheme::certificate)
             .returns(legacyScheme.privateKey(), Scheme::privateKey)
@@ -564,10 +562,10 @@ public class SchemeReaderTest {
         PrivateKeyReader mockPrivateKeyReader = mockPrivateKeyReader(
             SchemeReader.LEGACY_SCHEME_DEFAULT_KEY, legacyScheme.privateKey().get());
 
-        SchemeReader schemeReader = new SchemeReader(config, mockPrivateKeyReader, mockCertificateReader);
-        Scheme defaultScheme = schemeReader.readDefaultScheme();
+        SchemeReader reader = new SchemeReader(config, mockPrivateKeyReader, mockCertificateReader);
+        Scheme output = reader.readLegacyScheme();
 
-        assertThat(defaultScheme)
+        assertThat(output)
             .isNotNull()
             .returns(legacyScheme.certificate(), Scheme::certificate)
             .returns(legacyScheme.privateKey(), Scheme::privateKey)
@@ -595,11 +593,11 @@ public class SchemeReaderTest {
         PrivateKeyReader mockPrivateKeyReader = mockPrivateKeyReader(
             SchemeReader.LEGACY_SCHEME_DEFAULT_KEY, legacyScheme.privateKey().get());
 
-        SchemeReader schemeReader = new SchemeReader(config, mockPrivateKeyReader,
+        SchemeReader reader = new SchemeReader(config, mockPrivateKeyReader,
             CryptoUtil.getCertificateReader());
-        Scheme defaultScheme = schemeReader.readDefaultScheme();
+        Scheme output = reader.readLegacyScheme();
 
-        assertThat(defaultScheme)
+        assertThat(output)
             .isNotNull()
             .returns(legacyScheme.certificate(), Scheme::certificate)
             .returns(legacyScheme.privateKey(), Scheme::privateKey)
@@ -623,11 +621,11 @@ public class SchemeReaderTest {
         CertificateReader mockCertificateReader = mockCertificateReader(
             SchemeReader.LEGACY_SCHEME_DEFAULT_CERT, legacyScheme.certificate());
 
-        SchemeReader schemeReader = new SchemeReader(config, CryptoUtil.getPrivateKeyReader(),
+        SchemeReader reader = new SchemeReader(config, CryptoUtil.getPrivateKeyReader(),
             mockCertificateReader);
-        Scheme defaultScheme = schemeReader.readDefaultScheme();
+        Scheme output = reader.readLegacyScheme();
 
-        assertThat(defaultScheme)
+        assertThat(output)
             .isNotNull()
             .returns(legacyScheme.certificate(), Scheme::certificate)
             .returns(legacyScheme.privateKey(), Scheme::privateKey)
@@ -653,10 +651,10 @@ public class SchemeReaderTest {
         PrivateKeyReader mockPrivateKeyReader = mockPrivateKeyReader(
             SchemeReader.LEGACY_SCHEME_DEFAULT_KEY, legacyScheme.privateKey().get());
 
-        SchemeReader schemeReader = new SchemeReader(config, mockPrivateKeyReader, mockCertificateReader);
-        Scheme defaultScheme = schemeReader.readDefaultScheme();
+        SchemeReader reader = new SchemeReader(config, mockPrivateKeyReader, mockCertificateReader);
+        Scheme output = reader.readLegacyScheme();
 
-        assertThat(defaultScheme)
+        assertThat(output)
             .isNotNull()
             .returns(legacyScheme.certificate(), Scheme::certificate)
             .returns(legacyScheme.privateKey(), Scheme::privateKey)
@@ -682,10 +680,10 @@ public class SchemeReaderTest {
         PrivateKeyReader mockPrivateKeyReader = mockPrivateKeyReader(
             SchemeReader.LEGACY_SCHEME_DEFAULT_KEY, legacyScheme.privateKey().get());
 
-        SchemeReader schemeReader = new SchemeReader(config, mockPrivateKeyReader, mockCertificateReader);
-        Scheme defaultScheme = schemeReader.readDefaultScheme();
+        SchemeReader reader = new SchemeReader(config, mockPrivateKeyReader, mockCertificateReader);
+        Scheme output = reader.readLegacyScheme();
 
-        assertThat(defaultScheme)
+        assertThat(output)
             .isNotNull()
             .returns(legacyScheme.certificate(), Scheme::certificate)
             .returns(legacyScheme.privateKey(), Scheme::privateKey)
@@ -713,10 +711,10 @@ public class SchemeReaderTest {
         PrivateKeyReader mockPrivateKeyReader = mockPrivateKeyReader(
             SchemeReader.LEGACY_SCHEME_DEFAULT_KEY, legacyScheme.privateKey().get());
 
-        SchemeReader schemeReader = new SchemeReader(config, mockPrivateKeyReader, mockCertificateReader);
-        Scheme defaultScheme = schemeReader.readDefaultScheme();
+        SchemeReader reader = new SchemeReader(config, mockPrivateKeyReader, mockCertificateReader);
+        Scheme output = reader.readLegacyScheme();
 
-        assertThat(defaultScheme)
+        assertThat(output)
             .isNotNull()
             .returns(legacyScheme.certificate(), Scheme::certificate)
             .returns(legacyScheme.privateKey(), Scheme::privateKey)
@@ -743,7 +741,7 @@ public class SchemeReaderTest {
             ConfigProperties.CRYPTO_SCHEME_KEY_SIZE));
 
         SchemeReader reader = this.buildSchemeReader(config);
-        Scheme output = reader.readDefaultScheme();
+        Scheme output = reader.readLegacyScheme();
 
         assertThat(output)
             .returns(SchemeReader.LEGACY_SCHEME, Scheme::name)
@@ -770,7 +768,7 @@ public class SchemeReaderTest {
             ConfigProperties.CRYPTO_SCHEME_KEY_SIZE));
 
         SchemeReader reader = this.buildSchemeReader(config);
-        Scheme output = reader.readDefaultScheme();
+        Scheme output = reader.readLegacyScheme();
 
         assertThat(output)
             .returns(SchemeReader.LEGACY_SCHEME, Scheme::name)
@@ -796,7 +794,7 @@ public class SchemeReaderTest {
             ConfigProperties.CRYPTO_SCHEME_KEY_SIZE));
 
         SchemeReader reader = this.buildSchemeReader(config);
-        Scheme output = reader.readDefaultScheme();
+        Scheme output = reader.readLegacyScheme();
 
         assertThat(output)
             .returns(SchemeReader.LEGACY_SCHEME, Scheme::name)
@@ -817,7 +815,7 @@ public class SchemeReaderTest {
         config.setProperty(ConfigProperties.LEGACY_CA_KEY_PASSWORD, "legacy-ca-password");
 
         SchemeReader reader = this.buildSchemeReader(config);
-        Scheme output = reader.readDefaultScheme();
+        Scheme output = reader.readLegacyScheme();
 
         assertThat(output)
             .returns(SchemeReader.LEGACY_SCHEME, Scheme::name)
@@ -846,7 +844,7 @@ public class SchemeReaderTest {
         config.setProperty(ConfigProperties.LEGACY_CA_KEY_PASSWORD, actualPassword);
 
         SchemeReader reader = this.buildSchemeReader(config);
-        Scheme output = reader.readDefaultScheme();
+        Scheme output = reader.readLegacyScheme();
 
         assertThat(output)
             .returns(SchemeReader.LEGACY_SCHEME, Scheme::name)
@@ -855,6 +853,72 @@ public class SchemeReaderTest {
             .returns(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_ALGORITHM, Scheme::keyAlgorithm)
             .extracting(Scheme::keySize, as(InstanceOfAssertFactories.OPTIONAL))
             .hasValue(SchemeReader.LEGACY_SCHEME_DEFAULT_KEY_SIZE);
+    }
+
+    @Test
+    public void testReadLegacySchemeThrowsExceptionOnUnreadableKey() throws Exception {
+        DevConfig config = new DevConfig();
+        Scheme scheme = CryptoUtil.generateRsaScheme();
+        writeSchemeConfig(config, scheme, SchemeReader.LEGACY_SCHEME, null);
+
+        // set the key property to some non-existent file
+        config.setProperty(ConfigProperties.schemeConfig(SchemeReader.LEGACY_SCHEME,
+            ConfigProperties.CRYPTO_SCHEME_KEY), "path_does_not_exist");
+
+        SchemeReader reader = this.buildSchemeReader(config);
+
+        assertThatThrownBy(() -> reader.readLegacyScheme())
+            .isInstanceOf(ConfigurationException.class)
+            .hasMessageContaining("Unable to read private key");
+    }
+
+    @Test
+    public void testReadLegacySchemeThrowsExceptionOnEncryptedKeyWithWrongPassword() throws Exception {
+        DevConfig config = new DevConfig();
+        Scheme scheme = CryptoUtil.generateRsaScheme();
+        writeSchemeConfig(config, scheme, SchemeReader.LEGACY_SCHEME, "password");
+
+        config.setProperty(ConfigProperties.schemeConfig(SchemeReader.LEGACY_SCHEME,
+            ConfigProperties.CRYPTO_SCHEME_KEY_PASSWORD), "wrong_password");
+
+        SchemeReader reader = this.buildSchemeReader(config);
+
+        assertThatThrownBy(() -> reader.readLegacyScheme())
+            .isInstanceOf(ConfigurationException.class)
+            .hasMessageContaining("Unable to read private key");
+    }
+
+    @Test
+    public void testReadLegacySchemeThrowsExceptionOnEncryptedKeyWithNoPassword() throws Exception {
+        DevConfig config = new DevConfig();
+        Scheme scheme = CryptoUtil.generateRsaScheme();
+        writeSchemeConfig(config, scheme, SchemeReader.LEGACY_SCHEME, "password");
+
+        config.clearProperty(ConfigProperties.schemeConfig(SchemeReader.LEGACY_SCHEME,
+            ConfigProperties.CRYPTO_SCHEME_KEY_PASSWORD));
+
+        SchemeReader reader = this.buildSchemeReader(config);
+
+        assertThatThrownBy(() -> reader.readLegacyScheme())
+            .isInstanceOf(ConfigurationException.class)
+            .hasMessageContaining("Unable to read private key");
+    }
+
+    @Test
+    public void testReadLegacySchemeThrowsExceptionOnUnreadableCert() throws Exception {
+        DevConfig config = new DevConfig();
+        Scheme scheme = CryptoUtil.generateRsaScheme();
+        writeSchemeConfig(config, scheme, SchemeReader.LEGACY_SCHEME, null);
+
+        // set the key property to some non-existent file
+        config.setProperty(ConfigProperties.schemeConfig(SchemeReader.LEGACY_SCHEME,
+            ConfigProperties.CRYPTO_SCHEME_CERT), "path_does_not_exist");
+
+        SchemeReader reader = this.buildSchemeReader(config);
+
+        assertThatThrownBy(() -> reader.readLegacyScheme())
+            .isInstanceOf(ConfigurationException.class)
+            .hasMessageContaining("Unable to read certificate");
     }
 
 }

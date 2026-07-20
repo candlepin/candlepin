@@ -100,8 +100,7 @@ public abstract class CryptoManagerTest {
             .map(Scheme::name)
             .toList();
 
-        config.setProperty(ConfigProperties.CRYPTO_SCHEMES,
-            String.join(",", schemeNames));
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(",", schemeNames));
 
         return config;
     }
@@ -840,14 +839,14 @@ public abstract class CryptoManagerTest {
     public void testGetDefaultCryptoScheme() throws Exception {
         CryptoManager cryptoManager = this.buildCryptoManager();
 
-        Scheme defaultScheme = cryptoManager.getDefaultCryptoScheme();
-        assertNotNull(defaultScheme);
+        Scheme scheme = cryptoManager.getDefaultCryptoScheme();
+        assertNotNull(scheme);
 
-        // This should not change from call to call. The exact instance *shouldn't* change, but it wouoldn't
+        // This should not change from call to call. The exact instance *shouldn't* change, but it wouldn't
         // break things if it does. We'll just verify that it's equal on each invocation.
         for (int i = 0; i < 3; ++i) {
             Scheme output = cryptoManager.getDefaultCryptoScheme();
-            assertEquals(defaultScheme, output);
+            assertEquals(scheme, output);
         }
     }
 
@@ -883,6 +882,61 @@ public abstract class CryptoManagerTest {
         CryptoManager cryptoManager = this.buildCryptoManager(config);
 
         Scheme output = cryptoManager.getDefaultCryptoScheme();
+        assertEquals(mldsaScheme, output);
+    }
+
+    @Test
+    public void testGetLegacyCryptoScheme() throws Exception {
+        CryptoManager cryptoManager = this.buildCryptoManager();
+
+        Scheme scheme = cryptoManager.getLegacyCryptoScheme();
+        assertNotNull(scheme);
+
+        // This should not change from call to call. The exact instance *shouldn't* change, but it wouldn't
+        // break things if it does. We'll just verify that it's equal on each invocation.
+        for (int i = 0; i < 3; ++i) {
+            Scheme output = cryptoManager.getLegacyCryptoScheme();
+            assertEquals(scheme, output);
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testGetLegacyCryptoSchemeRespectsConfiguration(Scheme scheme) throws Exception {
+        // Configure the legacy scheme to match our input scheme
+        DevConfig config = TestConfig.defaults();
+        CryptoUtil.generateSchemeConfiguration(config, scheme, SchemeReader.LEGACY_SCHEME, null);
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        Scheme actual = cryptoManager.getLegacyCryptoScheme();
+        assertThat(actual)
+            .returns(SchemeReader.LEGACY_SCHEME, Scheme::name)
+            .returns(scheme.privateKey(), Scheme::privateKey)
+            .returns(scheme.certificate(), Scheme::certificate)
+            .returns(scheme.signatureAlgorithm(), Scheme::signatureAlgorithm)
+            .returns(scheme.keyAlgorithm(), Scheme::keyAlgorithm)
+            .returns(scheme.keySize(), Scheme::keySize);
+    }
+
+    @Test
+    public void testGetLegacyCryptoSchemeDoesNotRequirePresenceInSchemeList() throws Exception {
+        // This test validates that CryptoManager::getLegacyCryptoScheme does not require that the scheme
+        // is present in the configured scheme list
+        Scheme rsaScheme = CryptoUtil.generateRsaScheme();
+        Scheme mldsaScheme = CryptoUtil.generateMldsaScheme(SchemeReader.LEGACY_SCHEME);
+
+        DevConfig config = TestConfig.defaults();
+
+        CryptoUtil.generateSchemeConfiguration(config, rsaScheme, null);
+        CryptoUtil.generateSchemeConfiguration(config, mldsaScheme, null);
+
+        // Only define the RSA scheme in the primary scheme list, and set the legacy scheme to MLDSA
+        config.setProperty(ConfigProperties.CRYPTO_SCHEMES, rsaScheme.name());
+
+        CryptoManager cryptoManager = this.buildCryptoManager(config);
+
+        Scheme output = cryptoManager.getLegacyCryptoScheme();
         assertEquals(mldsaScheme, output);
     }
 
@@ -1012,9 +1066,9 @@ public abstract class CryptoManagerTest {
 
         private void validateTestState() throws Exception {
             // Ensure we have separation of all of our cert sources
-            List<Scheme> schemes = cryptoManager.getCryptoSchemes();
-            Scheme defaultScheme = cryptoManager.getDefaultCryptoScheme();
-            Set<X509Certificate> upstreamCertificates = cryptoManager.getUpstreamCertificates();
+            List<Scheme> schemes = this.cryptoManager.getCryptoSchemes();
+            Scheme defaultScheme = this.cryptoManager.getDefaultCryptoScheme();
+            Set<X509Certificate> upstreamCertificates = this.cryptoManager.getUpstreamCertificates();
 
             // Verify the default scheme is not one of the schemes in the primary scheme list to ensure proper
             // separation and that we aren't accidentally re-validating the same cert from the primary scheme

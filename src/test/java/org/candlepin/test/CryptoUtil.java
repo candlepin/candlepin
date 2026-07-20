@@ -717,11 +717,15 @@ public class CryptoUtil {
      * @param scheme
      *  the scheme to write to the configuration; cannot be null, and must contain a private key
      *
+     * @param alias
+     *  the scheme name or alias to use to in the config, overriding the name defined in the scheme object;
+     *  cannot be null
+     *
      * @param keyPassword
      *  the password or passphrase to use to encrypt the private key in the file
      *
      * @throws IllegalArgumentException
-     *  if config or scheme are null, or if the scheme lacks a private key
+     *  if config or scheme are null, the scheme alias is null or blank, or if the scheme lacks a private key
      *
      * @throws KeyException
      *  if an exception occurs while encoding the scheme's private key
@@ -729,8 +733,8 @@ public class CryptoUtil {
      * @throws IOException
      *  if an exception occurs while writing the key or certificate to temporary files
      */
-    public static void generateSchemeConfiguration(DevConfig config, Scheme scheme, String keyPassword)
-        throws KeyException, IOException {
+    public static void generateSchemeConfiguration(DevConfig config, Scheme scheme, String alias,
+        String keyPassword) throws KeyException, IOException {
 
         if (config == null) {
             throw new IllegalArgumentException("config is null");
@@ -740,11 +744,15 @@ public class CryptoUtil {
             throw new IllegalArgumentException("scheme is null");
         }
 
+        if (alias == null || alias.isBlank()) {
+            throw new IllegalArgumentException("scheme alias is null or empty");
+        }
+
         if (scheme.privateKey().isEmpty()) {
             throw new IllegalArgumentException("scheme lacks a private key");
         }
 
-        String prefix = ConfigProperties.schemePrefix(scheme.name());
+        String prefix = ConfigProperties.schemePrefix(alias);
 
         File keyFile = writePrivateKeyToFile(scheme.privateKey().get(), keyPassword);
         File certFile = writeCertificateToFile(scheme.certificate());
@@ -762,6 +770,37 @@ public class CryptoUtil {
 
         scheme.keySize().ifPresent(keySize ->
             config.setProperty(prefix + ConfigProperties.CRYPTO_SCHEME_KEY_SIZE, keySize.toString()));
+    }
+
+    /**
+     * Writes the specified scheme to the given configuration such that it should be well-formed and readable
+     * by any production-ready logic that loads schemes from the Candlepin configuration. This function will
+     * generate new temporary files for both the key and certificate used in the scheme, even if that scheme
+     * instance has already been written to a configuration object previously. If the config or scheme are
+     * null, or the scheme lacks a private key, this function throws an exception.
+     *
+     * @param config
+     *  the config instance to modify with the scheme configuration; cannot be null
+     *
+     * @param scheme
+     *  the scheme to write to the configuration; cannot be null, and must contain a private key
+     *
+     * @param keyPassword
+     *  the password or passphrase to use to encrypt the private key in the file
+     *
+     * @throws IllegalArgumentException
+     *  if config or scheme are null, or if the scheme lacks a private key
+     *
+     * @throws KeyException
+     *  if an exception occurs while encoding the scheme's private key
+     *
+     * @throws IOException
+     *  if an exception occurs while writing the key or certificate to temporary files
+     */
+    public static void generateSchemeConfiguration(DevConfig config, Scheme scheme, String keyPassword)
+        throws KeyException, IOException {
+
+        generateSchemeConfiguration(config, scheme, scheme.name(), keyPassword);
     }
 
     /**
