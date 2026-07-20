@@ -1,0 +1,110 @@
+<?xml version='1.0'?>
+<configuration
+    xmlns="urn:activemq"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    xsi:schemaLocation="urn:activemq /schema/artemis-configuration.xsd">
+    <core
+    xmlns="urn:activemq:core"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:activemq:core ">
+    <name>broker</name>
+    <persistence-enabled>true</persistence-enabled>
+    <journal-type>NIO</journal-type>
+    <paging-directory>data/paging</paging-directory>
+    <bindings-directory>data/bindings</bindings-directory>
+    <journal-directory>data/journal</journal-directory>
+    <large-messages-directory>data/large-messages</large-messages-directory>
+    <journal-datasync>true</journal-datasync>
+    <journal-min-files>2</journal-min-files>
+    <journal-pool-files>10</journal-pool-files>
+    <journal-device-block-size>4096</journal-device-block-size>
+    <journal-file-size>10M</journal-file-size>
+    <journal-buffer-timeout>8832000</journal-buffer-timeout>
+    <journal-max-io>1</journal-max-io>
+    <disk-scan-period>5000</disk-scan-period>
+    <max-disk-usage>90</max-disk-usage>
+    <critical-analyzer>true</critical-analyzer>
+    <critical-analyzer-timeout>120000</critical-analyzer-timeout>
+    <critical-analyzer-check-period>60000</critical-analyzer-check-period>
+    <critical-analyzer-policy>HALT</critical-analyzer-policy>
+
+    <acceptors>
+        <acceptor name="artemis">tcp://0.0.0.0:61616?sslEnabled=false;needClientAuth=false</acceptor>
+    </acceptors>
+
+    <security-enabled>false</security-enabled>
+
+    <security-settings>
+        <security-setting match="#">
+        <permission type="createNonDurableQueue" roles="amq"/>
+        <permission type="deleteNonDurableQueue" roles="amq"/>
+        <permission type="createDurableQueue" roles="amq"/>
+        <permission type="deleteDurableQueue" roles="amq"/>
+        <permission type="createAddress" roles="amq"/>
+        <permission type="deleteAddress" roles="amq"/>
+        <permission type="consume" roles="amq"/>
+        <permission type="browse" roles="amq"/>
+        <permission type="send" roles="amq"/>
+        <!-- we need this otherwise ./artemis data imp wouldn't work -->
+        <permission type="manage" roles="amq"/>
+        </security-setting>
+    </security-settings>
+
+    <!-- <security-settings>
+        <security-setting match="#">
+        <permission type="createNonDurableQueue" roles="fullaccess, {{ .Values.app.console_ldap_group }}"/>
+        <permission type="deleteNonDurableQueue" roles="fullaccess, {{ .Values.app.console_ldap_group }}"/>
+        <permission type="createDurableQueue" roles="fullaccess, {{ .Values.app.console_ldap_group }}"/>
+        <permission type="deleteDurableQueue" roles="fullaccess, {{ .Values.app.console_ldap_group }}"/>
+        <permission type="createAddress" roles="fullaccess, {{ .Values.app.console_ldap_group }}"/>
+        <permission type="deleteAddress" roles="fullaccess, {{ .Values.app.console_ldap_group }}"/>
+        <permission type="consume" roles="fullaccess, {{ .Values.app.console_ldap_group }}"/>
+        <permission type="browse" roles="fullaccess, {{ .Values.app.console_ldap_group }}"/>
+        <permission type="send" roles="fullaccess, {{ .Values.app.console_ldap_group }}"/>
+        <permission type="manage" roles="fullaccess, {{ .Values.app.console_ldap_group }}"/>
+        </security-setting>
+    </security-settings> -->
+
+    <addresses>
+        <address name="event.default">
+        <multicast>
+            <queue name="event.org.candlepin.audit.LoggingListener" />
+            <queue name="event.org.candlepin.audit.ActivationListener" />
+            <queue name="errata.event.default">
+            <filter string="EVENT_TYPE='MODIFIED' AND EVENT_TARGET='OWNER_CONTENT_ACCESS_MODE'"/>
+            </queue>
+        </multicast>
+        </address>
+        <address name="job">
+        <multicast>
+            <queue name="jobs" />
+        </multicast>
+        </address>
+    </addresses>
+
+    <address-settings>
+        <address-setting match="event.default">
+        <auto-create-queues>true</auto-create-queues>
+        <max-size-bytes>1048576000</max-size-bytes>
+        <page-size-bytes>104857600</page-size-bytes>
+        <redelivery-delay>30000</redelivery-delay>
+        <expiry-delay>241000</expiry-delay>
+        <max-redelivery-delay>3600000</max-redelivery-delay>
+        <redelivery-delay-multiplier>2</redelivery-delay-multiplier>
+        <max-delivery-attempts>-1</max-delivery-attempts>
+        </address-setting>
+        <address-setting match="job">
+        <auto-create-queues>true</auto-create-queues>
+        <max-size-bytes>10485760</max-size-bytes>
+        <page-size-bytes>1048576</page-size-bytes>
+        <redelivery-delay>30000</redelivery-delay>
+        <max-redelivery-delay>3600000</max-redelivery-delay>
+        <redelivery-delay-multiplier>2</redelivery-delay-multiplier>
+        <max-delivery-attempts>0</max-delivery-attempts>
+        </address-setting>
+    </address-settings>
+
+    </core>
+</configuration>
+
