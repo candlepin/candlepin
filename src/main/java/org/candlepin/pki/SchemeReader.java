@@ -147,7 +147,17 @@ public class SchemeReader {
             .orElse(null);
     }
 
-    private Scheme readLegacyScheme() {
+    /**
+     * Fetches the legacy scheme from the Candlepin configuration or known legacy default values where
+     * applicable. This method will never return null.
+     *
+     * @throws ConfigurationException
+     *  if the legacy scheme is malformed, or otherwise cannot be loaded
+     *
+     * @return
+     *  the legacy crypto scheme
+     */
+    public Scheme readLegacyScheme() {
         // This is a bit of a mess. We need to load a scheme that mostly comes from old config values, but
         // could also come from new config values.
 
@@ -286,7 +296,7 @@ public class SchemeReader {
      * cannot be loaded, this method throws an exception. This method will never return null.
      *
      * @throws ConfigurationException
-     *  if the default scheme is malformed, or the default scheme cannot be loaded
+     *  if the default scheme is malformed, or otherwise cannot be loaded
      *
      * @return
      *  the default crypto scheme
