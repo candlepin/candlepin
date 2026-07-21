@@ -80,6 +80,8 @@ public class BouncyCastleCryptoManager implements CryptoManager {
 
     private final List<Scheme> schemes;
     private final Scheme defaultScheme;
+    private final Scheme legacyScheme;
+
     private final File upstreamCertificateRepo;
 
     // TODO: FIXME: This feature flag is temporary and should be removed once all dependent services have
@@ -101,10 +103,13 @@ public class BouncyCastleCryptoManager implements CryptoManager {
 
         this.schemes = Collections.unmodifiableList(schemeReader.readSchemes());
         this.defaultScheme = schemeReader.readDefaultScheme();
+        this.legacyScheme = schemeReader.readLegacyScheme();
+
         this.upstreamCertificateRepo = this.readUpstreamCertificateRepoConfig(config);
 
         // Validate the schemes we've loaded
-        Stream.concat(this.schemes.stream(), Stream.of(this.defaultScheme))
+        Stream.concat(this.schemes.stream(), Stream.of(this.defaultScheme, this.legacyScheme))
+            .distinct()
             .forEach(this::validateScheme);
 
         // Temporary feature flag
@@ -315,6 +320,11 @@ public class BouncyCastleCryptoManager implements CryptoManager {
     }
 
     @Override
+    public Scheme getLegacyCryptoScheme() {
+        return this.legacyScheme;
+    }
+
+    @Override
     public Set<X509Certificate> getUpstreamCertificates() throws CertificateException {
         // If the directory/file doesn't exist, log a warning and return an empty set
         if (!this.upstreamCertificateRepo.exists()) {
@@ -398,8 +408,9 @@ public class BouncyCastleCryptoManager implements CryptoManager {
         }
 
         Stream<X509Certificate> schemeCerts = Stream.concat(this.schemes.stream(),
-            Stream.of(this.defaultScheme))
-            .map(Scheme::certificate);
+            Stream.of(this.defaultScheme, this.legacyScheme))
+            .map(Scheme::certificate)
+            .distinct();
 
         Set<X509Certificate> upstreamCerts = this.getUpstreamCertificates();
 

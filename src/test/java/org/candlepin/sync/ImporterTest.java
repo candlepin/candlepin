@@ -143,11 +143,6 @@ import java.util.zip.ZipOutputStream;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ImporterTest extends DatabaseTestFixture {
-    private static Stream<Arguments> schemeSource() {
-        return CryptoUtil.SUPPORTED_SCHEMES.values()
-            .stream()
-            .map(Arguments::of);
-    }
 
     @TempDir
     protected File tmpFolder;
@@ -232,6 +227,12 @@ public class ImporterTest extends DatabaseTestFixture {
     @AfterEach
     public void tearDown() throws Exception {
         this.updateReleaseVersion("${version}", "${release}");
+    }
+
+    private static Stream<Arguments> schemeSource() {
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
+            .stream()
+            .map(Arguments::of);
     }
 
     private void updateReleaseVersion(String version, String release) throws URISyntaxException, IOException {
@@ -936,7 +937,63 @@ public class ImporterTest extends DatabaseTestFixture {
         Owner mockOwner = mock(Owner.class);
         Importer importer = this.buildImporter();
 
-        File legacyExport = this.toLegacyExport(export, this.cryptoManager.getDefaultCryptoScheme());
+        File legacyExport = this.toLegacyExport(export, this.cryptoManager.getLegacyCryptoScheme());
+
+        ImportRecord importRecord = importer
+            .loadExport(mockOwner, legacyExport, new ConflictOverrides(), "original_file.zip");
+
+        org.assertj.core.api.Assertions.assertThat(importRecord)
+            .isNotNull()
+            .returns(Status.SUCCESS_WITH_WARNING, ImportRecord::getStatus)
+            .returns(mockOwner, ImportRecord::getOwner)
+            .doesNotReturn(null, ImportRecord::getFileName);
+    }
+
+    @Test
+    public void testLoadExportWithLegacyExportUsingNonLegacyDefaultCryptoScheme() throws Exception {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        // Impl note: this scheme can be anything *except* RSA
+        Scheme mldsaScheme = CryptoUtil.generateMldsaScheme("mldsa_default");
+        CryptoUtil.generateSchemeConfiguration(this.config, mldsaScheme, null);
+        this.config.setProperty(ConfigProperties.CRYPTO_DEFAULT_SCHEME, mldsaScheme.name());
+
+        // We have to recreate this so it receives the config changes. This is why we shouldn't use globally
+        // shared initializers in unit tests. :/
+        this.cryptoManager = spy(CryptoUtil.getCryptoManager(this.config));
+
+        Owner owner = this.createOwner();
+        ConsumerType consumerType = this.createConsumerType(true);
+        doReturn(consumerType).when(mockConsumerTypeCurator).getByLabel(any(String.class));
+
+        Consumer consumer = new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(consumerType);
+        consumer = this.consumerCurator.create(consumer);
+
+        IdentityCertificate idCert = this.identityCertificateGenerator.generate(consumer);
+        consumer.setIdCert(idCert);
+        consumer = this.consumerCurator.update(consumer);
+
+        Exporter exporter = this.createExporter();
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
+            TestUtil.randomString());
+        assertNotNull(export);
+        assertTrue(export.exists());
+        export.deleteOnExit();
+
+        Refresher mockRefresher = mock(Refresher.class);
+        doReturn(mockRefresher)
+            .when(this.refresherFactory)
+            .getRefresher(any(SubscriptionServiceAdapter.class));
+        doReturn(mockRefresher).when(mockRefresher).add(any(Owner.class));
+
+        Owner mockOwner = mock(Owner.class);
+        Importer importer = this.buildImporter();
+
+        File legacyExport = this.toLegacyExport(export, this.cryptoManager.getLegacyCryptoScheme());
 
         ImportRecord importRecord = importer
             .loadExport(mockOwner, legacyExport, new ConflictOverrides(), "original_file.zip");
@@ -1194,7 +1251,7 @@ public class ImporterTest extends DatabaseTestFixture {
         Importer importer = this.buildImporter();
         ManifestFile mockManifestFile = mock(ManifestFile.class);
 
-        File legacyExport = this.toLegacyExport(export, this.cryptoManager.getDefaultCryptoScheme());
+        File legacyExport = this.toLegacyExport(export, this.cryptoManager.getLegacyCryptoScheme());
 
         try (FileInputStream is = new FileInputStream(legacyExport)) {
             doReturn(is).when(mockManifestFile).getInputStream();

@@ -137,6 +137,16 @@ public interface CryptoManager {
     Scheme getDefaultCryptoScheme();
 
     /**
+     * Fetches the legacy scheme, as it is currently configured. Note that this should only be used in very
+     * specific instances where fallback behavior is known to only use the legacy scheme (e.g. manifest
+     * import).
+     *
+     * @return
+     *  the legacy cryptographic scheme
+     */
+    Scheme getLegacyCryptoScheme();
+
+    /**
      * Fetches the set of "upstream" certificates, defined as those included in the Candlepin RPM, typically
      * aligned with the certificates used by hosted Candlepin. This method will never return null. If there
      * are no upstream certificates, this method returns an empty set.
