@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-03 07:34+0000\n"
+"POT-Creation-Date: 2026-07-09 08:08+0000\n"
 "PO-Revision-Date: 2016-03-02 04:24-0500\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Hindi\n"
@@ -307,13 +307,13 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/auth/SSLAuth.java:96
+#: src/main/java/org/candlepin/auth/SSLAuth.java:97
 #, fuzzy
 #| msgid "Invalid Credentials"
 msgid "Invalid Certificate Type"
 msgstr "अवैध श्रेय"
 
-#: src/main/java/org/candlepin/auth/UserAuth.java:54
+#: src/main/java/org/candlepin/auth/UserAuth.java:56
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1468
 #: src/main/java/org/candlepin/resource/RoleResource.java:115
 #: src/main/java/org/candlepin/resource/UserResource.java:92
@@ -529,27 +529,27 @@ msgstr "UUID {0} के साथ तंत्र एक आभासी अत�
 msgid "Unit with ID \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/model/Pool.java:163
+#: src/main/java/org/candlepin/model/Pool.java:161
 msgid "Other"
 msgstr ""
 
-#: src/main/java/org/candlepin/model/Pool.java:164
+#: src/main/java/org/candlepin/model/Pool.java:162
 msgid "Standard"
 msgstr ""
 
-#: src/main/java/org/candlepin/model/Pool.java:165
+#: src/main/java/org/candlepin/model/Pool.java:163
 msgid "Instance Based"
 msgstr ""
 
-#: src/main/java/org/candlepin/model/Pool.java:166
+#: src/main/java/org/candlepin/model/Pool.java:164
 msgid "Stackable"
 msgstr ""
 
-#: src/main/java/org/candlepin/model/Pool.java:167
+#: src/main/java/org/candlepin/model/Pool.java:165
 msgid "Stackable only with other subscriptions"
 msgstr ""
 
-#: src/main/java/org/candlepin/model/Pool.java:168
+#: src/main/java/org/candlepin/model/Pool.java:166
 msgid "Multi-Entitleable"
 msgstr ""
 
@@ -1311,7 +1311,7 @@ msgstr "एंटाइटेलमेंट के लिए अपस्ट्
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "UUID {0} के साथ तंत्र एक आभासी अतिथि नहीं है."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3379
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3387
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr ""
@@ -1618,8 +1618,9 @@ msgid ""
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:246
+#, java-format
 msgid ""
-"Cannot attach content defined outside of the organization's namespace: {0}"
+"Cannot attach content defined outside of the organization''s namespace: {0}"
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:373
@@ -1641,8 +1642,9 @@ msgid ""
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:416
+#, java-format
 msgid ""
-"Cannot attach product defined outside of the organization's namespace: {0}"
+"Cannot attach product defined outside of the organization''s namespace: {0}"
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:449
@@ -2252,37 +2254,37 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:366
+#: src/main/java/org/candlepin/sync/Importer.java:367
 msgid "Wrong metadata type"
 msgstr "गलत मेटाडेटा प्रकार"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:375
+#: src/main/java/org/candlepin/sync/Importer.java:376
 msgid "Invalid owner"
 msgstr "अवैध स्वामी"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:388
+#: src/main/java/org/candlepin/sync/Importer.java:389
 msgid "Import is older than existing data"
 msgstr "मौजूदा आँकड़ा से आयात अधिक पुराना"
 
-#: src/main/java/org/candlepin/sync/Importer.java:407
+#: src/main/java/org/candlepin/sync/Importer.java:408
 msgid "Import is the same as existing data"
 msgstr "मौजूदा आँकड़ा की तरह आयात"
 
-#: src/main/java/org/candlepin/sync/Importer.java:441
+#: src/main/java/org/candlepin/sync/Importer.java:442
 #, fuzzy
 #| msgid "The archive does not contain the required consumer.json file"
 msgid "The provided manifest has no content in the exported consumer archive"
 msgstr "अभिलेख के लिए जरूरी consumer.json फ़ाइल नहीं समाहित है."
 
-#: src/main/java/org/candlepin/sync/Importer.java:466
+#: src/main/java/org/candlepin/sync/Importer.java:467
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "अभिलेख के लिए जरूरी consumer_export.zip फ़ाइल नहीं समाहित है."
 
-#: src/main/java/org/candlepin/sync/Importer.java:471
+#: src/main/java/org/candlepin/sync/Importer.java:472
 #, fuzzy
 #| msgid "Unable to find upstream certificate for entitlement: {0}"
 msgid "Unable to read certificates to validate manifest"
@@ -2290,51 +2292,51 @@ msgstr "एंटाइटेलमेंट के लिए अपस्ट्
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rajesh
-#: src/main/java/org/candlepin/sync/Importer.java:476
-#: src/main/java/org/candlepin/sync/Importer.java:480
+#: src/main/java/org/candlepin/sync/Importer.java:477
+#: src/main/java/org/candlepin/sync/Importer.java:481
 msgid "Failed to import archive"
 msgstr "अभिलेख आयात करने में विफल"
 
-#: src/main/java/org/candlepin/sync/Importer.java:484
-#: src/main/java/org/candlepin/sync/Importer.java:941
+#: src/main/java/org/candlepin/sync/Importer.java:485
+#: src/main/java/org/candlepin/sync/Importer.java:942
 msgid "Unable to extract export archive"
 msgstr "निर्यात अभिलेख निष्कर्षण में असमर्थ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:531
-#: src/main/java/org/candlepin/sync/Importer.java:856
+#: src/main/java/org/candlepin/sync/Importer.java:532
+#: src/main/java/org/candlepin/sync/Importer.java:857
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "अभिलेख {0} एक ठीक से संकुचित फाइल नहीं है या खाली है"
 
-#: src/main/java/org/candlepin/sync/Importer.java:541
+#: src/main/java/org/candlepin/sync/Importer.java:542
 msgid "Archive signed by an untrusted certificate"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:572
+#: src/main/java/org/candlepin/sync/Importer.java:573
 msgid "Archive failed signature check"
 msgstr "अभिलेख हस्ताक्षर जाँच में विफल रहा"
 
-#: src/main/java/org/candlepin/sync/Importer.java:586
+#: src/main/java/org/candlepin/sync/Importer.java:587
 msgid "The archive does not contain the required signature file"
 msgstr "अभिलेख के लिए जरूरी हस्ताक्षर फ़ाइल नहीं समाहित है."
 
-#: src/main/java/org/candlepin/sync/Importer.java:615
+#: src/main/java/org/candlepin/sync/Importer.java:616
 msgid "The archive does not contain the required meta.json file"
 msgstr "अभिलेख के लिए जरूरी meta.json फ़ाइल नहीं समाहित है."
 
-#: src/main/java/org/candlepin/sync/Importer.java:620
+#: src/main/java/org/candlepin/sync/Importer.java:621
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "अभिलेख के लिए जरूरी consumer_types निर्देशिका नहीं समाहित है."
 
-#: src/main/java/org/candlepin/sync/Importer.java:625
+#: src/main/java/org/candlepin/sync/Importer.java:626
 msgid "The archive does not contain the required consumer.json file"
 msgstr "अभिलेख के लिए जरूरी consumer.json फ़ाइल नहीं समाहित है."
 
-#: src/main/java/org/candlepin/sync/Importer.java:631
+#: src/main/java/org/candlepin/sync/Importer.java:632
 msgid "The archive does not contain the required entitlements directory"
 msgstr "अभिलेख के लिए जरूरी एंटाइटेल निर्देशिका नहीं समाहित है."
 
-#: src/main/java/org/candlepin/sync/Importer.java:869
+#: src/main/java/org/candlepin/sync/Importer.java:870
 #, java-format
 msgid "Entry is outside of the target directory: {0}"
 msgstr ""
@@ -2478,7 +2480,7 @@ msgstr ""
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:86
 #, java-format
-msgid "script expression \"{0}\" didn't evaluate to true"
+msgid "script expression \"{0}\" didn''t evaluate to true"
 msgstr ""
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89

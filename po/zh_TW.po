@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-03 07:34+0000\n"
+"POT-Creation-Date: 2026-07-09 08:08+0000\n"
 "PO-Revision-Date: 2025-04-26 03:22+0000\n"
 "Last-Translator: hsu zangmen <chzang55@gmail.com>\n"
 "Language-Team: Chinese (Traditional) <https://translate.fedoraproject.org/"
@@ -306,13 +306,13 @@ msgstr "嘗試取得 OAuth 單位金鑰時發生了錯誤"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/auth/SSLAuth.java:96
+#: src/main/java/org/candlepin/auth/SSLAuth.java:97
 #, fuzzy
 #| msgid "Invalid Credentials"
 msgid "Invalid Certificate Type"
 msgstr "無效的認證"
 
-#: src/main/java/org/candlepin/auth/UserAuth.java:54
+#: src/main/java/org/candlepin/auth/UserAuth.java:56
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1468
 #: src/main/java/org/candlepin/resource/RoleResource.java:115
 #: src/main/java/org/candlepin/resource/UserResource.java:92
@@ -526,27 +526,27 @@ msgstr "系統（UUID {0}）是虛擬客座端，不具有客座端。"
 msgid "Unit with ID \"{0}\" could not be found."
 msgstr "無法找到 ID 為 \"{0}\" 的裝置。"
 
-#: src/main/java/org/candlepin/model/Pool.java:163
+#: src/main/java/org/candlepin/model/Pool.java:161
 msgid "Other"
 msgstr "其它"
 
-#: src/main/java/org/candlepin/model/Pool.java:164
+#: src/main/java/org/candlepin/model/Pool.java:162
 msgid "Standard"
 msgstr "標準"
 
-#: src/main/java/org/candlepin/model/Pool.java:165
+#: src/main/java/org/candlepin/model/Pool.java:163
 msgid "Instance Based"
 msgstr ""
 
-#: src/main/java/org/candlepin/model/Pool.java:166
+#: src/main/java/org/candlepin/model/Pool.java:164
 msgid "Stackable"
 msgstr ""
 
-#: src/main/java/org/candlepin/model/Pool.java:167
+#: src/main/java/org/candlepin/model/Pool.java:165
 msgid "Stackable only with other subscriptions"
 msgstr ""
 
-#: src/main/java/org/candlepin/model/Pool.java:168
+#: src/main/java/org/candlepin/model/Pool.java:166
 msgid "Multi-Entitleable"
 msgstr ""
 
@@ -1296,7 +1296,7 @@ msgstr "找不到權利的上游憑證：{0}"
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "擁有 UUID {0} 的系統不是虛擬客座端。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3379
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3387
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr ""
@@ -1599,8 +1599,9 @@ msgid ""
 msgstr "無法在名稱空間\"{0}\"中找到一個或多個 ID 為： {1}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:246
+#, java-format
 msgid ""
-"Cannot attach content defined outside of the organization's namespace: {0}"
+"Cannot attach content defined outside of the organization''s namespace: {0}"
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:373
@@ -1623,8 +1624,9 @@ msgid ""
 msgstr "無法為擁有者 \"{1}\" 找到 ID 為 \"{0}\" 的產品"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:416
+#, java-format
 msgid ""
-"Cannot attach product defined outside of the organization's namespace: {0}"
+"Cannot attach product defined outside of the organization''s namespace: {0}"
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:449
@@ -2235,37 +2237,37 @@ msgstr "此檔案中找到一或多個非啟用中的訂閱服務。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:366
+#: src/main/java/org/candlepin/sync/Importer.java:367
 msgid "Wrong metadata type"
 msgstr "錯誤的 metadata 類型"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:375
+#: src/main/java/org/candlepin/sync/Importer.java:376
 msgid "Invalid owner"
 msgstr "無效的擁有者"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:388
+#: src/main/java/org/candlepin/sync/Importer.java:389
 msgid "Import is older than existing data"
 msgstr "所匯入的資料比既有的資料還要舊"
 
-#: src/main/java/org/candlepin/sync/Importer.java:407
+#: src/main/java/org/candlepin/sync/Importer.java:408
 msgid "Import is the same as existing data"
 msgstr "所匯入的資料與既有的資料一樣"
 
-#: src/main/java/org/candlepin/sync/Importer.java:441
+#: src/main/java/org/candlepin/sync/Importer.java:442
 #, fuzzy
 #| msgid "The archive does not contain the required consumer.json file"
 msgid "The provided manifest has no content in the exported consumer archive"
 msgstr "封存檔案不包含需要的 consumer.json 檔案"
 
-#: src/main/java/org/candlepin/sync/Importer.java:466
+#: src/main/java/org/candlepin/sync/Importer.java:467
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "封存檔案不包含必要的 consumer_export.zip 檔案"
 
-#: src/main/java/org/candlepin/sync/Importer.java:471
+#: src/main/java/org/candlepin/sync/Importer.java:472
 #, fuzzy
 #| msgid "Unable to find upstream certificate for entitlement: {0}"
 msgid "Unable to read certificates to validate manifest"
@@ -2273,51 +2275,51 @@ msgstr "找不到權利的上游憑證：{0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author tchuang
-#: src/main/java/org/candlepin/sync/Importer.java:476
-#: src/main/java/org/candlepin/sync/Importer.java:480
+#: src/main/java/org/candlepin/sync/Importer.java:477
+#: src/main/java/org/candlepin/sync/Importer.java:481
 msgid "Failed to import archive"
 msgstr "匯入封存檔案失敗"
 
-#: src/main/java/org/candlepin/sync/Importer.java:484
-#: src/main/java/org/candlepin/sync/Importer.java:941
+#: src/main/java/org/candlepin/sync/Importer.java:485
+#: src/main/java/org/candlepin/sync/Importer.java:942
 msgid "Unable to extract export archive"
 msgstr "無法擷取 export 封存檔案"
 
-#: src/main/java/org/candlepin/sync/Importer.java:531
-#: src/main/java/org/candlepin/sync/Importer.java:856
+#: src/main/java/org/candlepin/sync/Importer.java:532
+#: src/main/java/org/candlepin/sync/Importer.java:857
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "封存檔案 {0} 不是個正確壓縮的檔案，或是它是空的"
 
-#: src/main/java/org/candlepin/sync/Importer.java:541
+#: src/main/java/org/candlepin/sync/Importer.java:542
 msgid "Archive signed by an untrusted certificate"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:572
+#: src/main/java/org/candlepin/sync/Importer.java:573
 msgid "Archive failed signature check"
 msgstr "封存檔案的簽章檢查失敗"
 
-#: src/main/java/org/candlepin/sync/Importer.java:586
+#: src/main/java/org/candlepin/sync/Importer.java:587
 msgid "The archive does not contain the required signature file"
 msgstr "封存檔案不包含需要的簽章檔案"
 
-#: src/main/java/org/candlepin/sync/Importer.java:615
+#: src/main/java/org/candlepin/sync/Importer.java:616
 msgid "The archive does not contain the required meta.json file"
 msgstr "封存檔案不包含必要的 meta.json 檔案"
 
-#: src/main/java/org/candlepin/sync/Importer.java:620
+#: src/main/java/org/candlepin/sync/Importer.java:621
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "封存檔案不包含必要的 consumer_types 目錄"
 
-#: src/main/java/org/candlepin/sync/Importer.java:625
+#: src/main/java/org/candlepin/sync/Importer.java:626
 msgid "The archive does not contain the required consumer.json file"
 msgstr "封存檔案不包含需要的 consumer.json 檔案"
 
-#: src/main/java/org/candlepin/sync/Importer.java:631
+#: src/main/java/org/candlepin/sync/Importer.java:632
 msgid "The archive does not contain the required entitlements directory"
 msgstr "封存檔案不包含必要的 entitlements 目錄"
 
-#: src/main/java/org/candlepin/sync/Importer.java:869
+#: src/main/java/org/candlepin/sync/Importer.java:870
 #, java-format
 msgid "Entry is outside of the target directory: {0}"
 msgstr ""
@@ -2460,7 +2462,7 @@ msgstr "可能含有不安全的 HTML 內容"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:86
 #, java-format
-msgid "script expression \"{0}\" didn't evaluate to true"
+msgid "script expression \"{0}\" didn''t evaluate to true"
 msgstr ""
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89

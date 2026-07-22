@@ -7,9 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-03 07:34+0000\n"
-"PO-Revision-Date: 2026-05-30 00:02+0000\n"
-"Last-Translator: John Sefler <jsefler@redhat.com>\n"
+"POT-Creation-Date: 2026-07-09 08:08+0000\n"
+"PO-Revision-Date: 2026-07-08 21:17+0000\n"
+"Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
 "Language-Team: Czech <https://translate.fedoraproject.org/projects/candlepin/"
 "master/cs/>\n"
 "Language: cs\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: Weblate 2026.5\n"
+"X-Generator: Weblate 2026.7.1.dev0\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -253,11 +253,11 @@ msgstr "Došlo k chybě v OAuth. Vnitřní zpráva je: {0}"
 msgid "Error getting OAuth unit key"
 msgstr "Chyba při získávání klíče OAuth jednotky"
 
-#: src/main/java/org/candlepin/auth/SSLAuth.java:96
+#: src/main/java/org/candlepin/auth/SSLAuth.java:97
 msgid "Invalid Certificate Type"
 msgstr "Neplatný typ certifikátu"
 
-#: src/main/java/org/candlepin/auth/UserAuth.java:54
+#: src/main/java/org/candlepin/auth/UserAuth.java:56
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1468
 #: src/main/java/org/candlepin/resource/RoleResource.java:115
 #: src/main/java/org/candlepin/resource/UserResource.java:92
@@ -469,27 +469,27 @@ msgstr "Systém s UUID {0} je sám virtuální host. Nemá proto své hosty."
 msgid "Unit with ID \"{0}\" could not be found."
 msgstr "Jednotku s identifikátorem „{0}“ nebylo možné nalézt."
 
-#: src/main/java/org/candlepin/model/Pool.java:163
+#: src/main/java/org/candlepin/model/Pool.java:161
 msgid "Other"
 msgstr "Ostatní"
 
-#: src/main/java/org/candlepin/model/Pool.java:164
+#: src/main/java/org/candlepin/model/Pool.java:162
 msgid "Standard"
 msgstr "Standardní"
 
-#: src/main/java/org/candlepin/model/Pool.java:165
+#: src/main/java/org/candlepin/model/Pool.java:163
 msgid "Instance Based"
 msgstr "Založené na instanci"
 
-#: src/main/java/org/candlepin/model/Pool.java:166
+#: src/main/java/org/candlepin/model/Pool.java:164
 msgid "Stackable"
 msgstr "Vrstvitelné"
 
-#: src/main/java/org/candlepin/model/Pool.java:167
+#: src/main/java/org/candlepin/model/Pool.java:165
 msgid "Stackable only with other subscriptions"
 msgstr "Vrstvitelné pouze s ostatními předplatnými"
 
-#: src/main/java/org/candlepin/model/Pool.java:168
+#: src/main/java/org/candlepin/model/Pool.java:166
 msgid "Multi-Entitleable"
 msgstr "Vícero-nárokovovatelné"
 
@@ -1269,7 +1269,7 @@ msgstr "Nebylo možné vytvořit identifikační certifikát pro spotřebitele: 
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "Systém s UUID {0} není virtuální host."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3379
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3387
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "Záznam mazání pro hypervizora „{0}“ nenalezen."
@@ -1582,8 +1582,9 @@ msgstr ""
 "identifikátory: {1}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:246
+#, java-format
 msgid ""
-"Cannot attach content defined outside of the organization's namespace: {0}"
+"Cannot attach content defined outside of the organization''s namespace: {0}"
 msgstr "Nebylo možné připojit obsah definovaný mimo obor názvů organizace: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:373
@@ -1608,8 +1609,9 @@ msgstr ""
 "identifikátory: {1}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:416
+#, java-format
 msgid ""
-"Cannot attach product defined outside of the organization's namespace: {0}"
+"Cannot attach product defined outside of the organization''s namespace: {0}"
 msgstr "Není možné připojit produkt definovaný mimo obor názvů organizace: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:449
@@ -2208,79 +2210,79 @@ msgstr "V souboru nenalezena žádná aktivní předplatná."
 msgid "One or more inactive subscriptions found in the file."
 msgstr "V souboru nalezena jedna nebo více neplatných předplatných."
 
-#: src/main/java/org/candlepin/sync/Importer.java:366
+#: src/main/java/org/candlepin/sync/Importer.java:367
 msgid "Wrong metadata type"
 msgstr "Nesprávný typ metadat"
 
-#: src/main/java/org/candlepin/sync/Importer.java:375
+#: src/main/java/org/candlepin/sync/Importer.java:376
 msgid "Invalid owner"
 msgstr "Neplatný vlastník"
 
-#: src/main/java/org/candlepin/sync/Importer.java:388
+#: src/main/java/org/candlepin/sync/Importer.java:389
 msgid "Import is older than existing data"
 msgstr "Import je starší než stávající data"
 
-#: src/main/java/org/candlepin/sync/Importer.java:407
+#: src/main/java/org/candlepin/sync/Importer.java:408
 msgid "Import is the same as existing data"
 msgstr "Import je stejný jako stávající data"
 
-#: src/main/java/org/candlepin/sync/Importer.java:441
+#: src/main/java/org/candlepin/sync/Importer.java:442
 msgid "The provided manifest has no content in the exported consumer archive"
 msgstr "Poskytnutý manifest nemá žádný obsah v exportovaném archivu konzumenta"
 
-#: src/main/java/org/candlepin/sync/Importer.java:466
+#: src/main/java/org/candlepin/sync/Importer.java:467
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "Archiv neobsahuje požadovaný soubor consumer_export.zip"
 
-#: src/main/java/org/candlepin/sync/Importer.java:471
+#: src/main/java/org/candlepin/sync/Importer.java:472
 msgid "Unable to read certificates to validate manifest"
 msgstr "Nebylo možné číst certifikáty pro ověření manifestu"
 
-#: src/main/java/org/candlepin/sync/Importer.java:476
-#: src/main/java/org/candlepin/sync/Importer.java:480
+#: src/main/java/org/candlepin/sync/Importer.java:477
+#: src/main/java/org/candlepin/sync/Importer.java:481
 msgid "Failed to import archive"
 msgstr "Archiv se nepodařilo naimportovat"
 
-#: src/main/java/org/candlepin/sync/Importer.java:484
-#: src/main/java/org/candlepin/sync/Importer.java:941
+#: src/main/java/org/candlepin/sync/Importer.java:485
+#: src/main/java/org/candlepin/sync/Importer.java:942
 msgid "Unable to extract export archive"
 msgstr "Nebylo možné rozbalit archiv s exportem"
 
-#: src/main/java/org/candlepin/sync/Importer.java:531
-#: src/main/java/org/candlepin/sync/Importer.java:856
+#: src/main/java/org/candlepin/sync/Importer.java:532
+#: src/main/java/org/candlepin/sync/Importer.java:857
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "Archiv {0} není správně komprimovaný soubor nebo je prázdný"
 
-#: src/main/java/org/candlepin/sync/Importer.java:541
+#: src/main/java/org/candlepin/sync/Importer.java:542
 msgid "Archive signed by an untrusted certificate"
 msgstr "Archiv podepsán nedůvěryhodným certifikátem"
 
-#: src/main/java/org/candlepin/sync/Importer.java:572
+#: src/main/java/org/candlepin/sync/Importer.java:573
 msgid "Archive failed signature check"
 msgstr "Nepodařila se kontrola signatury archivu"
 
-#: src/main/java/org/candlepin/sync/Importer.java:586
+#: src/main/java/org/candlepin/sync/Importer.java:587
 msgid "The archive does not contain the required signature file"
 msgstr "Archiv neobsahuje potřebný soubor signatury"
 
-#: src/main/java/org/candlepin/sync/Importer.java:615
+#: src/main/java/org/candlepin/sync/Importer.java:616
 msgid "The archive does not contain the required meta.json file"
 msgstr "Archiv neobsahuje potřebný soubor meta.json"
 
-#: src/main/java/org/candlepin/sync/Importer.java:620
+#: src/main/java/org/candlepin/sync/Importer.java:621
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "Archiv neobsahuje potřebnou složku consumer_types"
 
-#: src/main/java/org/candlepin/sync/Importer.java:625
+#: src/main/java/org/candlepin/sync/Importer.java:626
 msgid "The archive does not contain the required consumer.json file"
 msgstr "Archiv neobsahuje potřebný soubor consumer.json"
 
-#: src/main/java/org/candlepin/sync/Importer.java:631
+#: src/main/java/org/candlepin/sync/Importer.java:632
 msgid "The archive does not contain the required entitlements directory"
 msgstr "Archiv neobsahuje potřebnou složku entitlements"
 
-#: src/main/java/org/candlepin/sync/Importer.java:869
+#: src/main/java/org/candlepin/sync/Importer.java:870
 #, java-format
 msgid "Entry is outside of the target directory: {0}"
 msgstr "Položka se nachází mimo cílovou složku: {0}"
@@ -2425,7 +2427,7 @@ msgstr "může obsahovat nebezpečný HTML obsah"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:86
 #, java-format
-msgid "script expression \"{0}\" didn't evaluate to true"
+msgid "script expression \"{0}\" didn''t evaluate to true"
 msgstr "výraz skriptu „{0}“ nebyl vyhodnocen na true"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
