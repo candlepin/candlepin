@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.8.2
+Version: 4.8.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,9 @@ fi
 
 #raw
 %changelog
+* Wed Jul 22 2026 candlepin-bot 4.8.3-1
+- CANDLEPIN-1253: Fixed import bug with legacy manifests (crog@redhat.com)
+
 * Thu Jun 25 2026 candlepin-bot 4.8.2-1
 - CANDLEPIN-1215: Updated GET compliance status to return static response
   (jalbrech@redhat.com)
