@@ -427,7 +427,7 @@ public class Importer {
         try {
             File consumerExport = this.getConsumerExport(exportDir);
             Scheme scheme = this.loadSchemeFromManifest(consumerExport)
-                .orElse(this.cryptoManager.getLegacyCryptoScheme());
+                .orElse(this.cryptoManager.getDefaultCryptoScheme());
 
             this.verifyCertificate(scheme.certificate(), overrides);
             this.verifySignature(scheme, exportDir, overrides);
