@@ -113,7 +113,8 @@ public class CryptoUtil {
     private static final String MLDSA_SIGNATURE_ALGORITHM = "ML-DSA-65";
     private static final String MLDSA_KEY_ALGORITHM = "ML-DSA-65";
 
-    private static CryptoManager standardCryptoManager;
+    private static volatile CryptoManager standardCryptoManager;
+    private static final Object CRYPTO_MANAGER_LOCK = new Object();
 
     private CryptoUtil() {
         throw new UnsupportedOperationException();
@@ -232,11 +233,17 @@ public class CryptoUtil {
      *  a CryptoManager configured using the standard configuration
      */
     public static CryptoManager getCryptoManager() {
-        if (standardCryptoManager == null) {
-            standardCryptoManager = getCryptoManager(TestConfig.defaults());
+        CryptoManager local = standardCryptoManager;
+        if (local == null) {
+            synchronized (CRYPTO_MANAGER_LOCK) {
+                local = standardCryptoManager;
+                if (local == null) {
+                    local = getCryptoManager(TestConfig.defaults());
+                    standardCryptoManager = local;
+                }
+            }
         }
-
-        return standardCryptoManager;
+        return local;
     }
 
     /**

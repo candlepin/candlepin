@@ -15,6 +15,7 @@
 package org.candlepin.guice;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.mock;
@@ -28,7 +29,8 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
-import org.candlepin.junit.LiquibaseExtension;
+import org.candlepin.junit.DatabaseTestExtension;
+import org.candlepin.test.DatabaseTestFixture;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -41,26 +43,37 @@ import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.ResourceLocks;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.xnap.commons.i18n.I18nManager;
 
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
+import java.util.MissingResourceException;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 
-// TODO: Currently the tests in this class are in a state where we have mocking for some objects, but we are
-// backing up and restoring the drivers as part of some tests. We should commit to a testing paradigm in
-// this class and be consistent across all of these tests.
-
-@ExtendWith(LiquibaseExtension.class)
+@ResourceLocks({
+    @ResourceLock("CandlepinCapabilities"),
+    @ResourceLock("DriverManager")
+})
 public class CandlepinContextListenerTest {
+
+    @RegisterExtension
+    static DatabaseTestExtension ext = new DatabaseTestExtension();
+
     private DevConfig config;
     private CandlepinContextListener listener;
     private ActiveMQContextListener hqlistener;
@@ -193,44 +206,32 @@ public class CandlepinContextListenerTest {
 
     @Test
     public void contextDestroyed() {
-        // backup jdbc drivers before calling contextDestroyed method
-        Enumeration<Driver> drivers = DriverManager.getDrivers();
+        List<Driver> drivers = backupDrivers();
 
         this.config.setProperty(ConfigProperties.ACTIVEMQ_ENABLED, "true");
         prepareForInitialization();
 
-        // we actually have to call contextInitialized before we
-        // can call contextDestroyed, otherwise the listener's
-        // member variables will be null.
         listener.contextInitialized(evt);
-
-        // what we really want to test.
         listener.contextDestroyed(evt);
 
-        // make sure we only call it 5 times all from init code
-        verify(evt, atMost(5)).getServletContext();
-        verifyNoMoreInteractions(evt); // destroy shouldn't use it
-        verify(hqlistener).contextDestroyed(any(Injector.class));
+        restoreDrivers(drivers);
 
-        // re-register drivers
-        registerDrivers(drivers);
+        verify(evt, atMost(5)).getServletContext();
+        verifyNoMoreInteractions(evt);
+        verify(hqlistener).contextDestroyed(any(Injector.class));
     }
 
     @Test
     public void ensureAMQPClosedProperly() {
-        // backup jdbc drivers before calling contextDestroyed method
-        Enumeration<Driver> drivers = DriverManager.getDrivers();
+        List<Driver> drivers = backupDrivers();
 
         this.config.setProperty(ConfigProperties.SUSPEND_MODE_ENABLED, "true");
 
         prepareForInitialization();
         listener.contextInitialized(evt);
-
-        // test & verify
         listener.contextDestroyed(evt);
 
-        // re-register drivers
-        registerDrivers(drivers);
+        restoreDrivers(drivers);
     }
 
     @Test
@@ -261,6 +262,35 @@ public class CandlepinContextListenerTest {
             .doesNotContain(CandlepinCapabilities.COMBINED_REPORTING_CAPABILITY);
     }
 
+    @Test
+    void testInitializeTranslationsSetsDefaultLocale() {
+        CandlepinContextListener realListener = new CandlepinContextListener();
+
+        try (MockedStatic<I18nManager> i18nMock = Mockito.mockStatic(I18nManager.class)) {
+            I18nManager managerInstance = mock(I18nManager.class);
+            i18nMock.when(I18nManager::getInstance).thenReturn(managerInstance);
+
+            realListener.initializeTranslations();
+
+            verify(managerInstance).setDefaultLocale(Locale.US);
+        }
+    }
+
+    @Test
+    void testInitializeTranslationsThrowsOnMissingResource() {
+        CandlepinContextListener realListener = new CandlepinContextListener();
+
+        try (MockedStatic<I18nManager> i18nMock = Mockito.mockStatic(I18nManager.class)) {
+            i18nMock.when(I18nManager::getInstance)
+                .thenThrow(new MissingResourceException("test", "test", "test"));
+
+            assertThatThrownBy(realListener::initializeTranslations)
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Failed to initialize translations")
+                .hasCauseInstanceOf(MissingResourceException.class);
+        }
+    }
+
     private void prepareForInitialization() {
         evt = mock(ServletContextEvent.class);
         ctx = mock(ServletContext.class);
@@ -274,14 +304,22 @@ public class CandlepinContextListenerTest {
         when(resteasyDeployment.getRegistry()).thenReturn(registry);
     }
 
-    private void registerDrivers(Enumeration<Driver> drivers) {
-        while (drivers.hasMoreElements()) {
-            Driver driver = drivers.nextElement();
+    private static List<Driver> backupDrivers() {
+        List<Driver> drivers = new ArrayList<>();
+        Enumeration<Driver> driverEnum = DriverManager.getDrivers();
+        while (driverEnum.hasMoreElements()) {
+            drivers.add(driverEnum.nextElement());
+        }
+        return drivers;
+    }
+
+    private static void restoreDrivers(List<Driver> drivers) {
+        for (Driver driver : drivers) {
             try {
                 DriverManager.registerDriver(driver);
             }
             catch (SQLException e) {
-                e.printStackTrace();
+                throw new RuntimeException("Failed to re-register driver: " + driver, e);
             }
         }
     }
@@ -291,7 +329,8 @@ public class CandlepinContextListenerTest {
             @Override
             protected List<Module> getModules(ServletContext context) {
                 List<Module> modules = new LinkedList<>();
-                modules.add(new TestingModules.JpaModule());
+                modules.add(DatabaseTestFixture.createJpaModule(ext.getJdbcUrl()));
+                modules.add(new TestingModules.PKIModule());
 
                 Module testingModule = new TestingModules.StandardTest(config);
                 Module contextListenerTestModule = new ContextListenerTestModule();
@@ -311,7 +350,12 @@ public class CandlepinContextListenerTest {
 
             @Override
             protected void initializeDatabase() {
-                // Intentionally left blank
+                /* intentionally left empty */
+            }
+
+            @Override
+            protected void initializeTranslations() {
+                /* intentionally left empty */
             }
         };
     }
