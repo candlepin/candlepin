@@ -79,14 +79,14 @@ public abstract class CryptoManagerTest {
      */
     protected abstract CryptoManager buildCryptoManager(Configuration config);
 
+    private CryptoManager buildCryptoManager() {
+        return this.buildCryptoManager(TestConfig.defaults());
+    }
+
     private static Stream<Arguments> schemeSource() {
         return CryptoUtil.SUPPORTED_SCHEMES.values()
             .stream()
             .map(Arguments::of);
-    }
-
-    private CryptoManager buildCryptoManager() {
-        return this.buildCryptoManager(TestConfig.defaults());
     }
 
     private static DevConfig addSchemeConfig(DevConfig config, List<Scheme> schemes)
@@ -1012,9 +1012,9 @@ public abstract class CryptoManagerTest {
 
         private void validateTestState() throws Exception {
             // Ensure we have separation of all of our cert sources
-            List<Scheme> schemes = cryptoManager.getCryptoSchemes();
-            Scheme defaultScheme = cryptoManager.getDefaultCryptoScheme();
-            Set<X509Certificate> upstreamCertificates = cryptoManager.getUpstreamCertificates();
+            List<Scheme> schemes = this.cryptoManager.getCryptoSchemes();
+            Scheme defaultScheme = this.cryptoManager.getDefaultCryptoScheme();
+            Set<X509Certificate> upstreamCertificates = this.cryptoManager.getUpstreamCertificates();
 
             // Verify the default scheme is not one of the schemes in the primary scheme list to ensure proper
             // separation and that we aren't accidentally re-validating the same cert from the primary scheme
