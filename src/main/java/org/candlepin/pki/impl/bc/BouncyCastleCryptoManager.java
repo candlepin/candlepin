@@ -105,6 +105,7 @@ public class BouncyCastleCryptoManager implements CryptoManager {
 
         // Validate the schemes we've loaded
         Stream.concat(this.schemes.stream(), Stream.of(this.defaultScheme))
+            .distinct()
             .forEach(this::validateScheme);
 
         // Temporary feature flag
@@ -399,7 +400,8 @@ public class BouncyCastleCryptoManager implements CryptoManager {
 
         Stream<X509Certificate> schemeCerts = Stream.concat(this.schemes.stream(),
             Stream.of(this.defaultScheme))
-            .map(Scheme::certificate);
+            .map(Scheme::certificate)
+            .distinct();
 
         Set<X509Certificate> upstreamCerts = this.getUpstreamCertificates();
 

@@ -140,17 +140,31 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 
+// TODO: Rewrite this whole test suite. We're both mock heavy *and* extending the DBTestFixture, which makes
+// zero sense. Not to mention, a good half of this is over a decade old and doesn't really test intended
+// behavior nor error cases very well.
+
+
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ImporterTest extends DatabaseTestFixture {
-    private static Stream<Arguments> schemeSource() {
-        return CryptoUtil.SUPPORTED_SCHEMES.values()
-            .stream()
-            .map(Arguments::of);
+
+    private static final Scheme LEGACY_SCHEME;
+
+    static {
+        try {
+            LEGACY_SCHEME = CryptoUtil.generateRsaScheme("legacy_rsa");
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @TempDir
     protected File tmpFolder;
+
+    @TempDir
+    protected File upstreamCerts;
 
     private DevConfig config;
     private I18n i18n;
@@ -202,6 +216,12 @@ public class ImporterTest extends DatabaseTestFixture {
         super.init();
 
         this.config = TestConfig.defaults();
+        this.config.setProperty(ConfigProperties.CRYPTO_UPSTREAM_CERT_REPO, this.upstreamCerts.getPath());
+
+        // Add our legacy scheme's cert as an upstream cert
+        File upstreamCertFile = new File(this.upstreamCerts, "upstream_rsa.crt");
+        CryptoUtil.writeCertificateToFile(LEGACY_SCHEME.certificate(), upstreamCertFile);
+
         this.config.setProperty(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
 
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
@@ -226,12 +246,17 @@ public class ImporterTest extends DatabaseTestFixture {
             new ConsumerKeyPairGenerator(cryptoManager, this.keyPairDataCurator),
             this.identityCertificateCurator,
             this.certSerialCurator);
-
     }
 
     @AfterEach
     public void tearDown() throws Exception {
         this.updateReleaseVersion("${version}", "${release}");
+    }
+
+    private static Stream<Arguments> schemeSource() {
+        return CryptoUtil.SUPPORTED_SCHEMES.values()
+            .stream()
+            .map(Arguments::of);
     }
 
     private void updateReleaseVersion(String version, String release) throws URISyntaxException, IOException {
@@ -262,7 +287,7 @@ public class ImporterTest extends DatabaseTestFixture {
         return tmpdir;
     }
 
-    private File createFile(String filename, String version, Date date, String username, String prefix)
+    private File createMetaFile(String filename, String version, Date date, String username, String prefix)
         throws IOException {
 
         File file = new File(this.tmpFolder, filename);
@@ -285,6 +310,13 @@ public class ImporterTest extends DatabaseTestFixture {
         File[] fileArray = new File[1];
         fileArray[0] = new File(filename);
         return fileArray;
+    }
+
+    private byte[] signFile(Scheme scheme, File file) throws IOException {
+        try (InputStream istream = new FileInputStream(file)) {
+            return this.cryptoManager.getSigner(scheme)
+                .sign(istream);
+        }
     }
 
     private Date getDateBeforeDays(int days) {
@@ -350,8 +382,8 @@ public class ImporterTest extends DatabaseTestFixture {
          * make sure version is > ABC
          */
         Date now = new Date();
-        File file = createFile("meta", "0.0.3", now, "test_user", "prefix");
-        File actual = createFile("meta.json", "0.0.3", now, "test_user", "prefix");
+        File file = createMetaFile("meta", "0.0.3", now, "test_user", "prefix");
+        File actual = createMetaFile("meta.json", "0.0.3", now, "test_user", "prefix");
 
         ExporterMetadata em = new ExporterMetadata();
         Date daybefore = getDateBeforeDays(1);
@@ -381,8 +413,8 @@ public class ImporterTest extends DatabaseTestFixture {
     public void firstRun() throws Exception {
         Date now = new Date();
 
-        File file = createFile("meta", "0.0.3", now, "test_user", "prefix");
-        File actualmeta = createFile("meta.json", "0.0.3", now, "test_user", "prefix");
+        File file = createMetaFile("meta", "0.0.3", now, "test_user", "prefix");
+        File actualmeta = createMetaFile("meta.json", "0.0.3", now, "test_user", "prefix");
 
         Importer importer = this.buildImporter();
         ExporterMetadata metadata = importer.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
@@ -400,7 +432,7 @@ public class ImporterTest extends DatabaseTestFixture {
     @Test
     public void oldImport() throws Exception {
         // actualmeta is the mock for the import itself
-        File actualmeta = createFile("meta.json", "0.0.3", getDateBeforeDays(10), "test_user", "prefix");
+        File actualmeta = createMetaFile("meta.json", "0.0.3", getDateBeforeDays(10), "test_user", "prefix");
 
         ExporterMetadata em = new ExporterMetadata();
         em.setExported(getDateBeforeDays(3));
@@ -430,7 +462,7 @@ public class ImporterTest extends DatabaseTestFixture {
     public void sameImport() throws Exception {
         // actualmeta is the mock for the import itself
         Date date = getDateBeforeDays(10);
-        File actualmeta = createFile("meta.json", "0.0.3", date, "test_user", "prefix");
+        File actualmeta = createMetaFile("meta.json", "0.0.3", date, "test_user", "prefix");
 
         ExporterMetadata em = new ExporterMetadata();
         em.setExported(date); // exact same date = assumed same manifest
@@ -480,7 +512,7 @@ public class ImporterTest extends DatabaseTestFixture {
         Date importDate = getDateBeforeDays(10);
 
         // actualmeta is the mock for the import itself
-        File actualmeta = createFile("meta.json", "0.0.3", importDate, "test_user", "prefix");
+        File actualmeta = createMetaFile("meta.json", "0.0.3", importDate, "test_user", "prefix");
 
         ExporterMetadata em = new ExporterMetadata();
         em.setExported(getDateBeforeDays(30));
@@ -505,7 +537,7 @@ public class ImporterTest extends DatabaseTestFixture {
 
     @Test
     public void nullType() throws IOException {
-        File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
+        File actualmeta = createMetaFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
 
         Importer importer = this.buildImporter();
 
@@ -519,7 +551,7 @@ public class ImporterTest extends DatabaseTestFixture {
     @Test
     public void expectOwner() throws IOException {
         ConflictOverrides overrides = new ConflictOverrides();
-        File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
+        File actualmeta = createMetaFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
 
         Importer importer = this.buildImporter();
 
@@ -602,23 +634,21 @@ public class ImporterTest extends DatabaseTestFixture {
 
     @Test
     public void testImportZipSigAndEmptyConsumerZip() throws Exception {
-        // Mock a passed signature check:
-        SignatureValidator mockSignatureValidator = mock(SignatureValidator.class, Answers.RETURNS_SELF);
-        doReturn(true).when(mockSignatureValidator).validate(any(File.class));
-        doReturn(mockSignatureValidator).when(this.cryptoManager).getSignatureValidator(any(Scheme.class));
-
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
+
+        File ceArchive = new File(this.tmpFolder, "consumer_export.zip");
+
+        try (ZipOutputStream cezip = new ZipOutputStream(new FileOutputStream(ceArchive))) {
+            cezip.putNextEntry(new ZipEntry("no_content"));
+        }
+
+        byte[] signature = this.signFile(LEGACY_SCHEME, ceArchive);
 
         File archive = new File(this.tmpFolder, "file.zip");
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive));
         out.putNextEntry(new ZipEntry("signature"));
-        out.write("This is the placeholder for the signature file".getBytes());
-
-        File ceArchive = new File(this.tmpFolder, "consumer_export.zip");
-        ZipOutputStream cezip = new ZipOutputStream(new FileOutputStream(ceArchive));
-        cezip.putNextEntry(new ZipEntry("no_content"));
-        cezip.close();
+        out.write(signature);
 
         addFileToArchive(out, ceArchive);
         out.close();
@@ -688,7 +718,7 @@ public class ImporterTest extends DatabaseTestFixture {
         File ruleDir = mock(File.class);
         File[] rulesFiles = createMockJsFile(mockJsPath);
         when(ruleDir.listFiles()).thenReturn(rulesFiles);
-        File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
+        File actualmeta = createMetaFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
 
         // this is the hook to stop testing. we confirm that the archive component tests
         //  are passed and then jump out instead of trying to fake the actual file
@@ -734,7 +764,7 @@ public class ImporterTest extends DatabaseTestFixture {
         when(ruleDir.listFiles()).thenReturn(rulesFiles); // bad bad bad bad bad bad bad bad bad bad bad bad
         importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFiles[0]);
 
-        File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
+        File actualmeta = createMetaFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
         importFiles.put(ImportFile.META.fileName(), actualmeta);
 
         ConsumerDTO consumerDTO = new ConsumerDTO();
@@ -864,11 +894,13 @@ public class ImporterTest extends DatabaseTestFixture {
         ConsumerType consumerType = this.createConsumerType(true);
         doReturn(consumerType).when(mockConsumerTypeCurator).getByLabel(any(String.class));
 
-        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer()
+        Consumer consumer = new Consumer()
             .setName(TestUtil.randomString("name-"))
             .setUsername(TestUtil.randomString("username-"))
             .setOwner(owner)
-            .setType(consumerType), scheme);
+            .setType(consumerType);
+
+        CryptoUtil.configureConsumerForSchemes(consumer, scheme);
         consumer = this.consumerCurator.create(consumer);
 
         IdentityCertificate idCert = this.identityCertificateGenerator.generate(consumer);
@@ -936,7 +968,63 @@ public class ImporterTest extends DatabaseTestFixture {
         Owner mockOwner = mock(Owner.class);
         Importer importer = this.buildImporter();
 
-        File legacyExport = this.toLegacyExport(export, this.cryptoManager.getDefaultCryptoScheme());
+        File legacyExport = this.toLegacyExport(export, LEGACY_SCHEME);
+
+        ImportRecord importRecord = importer
+            .loadExport(mockOwner, legacyExport, new ConflictOverrides(), "original_file.zip");
+
+        org.assertj.core.api.Assertions.assertThat(importRecord)
+            .isNotNull()
+            .returns(Status.SUCCESS_WITH_WARNING, ImportRecord::getStatus)
+            .returns(mockOwner, ImportRecord::getOwner)
+            .doesNotReturn(null, ImportRecord::getFileName);
+    }
+
+    @Test
+    public void testLoadExportWithLegacyExportUsingNonLegacyDefaultCryptoScheme() throws Exception {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        // Impl note: this scheme can be anything *except* RSA
+        Scheme mldsaScheme = CryptoUtil.generateMldsaScheme("mldsa_default");
+        CryptoUtil.generateSchemeConfiguration(this.config, mldsaScheme, null);
+        this.config.setProperty(ConfigProperties.CRYPTO_DEFAULT_SCHEME, mldsaScheme.name());
+
+        // We have to recreate this so it receives the config changes. This is why we shouldn't use globally
+        // shared initializers in unit tests. :/
+        this.cryptoManager = spy(CryptoUtil.getCryptoManager(this.config));
+
+        Owner owner = this.createOwner();
+        ConsumerType consumerType = this.createConsumerType(true);
+        doReturn(consumerType).when(mockConsumerTypeCurator).getByLabel(any(String.class));
+
+        Consumer consumer = new Consumer()
+            .setName(TestUtil.randomString("name-"))
+            .setUsername(TestUtil.randomString("username-"))
+            .setOwner(owner)
+            .setType(consumerType);
+        consumer = this.consumerCurator.create(consumer);
+
+        IdentityCertificate idCert = this.identityCertificateGenerator.generate(consumer);
+        consumer.setIdCert(idCert);
+        consumer = this.consumerCurator.update(consumer);
+
+        Exporter exporter = this.createExporter();
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
+            TestUtil.randomString());
+        assertNotNull(export);
+        assertTrue(export.exists());
+        export.deleteOnExit();
+
+        Refresher mockRefresher = mock(Refresher.class);
+        doReturn(mockRefresher)
+            .when(this.refresherFactory)
+            .getRefresher(any(SubscriptionServiceAdapter.class));
+        doReturn(mockRefresher).when(mockRefresher).add(any(Owner.class));
+
+        Owner mockOwner = mock(Owner.class);
+        Importer importer = this.buildImporter();
+
+        File legacyExport = this.toLegacyExport(export, LEGACY_SCHEME);
 
         ImportRecord importRecord = importer
             .loadExport(mockOwner, legacyExport, new ConflictOverrides(), "original_file.zip");
@@ -1194,7 +1282,7 @@ public class ImporterTest extends DatabaseTestFixture {
         Importer importer = this.buildImporter();
         ManifestFile mockManifestFile = mock(ManifestFile.class);
 
-        File legacyExport = this.toLegacyExport(export, this.cryptoManager.getDefaultCryptoScheme());
+        File legacyExport = this.toLegacyExport(export, LEGACY_SCHEME);
 
         try (FileInputStream is = new FileInputStream(legacyExport)) {
             doReturn(is).when(mockManifestFile).getInputStream();
@@ -1437,11 +1525,7 @@ public class ImporterTest extends DatabaseTestFixture {
             }
 
             // Generate the new signature
-            byte[] newSignature;
-            try (InputStream toSign = new FileInputStream(innerWithoutScheme)) {
-                newSignature = this.cryptoManager.getSigner(scheme)
-                    .sign(toSign);
-            }
+            byte[] newSignature = this.signFile(scheme, innerWithoutScheme);
 
             // Replace the signature
             try (ZipOutputStream outerZos = new ZipOutputStream(Files.newOutputStream(outputPath))) {
@@ -1624,7 +1708,7 @@ public class ImporterTest extends DatabaseTestFixture {
         File ruleDir = mock(File.class);
         when(ruleDir.listFiles()).thenReturn(rulesFiles);
 
-        File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
+        File actualmeta = createMetaFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
 
         Map<String, File> importFiles = this.getTestImportFiles();
         importFiles.put(ImportFile.META.fileName(), actualmeta);

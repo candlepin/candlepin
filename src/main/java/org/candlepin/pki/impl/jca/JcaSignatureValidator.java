@@ -34,7 +34,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Stream;
 
 
 
@@ -53,9 +52,10 @@ public class JcaSignatureValidator implements SignatureValidator {
 
     private final java.security.Provider securityProvider;
     private final Scheme scheme;
+    private final String signatureAlgorithm;
 
+    private Set<X509Certificate> certificates;
     private byte[] signature;
-    private Set<X509Certificate> additionalCerts;
 
     /**
      * A simple functional interface to assist in abstracting distinct logic away from the generalized
@@ -93,13 +93,47 @@ public class JcaSignatureValidator implements SignatureValidator {
     public JcaSignatureValidator(java.security.Provider securityProvider, Scheme scheme) {
         this.securityProvider = Objects.requireNonNull(securityProvider);
         this.scheme = Objects.requireNonNull(scheme);
+        this.signatureAlgorithm = scheme.signatureAlgorithm();
 
+        this.certificates = new HashSet<>();
         this.signature = null;
-        this.additionalCerts = new HashSet<>();
+
+        this.certificates.add(scheme.certificate());
+    }
+
+    /**
+     * Creates a new signature validator using the specified signature algorithm. One or more certificates
+     * will need to be provided via the .withAdditionalCertificate method before validation can be performed.
+     *
+     * @deprecated
+     * This constructor should not be used outside of extreme circumstances where the algorithm is known, but
+     * a scheme is not available (e.g. legacy manifest import). The algorithm name is not validated at
+     * construction time, and will not be checked until beginning the signature validation operation.
+     *
+     * Additionally, signature validators created in this way will violate the interface specification with
+     * respect to the .getCryptoScheme method -- as there is no scheme provided, it will return null in cases
+     * where callers may be expecting a valid scheme.
+     *
+     * @param securityProvider
+     *  the security provider to use for all crypto operations; cannot be null
+     *
+     * @param signatureAlgorithm
+     *  the algorithm to use for performing signature validation
+     */
+    @Deprecated
+    public JcaSignatureValidator(java.security.Provider securityProvider, String signatureAlgorithm) {
+        this.securityProvider = Objects.requireNonNull(securityProvider);
+        this.scheme = null;
+        this.signatureAlgorithm = Objects.requireNonNull(signatureAlgorithm);
+
+        this.certificates = new HashSet<>();
+        this.signature = null;
     }
 
     @Override
     public Scheme getCryptoScheme() {
+        // Impl note: this will violate the interface spec if the validator was created manually without a
+        // scheme.
         return this.scheme;
     }
 
@@ -111,7 +145,8 @@ public class JcaSignatureValidator implements SignatureValidator {
 
         certs.stream()
             .filter(Objects::nonNull)
-            .forEach(this.additionalCerts::add);
+            .sequential()
+            .forEach(this.certificates::add);
 
         return this;
     }
@@ -140,8 +175,7 @@ public class JcaSignatureValidator implements SignatureValidator {
                     return false;
                 }
 
-                Signature verifier = Signature.getInstance(this.scheme.signatureAlgorithm(),
-                    this.securityProvider);
+                Signature verifier = Signature.getInstance(this.signatureAlgorithm, this.securityProvider);
                 verifier.initVerify(certificate);
 
                 updater.update(verifier);
@@ -150,8 +184,8 @@ public class JcaSignatureValidator implements SignatureValidator {
             }
             catch (InvalidKeyException e) {
                 // Key and cert don't match signature scheme. Move on to next cert
-                log.debug("Certificate not usable for signature validation with scheme: <cert: {}>, {}",
-                    certificate.getSerialNumber(), this.scheme);
+                log.debug("Certificate not usable for signature validation with algorithm: <cert: {}>, {}",
+                    certificate.getSerialNumber(), this.signatureAlgorithm);
                 return false;
             }
             catch (java.security.SignatureException | NoSuchAlgorithmException e) {
@@ -160,7 +194,7 @@ public class JcaSignatureValidator implements SignatureValidator {
             }
         };
 
-        return Stream.concat(Stream.of(this.scheme.certificate()), this.additionalCerts.stream())
+        return this.certificates.stream()
             .filter(CheckedPredicate.rethrow(predicate))
             .findFirst()
             .isPresent();
