@@ -13,6 +13,17 @@ resteasy = "7.0.2.Final"
 slf4j = "2.0.18"
 test-logger = "4.0.0"
 
+# Maven plugin versions used by PomGenerator to produce the Maven multi-module build poms.
+# These are NOT Gradle dependencies: they are written into the generated pom.xml files so that
+# Maven uses the correct plugin versions. Corresponding [libraries] entries at the bottom of this
+# file map these aliases to real Maven groupId:artifactId coordinates so Dependabot can detect them.
+maven-build-helper-plugin = "3.6.1"
+maven-compiler-plugin = "3.15.0"
+maven-exec-plugin = "3.6.3"
+maven-jar-plugin = "3.5.0"
+maven-resources-plugin = "3.5.0"
+maven-war-plugin = "3.5.1"
+
 [plugins]
 dependency-check = { id = "org.owasp.dependencycheck", version = "12.2.2" }
 gradle-versions = { id = "com.github.ben-manes.versions", version = "0.54.0" }
@@ -107,3 +118,12 @@ spotbugs = { module = "com.github.spotbugs:spotbugs-annotations", version = "4.1
 tomcat-annotations = { module = "org.apache.tomcat:tomcat-annotations-api", version = "11.0.24" }
 swagger = { module = "io.swagger:swagger-annotations", version = "1.6.16" }
 test-logger-plugin = { module = "com.adarshr:gradle-test-logger-plugin", version.ref = "test-logger" }
+
+# These library entries exist solely so Dependabot can map the version aliases above to real Maven
+# coordinates. They are NOT used as Gradle dependencies: PomGenerator reads only the [versions] entries.
+mvn-build-helper-plugin = { module = "org.codehaus.mojo:build-helper-maven-plugin", version.ref = "maven-build-helper-plugin" }
+mvn-compiler-plugin = { module = "org.apache.maven.plugins:maven-compiler-plugin", version.ref = "maven-compiler-plugin" }
+mvn-exec-plugin = { module = "org.codehaus.mojo:exec-maven-plugin", version.ref = "maven-exec-plugin" }
+mvn-jar-plugin = { module = "org.apache.maven.plugins:maven-jar-plugin", version.ref = "maven-jar-plugin" }
+mvn-resources-plugin = { module = "org.apache.maven.plugins:maven-resources-plugin", version.ref = "maven-resources-plugin" }
+mvn-war-plugin = { module = "org.apache.maven.plugins:maven-war-plugin", version.ref = "maven-war-plugin" }

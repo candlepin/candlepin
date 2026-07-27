@@ -31,5 +31,9 @@ gradlePlugin {
             id = "org.candlepin.gradle.msgfmt"
             implementationClass = "Msgfmt"
         }
+        pomGeneratorPlugin {
+            id = "org.candlepin.gradle.PomGenerator"
+            implementationClass = "PomGenerator"
+        }
     }
 }
