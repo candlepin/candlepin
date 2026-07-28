@@ -20,7 +20,7 @@ test-logger = "4.0.0"
 maven-build-helper-plugin = "3.6.1"
 maven-compiler-plugin = "3.15.0"
 maven-exec-plugin = "3.6.3"
-maven-jar-plugin = "3.5.0"
+maven-jar-plugin = "3.5.1"
 maven-resources-plugin = "3.5.0"
 maven-war-plugin = "3.5.1"
 
