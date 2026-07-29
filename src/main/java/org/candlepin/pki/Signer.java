@@ -57,4 +57,6 @@ public interface Signer {
      */
     byte[] sign(byte[] data);
 
+    // TODO: Add a sign(File) default implementation that offloads to the sign(inputstream) method)
+
 }

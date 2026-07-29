@@ -49,6 +49,9 @@ public abstract class KeyPairGeneratorTest {
      * Builds a new KeyPairGenerator instance to test. Each invocation of this method should return a new
      * instance to avoid unintended object state retention between tests.
      *
+     * @param scheme
+     *  the scheme with which to build a KeyPairGenerator instance
+     *
      * @return
      *  a new KeyPairGenerator instance to test
      */

@@ -42,6 +42,8 @@ import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.Scheme;
+import org.candlepin.pki.SignatureValidator;
+import org.candlepin.pki.impl.jca.JcaSignatureValidator;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.sync.file.ManifestFile;
@@ -92,6 +94,9 @@ import jakarta.persistence.PersistenceException;
 
 public class Importer {
     private static final Logger log = LoggerFactory.getLogger(Importer.class);
+
+    /** The signature algorithm to use only when validating legacy manifest signatures. */
+    private static final String LEGACY_MANIFEST_SIGNATURE_ALGORITHM = "SHA256withRSA";
 
     /**
      * files we use to perform import
@@ -426,11 +431,17 @@ public class Importer {
         Map<String, Object> result = new HashMap<>();
         try {
             File consumerExport = this.getConsumerExport(exportDir);
-            Scheme scheme = this.loadSchemeFromManifest(consumerExport)
-                .orElse(this.cryptoManager.getLegacyCryptoScheme());
+            Optional<Scheme> scheme = this.loadSchemeFromManifest(consumerExport);
 
-            this.verifyCertificate(scheme.certificate(), overrides);
-            this.verifySignature(scheme, exportDir, overrides);
+            if (scheme.isPresent()) {
+                // Use modern "trust cert + validate signature" scheme
+                this.verifySignature(scheme.get(), exportDir, overrides);
+            }
+            else {
+                // No scheme present in the manifest; fall back to the legacy validation logic where we check
+                // all known schemes and upstream certs
+                this.verifyLegacySignature(exportDir, overrides);
+            }
 
             File consumerExportDir = extractArchive(exportDir, consumerExport.getName(),
                 new FileInputStream(consumerExport));
@@ -533,11 +544,13 @@ public class Importer {
         }
     }
 
-    private void verifyCertificate(X509Certificate certificate, ConflictOverrides overrides)
-        throws CertificateException {
+    private void verifySignature(Scheme scheme, File exportDir, ConflictOverrides overrides)
+        throws ImporterException, IOException, CertificateException {
 
-        if (!this.cryptoManager.isTrustedCertificate(certificate)) {
-            log.warn("signature certificate verification failed");
+        // Verify the scheme's certificate is one we trust
+        if (!this.cryptoManager.isTrustedCertificate(scheme.certificate())) {
+            log.warn("Signature certificate verification failed");
+
             if (!overrides.isForced(Conflict.UNTRUSTED_SIGNING_CERTIFICATE)) {
                 String msg = this.i18n.tr("Archive signed by an untrusted certificate");
                 throw new ImportConflictException(msg, Conflict.UNTRUSTED_SIGNING_CERTIFICATE);
@@ -546,41 +559,71 @@ public class Importer {
                 log.warn("Archive signed by an untrusted certificate; ignoring");
             }
         }
-    }
 
-    private void verifySignature(Scheme scheme, File exportDir, ConflictOverrides overrides)
-        throws ImportExtractionException, IOException, CertificateException {
-
+        // Use the cert to validate our signature
         byte[] signature = this.loadSignature(exportDir);
         File consumerExport = new File(exportDir, "consumer_export.zip");
 
         boolean verifiedSignature = this.cryptoManager.getSignatureValidator(scheme)
-            .withAdditionalCertificates(this.cryptoManager.getUpstreamCertificates())
             .forSignature(signature)
             .validate(consumerExport);
 
         if (!verifiedSignature) {
-            log.warn("Archive signature check failed.");
+            log.warn("Archive signature check failed");
 
             if (!overrides.isForced(Conflict.SIGNATURE_CONFLICT)) {
-                /*
-                    * Normally for import conflicts that can be overridden, we try to
-                    * report them all the first time so if the user intends to override,
-                    * they can do so with just one more request. However in the case of
-                    * a bad signature, we're going to report immediately due to the nature
-                    * of what this might mean.
-                    */
+                // Normally for import conflicts that can be overridden, we try to report them all the first
+                // time so if the user intends to override, they can do so with just one more request. However
+                // in the case of a bad signature, we're going to report immediately due to the nature of what
+                // this might mean.
                 throw new ImportConflictException(i18n.tr("Archive failed signature check"),
                     Conflict.SIGNATURE_CONFLICT);
             }
             else {
-                log.warn("Ignoring signature check failure.");
+                log.warn("Ignoring signature check failure");
             }
         }
     }
 
-    private byte[] loadSignature(File exportDir)
-        throws IOException, ImportExtractionException {
+    private void verifyLegacySignature(File exportDir, ConflictOverrides overrides)
+        throws ImporterException, IOException, CertificateException {
+
+        List<X509Certificate> schemeCerts = this.cryptoManager.getCryptoSchemes()
+            .stream()
+            .map(Scheme::certificate)
+            .toList();
+
+        Set<X509Certificate> upstreamCerts = this.cryptoManager.getUpstreamCertificates();
+
+        byte[] signature = this.loadSignature(exportDir);
+        File consumerExport = new File(exportDir, "consumer_export.zip");
+
+        SignatureValidator validator = new JcaSignatureValidator(this.cryptoManager.getSecurityProvider(),
+            LEGACY_MANIFEST_SIGNATURE_ALGORITHM);
+
+        boolean verifiedSignature = validator.withAdditionalCertificates(schemeCerts)
+            .withAdditionalCertificates(upstreamCerts)
+            .forSignature(signature)
+            .validate(consumerExport);
+
+        if (!verifiedSignature) {
+            log.warn("Legacy archive signature check failed");
+
+            if (!overrides.isForced(Conflict.SIGNATURE_CONFLICT)) {
+                // Normally for import conflicts that can be overridden, we try to report them all the first
+                // time so if the user intends to override, they can do so with just one more request. However
+                // in the case of a bad signature, we're going to report immediately due to the nature of what
+                // this might mean.
+                throw new ImportConflictException(i18n.tr("Archive failed signature check"),
+                    Conflict.SIGNATURE_CONFLICT);
+            }
+            else {
+                log.warn("Ignoring signature check failure");
+            }
+        }
+    }
+
+    private byte[] loadSignature(File exportDir) throws IOException, ImportExtractionException {
         File signatureFile = new File(exportDir, "signature");
         if (signatureFile.length() == 0) {
             throw new ImportExtractionException(
