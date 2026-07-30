@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.8.3
+Version: 4.8.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,12 @@ fi
 
 #raw
 %changelog
+* Thu Jul 30 2026 candlepin-bot 4.8.4-1
+- CANDLEPIN-1253: Fixed bugs with legacy manifest import under PQC
+  (crog@redhat.com)
+- Revert "CANDLEPIN-1253: Fixed import bug with legacy manifests"
+  (crog@redhat.com)
+
 * Wed Jul 22 2026 candlepin-bot 4.8.3-1
 - CANDLEPIN-1253: Fixed import bug with legacy manifests (crog@redhat.com)
 
