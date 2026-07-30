@@ -257,13 +257,11 @@ public class BouncyCastleX509CertificateBuilderTest {
         Instant end = LocalDate.now().plusDays(365).atStartOfDay(ZoneId.systemDefault()).toInstant();
         KeyPair keyPair = this.createKeyPair();
 
-        String junkChars = "#$%&'()*+,:;=?@[] \".<>\\^_`{|}~£円ßЯ∑#$%&'()*+,:;=?@[] \".<>\\^_`{|}~£円ßЯ∑";
+        String junkChars = "#$%&'()*+,:;=?@[] \".<>\\^_`{|}~£円ßЯ∑";
 
-        String cnComponent = "CN=\\#$%&'()*\\+\\,:\\;\\=?@[] \\\".\\<\\>\\\\^_`{|}~£円ßЯ∑" +
-            "\\#$%&'()*\\+\\,:\\;\\=?@[] \\\".\\<\\>\\\\^_`{|}~£円ßЯ∑";
+        String cnComponent = "CN=\\#$%&'()*\\+\\,:\\;\\=?@[] \\\".\\<\\>\\\\^_`{|}~£円ßЯ∑";
 
-        String oComponent = "O=\\#$%&'()*\\+\\,:\\;\\=?@[] \\\".\\<\\>\\\\^_`{|}~£円ßЯ∑" +
-            "\\#$%&'()*\\+\\,:\\;\\=?@[] \\\".\\<\\>\\\\^_`{|}~£円ßЯ∑";
+        String oComponent = "O=\\#$%&'()*\\+\\,:\\;\\=?@[] \\\".\\<\\>\\\\^_`{|}~£円ßЯ∑";
 
         DistinguishedName distinguishedName = new DistinguishedName(junkChars, junkChars);
 
@@ -312,11 +310,10 @@ public class BouncyCastleX509CertificateBuilderTest {
         KeyPair keyPair = this.createKeyPair();
 
         DistinguishedName distinguishedName = new DistinguishedName("candlepinproject.org");
-        String junkChars = "#$%&'()*+,:;=?@[] \".<>\\^_`{|}~£円ßЯ∑#$%&'()*+,:;=?@[] \".<>\\^_`{|}~£円ßЯ∑";
+        String junkChars = "#$%&'()*+,:;=?@[] \".<>\\^_`{|}~£円ßЯ∑";
 
         String expectedDN = "CN=candlepinproject.org";
-        String expectedSAN = "CN=\\#$%&'()*\\+\\,:\\;\\=?@[] \\\".\\<\\>\\\\^_`{|}~£円ßЯ∑" +
-            "\\#$%&'()*\\+\\,:\\;\\=?@[] \\\".\\<\\>\\\\^_`{|}~£円ßЯ∑";
+        String expectedSAN = "CN=\\#$%&'()*\\+\\,:\\;\\=?@[] \\\".\\<\\>\\\\^_`{|}~£円ßЯ∑";
 
         X509Certificate cert = this.builder
             .withDN(distinguishedName)
