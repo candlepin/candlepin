@@ -19,6 +19,7 @@ import org.candlepin.model.KeyPairData;
 import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.KeyPairGenerator;
 import org.candlepin.pki.Scheme;
 
 import org.slf4j.Logger;
@@ -53,6 +54,7 @@ public class ConsumerKeyPairGenerator {
 
     private final CryptoManager cryptoManager;
     private final KeyPairDataCurator keyPairDataCurator;
+
 
     @Inject
     public ConsumerKeyPairGenerator(CryptoManager cryptoManager, KeyPairDataCurator keyPairDataCurator) {

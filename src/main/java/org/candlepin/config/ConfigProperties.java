@@ -264,6 +264,10 @@ public class ConfigProperties {
     public static final String CRYPTO_SCHEME_KEY_ALGORITHM = "key_algorithm";
     public static final String CRYPTO_SCHEME_KEY_SIZE = "key_size";
 
+    public static final String CRYPTO_SCHEME_KEY_BUFFERING = "key_buffering";
+    public static final String CRYPTO_SCHEME_KEY_BUFFERING_CAPACITY = "key_buffering.capacity";
+    public static final String CRYPTO_SCHEME_KEY_BUFFERING_THREADS = "key_buffering.threads";
+
     // TODO: FIXME: Temporary config controlling whether or not non-manifest consumers can perform crypto
     // scheme negotiation. Remove this config once dependent systems are updated to support PQC certs and
     // negotiation.
