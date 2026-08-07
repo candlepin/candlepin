@@ -179,6 +179,7 @@ import org.candlepin.sync.RulesExporter;
 import org.candlepin.sync.SchemeFileExporter;
 import org.candlepin.sync.SyncUtils;
 import org.candlepin.util.AttributeValidator;
+import org.candlepin.util.CandlepinExecutorServiceProvider;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.FactValidator;
@@ -233,6 +234,7 @@ public class CandlepinModule extends AbstractModule {
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
         bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
+        bind(CandlepinExecutorServiceProvider.class).asEagerSingleton();
 
         configureJPA();
         bindPki();

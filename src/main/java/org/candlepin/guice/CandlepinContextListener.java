@@ -30,6 +30,7 @@ import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.service.EventAdapter;
+import org.candlepin.util.CandlepinExecutorServiceProvider;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -111,6 +112,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     private JobManager jobManager;
     private EventAdapter eventAdapter;
     private LoggerContextListener loggerListener;
+    private CandlepinExecutorServiceProvider executorServiceProvider;
 
     // a bit of application-initialization code. Not sure if this is the
     // best spot for it.
@@ -188,6 +190,10 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
         ResourceLocatorMap map = injector.getInstance(ResourceLocatorMap.class);
         map.init();
+
+        // Start our executor service provider ASAP. Probably not strictly necessary, but doing things in
+        // proper order is good form.
+        this.executorServiceProvider = injector.getInstance(CandlepinExecutorServiceProvider.class);
 
         // make sure our session factory is initialized before we attempt to start something
         // that relies upon it
@@ -272,6 +278,10 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         // Make sure this is called after everything else, as other objects may rely on the
         // messaging subsystem
         this.cpmContextListener.destroy();
+
+        // Like the above, this should be destroyed last to ensure we don't break other subsystems that
+        // have graceful shutdowns
+        this.executorServiceProvider.shutdown();
 
         this.loggerListener.contextDestroyed();
     }

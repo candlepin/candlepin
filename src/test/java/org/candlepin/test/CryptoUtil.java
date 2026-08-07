@@ -37,6 +37,7 @@ import org.candlepin.pki.impl.bc.BouncyCastleSecurityProvider;
 import org.candlepin.pki.impl.bc.BouncyCastleSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.jca.JcaCertificateReader;
 import org.candlepin.pki.impl.jca.JcaOidUtil;
+import org.candlepin.util.CandlepinExecutorServiceProvider;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -102,6 +103,9 @@ import java.util.stream.Stream;
 public class CryptoUtil {
     private static final BouncyCastleSecurityProvider SECURITY_PROVIDER_PROVIDER =
         new BouncyCastleSecurityProvider();
+
+    private static final CandlepinExecutorServiceProvider EXECUTOR_SERVICE_PROVIDER =
+        new CandlepinExecutorServiceProvider();
 
     public static final Map<String, Scheme> SUPPORTED_SCHEMES = generateSupportedSchemes()
         .collect(Collectors.toMap(Scheme::name, Function.identity()));
@@ -216,7 +220,7 @@ public class CryptoUtil {
 
         // Build & return crypto manager
         return new BouncyCastleCryptoManager(config, SECURITY_PROVIDER_PROVIDER.get(), schemeReader,
-            certReader, skiWriter, oidUtil);
+            certReader, skiWriter, oidUtil, EXECUTOR_SERVICE_PROVIDER);
     }
 
     /**

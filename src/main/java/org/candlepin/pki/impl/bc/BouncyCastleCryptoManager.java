@@ -32,9 +32,11 @@ import org.candlepin.pki.SignatureValidator;
 import org.candlepin.pki.Signer;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509CertificateBuilder;
+import org.candlepin.pki.impl.BufferedKeyPairGenerator;
 import org.candlepin.pki.impl.jca.JcaKeyPairGenerator;
 import org.candlepin.pki.impl.jca.JcaSignatureValidator;
 import org.candlepin.pki.impl.jca.JcaSigner;
+import org.candlepin.util.CandlepinExecutorServiceProvider;
 import org.candlepin.util.function.CheckedFunction;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -53,9 +55,12 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -73,14 +78,22 @@ import javax.inject.Singleton;
 public class BouncyCastleCryptoManager implements CryptoManager {
     private static Logger log = LoggerFactory.getLogger(BouncyCastleCryptoManager.class);
 
+    private static final int DEFAULT_KEY_BUFFERING_THREAD_COUNT = 2;
+    private static final int DEFAULT_KEY_BUFFERING_BUFFER_CAPACITY = 250;
+
+    private final Configuration config;
+
     private final BouncyCastleProvider securityProvider;
     private final CertificateReader certreader;
     private final SubjectKeyIdentifierWriter skiWriter;
     private final OidUtil oidUtil;
+    private final ExecutorService executor;
 
     private final List<Scheme> schemes;
     private final Scheme defaultScheme;
     private final File upstreamCertificateRepo;
+
+    private final ConcurrentHashMap<Scheme, KeyPairGenerator> keyPairGenerators;
 
     // TODO: FIXME: This feature flag is temporary and should be removed once all dependent services have
     // enabled support for PQC certs and negotiation
@@ -89,19 +102,22 @@ public class BouncyCastleCryptoManager implements CryptoManager {
     @Inject
     public BouncyCastleCryptoManager(Configuration config, BouncyCastleProvider securityProvider,
         SchemeReader schemeReader, CertificateReader certreader, SubjectKeyIdentifierWriter skiWriter,
-        OidUtil oidUtil) {
+        OidUtil oidUtil, CandlepinExecutorServiceProvider executorProvider) {
 
-        Objects.requireNonNull(config);
+        this.config = Objects.requireNonNull(config);
         Objects.requireNonNull(schemeReader);
 
         this.securityProvider = Objects.requireNonNull(securityProvider);
         this.certreader = Objects.requireNonNull(certreader);
         this.skiWriter = Objects.requireNonNull(skiWriter);
         this.oidUtil = Objects.requireNonNull(oidUtil);
+        this.executor = Objects.requireNonNull(executorProvider).get();
 
         this.schemes = Collections.unmodifiableList(schemeReader.readSchemes());
         this.defaultScheme = schemeReader.readDefaultScheme();
         this.upstreamCertificateRepo = this.readUpstreamCertificateRepoConfig(config);
+
+        this.keyPairGenerators = new ConcurrentHashMap<>();
 
         // Validate the schemes we've loaded
         Stream.concat(this.schemes.stream(), Stream.of(this.defaultScheme))
@@ -109,6 +125,52 @@ public class BouncyCastleCryptoManager implements CryptoManager {
 
         // Temporary feature flag
         this.enableSchemeNegotiation = config.getBoolean(ConfigProperties.CRYPTO_CLIENT_NEGOTIATION_ENABLED);
+    }
+
+    private boolean isSchemeKeyBuffering(Scheme scheme) {
+        String cfgKeyBuffering = ConfigProperties.schemeConfig(scheme.name(),
+            ConfigProperties.CRYPTO_SCHEME_KEY_BUFFERING);
+
+        return this.config.getOptionalBoolean(cfgKeyBuffering)
+            .orElse(false);
+    }
+
+    private int getSchemeKeyBufferCapacity(Scheme scheme) {
+        String cfgBufferCapacity = ConfigProperties.schemeConfig(scheme.name(),
+            ConfigProperties.CRYPTO_SCHEME_KEY_BUFFERING_CAPACITY);
+
+        return this.config.getOptionalInt(cfgBufferCapacity)
+            .orElse(DEFAULT_KEY_BUFFERING_BUFFER_CAPACITY);
+    }
+
+    private int getSchemeKeyBufferThreads(Scheme scheme) {
+        String cfgBufferThreads = ConfigProperties.schemeConfig(scheme.name(),
+            ConfigProperties.CRYPTO_SCHEME_KEY_BUFFERING_THREADS);
+
+        return this.config.getOptionalInt(cfgBufferThreads)
+            .orElse(DEFAULT_KEY_BUFFERING_THREAD_COUNT);
+    }
+
+    /**
+     * Performs additional validation on the extra scheme configuration not already managed by the scheme
+     * reader, such as buffering configurations
+     */
+    private void validateSchemeConfig(Scheme scheme) {
+        boolean keyBuffering = this.isSchemeKeyBuffering(scheme);
+
+        if (keyBuffering) {
+            int capacity = this.getSchemeKeyBufferCapacity(scheme);
+            if (capacity < 1) {
+                throw new ConfigurationException(
+                    String.format("key buffer capacity for scheme %s must be a positive integer", scheme.name()));
+            }
+
+            int threads = this.getSchemeKeyBufferThreads(scheme);
+            if (threads < 1) {
+                throw new ConfigurationException(
+                    String.format("key buffer threads for scheme %s must be a positive integer", scheme.name()));
+            }
+        }
     }
 
     /**
@@ -124,6 +186,8 @@ public class BouncyCastleCryptoManager implements CryptoManager {
      */
     private void validateScheme(Scheme scheme) {
         try {
+            this.validateSchemeConfig(scheme);
+
             byte[] bytes = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
             // We don't care about the result of any of these methods, just that they seem to work, indicating
@@ -448,7 +512,21 @@ public class BouncyCastleCryptoManager implements CryptoManager {
             throw new IllegalArgumentException("scheme is null");
         }
 
-        return new JcaKeyPairGenerator(this.securityProvider, scheme);
+        // Impl note: this works only so long as the base generator is stateless. If the key pair generator
+        // ever becomes stateful, we'll have to do some shenanigans with the buffer implementation to make
+        // it stateless. This is non-trivial and requires more effort than this.
+        return this.keyPairGenerators.computeIfAbsent(scheme, key -> {
+            KeyPairGenerator generator = new JcaKeyPairGenerator(this.securityProvider, key);
+
+            if (this.isSchemeKeyBuffering(key)) {
+                int capacity = this.getSchemeKeyBufferCapacity(key);
+                int threads = this.getSchemeKeyBufferThreads(key);
+
+                return new BufferedKeyPairGenerator(generator, this.executor, capacity, threads);
+            }
+
+            return generator;
+        });
     }
 
 }
