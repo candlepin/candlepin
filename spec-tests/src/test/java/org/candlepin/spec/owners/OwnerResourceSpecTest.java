@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2025 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -61,6 +61,7 @@ import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.Environments;
+import org.candlepin.spec.bootstrap.data.builder.ExportGenerator;
 import org.candlepin.spec.bootstrap.data.builder.Facts;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Permissions;
@@ -70,6 +71,7 @@ import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 import org.candlepin.spec.bootstrap.data.util.DateUtil;
+import org.candlepin.spec.bootstrap.data.util.OAuthUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
@@ -87,6 +89,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import tools.jackson.databind.JsonNode;
 
+import java.io.File;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -1800,6 +1803,26 @@ public class OwnerResourceSpecTest {
             .extractingByKey("content_access", as(collection(String.class)))
             .singleElement()
             .isEqualTo(content2.getId());
+    }
+
+    @Test
+    public void shouldImportManifestUsingOAuthClient() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        ApiClient oauthClient = ApiClients.oauth(OAuthUtil.CONSUMER_KEY, OAuthUtil.CONSUMER_SECRET);
+
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+
+        File manifest = new ExportGenerator()
+            .addProduct(Products.random())
+            .export();
+
+        AsyncJobStatusDTO importJob = oauthClient.owners()
+            .importManifestAsync(owner.getKey(), List.of(), manifest);
+
+        AsyncJobStatusDTO jobStatus = adminClient.jobs().waitForJob(importJob);
+        assertThatJob(jobStatus)
+            .isFinished()
+            .contains("SUCCESS");
     }
 
 }

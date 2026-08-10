@@ -60,37 +60,56 @@ public class RestEasyOAuthMessage extends OAuthMessage {
         }
     }
 
+    /**
+     * Retrieves a list of OAuth specific parameters from the provided HTTP request. This method returns all
+     * of the OAuth parameters in the 'Authorization' header. This method also returns all of the form
+     * parameters if the request has a Content-Type that is compatible with
+     * 'application/x-www-form-urlencoded'.
+     *
+     * @param request
+     *  the request to retrieve the OAuth parameters from
+     *
+     * @return a list of all the OAuth specific parameters
+     */
     public static List<OAuth.Parameter> getParameters(HttpRequest request) {
-        List<OAuth.Parameter> list = new ArrayList<>();
-        java.util.List<java.lang.String> headers =
-            request.getHttpHeaders().getRequestHeader("Authorization");
+        List<OAuth.Parameter> parameters = new ArrayList<>();
+        List<String> headers = request.getHttpHeaders().getRequestHeader("Authorization");
         if (headers != null) {
-            Iterator<String> itor = headers.iterator();
-            while (itor.hasNext()) {
-                String header = itor.next();
-                for (OAuth.Parameter parameter : OAuthMessage
-                    .decodeAuthorization(header)) {
-                    log.debug(parameter.getKey() + ":" + parameter.getValue());
+            for (String header : headers) {
+                for (OAuth.Parameter parameter : OAuthMessage.decodeAuthorization(header)) {
                     if (!"realm".equalsIgnoreCase(parameter.getKey())) {
-                        list.add(parameter);
+                        parameters.add(parameter);
                     }
                 }
             }
         }
 
-        // we can't call getFormParameters when it's a PUT and not a form.
-        if (request.getHttpMethod().equals("PUT") && !request.getHttpHeaders().getMediaType().isCompatible(
-            MediaType.valueOf("application/x-www-form-urlencoded"))) {
-            return list;
+        if (request.getHttpMethod() == null) {
+            log.debug("Not adding form parameters due to null HTTP method");
+            return parameters;
         }
 
+        MediaType requestMediaType = request.getHttpHeaders().getMediaType();
+        if (requestMediaType == null) {
+            log.debug("Not adding form parameters due to missing Content-Type");
+            return parameters;
+        }
+
+        // HttpRequest.getFormParameters requires that the request content-type is compatible with
+        // application/x-www-form-urlencoded or else we will run into an IllegalArgumentException.
+        if (!requestMediaType.isCompatible(MediaType.APPLICATION_FORM_URLENCODED_TYPE)) {
+            log.debug("Not adding form parameters due to incompatible Content-Type");
+            return parameters;
+        }
+
+        // Add all of the form parameters
         for (Map.Entry<String, List<String>> entry : request.getFormParameters().entrySet()) {
             String name = entry.getKey();
             for (String value : entry.getValue()) {
-                list.add(new OAuth.Parameter(name, value));
+                parameters.add(new OAuth.Parameter(name, value));
             }
         }
 
-        return list;
+        return parameters;
     }
 }
