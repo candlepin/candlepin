@@ -47,6 +47,7 @@ jobs:
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ matrix.java-version }}
+          check-latest: ${{ env.JAVA_CHECK_LATEST }}
           set-safe-directory: $GITHUB_WORKSPACE
 
       - name: Run internationalization
