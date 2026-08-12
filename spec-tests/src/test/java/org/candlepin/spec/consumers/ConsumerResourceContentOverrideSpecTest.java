@@ -86,8 +86,7 @@ public class ConsumerResourceContentOverrideSpecTest {
         List<ContentOverrideDTO> createdOverrides = consumerClient.consumers()
             .addConsumerContentOverrides(consumer.getUuid(), overrides);
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertConsumerOverrides(consumerClient, consumer)
             .hasSize(2)
@@ -116,8 +115,7 @@ public class ConsumerResourceContentOverrideSpecTest {
         List<ContentOverrideDTO> overrides = this.admin.consumers()
             .addConsumerContentOverrides(consumer.getUuid(), List.of(ContentOverrides.random()));
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(overrides)
             .hasSize(1);
@@ -215,8 +213,7 @@ public class ConsumerResourceContentOverrideSpecTest {
 
         consumerClient.consumers().deleteConsumerContentOverrides(consumer.getUuid(), List.of(override));
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertConsumerOverrides(consumerClient, consumer)
             .hasSize(4)

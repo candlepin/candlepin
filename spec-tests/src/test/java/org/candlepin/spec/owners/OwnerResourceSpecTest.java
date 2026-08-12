@@ -177,8 +177,7 @@ public class OwnerResourceSpecTest {
 
         OwnerDTO output = this.owners.createOwner(Owners.random());
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output.getId())
             .isNotNull()
@@ -208,8 +207,7 @@ public class OwnerResourceSpecTest {
         entity.setDisplayName(entity.getDisplayName() + "-update");
         OwnerDTO output = this.owners.updateOwner(entity.getKey(), entity);
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output.getCreated())
             .isNotNull()
@@ -233,8 +231,7 @@ public class OwnerResourceSpecTest {
 
         PoolDTO output = this.owners.createPool(owner.getKey(), Pools.random(product));
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output.getId())
             .isNotNull()
@@ -271,8 +268,7 @@ public class OwnerResourceSpecTest {
 
         PoolDTO output = this.admin.pools().getPool(entity.getId(), null, null);
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output.getCreated())
             .isNotNull()

@@ -223,8 +223,7 @@ public class ActivationKeySpecTest {
         ActivationKeyDTO output = adminClient.owners()
             .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output.getId())
             .isNotNull()
@@ -258,8 +257,7 @@ public class ActivationKeySpecTest {
         entity.setName(entity.getName() + "-update");
         ActivationKeyDTO output = adminClient.activationKeys().updateActivationKey(entity.getId(), entity);
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output.getCreated())
             .isNotNull()
@@ -407,8 +405,7 @@ public class ActivationKeySpecTest {
         userClient.activationKeys()
             .addProductIdToKey(key.getId(), product.getId());
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         // verify the modification
         ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
@@ -456,8 +453,7 @@ public class ActivationKeySpecTest {
         userClient.activationKeys()
             .removeProductIdFromKey(key.getId(), product.getId());
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         // verify the modification
         ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
@@ -491,8 +487,7 @@ public class ActivationKeySpecTest {
         List<ContentOverrideDTO> overrides = adminClient.activationKeys()
             .addActivationKeyContentOverrides(key.getId(), List.of(ContentOverrides.random()));
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(overrides)
             .hasSize(1);
@@ -529,8 +524,7 @@ public class ActivationKeySpecTest {
         userClient.activationKeys()
             .addActivationKeyContentOverrides(key.getId(), List.of(contentOverride));
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         // verify the modification
         ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
@@ -582,8 +576,7 @@ public class ActivationKeySpecTest {
         userClient.activationKeys()
             .deleteActivationKeyContentOverrides(key.getId(), List.of(contentOverride));
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         // verify the modification
         ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
@@ -842,8 +835,7 @@ public class ActivationKeySpecTest {
         userClient.activationKeys()
             .addPoolToKey(key.getId(), pool.getId(), null);
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         // verify the modification
         ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
@@ -913,8 +905,7 @@ public class ActivationKeySpecTest {
         userClient.activationKeys()
             .removePoolFromKey(key.getId(), pool.getId());
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         // verify the modification
         ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());

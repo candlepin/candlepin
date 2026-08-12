@@ -107,8 +107,7 @@ public class UeberCertSpecTest {
 
         UeberCertificateDTO output = ownerApi.createUeberCertificate(owner.getKey(), capabilities);
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output)
             .isNotNull()

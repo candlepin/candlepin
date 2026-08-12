@@ -79,8 +79,7 @@ public class DistributorCapabilitySpecTest {
 
         DistributorVersionDTO output = client.distributorVersions().create(distVersion);
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output.getId())
             .isNotNull()
@@ -127,8 +126,7 @@ public class DistributorCapabilitySpecTest {
 
         DistributorVersionDTO output = client.distributorVersions().update(distVersionId, updateDistVersion);
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(client.distributorVersions().getVersions("test-update", null))
             .hasSize(count + 1);

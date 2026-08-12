@@ -138,8 +138,7 @@ public class ConsumerResourceSpecTest {
 
         ConsumerDTO output = this.adminClient.consumers().createConsumer(Consumers.random(this.owner));
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output.getId())
             .isNotNull()
@@ -172,8 +171,7 @@ public class ConsumerResourceSpecTest {
         ConsumerDTO output = this.adminClient.consumers().createConsumer(input);
         assertNotNull(output);
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         CertificateDTO cert = output.getIdCert();
 
@@ -334,8 +332,7 @@ public class ConsumerResourceSpecTest {
         this.adminClient.consumers().updateConsumer(entity.getUuid(), entity);
         ConsumerDTO output = this.adminClient.consumers().getConsumer(entity.getUuid());
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output.getCreated())
             .isNotNull()
