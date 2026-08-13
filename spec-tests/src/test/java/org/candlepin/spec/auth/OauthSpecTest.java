@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -27,6 +27,7 @@ import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Users;
+import org.candlepin.spec.bootstrap.data.util.OAuthUtil;
 
 import org.junit.jupiter.api.Test;
 
@@ -34,40 +35,36 @@ import org.junit.jupiter.api.Test;
 @OnlyInHosted
 public class OauthSpecTest {
 
-    private final String OAUTH_CONSUMER = "rspec";
-    private final String OAUTH_SECRET = "rspec-oauth-secret";
-
-
     @Test
-    void shouldReturnsAUnauthorizedIfOauthUserIsNotConfigured() {
+    public void shouldReturnsAUnauthorizedIfOauthUserIsNotConfigured() {
         ApiClient oauth = ApiClients.oauth("baduser", "badsecret");
         assertUnauthorized(() -> oauth.users().listUsers());
     }
 
     @Test
-    void shouldReturnsAUnauthorizedIfOauthSecretDoesNotMatch() {
-        ApiClient oauth = ApiClients.oauth(OAUTH_CONSUMER, "badsecret");
+    public void shouldReturnsAUnauthorizedIfOauthSecretDoesNotMatch() {
+        ApiClient oauth = ApiClients.oauth(OAuthUtil.CONSUMER_KEY, "badsecret");
         assertUnauthorized(() -> oauth.users().listUsers());
     }
 
     @Test
-    void shouldLetACallerActAsAUser() {
+    public void shouldLetACallerActAsAUser() {
         ApiClient adminClient = ApiClients.admin();
         UserDTO user = adminClient.users().createUser(Users.random());
         ApiClient oauthUser = ApiClients.oauthUser(
-            OAUTH_CONSUMER, OAUTH_SECRET, user.getUsername());
+            OAuthUtil.CONSUMER_KEY, OAuthUtil.CONSUMER_SECRET, user.getUsername());
         UserDTO userInfo = oauthUser.users().getUserInfo(user.getUsername());
         assertThat(userInfo)
             .isEqualTo(user);
     }
 
     @Test
-    void shouldLetACallerActAsAConsumer() {
+    public void shouldLetACallerActAsAConsumer() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient oauthConsumer = ApiClients.oauthConsumer(
-            OAUTH_CONSUMER, OAUTH_SECRET, consumer.getUuid());
+            OAuthUtil.CONSUMER_KEY, OAuthUtil.CONSUMER_SECRET, consumer.getUuid());
         ConsumerDTO consumerFromServer = oauthConsumer.consumers().getConsumer(consumer.getUuid());
         assertThat(consumerFromServer)
             .isNotNull()
@@ -75,20 +72,20 @@ public class OauthSpecTest {
     }
 
     @Test
-    void shouldReturnsUnauthorizedIfAnUnknownConsumerIsRequested() {
+    public void shouldReturnsUnauthorizedIfAnUnknownConsumerIsRequested() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient oauthConsumer = ApiClients.oauthConsumer(
-            OAUTH_CONSUMER, OAUTH_SECRET, "some unknown consumer");
+            OAuthUtil.CONSUMER_KEY, OAuthUtil.CONSUMER_SECRET, "some unknown consumer");
         assertUnauthorized(() -> oauthConsumer.consumers().getConsumer(consumer.getUuid()));
     }
 
     @Test
-    void shouldFallsBackToTrustedSystemAuthIfNoHeadersAreSet() {
+    public void shouldFallsBackToTrustedSystemAuthIfNoHeadersAreSet() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
-        ApiClient oauth = ApiClients.oauth(OAUTH_CONSUMER, OAUTH_SECRET);
+        ApiClient oauth = ApiClients.oauth(OAuthUtil.CONSUMER_KEY, OAuthUtil.CONSUMER_SECRET);
         OwnerDTO ownerFromServer = oauth.owners().getOwner(owner.getKey());
         assertThat(ownerFromServer)
             .isEqualTo(owner);
