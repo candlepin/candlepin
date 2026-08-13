@@ -101,8 +101,7 @@ public class EnvironmentSpecTest {
         EnvironmentDTO output = this.ownerClient.owners()
             .createEnvironment(this.owner.getKey(), Environments.random());
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output.getId())
             .isNotNull()
@@ -133,8 +132,7 @@ public class EnvironmentSpecTest {
         entity.setName(entity.getName() + "-update");
         EnvironmentDTO output = this.ownerClient.environments().updateEnvironment(entity.getId(), entity);
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output.getCreated())
             .isNotNull()

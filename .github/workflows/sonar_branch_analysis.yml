@@ -16,10 +16,6 @@ on:
         default: 'main'
         type: string
 
-env:
-  JAVA_DISTRIBUTION: 'temurin'
-  JAVA_VERSION: '25'
-
 # Cancel in-progress sonar branch analysis workflows. We only care about analyzing the latest commit.
 concurrency:
   group: ${{ github.workflow }}-${{ inputs.branch-name || github.ref_name }}
@@ -43,11 +39,17 @@ jobs:
         shell: bash
         run: sudo apt-get install -y gettext
 
+      - name: Set Environment Variables
+        uses: ./.github/actions/set_vars
+        with:
+          varFilePath: ./.github/variables/pr_verification.env
+
       - name: Set up Java
         uses: actions/setup-java@v5
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
+          check-latest: ${{ env.JAVA_CHECK_LATEST }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6

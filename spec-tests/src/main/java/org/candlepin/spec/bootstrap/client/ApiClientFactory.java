@@ -260,14 +260,19 @@ public class ApiClientFactory {
             }
 
             // Create a KeyStore with the client certificate and private key
-            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            // Use the BC KeyStore/KeyManagerFactory providers instead of the JDK defaults; the JDK's own
+            // PKCS12 implementation round-trips the private key through its native KeyFactory, which for
+            // algorithms such as ML-DSA discards the specific parameter set (e.g. ML-DSA-65) in favor of
+            // the generic "ML-DSA" name, producing a key BC's TLS stack doesn't recognize
+            KeyStore keyStore = KeyStore.getInstance("PKCS12", "BC");
             keyStore.load(null, null);
             Certificate[] certChain = certificates.toArray(new Certificate[0]);
             keyStore.setKeyEntry("client", privateKey, new char[0], certChain);
 
             // Create KeyManager from the KeyStore
-            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(
-                KeyManagerFactory.getDefaultAlgorithm());
+            // Note: BCJSSE registers its KeyManagerFactory under "X.509", not the JDK's default algorithm
+            // name (e.g. "SunX509")
+            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("X.509", "BCJSSE");
             keyManagerFactory.init(keyStore, new char[0]);
             KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
 

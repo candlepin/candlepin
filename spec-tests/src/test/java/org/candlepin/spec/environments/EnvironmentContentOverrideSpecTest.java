@@ -71,8 +71,7 @@ public class EnvironmentContentOverrideSpecTest {
         List<ContentOverrideDTO> overrides = adminClient.environments()
             .putEnvironmentContentOverrides(environment.getId(), List.of(ContentOverrides.random()));
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(overrides)
             .hasSize(1);

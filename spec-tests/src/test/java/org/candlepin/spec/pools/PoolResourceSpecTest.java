@@ -156,8 +156,7 @@ class PoolResourceSpecTest {
 
         PoolDTO output = this.createPool(adminClient, owner);
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output.getId())
             .isNotNull()

@@ -144,8 +144,7 @@ public class OwnerProductResourceSpecTest {
 
         ProductDTO output = ownerProductApi.createProduct(owner.getKey(), Products.random());
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output.getId())
             .isNotNull()
@@ -176,8 +175,7 @@ public class OwnerProductResourceSpecTest {
         entity.setName(entity.getName() + "-update");
         ProductDTO output = this.ownerProductApi.updateProduct(owner.getKey(), entity.getId(), entity);
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output.getCreated())
             .isNotNull()

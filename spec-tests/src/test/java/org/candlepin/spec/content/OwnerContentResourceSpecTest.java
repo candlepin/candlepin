@@ -148,8 +148,7 @@ class OwnerContentResourceSpecTest {
 
         ContentDTO output = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output.getId())
             .isNotNull()
@@ -181,8 +180,7 @@ class OwnerContentResourceSpecTest {
         entity.setName(entity.getName() + "-update");
         ContentDTO output = adminClient.ownerContent().updateContent(owner.getKey(), entity.getId(), entity);
 
-        OffsetDateTime post = OffsetDateTime.now()
-            .truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime post = OffsetDateTime.now();
 
         assertThat(output.getCreated())
             .isNotNull()
