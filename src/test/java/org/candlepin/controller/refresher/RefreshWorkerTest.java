@@ -51,6 +51,8 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
@@ -79,6 +81,7 @@ import jakarta.persistence.EntityManager;
 /**
  * Test suite for the RefreshWorker class
  */
+@Execution(ExecutionMode.CONCURRENT)
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class RefreshWorkerTest {

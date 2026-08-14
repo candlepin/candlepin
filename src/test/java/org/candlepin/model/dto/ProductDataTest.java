@@ -33,6 +33,8 @@ import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -50,6 +52,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 
+@Execution(ExecutionMode.CONCURRENT)
 public class ProductDataTest {
 
     public static final String PRODUCT_JSON_BASE = "{" +

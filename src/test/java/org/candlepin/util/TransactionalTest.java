@@ -30,6 +30,8 @@ import org.candlepin.util.function.CheckedSupplier;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -44,6 +46,7 @@ import jakarta.transaction.Status;
 /**
  * Test suite for the Transactional object
  */
+@Execution(ExecutionMode.CONCURRENT)
 public class TransactionalTest  {
 
     /**

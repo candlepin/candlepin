@@ -56,6 +56,8 @@ import org.candlepin.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.xnap.commons.i18n.I18n;
@@ -77,6 +79,7 @@ import java.util.stream.Collectors;
 
 
 
+@Execution(ExecutionMode.CONCURRENT)
 @ExtendWith(MockitoExtension.class)
 public class EntitlerTest {
     private I18n i18n;

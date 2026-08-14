@@ -56,6 +56,8 @@ import org.candlepin.util.Util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -85,6 +87,7 @@ import jakarta.persistence.LockModeType;
 /**
  * JsPoolRulesTest: Tests for the default rules.
  */
+@Execution(ExecutionMode.CONCURRENT)
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class PoolRulesTest {
