@@ -43,7 +43,7 @@ caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.4
 checkstyle = { module = "com.puppycrawl.tools:checkstyle", version = "13.10.0" }
 checkstyle-sevntu = { module = "com.github.sevntu-checkstyle:sevntu-checks", version = "1.44.1" }
 commons-codec = { module = "commons-codec:commons-codec", version = "1.22.1" }
-commons-collections = { module = "org.apache.commons:commons-collections4", version = "4.5.0" }
+commons-collections = { module = "org.apache.commons:commons-collections4", version = "4.6.0" }
 commons-io = { module = "commons-io:commons-io", version = "2.22.0" }
 # Do not upgrade commons-lang beyond 3.14 until Liquibase has stopped using RandomStringUtils.random(...)
 commons-lang = { module = "org.apache.commons:commons-lang3", version = { strictly = "3.14.0" } }
