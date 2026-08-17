@@ -118,6 +118,7 @@ import org.candlepin.pki.certs.AnonymousCertificateGenerator;
 import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.pki.certs.SCACertificateGenerator;
+import org.candlepin.pki.certs.SCACertificateGenerator.SCACertificateComponents;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -1831,7 +1832,9 @@ public class ConsumerResourceTest {
 
         ContentAccessPayload payload = new ContentAccessPayload()
             .setTimestamp(new Date());
-        doReturn(payload).when(scaCertificateGenerator).getContentPayload(consumer);
+
+        SCACertificateComponents expectedComponents = new SCACertificateComponents(null, payload);
+        doReturn(expectedComponents).when(scaCertificateGenerator).getSCACertificateComponents(consumer);
 
         String now = new SimpleDateFormat(SINCE_DATE_FORMAT)
             .format(new Date());
@@ -1862,9 +1865,8 @@ public class ConsumerResourceTest {
         expectedCertificate.setKey("key");
         expectedCertificate.setSerial(new CertificateSerial(1234567L));
 
-        doReturn(expectedCertificate)
-            .when(scaCertificateGenerator)
-            .getX509Certificate(consumer);
+        SCACertificateComponents expectedComponents = new SCACertificateComponents(expectedCertificate, null);
+        doReturn(expectedComponents).when(scaCertificateGenerator).getSCACertificateComponents(consumer);
 
         String now = new SimpleDateFormat(SINCE_DATE_FORMAT)
             .format(new Date());
@@ -1889,19 +1891,9 @@ public class ConsumerResourceTest {
             .when(consumerCurator)
             .verifyAndLookupConsumer(anyString());
 
-        SCACertificate expectedCertificate = new SCACertificate()
-            .setUpdated(new Date());
-        expectedCertificate.setCert("cert");
-        expectedCertificate.setKey("key");
-        expectedCertificate.setSerial(new CertificateSerial(1234567L));
-
-        doReturn(expectedCertificate)
+        doThrow(new ConcurrentContentPayloadCreationException(""))
             .when(scaCertificateGenerator)
-            .getX509Certificate(consumer);
-
-        doThrow(ConcurrentContentPayloadCreationException.class)
-            .when(scaCertificateGenerator)
-            .getContentPayload(consumer);
+            .getSCACertificateComponents(consumer);
 
         String now = new SimpleDateFormat(SINCE_DATE_FORMAT)
             .format(new Date());
@@ -1936,15 +1928,12 @@ public class ConsumerResourceTest {
         expectedCertificate.setKey("key");
         expectedCertificate.setSerial(new CertificateSerial(1234567L));
 
-        doReturn(expectedCertificate)
-            .when(scaCertificateGenerator)
-            .getX509Certificate(consumer);
-
         ContentAccessPayload payload = new ContentAccessPayload()
             .setTimestamp(before);
-        doReturn(payload)
-            .when(scaCertificateGenerator)
-            .getContentPayload(consumer);
+
+        SCACertificateComponents expectedComponents =
+            new SCACertificateComponents(expectedCertificate, payload);
+        doReturn(expectedComponents).when(scaCertificateGenerator).getSCACertificateComponents(consumer);
 
         String now = new SimpleDateFormat(SINCE_DATE_FORMAT)
             .format(new Date());
@@ -1972,14 +1961,11 @@ public class ConsumerResourceTest {
         expectedCertificate.setKey("key");
         expectedCertificate.setSerial(new CertificateSerial(1234567L));
 
-        doReturn(expectedCertificate)
-            .when(scaCertificateGenerator)
-            .getX509Certificate(consumer);
-
         ContentAccessPayload payload = new ContentAccessPayload();
-        doReturn(payload)
-            .when(scaCertificateGenerator)
-            .getContentPayload(consumer);
+
+        SCACertificateComponents expectedComponents =
+            new SCACertificateComponents(expectedCertificate, payload);
+        doReturn(expectedComponents).when(scaCertificateGenerator).getSCACertificateComponents(consumer);
 
         // If the X509 cert and content access payload have a null updated date, then the current time should
         // be used as the updated date. Use a future 'since' date to verify this.
@@ -2009,14 +1995,14 @@ public class ConsumerResourceTest {
 
         Date certLastUpdate = new Date();
         expectedCertificate.setUpdated(certLastUpdate);
-        doReturn(expectedCertificate)
-            .when(scaCertificateGenerator)
-            .getX509Certificate(consumer);
 
         ContentAccessPayload payload = new ContentAccessPayload()
             .setTimestamp(certLastUpdate)
             .setPayload(TestUtil.randomString("payload-"));
-        doReturn(payload).when(scaCertificateGenerator).getContentPayload(consumer);
+
+        SCACertificateComponents expectedComponents =
+            new SCACertificateComponents(expectedCertificate, payload);
+        doReturn(expectedComponents).when(scaCertificateGenerator).getSCACertificateComponents(consumer);
 
         Response actual = consumerResource
             .getContentAccessBody("test-uuid", null);
@@ -2049,14 +2035,14 @@ public class ConsumerResourceTest {
 
         SCACertificate expectedCertificate = createContentAccessCertificate(
             "expected-key", "expected-cert", new Random().nextLong());
-        doReturn(expectedCertificate)
-            .when(scaCertificateGenerator)
-            .getX509Certificate(consumer);
 
         ContentAccessPayload payload = new ContentAccessPayload()
             .setTimestamp(new Date())
             .setPayload(TestUtil.randomString("payload-"));
-        doReturn(payload).when(scaCertificateGenerator).getContentPayload(consumer);
+
+        SCACertificateComponents expectedComponents =
+            new SCACertificateComponents(expectedCertificate, payload);
+        doReturn(expectedComponents).when(scaCertificateGenerator).getSCACertificateComponents(consumer);
 
         Response actual = consumerResource
             .getContentAccessBody("test-uuid", null);
@@ -2088,14 +2074,14 @@ public class ConsumerResourceTest {
         // Make this updated date more recent than the content access payload timestamp.
         // This is the date that should be included in the ContentAccessListing
         expectedCertificate.setUpdated(TestUtil.createDateOffset(0, 0, -3));
-        doReturn(expectedCertificate)
-            .when(scaCertificateGenerator)
-            .getX509Certificate(consumer);
 
         ContentAccessPayload payload = new ContentAccessPayload()
             .setTimestamp(TestUtil.createDateOffset(0, 0, -5))
             .setPayload(TestUtil.randomString("payload-"));
-        doReturn(payload).when(scaCertificateGenerator).getContentPayload(consumer);
+
+        SCACertificateComponents expectedComponents =
+            new SCACertificateComponents(expectedCertificate, payload);
+        doReturn(expectedComponents).when(scaCertificateGenerator).getSCACertificateComponents(consumer);
 
         Response actual = consumerResource
             .getContentAccessBody("test-uuid", null);
@@ -2114,6 +2100,28 @@ public class ConsumerResourceTest {
     }
 
     @Test
+    public void testGetContentAccessBodyWithNullCertComponents() throws Exception {
+        Owner owner = createOwner();
+        doReturn(owner)
+            .when(ownerCurator)
+            .findOwnerById(owner.getOwnerId());
+
+        Consumer consumer = createConsumer(owner);
+        doReturn(consumer)
+            .when(consumerCurator)
+            .verifyAndLookupConsumer(anyString());
+
+        doReturn(null).when(scaCertificateGenerator).getSCACertificateComponents(consumer);
+
+        String now = new SimpleDateFormat(SINCE_DATE_FORMAT)
+            .format(new Date());
+
+        assertThrows(BadRequestException.class, () -> {
+            consumerResource.getContentAccessBody("test-uuid", now);
+        });
+    }
+
+    @Test
     public void contentAccessGetModified() throws Exception {
         Owner owner = createOwner();
         doReturn(owner)
@@ -2127,16 +2135,15 @@ public class ConsumerResourceTest {
 
         SCACertificate expectedCertificate = createContentAccessCertificate(
             "expected-key", "expected-cert", 18084729L);
-        doReturn(expectedCertificate)
-            .when(scaCertificateGenerator)
-            .getX509Certificate(consumer);
 
         ContentAccessPayload payload = new ContentAccessPayload()
             .setTimestamp(TestUtil.createDateOffset(0, 0, -1))
             .setPayload(TestUtil.randomString("payload-"));
-        doReturn(payload)
-            .when(scaCertificateGenerator)
-            .getContentPayload(consumer);
+
+        SCACertificateComponents expectedComponents =
+            new SCACertificateComponents(expectedCertificate, payload);
+
+        doReturn(expectedComponents).when(scaCertificateGenerator).getSCACertificateComponents(consumer);
 
         Response actual = consumerResource
             .getContentAccessBody("test-uuid", "Fri, 06 Oct 2023 08:20:51 Z");
@@ -2165,16 +2172,14 @@ public class ConsumerResourceTest {
 
         SCACertificate expectedCertificate = createContentAccessCertificate(
             "expected-key", "expected-cert", 18084729L);
-        doReturn(expectedCertificate)
-            .when(scaCertificateGenerator)
-            .getX509Certificate(consumer);
 
         ContentAccessPayload payload = new ContentAccessPayload()
             .setTimestamp(new Date())
             .setPayload(TestUtil.randomString("payload-"));
-        doReturn(payload)
-            .when(scaCertificateGenerator)
-            .getContentPayload(consumer);
+
+        SCACertificateComponents expectedComponents =
+            new SCACertificateComponents(expectedCertificate, payload);
+        doReturn(expectedComponents).when(scaCertificateGenerator).getSCACertificateComponents(consumer);
 
         Response contentAccess = consumerResource
             .getContentAccessBody("test-uuid", "Fri, 06 Oct 2023 08:20:51 Z");
