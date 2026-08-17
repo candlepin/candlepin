@@ -131,6 +131,7 @@ import org.candlepin.pki.certs.CertificateCreationException;
 import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.pki.certs.SCACertificateGenerator;
+import org.candlepin.pki.certs.SCACertificateGenerator.SCACertificateComponents;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -2364,13 +2365,16 @@ public class ConsumerResource implements ConsumerApi {
 
             // TODO: Come up with a better way of dealing with all of these checked exceptions.
             try {
-                SCACertificate scaCert = this.scaCertificateGenerator.getX509Certificate(consumer);
-                ContentAccessPayload scaPayload = this.scaCertificateGenerator.getContentPayload(consumer);
+                SCACertificateComponents components = this.scaCertificateGenerator
+                    .getSCACertificateComponents(consumer);
 
-                if (scaCert == null || scaPayload == null) {
+                if (components == null || components.certificate() == null || components.payload() == null) {
                     String msg = I18n.marktr("Cannot retrieve content access certificate for consumer: {0}");
                     throw new BadRequestException(i18n.tr(msg, consumerUuid));
                 }
+
+                SCACertificate scaCert = components.certificate();
+                ContentAccessPayload scaPayload = components.payload();
 
                 Date certUpdated = Util.firstOf(scaCert.getUpdated(), new Date());
                 Date payloadUpdated = scaPayload.getTimestamp();
