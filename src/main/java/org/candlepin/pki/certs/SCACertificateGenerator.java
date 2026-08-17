@@ -70,6 +70,8 @@ public class SCACertificateGenerator {
 
     private static final String SCA_ENTITLEMENT_TYPE = "OrgLevel";
 
+    public record SCACertificateComponents(SCACertificate certificate, ContentAccessPayload payload) {};
+
     private final Configuration configuration;
 
     private final CryptoManager cryptoManager;
@@ -201,6 +203,42 @@ public class SCACertificateGenerator {
 
         try {
             return this.getCertificate(scheme, owner, consumer, environments);
+        }
+        catch (KeyException e) {
+            throw new CertificateCreationException("Exception occurred while building certificate", e);
+        }
+    }
+
+    public SCACertificateComponents getSCACertificateComponents(Consumer consumer)
+        throws ConcurrentContentPayloadCreationException, CryptoCapabilitiesException {
+
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        Owner owner = consumer.getOwner();
+        if (owner == null || !owner.isUsingSimpleContentAccess()) {
+            log.debug("Consumer is not in SCA mode");
+            return null;
+        }
+
+        if (!v3CapabilityCheck.isCertV3Capable(consumer)) {
+            log.debug("Consumer is not v3 cert capable");
+            return null;
+        }
+
+        // Impl note:
+        // These need to be ordered according to priority! At the time of writing, getConsumerEnvironments
+        // does this, but if that ever changes, we absolutely need that sorting here.
+        Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
+        List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
+
+        try {
+            SCACertificate certificate = this.getCertificate(scheme, owner, consumer, environments);
+            ContentAccessPayload payload = this.getContentAccessPayload(scheme, owner, consumer,
+                environments);
+
+            return new SCACertificateComponents(certificate, payload);
         }
         catch (KeyException e) {
             throw new CertificateCreationException("Exception occurred while building certificate", e);
