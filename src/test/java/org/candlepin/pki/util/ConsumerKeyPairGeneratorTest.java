@@ -15,8 +15,10 @@
 package org.candlepin.pki.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -33,6 +35,7 @@ import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.Scheme;
 import org.candlepin.test.CryptoUtil;
+import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -44,6 +47,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.KeyException;
 import java.security.KeyPair;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -103,12 +107,26 @@ public class ConsumerKeyPairGeneratorTest {
     }
 
     private KeyPairData generateKeyPairData(Scheme scheme) throws KeyException {
+        return this.generateKeyPairData(scheme, null, null);
+    }
+
+    private KeyPairData generateKeyPairData(Scheme scheme, Date created, Date updated) throws KeyException {
         KeyPair keypair = CryptoUtil.generateKeyPair(scheme);
 
-        return new KeyPairData()
+        KeyPairData keypairData = new KeyPairData()
             .setPublicKeyData(keypair.getPublic().getEncoded())
             .setPrivateKeyData(keypair.getPrivate().getEncoded())
             .setAlgorithm(this.getKeyAlgorithmString(scheme));
+
+        if (created != null) {
+            keypairData.setCreated(created);
+        }
+
+        if (updated != null) {
+            keypairData.setUpdated(updated);
+        }
+
+        return keypairData;
     }
 
     private KeyPairDataCurator mockKeyPairDataCurator() {
@@ -151,11 +169,203 @@ public class ConsumerKeyPairGeneratorTest {
     }
 
     @Test
-    public void testConsumerKeyPairGeneratorRequiresConsumer() throws Exception {
+    public void testHasKeyPairChangedSinceWithNullScheme() throws Exception {
+        DevConfig config = this.buildConfiguration();
+        ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
+        Consumer consumer = new Consumer();
+        Date since = new Date();
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            generator.hasKeyPairChangedSince(null, consumer, since);
+        });
+    }
+
+    @Test
+    public void testHasKeyPairChangedSinceWithNullConsumer() throws Exception {
+        DevConfig config = this.buildConfiguration();
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(config);
+        Scheme scheme = cryptoManager.getDefaultCryptoScheme();
+        ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
+        Date since = new Date();
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            generator.hasKeyPairChangedSince(scheme, null, since);
+        });
+    }
+
+    @Test
+    public void testHasKeyPairChangedSinceWithNullSinceDate() throws Exception {
+        DevConfig config = this.buildConfiguration();
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(config);
+        Scheme scheme = cryptoManager.getDefaultCryptoScheme();
+        ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
+        Consumer consumer = new Consumer();
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            generator.hasKeyPairChangedSince(scheme, consumer, null);
+        });
+    }
+
+    @Test
+    public void testHasKeyPairChangedSinceWithNoKeyPair() throws Exception {
+        DevConfig config = this.buildConfiguration();
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(config);
+        Scheme scheme = cryptoManager.getDefaultCryptoScheme();
+        ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
+        Consumer consumer = new Consumer();
+        Date yesterday = TestUtil.createDateOffset(0, 0, -1);
+
+        boolean actual = generator.hasKeyPairChangedSince(scheme, consumer, yesterday);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    public void testHasKeyPairChangedSinceWithAlgorithmMismatch() throws Exception {
+        DevConfig config = this.buildConfiguration();
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(config);
+        Scheme scheme = cryptoManager.getDefaultCryptoScheme();
+        ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
+        Date now = new Date();
+        KeyPairData kpdata = this.generateKeyPairData(scheme, now, now);
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer(), scheme)
+            .setKeyPairData(kpdata);
+
+        Date tomorrow = TestUtil.createDateOffset(0, 0, 1);
+
+        Scheme otherScheme = new Scheme.Builder()
+            .setName(TestUtil.randomString("scheme-"))
+            .setKeyAlgorithm(TestUtil.randomString("algo-"))
+            .setSignatureAlgorithm(TestUtil.randomString("algo-"))
+            .setCertificate(scheme.certificate())
+            .build();
+
+        boolean actual = generator.hasKeyPairChangedSince(otherScheme, consumer, tomorrow);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    public void testHasKeyPairChangedSinceWithNullKeyPairDataCreatedDate() throws Exception {
+        DevConfig config = this.buildConfiguration();
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(config);
+        Scheme scheme = cryptoManager.getDefaultCryptoScheme();
+        ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
+        KeyPairData kpdata = this.generateKeyPairData(scheme, null, new Date());
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer(), scheme)
+            .setKeyPairData(kpdata);
+
+        Date beforeKeyPairCreation = TestUtil.createDateOffset(0, 0, -1);
+        Date afterKeyPairCreation = TestUtil.createDateOffset(0, 0, 1);
+
+        boolean actual = generator.hasKeyPairChangedSince(scheme, consumer, beforeKeyPairCreation);
+
+        assertTrue(actual);
+
+        actual = generator.hasKeyPairChangedSince(scheme, consumer, afterKeyPairCreation);
+
+        assertFalse(actual);
+    }
+
+    @Test
+    public void testHasKeyPairChangedSinceWithNullKeyPairDataUpdatedDate() throws Exception {
+        DevConfig config = this.buildConfiguration();
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(config);
+        Scheme scheme = cryptoManager.getDefaultCryptoScheme();
+        ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
+        KeyPairData kpdata = this.generateKeyPairData(scheme, new Date(), null);
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer(), scheme)
+            .setKeyPairData(kpdata);
+
+        Date beforeKeyPairCreation = TestUtil.createDateOffset(0, 0, -1);
+        Date afterKeyPairCreation = TestUtil.createDateOffset(0, 0, 1);
+
+        boolean actual = generator.hasKeyPairChangedSince(scheme, consumer, beforeKeyPairCreation);
+
+        assertTrue(actual);
+
+        actual = generator.hasKeyPairChangedSince(scheme, consumer, afterKeyPairCreation);
+
+        assertFalse(actual);
+    }
+
+    @Test
+    public void testHasKeyPairChangedSinceWithNullKeyPairDataUpdatedAndCreatedDate() throws Exception {
+        DevConfig config = this.buildConfiguration();
+        CryptoManager cryptoManager = CryptoUtil.getCryptoManager(config);
+        Scheme scheme = cryptoManager.getDefaultCryptoScheme();
+        ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
+        KeyPairData kpdata = this.generateKeyPairData(scheme);
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer(), scheme)
+            .setKeyPairData(kpdata);
+
+        Date beforeKeyPairCreation = TestUtil.createDateOffset(0, 0, -1);
+        Date afterKeyPairCreation = TestUtil.createDateOffset(0, 0, 1);
+
+        boolean actual = generator.hasKeyPairChangedSince(scheme, consumer, beforeKeyPairCreation);
+
+        assertFalse(actual);
+
+        actual = generator.hasKeyPairChangedSince(scheme, consumer, afterKeyPairCreation);
+
+        assertFalse(actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testHasKeyPairChangedSince(Scheme scheme) throws Exception {
+        DevConfig config = this.buildConfiguration();
+        ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
+        Date now = new Date();
+        KeyPairData kpdata = this.generateKeyPairData(scheme, now, now);
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer(), scheme)
+            .setKeyPairData(kpdata);
+
+        Date beforeKeyPairCreation = TestUtil.createDateOffset(0, 0, -1);
+        Date afterKeyPairCreation = TestUtil.createDateOffset(0, 0, 1);
+
+        boolean actual = generator.hasKeyPairChangedSince(scheme, consumer, beforeKeyPairCreation);
+
+        assertTrue(actual);
+
+        actual = generator.hasKeyPairChangedSince(scheme, consumer, afterKeyPairCreation);
+
+        assertFalse(actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testHasKeyPairChangedSinceWithUpdatedKeyPair(Scheme scheme) throws Exception {
+        DevConfig config = this.buildConfiguration();
+        ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
+        Date created = TestUtil.createDateOffset(0, 0, -1);
+        Date updated = new Date();
+        KeyPairData kpdata = this.generateKeyPairData(scheme, created, updated);
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer(), scheme)
+            .setKeyPairData(kpdata);
+
+        boolean actual = generator.hasKeyPairChangedSince(scheme, consumer, created);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    public void testConsumerKeyPairGeneratorRequiresScheme() throws Exception {
+        Consumer consumer = new Consumer();
+
         DevConfig config = this.buildConfiguration();
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
 
-        assertThrows(IllegalArgumentException.class, () -> generator.getConsumerKeyPair(null));
+        assertThrows(IllegalArgumentException.class, () -> generator.getConsumerKeyPair(null, consumer));
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testConsumerKeyPairGeneratorRequiresConsumer(Scheme scheme) throws Exception {
+        DevConfig config = this.buildConfiguration();
+        ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
+
+        assertThrows(IllegalArgumentException.class, () -> generator.getConsumerKeyPair(scheme, null));
     }
 
     @ParameterizedTest
@@ -167,7 +377,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(null);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(scheme, consumer);
 
         assertNotNull(output);
         assertThat(output.getPublic())
@@ -194,7 +404,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(null);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(cryptoManager);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(scheme, consumer);
 
         assertNotNull(output);
         assertThat(output.getPublic())
@@ -223,7 +433,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(scheme, consumer);
 
         assertNotNull(output);
         assertThat(output.getPublic())
@@ -254,7 +464,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(cryptoManager);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(scheme, consumer);
 
         assertNotNull(output);
         assertThat(output.getPublic())
@@ -290,7 +500,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(scheme, consumer);
 
         assertNotNull(output);
         assertThat(output.getPublic())
@@ -327,7 +537,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(scheme, consumer);
 
         assertNotNull(output);
         assertThat(output.getPublic())
@@ -362,7 +572,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(scheme, consumer);
 
         assertNotNull(output);
         assertThat(output.getPublic())
@@ -399,9 +609,8 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(legacyScheme, consumer);
 
-        // In this case, even though the
         assertNotNull(output);
         assertThat(output.getPublic())
             .isNotNull()
@@ -443,9 +652,8 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(modernScheme, consumer);
 
-        // In this case, even though the
         assertNotNull(output);
         assertThat(output.getPublic())
             .isNotNull()

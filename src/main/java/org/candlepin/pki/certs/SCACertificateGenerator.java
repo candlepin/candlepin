@@ -74,7 +74,7 @@ public class SCACertificateGenerator {
 
     private final CryptoManager cryptoManager;
     private final PemEncoder pemEncoder;
-    private final ConsumerKeyPairGenerator keyPairGenerator;
+    private final ConsumerKeyPairGenerator consumerKeyPairGenerator;
     private final X509V3ExtensionUtil v3ExtensionUtil;
     private final V3CapabilityCheck v3CapabilityCheck;
     private final ContentAccessPayloadBuilderProvider caPayloadBuilderProvider;
@@ -90,7 +90,7 @@ public class SCACertificateGenerator {
         Configuration configuration,
         CryptoManager cryptoManager,
         PemEncoder pemEncoder,
-        ConsumerKeyPairGenerator keyPairGenerator,
+        ConsumerKeyPairGenerator consumerKeyPairGenerator,
         X509V3ExtensionUtil v3ExtensionUtil,
         V3CapabilityCheck v3CapabilityCheck,
         ContentAccessPayloadBuilderProvider caPayloadBuilderProvider,
@@ -102,7 +102,7 @@ public class SCACertificateGenerator {
 
         this.cryptoManager = Objects.requireNonNull(cryptoManager);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
-        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
+        this.consumerKeyPairGenerator = Objects.requireNonNull(consumerKeyPairGenerator);
         this.v3ExtensionUtil = Objects.requireNonNull(v3ExtensionUtil);
         this.v3CapabilityCheck = Objects.requireNonNull(v3CapabilityCheck);
         this.caPayloadBuilderProvider = Objects.requireNonNull(caPayloadBuilderProvider);
@@ -308,12 +308,13 @@ public class SCACertificateGenerator {
             consumer.setContentAccessCert(scaCertificate);
         }
 
-        KeyPair keypair = this.keyPairGenerator.getConsumerKeyPair(consumer);
-        byte[] privateKeyBytes = this.pemEncoder.encodeAsBytes(keypair.getPrivate());
+        boolean certExpired = this.hasCertificateExpired(scaCertificate);
+        boolean keyChanged = this.consumerKeyPairGenerator.hasKeyPairChangedSince(scheme, consumer,
+            scaCertificate.getUpdated());
 
-        if (this.hasCertificateExpired(scaCertificate) ||
-            this.hasCertificatePrivateKeyChanged(scaCertificate, privateKeyBytes)) {
+        log.debug("CHECKING IF THE CERT HAS EXPIRED AND ITS KEY IS CURRENT: {}, {}", certExpired, keyChanged);
 
+        if (certExpired || keyChanged) {
             log.info("Generating new SCA x509 certificate for consumer: \"{}\"", consumer.getUuid());
 
             CertificateSerial serial = scaCertificate.getSerial();
@@ -325,6 +326,9 @@ public class SCACertificateGenerator {
             OffsetDateTime end = start.plusYears(1L);
 
             serial = this.createSerial(end);
+
+            KeyPair keypair = this.consumerKeyPairGenerator.getConsumerKeyPair(scheme, consumer);
+            byte[] privateKeyBytes = this.pemEncoder.encodeAsBytes(keypair.getPrivate());
 
             X509Certificate x509Cert = this.buildX509Certificate(scheme, owner, consumer, environments,
                 serial, keypair, start, end);
