@@ -151,11 +151,22 @@ public class ConsumerKeyPairGeneratorTest {
     }
 
     @Test
-    public void testConsumerKeyPairGeneratorRequiresConsumer() throws Exception {
+    public void testConsumerKeyPairGeneratorRequiresScheme() throws Exception {
+        Consumer consumer = new Consumer();
+
         DevConfig config = this.buildConfiguration();
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
 
-        assertThrows(IllegalArgumentException.class, () -> generator.getConsumerKeyPair(null));
+        assertThrows(IllegalArgumentException.class, () -> generator.getConsumerKeyPair(null, consumer));
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    public void testConsumerKeyPairGeneratorRequiresConsumer(Scheme scheme) throws Exception {
+        DevConfig config = this.buildConfiguration();
+        ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
+
+        assertThrows(IllegalArgumentException.class, () -> generator.getConsumerKeyPair(scheme, null));
     }
 
     @ParameterizedTest
@@ -167,7 +178,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(null);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(scheme, consumer);
 
         assertNotNull(output);
         assertThat(output.getPublic())
@@ -194,7 +205,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(null);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(cryptoManager);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(scheme, consumer);
 
         assertNotNull(output);
         assertThat(output.getPublic())
@@ -223,7 +234,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(scheme, consumer);
 
         assertNotNull(output);
         assertThat(output.getPublic())
@@ -254,7 +265,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(cryptoManager);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(scheme, consumer);
 
         assertNotNull(output);
         assertThat(output.getPublic())
@@ -290,7 +301,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(scheme, consumer);
 
         assertNotNull(output);
         assertThat(output.getPublic())
@@ -327,7 +338,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(scheme, consumer);
 
         assertNotNull(output);
         assertThat(output.getPublic())
@@ -362,7 +373,7 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(scheme, consumer);
 
         assertNotNull(output);
         assertThat(output.getPublic())
@@ -399,9 +410,8 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(legacyScheme, consumer);
 
-        // In this case, even though the
         assertNotNull(output);
         assertThat(output.getPublic())
             .isNotNull()
@@ -443,9 +453,8 @@ public class ConsumerKeyPairGeneratorTest {
             .setKeyPairData(kpdata);
 
         ConsumerKeyPairGenerator generator = this.buildKeyPairGenerator(config);
-        KeyPair output = generator.getConsumerKeyPair(consumer);
+        KeyPair output = generator.getConsumerKeyPair(modernScheme, consumer);
 
-        // In this case, even though the
         assertNotNull(output);
         assertThat(output.getPublic())
             .isNotNull()
