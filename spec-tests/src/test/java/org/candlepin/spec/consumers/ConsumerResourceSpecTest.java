@@ -242,7 +242,7 @@ public class ConsumerResourceSpecTest {
         // the GSON serializer being helpful and throwing out null values on our behalf against our wishes.
         Response response = Request.from(this.adminClient)
             .setPath("/consumers")
-            .setMethod("POST")
+            .setMethod(Request.Method.POST)
             .addQueryParam("owner", owner.getKey())
             .setBody(ApiClient.MAPPER.writeValueAsString(consumer))
             .execute();
@@ -278,7 +278,7 @@ public class ConsumerResourceSpecTest {
         // the GSON serializer being helpful and throwing out null values on our behalf against our wishes.
         Response response = Request.from(this.adminClient)
             .setPath("/consumers")
-            .setMethod("POST")
+            .setMethod(Request.Method.POST)
             .addQueryParam("owner", owner.getKey())
             .setBody(ApiClient.MAPPER.writeValueAsString(consumer))
             .execute();
@@ -395,7 +395,7 @@ public class ConsumerResourceSpecTest {
 
         Response response = Request.from(adminClient)
             .setPath("/consumers/{consumer_uuid}")
-            .setMethod("PUT")
+            .setMethod(Request.Method.PUT)
             .setPathParam("consumer_uuid", consumer.getUuid())
             .setBody(objectNode.toString())
             .execute();
@@ -785,7 +785,7 @@ public class ConsumerResourceSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         Response response = Request.from(adminClient)
             .setPath("/consumers/{consumer_uuid}/exists")
-            .setMethod("HEAD")
+            .setMethod(Request.Method.HEAD)
             .setPathParam("consumer_uuid", consumer.getUuid())
             .execute();
 
@@ -839,7 +839,7 @@ public class ConsumerResourceSpecTest {
         ConsumerDTO consumer1 = adminClient.consumers().createConsumer(Consumers.random(owner));
         Response response = Request.from(adminClient)
             .setPath("/consumers/exists")
-            .setMethod("POST")
+            .setMethod(Request.Method.POST)
             .setBody(List.of(consumer1.getUuid()))
             .execute();
         assertThat(response.getBody()).isEmpty();

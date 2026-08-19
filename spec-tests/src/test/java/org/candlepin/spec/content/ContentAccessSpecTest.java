@@ -252,7 +252,7 @@ public class ContentAccessSpecTest {
         Response response = Request.from(adminClient)
             .setPath("/owners/{owner_key}")
             .setPathParam("owner_key", owner.getKey())
-            .setMethod("PUT")
+            .setMethod(Request.Method.PUT)
             .setBody(ownerNode.toString().getBytes())
             .execute();
 

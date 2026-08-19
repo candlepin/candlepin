@@ -632,7 +632,7 @@ public class OwnerProductResourceSpecTest {
         Response response = Request.from(client)
             .setPath("/owners/{owner_key}/products")
             .setPathParam("owner_key", owner.getKey())
-            .setMethod("POST")
+            .setMethod(Request.Method.POST)
             .setBody(productNode.toString())
             .execute();
 
@@ -660,7 +660,7 @@ public class OwnerProductResourceSpecTest {
         Response response = Request.from(client)
             .setPath("/owners/{owner_key}/products")
             .setPathParam("owner_key", owner.getKey())
-            .setMethod("POST")
+            .setMethod(Request.Method.POST)
             .setBody(productNode.toString())
             .execute();
 

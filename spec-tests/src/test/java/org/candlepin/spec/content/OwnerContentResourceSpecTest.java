@@ -270,7 +270,7 @@ class OwnerContentResourceSpecTest {
         Response response = Request.from(adminClient)
             .setPath("/owners/{owner_key}/content")
             .setPathParam("owner_key", owner.getKey())
-            .setMethod("POST")
+            .setMethod(Request.Method.POST)
             .setBody(jsonNode.toString())
             .execute();
 
@@ -304,7 +304,7 @@ class OwnerContentResourceSpecTest {
         Response response = Request.from(adminClient)
             .setPath("/owners/{owner_key}/content")
             .setPathParam("owner_key", owner.getKey())
-            .setMethod("POST")
+            .setMethod(Request.Method.POST)
             .setBody(jsonNode.toString())
             .execute();
 
@@ -331,7 +331,7 @@ class OwnerContentResourceSpecTest {
         Response response = Request.from(adminClient)
             .setPath("/owners/{owner_key}/content")
             .setPathParam("owner_key", owner.getKey())
-            .setMethod("POST")
+            .setMethod(Request.Method.POST)
             .setBody(jsonNode.toString())
             .execute();
 
@@ -359,7 +359,7 @@ class OwnerContentResourceSpecTest {
         Response response = Request.from(adminClient)
             .setPath("/owners/{owner_key}/content/batch")
             .setPathParam("owner_key", owner.getKey())
-            .setMethod("POST")
+            .setMethod(Request.Method.POST)
             .setBody("[" + jsonNode.toString() + "]")
             .execute();
 

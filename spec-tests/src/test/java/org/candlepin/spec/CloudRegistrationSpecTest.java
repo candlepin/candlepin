@@ -671,7 +671,7 @@ class CloudRegistrationSpecTest {
         // the GSON serializer being helpful and throwing out null values on our behalf against our wishes.
         Response response = Request.from(ApiClients.bearerToken(cloudAuthDTO.getToken()))
             .setPath("/consumers")
-            .setMethod("POST")
+            .setMethod(Request.Method.POST)
             .setBody(ApiClient.MAPPER.writeValueAsString(consumer))
             .execute();
 
@@ -714,7 +714,7 @@ class CloudRegistrationSpecTest {
         // the GSON serializer being helpful and throwing out null values on our behalf against our wishes.
         Response response = Request.from(ApiClients.bearerToken(cloudAuthDTO.getToken()))
             .setPath("/consumers")
-            .setMethod("POST")
+            .setMethod(Request.Method.POST)
             .setBody(ApiClient.MAPPER.writeValueAsString(consumer))
             .execute();
 

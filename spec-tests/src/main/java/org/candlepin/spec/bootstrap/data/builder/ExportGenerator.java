@@ -279,7 +279,7 @@ public class ExportGenerator {
 
         Request request = Request.from(this.client)
             .setPath(MANIFEST_GENERATOR_ENDPOINT)
-            .setMethod("POST")
+            .setMethod(Request.Method.POST)
             .setBody(body);
 
         // Add in optional query bits
