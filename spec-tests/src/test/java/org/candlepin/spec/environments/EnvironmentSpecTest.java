@@ -529,7 +529,7 @@ public class EnvironmentSpecTest {
 
             ConsumerDTO consumer = Request.from(ApiClients.noAuth())
                 .setPath("/environments/{env_id}/consumers")
-                .setMethod("POST")
+                .setMethod(Request.Method.POST)
                 .setPathParam("env_id", environment.getId())
                 .addQueryParam("owner", owner.getKey())
                 .addQueryParam("activation_keys", activationKey.getName())

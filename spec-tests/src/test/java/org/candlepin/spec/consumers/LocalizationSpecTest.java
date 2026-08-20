@@ -35,7 +35,7 @@ public class LocalizationSpecTest {
     public void shouldReturnranslatedErrorMessage() {
         String expectedMessage = "Ungültige Berechtigungsnachweise";
         Request request = Request.from(ApiClients.basic("admin", "badpass"))
-            .setMethod("POST")
+            .setMethod(Request.Method.POST)
             .addHeader("Accept-Language", "de-DE")
             .setPath("/consumers");
         assertThatStatus(request::execute)

@@ -39,6 +39,18 @@ import java.util.stream.Collectors;
  */
 public class Request {
 
+    public static enum Method {
+        GET,
+        HEAD,
+        POST,
+        PUT,
+        DELETE,
+        CONNECT,
+        OPTIONS,
+        TRACE,
+        PATCH
+    }
+
     private static final Pattern PATH_PARAM_REGEX = Pattern.compile("\\{([^}]+)\\}");
 
     private static final String CONTENT_TYPE_HEADER = "Content-Type";
@@ -48,7 +60,7 @@ public class Request {
 
     private String basePath;
     private String endpoint;
-    private String method;
+    private Method method;
     private Object body;
 
     private Map<String, String> pathParams;
@@ -121,16 +133,22 @@ public class Request {
     }
 
     /**
-     * Sets the HTTP method, or verb, to use for this request. If the method is not explicitly set,
-     * it will default to "GET".
+     * Sets the HTTP method, or verb, to use for this request.
      *
      * @param method
      *  the HTTP method to use for this request, such as GET, PUT, DELETE, etc.
      *
+     * @throws IllegalArgumentException
+     *  if the provided method is null
+     *
      * @return
      *  a reference to this Request
      */
-    public Request setMethod(String method) {   // TODO: change to an enum
+    public Request setMethod(Method method) {
+        if (method == null) {
+            throw new IllegalArgumentException("method is null");
+        }
+
         this.method = method;
         return this;
     }
@@ -320,7 +338,8 @@ public class Request {
     }
 
     /**
-     * Executes this request synchronously, returning the response as a container object.
+     * Executes this request synchronously, returning the response as a container object. If the request
+     * method (or HTTP verb) has not yet been set, the request will be sent as a GET request.
      * <p></p>
      * <strong>Note:</strong> This method will <strong>not</strong> throw an exception as a result
      * of a non-200 response code.
@@ -336,11 +355,11 @@ public class Request {
             throw new IllegalStateException("endpoint has not been set");
         }
 
+        String method = (this.method != null ? this.method : Method.GET).toString();
+
         // Translate the bits we need to translate...
         String path = PATH_PARAM_REGEX.matcher(this.endpoint)
             .replaceAll((match) -> this.pathParams.getOrDefault(match.group(1), ""));
-
-        String method = this.method != null ? this.method : "GET";
 
         List<Pair> qparams = this.queryParams.entrySet()
             .stream()
@@ -354,7 +373,7 @@ public class Request {
 
         try {
             Call call = this.client.buildCall(this.basePath, path, method, qparams, List.of(), this.body,
-                this.headers, Map.of(), Map.of(), new String[] {  }, null);
+                this.headers, Map.of(), Map.of(), new String[] {}, null);
 
             return new Response(call.execute());
         }

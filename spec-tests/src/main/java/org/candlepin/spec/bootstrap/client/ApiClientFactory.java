@@ -144,11 +144,9 @@ public class ApiClientFactory {
         return apiClient;
     }
 
-    public ApiClient createOauthClient(
-        String oauthConsumer, String oauthSecret) {
+    public ApiClient createOauthClient(String oauthConsumer, String oauthSecret) {
         ApiClient apiClient = createDefaultClient();
-        apiClient.setHttpClient(createOkHttpClient(
-            new OauthInterceptor(oauthConsumer, oauthSecret)));
+        apiClient.setHttpClient(createOkHttpClient(new OauthInterceptor(oauthConsumer, oauthSecret)));
 
         return apiClient;
     }
