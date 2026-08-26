@@ -79,7 +79,7 @@ jakarta-servlet = { module = "jakarta.servlet:jakarta.servlet-api", version = "6
 jakarta-validation = { module = "jakarta.validation:jakarta.validation-api", version = "3.1.1" }
 jaxb-api = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version = "4.0.5" }
 jaxb-impl = { module = "org.glassfish.jaxb:jaxb-runtime", version.ref = "jaxb" }
-jimfs = { module = "com.google.jimfs:jimfs", version = "1.3.1" }
+jimfs = { module = "com.google.jimfs:jimfs", version = "1.3.2" }
 junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit" }
 junit-jupiter-api    = { group = "org.junit.jupiter", name = "junit-jupiter-api" }
 junit-jupiter-params = { group = "org.junit.jupiter", name = "junit-jupiter-params" }
