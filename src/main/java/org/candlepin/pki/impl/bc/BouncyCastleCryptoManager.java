@@ -95,10 +95,6 @@ public class BouncyCastleCryptoManager implements CryptoManager {
 
     private final ConcurrentHashMap<Scheme, KeyPairGenerator> keyPairGenerators;
 
-    // TODO: FIXME: This feature flag is temporary and should be removed once all dependent services have
-    // enabled support for PQC certs and negotiation
-    private final boolean enableSchemeNegotiation;
-
     @Inject
     public BouncyCastleCryptoManager(Configuration config, BouncyCastleProvider securityProvider,
         SchemeReader schemeReader, CertificateReader certreader, SubjectKeyIdentifierWriter skiWriter,
@@ -122,9 +118,6 @@ public class BouncyCastleCryptoManager implements CryptoManager {
         // Validate the schemes we've loaded
         Stream.concat(this.schemes.stream(), Stream.of(this.defaultScheme))
             .forEach(this::validateScheme);
-
-        // Temporary feature flag
-        this.enableSchemeNegotiation = config.getBoolean(ConfigProperties.CRYPTO_CLIENT_NEGOTIATION_ENABLED);
     }
 
     private boolean isSchemeKeyBuffering(Scheme scheme) {
@@ -310,17 +303,6 @@ public class BouncyCastleCryptoManager implements CryptoManager {
             throw new IllegalArgumentException("consumer is null");
         }
 
-        // TODO: FIXME: Temporary gating; remove this logic once all dependent services support PQC certs and
-        // auth negotiation
-        ConsumerType ctype = consumer.getType();
-        if (!(this.enableSchemeNegotiation || (ctype != null && ctype.isManifest()))) {
-            log.debug("Scheme negotiation is disabled and consumer is not a manifest consumer, " +
-                "returning default scheme");
-
-            return this.getDefaultCryptoScheme();
-        }
-        // end temp logic
-
         Set<String> supportedKeyAlgoOids = consumer.getSupportedKeyAlgorithmOids();
         Set<String> supportedSignatureAlgoOids = consumer.getSupportedSignatureAlgorithmOids();
 
@@ -335,16 +317,6 @@ public class BouncyCastleCryptoManager implements CryptoManager {
             throw new IllegalArgumentException("consumer is null");
         }
 
-        // TODO: FIXME: Temporary gating; remove this logic once all dependent services support PQC certs and
-        // auth negotiation
-        if (!this.enableSchemeNegotiation) {
-            log.debug("Scheme negotiation is disabled and consumer is not a manifest consumer, " +
-                "returning default scheme");
-
-            return this.getDefaultCryptoScheme();
-        }
-        // end temp logic
-
         Set<String> supportedKeyAlgoOids = consumer.getSupportedKeyAlgorithmOids();
         Set<String> supportedSignatureAlgoOids = consumer.getSupportedSignatureAlgorithmOids();
 
@@ -358,14 +330,6 @@ public class BouncyCastleCryptoManager implements CryptoManager {
         if (consumer == null) {
             throw new IllegalArgumentException("consumer is null");
         }
-
-        // TODO: FIXME: Temporary gating; remove this logic once all dependent services support PQC certs and
-        // auth negotiation
-        ConsumerType ctype = consumer.getType();
-        if (!(this.enableSchemeNegotiation || (ctype != null && ctype.isManifest()))) {
-            return true;
-        }
-        // end temp logic
 
         Set<String> supportedKeyAlgoOids = consumer.getSupportedKeyAlgorithmOids();
         Set<String> supportedSignatureAlgoOids = consumer.getSupportedSignatureAlgorithmOids();
