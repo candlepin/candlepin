@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.config.ConfigProperties;
@@ -173,7 +174,11 @@ public class IdentityCertificateGeneratorTest extends DatabaseTestFixture {
         assertNull(consumer.getIdCert());
 
         ConsumerKeyPairGenerator keyPairGenerator = mock(ConsumerKeyPairGenerator.class);
-        doThrow(KeyException.class).when(keyPairGenerator).getConsumerKeyPair(any(Scheme.class), consumer);
+
+        doThrow(KeyException.class)
+            .when(keyPairGenerator)
+            .getConsumerKeyPair(any(Scheme.class), eq(consumer));
+
         IdentityCertificateGenerator generator = new IdentityCertificateGenerator(this.config,
             this.cryptoManager,
             CryptoUtil.getPemEncoder(),
@@ -279,7 +284,10 @@ public class IdentityCertificateGeneratorTest extends DatabaseTestFixture {
         assertNull(consumer.getIdCert());
 
         ConsumerKeyPairGenerator keyPairGenerator = mock(ConsumerKeyPairGenerator.class);
-        doThrow(KeyException.class).when(keyPairGenerator).getConsumerKeyPair(any(Scheme.class), consumer);
+        doThrow(KeyException.class)
+            .when(keyPairGenerator)
+            .getConsumerKeyPair(any(Scheme.class), eq(consumer));
+
         IdentityCertificateGenerator generator = new IdentityCertificateGenerator(this.config,
             this.cryptoManager,
             CryptoUtil.getPemEncoder(),
