@@ -350,8 +350,6 @@ public class SCACertificateGenerator {
         boolean keyChanged = this.consumerKeyPairGenerator.hasKeyPairChangedSince(scheme, consumer,
             scaCertificate.getUpdated());
 
-        log.debug("CHECKING IF THE CERT HAS EXPIRED AND ITS KEY IS CURRENT: {}, {}", certExpired, keyChanged);
-
         if (certExpired || keyChanged) {
             log.info("Generating new SCA x509 certificate for consumer: \"{}\"", consumer.getUuid());
 

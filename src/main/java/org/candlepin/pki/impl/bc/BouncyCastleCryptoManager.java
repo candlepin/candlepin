@@ -19,7 +19,6 @@ import org.candlepin.config.Configuration;
 import org.candlepin.config.ConfigurationException;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerType;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
@@ -82,10 +81,6 @@ public class BouncyCastleCryptoManager implements CryptoManager {
     private final Scheme defaultScheme;
     private final File upstreamCertificateRepo;
 
-    // TODO: FIXME: This feature flag is temporary and should be removed once all dependent services have
-    // enabled support for PQC certs and negotiation
-    private final boolean enableSchemeNegotiation;
-
     @Inject
     public BouncyCastleCryptoManager(Configuration config, BouncyCastleProvider securityProvider,
         SchemeReader schemeReader, CertificateReader certreader, SubjectKeyIdentifierWriter skiWriter,
@@ -107,9 +102,6 @@ public class BouncyCastleCryptoManager implements CryptoManager {
         Stream.concat(this.schemes.stream(), Stream.of(this.defaultScheme))
             .distinct()
             .forEach(this::validateScheme);
-
-        // Temporary feature flag
-        this.enableSchemeNegotiation = config.getBoolean(ConfigProperties.CRYPTO_CLIENT_NEGOTIATION_ENABLED);
     }
 
     /**
@@ -247,17 +239,6 @@ public class BouncyCastleCryptoManager implements CryptoManager {
             throw new IllegalArgumentException("consumer is null");
         }
 
-        // TODO: FIXME: Temporary gating; remove this logic once all dependent services support PQC certs and
-        // auth negotiation
-        ConsumerType ctype = consumer.getType();
-        if (!(this.enableSchemeNegotiation || (ctype != null && ctype.isManifest()))) {
-            log.debug("Scheme negotiation is disabled and consumer is not a manifest consumer, " +
-                "returning default scheme");
-
-            return this.getDefaultCryptoScheme();
-        }
-        // end temp logic
-
         Set<String> supportedKeyAlgoOids = consumer.getSupportedKeyAlgorithmOids();
         Set<String> supportedSignatureAlgoOids = consumer.getSupportedSignatureAlgorithmOids();
 
@@ -272,16 +253,6 @@ public class BouncyCastleCryptoManager implements CryptoManager {
             throw new IllegalArgumentException("consumer is null");
         }
 
-        // TODO: FIXME: Temporary gating; remove this logic once all dependent services support PQC certs and
-        // auth negotiation
-        if (!this.enableSchemeNegotiation) {
-            log.debug("Scheme negotiation is disabled and consumer is not a manifest consumer, " +
-                "returning default scheme");
-
-            return this.getDefaultCryptoScheme();
-        }
-        // end temp logic
-
         Set<String> supportedKeyAlgoOids = consumer.getSupportedKeyAlgorithmOids();
         Set<String> supportedSignatureAlgoOids = consumer.getSupportedSignatureAlgorithmOids();
 
@@ -295,14 +266,6 @@ public class BouncyCastleCryptoManager implements CryptoManager {
         if (consumer == null) {
             throw new IllegalArgumentException("consumer is null");
         }
-
-        // TODO: FIXME: Temporary gating; remove this logic once all dependent services support PQC certs and
-        // auth negotiation
-        ConsumerType ctype = consumer.getType();
-        if (!(this.enableSchemeNegotiation || (ctype != null && ctype.isManifest()))) {
-            return true;
-        }
-        // end temp logic
 
         Set<String> supportedKeyAlgoOids = consumer.getSupportedKeyAlgorithmOids();
         Set<String> supportedSignatureAlgoOids = consumer.getSupportedSignatureAlgorithmOids();
