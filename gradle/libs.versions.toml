@@ -27,7 +27,7 @@ maven-war-plugin = "3.5.1"
 [plugins]
 dependency-check = { id = "org.owasp.dependencycheck", version = "13.0.0" }
 gradle-versions = { id = "com.github.ben-manes.versions", version = "0.61.0" }
-nebula-lint = { id = "nebula.lint", version = "21.2.1" }
+nebula-lint = { id = "nebula.lint", version = "21.2.2" }
 openapi-generator = { id = "org.openapi.generator", version.ref = "openapi-generator" }
 sonarqube = { id = "org.sonarqube", version = "7.4.0.8496" }
 test-logger = { id = "com.adarshr.test-logger", version.ref = "test-logger" }
