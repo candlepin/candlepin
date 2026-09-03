@@ -438,7 +438,6 @@ public class OwnerProductResource implements OwnerProductApi {
             throw new IllegalArgumentException("owner is null");
         }
 
-        String namespace = owner.getKey();
         Set<String> cids = new HashSet<>();
 
         Collection<ProductContentDTO> pcdtos = pdto.getProductContent();

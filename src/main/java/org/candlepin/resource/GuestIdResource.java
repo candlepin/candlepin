@@ -34,7 +34,6 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
-import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.paging.PagingUtilFactory;
 import org.candlepin.resource.server.v1.GuestIdsApi;
 import org.candlepin.resource.util.GuestMigration;
@@ -186,8 +185,6 @@ public class GuestIdResource implements GuestIdsApi {
         for (GuestIdDTO gid : consumer.getGuestIds()) {
             allGuestIds.add(gid.getGuestId());
         }
-        VirtConsumerMap guestConsumerMap = consumerCurator.getGuestConsumersMap(
-            toUpdate.getOwnerId(), allGuestIds);
 
         GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(consumer, toUpdate);
 

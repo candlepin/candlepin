@@ -134,8 +134,6 @@ public class EntitlementRules implements Enforcer {
     public Map<String, ValidationResult> preEntitlement(Consumer consumer, Consumer host,
         Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
 
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
         /* This document describes the java script portion of the pre entitlement rules check:
          * http://www.candlepinproject.org/docs/candlepin/pre_entitlement_rules_check.html
          */
@@ -185,8 +183,6 @@ public class EntitlementRules implements Enforcer {
     @SuppressWarnings("checkstyle:indentation")
     public List<Pool> filterPools(Consumer consumer, List<Pool> pools, boolean showAll) {
         JsonJsContext args = new JsonJsContext(objectMapper);
-
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         Stream<PoolDTO> poolStream = pools == null ? Stream.empty() :
             pools.stream().map(this.translator.getStreamMapper(Pool.class, PoolDTO.class));
