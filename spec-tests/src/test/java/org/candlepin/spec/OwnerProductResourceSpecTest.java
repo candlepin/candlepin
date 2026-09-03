@@ -410,12 +410,12 @@ public class OwnerProductResourceSpecTest {
         pool3.setDerivedProvidedProducts(Set.of(new ProvidedProductDTO().productId(product3.getId())));
         ownerApi.createPool(owner3.getKey(), pool3);
 
-        verifyRefreshPoolJob(owner1.getKey(), prod4.getId(), true);
-        verifyRefreshPoolJob(owner2.getKey(), prod5d.getId(), true);
-        verifyRefreshPoolJob(owner3.getKey(), product1.getId(), true);
-        verifyRefreshPoolJob(owner3.getKey(), product3.getId(), true);
+        verifyRefreshPoolJob(owner1.getKey(), prod4.getId());
+        verifyRefreshPoolJob(owner2.getKey(), prod5d.getId());
+        verifyRefreshPoolJob(owner3.getKey(), product1.getId());
+        verifyRefreshPoolJob(owner3.getKey(), product3.getId());
 
-        assertNotFound(() -> ownerProductApi.refreshPoolsForProduct(owner1.getKey(), "bad_id", true));
+        assertNotFound(() -> ownerProductApi.refreshPoolsForProduct(owner1.getKey(), "bad_id"));
     }
 
     @Test
@@ -746,8 +746,8 @@ public class OwnerProductResourceSpecTest {
         return product;
     }
 
-    private void verifyRefreshPoolJob(String ownerKey, String productId, boolean lazyRegen) {
-        AsyncJobStatusDTO job = ownerProductApi.refreshPoolsForProduct(ownerKey, productId, lazyRegen);
+    private void verifyRefreshPoolJob(String ownerKey, String productId) {
+        AsyncJobStatusDTO job = ownerProductApi.refreshPoolsForProduct(ownerKey, productId);
         assertNotNull(job);
         AsyncJobStatusDTO status = jobsApi.waitForJob(job.getId());
         assertEquals("RefreshPoolsForProductJob", status.getKey());

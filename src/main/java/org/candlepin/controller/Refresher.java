@@ -14,7 +14,6 @@
  */
 package org.candlepin.controller;
 
-import org.candlepin.controller.util.ExpectedExceptionRetryWrapper;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -26,8 +25,6 @@ import org.candlepin.service.exception.subscription.SubscriptionServiceException
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
-import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.exception.LockAcquisitionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,12 +43,6 @@ import java.util.Set;
 
 public class Refresher {
     private static final Logger log = LoggerFactory.getLogger(Refresher.class);
-
-    /**
-     * The number of times to retry the refresh operation if it fails as a result of a constraint
-     * violation.
-     */
-    private static final int CONSTRAINT_VIOLATION_RETRIES = 4;
 
     private final PoolManager poolManager;
     private final SubscriptionServiceAdapter subAdapter;
@@ -160,16 +151,16 @@ public class Refresher {
                 }
             };
 
-            // Retry this operation if we hit a unique constraint violation (two orgs creating the
-            // same products or content in simultaneous transactions), or we deadlock (same deal,
-            // but in a spicy entity order).
-            new ExpectedExceptionRetryWrapper()
-                .addException(ConstraintViolationException.class)
-                .addException(LockAcquisitionException.class)
-                .retries(CONSTRAINT_VIOLATION_RETRIES)
-                .execute(() -> this.poolCurator.transactional()
-                    .allowExistingTransactions()
-                    .execute(refreshTask));
+            // Impl note:
+            // We used to retry ConstraintViolationException and LockAcquisitionException here,
+            // but this method already runs inside an existing transaction. After one of these
+            // errors the transaction is aborted, so retrying here only fails again.
+            //
+            // Retry has to start with a new transaction, so it is now handled by the calling
+            // job. Let the exception propagate.
+            this.poolCurator.transactional()
+                .allowExistingTransactions()
+                .execute(refreshTask);
         }
     }
 

@@ -59,6 +59,9 @@ import org.candlepin.util.Util;
 import org.candlepin.util.function.CheckedRunnable;
 import org.candlepin.util.function.CheckedSupplier;
 
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.LockAcquisitionException;
+
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -595,6 +598,29 @@ public class TestUtil {
     public static Date createDateOffset(int years, int months, int days) {
         LocalDate now = LocalDate.now();
         return createDate(now.getYear() + years, now.getMonthValue() + months, now.getDayOfMonth() + days);
+    }
+
+    /**
+     * Creates an exception of one of the types that indicate a transient database race (a
+     * constraint violation or a lock acquisition failure), useful for testing retry behavior
+     * around such races.
+     *
+     * @param exceptionClass
+     *     the class of the exception to create; must be either ConstraintViolationException or
+     *     LockAcquisitionException
+     *
+     * @param message
+     *     the message to attach to the created exception
+     *
+     * @return a new exception of the given class
+     */
+    public static Exception createTransientRaceException(Class<? extends Exception> exceptionClass,
+        String message) {
+        if (exceptionClass == ConstraintViolationException.class) {
+            return new ConstraintViolationException(message, null, null);
+        }
+
+        return new LockAcquisitionException(message, null);
     }
 
     public static User createUser(String username, String password,
