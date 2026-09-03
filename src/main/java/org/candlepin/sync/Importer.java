@@ -318,7 +318,14 @@ public class Importer {
     }
 
     public void recordImportFailure(Owner owner, Throwable error, String filename) {
-        ImportRecord record = new ImportRecord(owner);
+        // Impl note:
+        // The provided owner may have been loaded in a session/transaction that's since been rolled
+        // back (e.g. the import failed due to a deadlock or constraint violation on a shared
+        // product/content row). Its lazy associations, such as the upstream consumer, can no longer
+        // be initialized from that stale session, so we re-fetch a fresh copy before touching them.
+        Owner refreshedOwner = owner != null ? this.ownerCurator.get(owner.getId()) : null;
+
+        ImportRecord record = new ImportRecord(refreshedOwner);
         log.error("Recording import failure", error);
 
         if (error instanceof ImporterException) {
@@ -328,7 +335,7 @@ public class Importer {
                 record.setGeneratedDate(meta.getCreated());
             }
         }
-        record.setUpstreamConsumer(createImportUpstreamConsumer(owner, null));
+        record.setUpstreamConsumer(createImportUpstreamConsumer(refreshedOwner, null));
         record.setFileName(filename);
 
         record.recordStatus(ImportRecord.Status.FAILURE, error.getMessage());
