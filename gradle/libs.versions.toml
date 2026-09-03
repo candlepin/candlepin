@@ -18,7 +18,7 @@ test-logger = "4.0.0"
 # Maven uses the correct plugin versions. Corresponding [libraries] entries at the bottom of this
 # file map these aliases to real Maven groupId:artifactId coordinates so Dependabot can detect them.
 maven-build-helper-plugin = "3.6.1"
-maven-compiler-plugin = "3.15.0"
+maven-compiler-plugin = "3.16.0"
 maven-exec-plugin = "3.6.3"
 maven-jar-plugin = "3.5.1"
 maven-resources-plugin = "3.5.0"
