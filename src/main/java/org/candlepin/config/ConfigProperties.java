@@ -463,12 +463,6 @@ public class ConfigProperties {
             this.put(LEGACY_CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
             this.put(LEGACY_CA_CERT_UPSTREAM, "/etc/candlepin/certs/upstream");
 
-            // TODO: FIXME: Temporary config controlling whether or not non-manifest consumers can perform
-            // crypto scheme negotiation. Remove this config once dependent systems are updated to support
-            // PQC certs and negotiation.
-            this.put(CRYPTO_CLIENT_NEGOTIATION_ENABLED, "true");
-            // end temp logic
-
             this.put(ACTIVATION_DEBUG_PREFIX, "");
 
             this.put(CPM_PROVIDER, "artemis");

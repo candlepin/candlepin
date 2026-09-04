@@ -34,6 +34,7 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Date;
 import java.util.Objects;
 
 import jakarta.inject.Inject;
@@ -50,6 +51,18 @@ public class ConsumerKeyPairGenerator {
 
     /** The algorithm to use when the key pair data does not define it; used only for legacy entries */
     private static final String LEGACY_KEYPAIR_ALGORITHM = "RSA:4096";
+
+    /** Enum defining the various states a consumer's key pair may be in */
+    private static enum State {
+        /** The consumer does not yet have a key pair defined */
+        NO_KEY_PAIR,
+
+        /** The key pair exists, but is not of the algorithm the consumer needs */
+        ALGORITHM_MISMATCH,
+
+        /** The key pair exists and appears to be current */
+        CURRENT
+    }
 
     private final CryptoManager cryptoManager;
     private final KeyPairDataCurator keyPairDataCurator;
@@ -168,6 +181,75 @@ public class ConsumerKeyPairGenerator {
         }
     }
 
+    private State getConsumerKeyPairState(Scheme scheme, Consumer consumer) {
+        KeyPairData kpdata = consumer.getKeyPairData();
+        String schemeKeyAlgorithm = this.buildAlgorithmString(scheme);
+
+        // Check that the consumer even has a key pair to begin with
+        if (kpdata == null) {
+            return State.NO_KEY_PAIR;
+        }
+
+        // If the algorithm isn't defined in the keypair data, assume it's a legacy keypair and correct it.
+        if (kpdata.getAlgorithm() == null) {
+            kpdata.setAlgorithm(LEGACY_KEYPAIR_ALGORITHM);
+        }
+
+        // Does the algorithm string match? If not, then it doesn't matter if we can decode the pair: we're
+        // going to throw it out anyway.
+        if (!schemeKeyAlgorithm.equals(kpdata.getAlgorithm())) {
+            return State.ALGORITHM_MISMATCH;
+        }
+
+        return State.CURRENT;
+    }
+
+    /**
+     * Checks to see if the {@link Consumer}'s key pair has changed since a point in time.
+     * <p>
+     * A key pair is considered changed if the the updated or created date is after the provided since date.
+     * This method will also return true if the consumer does not have a key pair or if the algorithm used to
+     * generate the key pair does not match the algorithm in the provided {@link Scheme}.
+     *
+     * @param scheme
+     *  scheme that contains the algorithm that is used to validate the consumer's key pair
+     *
+     * @param consumer
+     *  consumer who has a key pair to check
+     *
+     * @param since
+     *  the point in time that dictates if a key pair is considered changed or not
+     *
+     * @throws IllegalArgumentException
+     *  if the provided scheme, consumer, or since date is null
+     *
+     * @return true if the key pair has changed
+     */
+    public boolean hasKeyPairChangedSince(Scheme scheme, Consumer consumer, Date since) {
+        if (scheme == null) {
+            throw new IllegalArgumentException("scheme is null");
+        }
+
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        if (since == null) {
+            throw new IllegalArgumentException("since is null");
+        }
+
+        // Verify the keypair is current according to the provided scheme
+        if (this.getConsumerKeyPairState(scheme, consumer) != State.CURRENT) {
+            return true;
+        }
+
+        // Check if it has changed since the given date...
+        KeyPairData kpdata = consumer.getKeyPairData();
+
+        return (kpdata.getUpdated() != null && since.before(kpdata.getUpdated())) ||
+            (kpdata.getCreated() != null && since.before(kpdata.getCreated()));
+    }
+
     /**
      * Fetches the key pair for the specified consumer, generating or regenerating it if necessary. If the
      * key pair requires generation or regeneration, the value stored on the consumer will be updated and
@@ -189,8 +271,11 @@ public class ConsumerKeyPairGenerator {
      * @param consumer
      *  the consumer for which to fetch a key pair
      *
+     * @param scheme
+     *  the scheme to use for generating the key pair
+     *
      * @throws IllegalArgumentException
-     *  if the given consumer is null
+     *  if the consumer or scheme are null
      *
      * @throws CryptoCapabilitiesException
      *  if a crypto scheme cannot be negotiated for the given consumer
@@ -201,73 +286,70 @@ public class ConsumerKeyPairGenerator {
      * @return
      *  the key pair for the given consumer
      */
-    public KeyPair getConsumerKeyPair(Consumer consumer) throws CryptoCapabilitiesException, KeyException {
+    public KeyPair getConsumerKeyPair(Scheme scheme, Consumer consumer)
+        throws CryptoCapabilitiesException, KeyException {
+
         if (consumer == null) {
             throw new IllegalArgumentException("consumer is null");
         }
 
-        KeyPairData kpdata = consumer.getKeyPairData();
+        if (scheme == null) {
+            throw new IllegalArgumentException("scheme is null");
+        }
 
-        Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
+        KeyPairData kpdata = consumer.getKeyPairData();
         String schemeKeyAlgorithm = this.buildAlgorithmString(scheme);
 
-        // Check that the consumer even has a key pair to begin with
-        if (kpdata == null) {
-            log.debug("Generating new key pair for consumer w/uuid \"{}\"", consumer.getUuid());
+        State kpstate = this.getConsumerKeyPairState(scheme, consumer);
+        if (kpstate == State.CURRENT) {
+            KeyPair keypair = this.processAsPKCS8(kpdata);
+            if (keypair != null) {
+                // This is our primary path. We're using the current storage format, and the algorithm lines up.
+                return keypair;
+            }
 
-            KeyPair keypair = this.generateKeyPair(scheme);
-
-            kpdata = new KeyPairData()
-                .setPublicKeyData(keypair.getPublic().getEncoded())
-                .setPrivateKeyData(keypair.getPrivate().getEncoded())
-                .setAlgorithm(schemeKeyAlgorithm);
-
-            this.keyPairDataCurator.create(kpdata);
-            consumer.setKeyPairData(kpdata);
-
-            return keypair;
+            // If we couldn't decode the keypair, we have no idea what format this key pair is stored as (or
+            // it has become corrupted, or obsolete). Generate a new key pair for this consumer.
         }
 
-        // If the algorithm isn't defined in the keypair data, assume it's a legacy keypair and update the
-        // kpdata accordingly.
-        if (kpdata.getAlgorithm() == null) {
-            kpdata.setAlgorithm(LEGACY_KEYPAIR_ALGORITHM);
+        // Generate a new key pair for the consumer
+        KeyPair keypair = this.generateKeyPair(scheme);
+
+        switch (kpstate) {
+            case NO_KEY_PAIR:
+                log.debug("Generating new key pair for consumer w/uuid \"{}\"", consumer.getUuid());
+
+                kpdata = new KeyPairData()
+                    .setPublicKeyData(keypair.getPublic().getEncoded())
+                    .setPrivateKeyData(keypair.getPrivate().getEncoded())
+                    .setAlgorithm(schemeKeyAlgorithm);
+
+                this.keyPairDataCurator.create(kpdata);
+                consumer.setKeyPairData(kpdata);
+                break;
+
+            case ALGORITHM_MISMATCH:
+                log.debug("Generating new key pair for consumer w/uuid \"{}\": algorithm mismatch ({} != {})",
+                    consumer.getUuid(), schemeKeyAlgorithm, kpdata.getAlgorithm());
+
+                kpdata.setPublicKeyData(keypair.getPublic().getEncoded())
+                    .setPrivateKeyData(keypair.getPrivate().getEncoded())
+                    .setAlgorithm(schemeKeyAlgorithm);
+                break;
+
+            case CURRENT:
+                log.debug("Generating new key pair for consumer w/uuid \"{}\": unable to decode cached " +
+                    "key pair", consumer.getUuid());
+
+                kpdata.setPublicKeyData(keypair.getPublic().getEncoded())
+                    .setPrivateKeyData(keypair.getPrivate().getEncoded())
+                    .setAlgorithm(schemeKeyAlgorithm);
+                break;
+
+            default:
+                // Intentionally ignoring states we don't care about
+                break;
         }
-
-        // Does the algorithm string match? If not, then it doesn't matter if we can decode the pair: we're
-        // going to throw it out anyway.
-        if (!schemeKeyAlgorithm.equals(kpdata.getAlgorithm())) {
-            log.debug("Generating new key pair for consumer w/uuid \"{}\": algorithm mismatch ({} != {})",
-                consumer.getUuid(), schemeKeyAlgorithm, kpdata.getAlgorithm());
-
-            KeyPair keypair = this.generateKeyPair(scheme);
-
-            kpdata.setPublicKeyData(keypair.getPublic().getEncoded())
-                .setPrivateKeyData(keypair.getPrivate().getEncoded())
-                .setAlgorithm(schemeKeyAlgorithm);
-
-            return keypair;
-        }
-
-        // Attempt to decode the key pair data as a pair of PKCS8 blobs
-        KeyPair keypair = this.processAsPKCS8(kpdata);
-        if (keypair != null) {
-            // This is our primary path. We're using the current storage format, and the algorithm lines up.
-            return keypair;
-        }
-
-        // If we couldn't decode the keypair, we have no idea what format this key pair is stored as (or
-        // it has become corrupted, or obsolete). Generate a new key pair for this consumer
-        log.debug("Generating new key pair for consumer w/uuid \"{}\": unable to decode cached key pair",
-            consumer.getUuid());
-
-        keypair = this.generateKeyPair(scheme);
-
-        // Regardless, at this point we need to update the key pair cache for this consumer so it's
-        // stored as a PKCS8 keypair with the correct algorithm string.
-        kpdata.setPublicKeyData(keypair.getPublic().getEncoded())
-            .setPrivateKeyData(keypair.getPrivate().getEncoded())
-            .setAlgorithm(schemeKeyAlgorithm);
 
         return keypair;
     }

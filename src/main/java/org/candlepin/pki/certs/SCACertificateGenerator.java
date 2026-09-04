@@ -70,11 +70,13 @@ public class SCACertificateGenerator {
 
     private static final String SCA_ENTITLEMENT_TYPE = "OrgLevel";
 
+    public record SCACertificateComponents(SCACertificate certificate, ContentAccessPayload payload) {};
+
     private final Configuration configuration;
 
     private final CryptoManager cryptoManager;
     private final PemEncoder pemEncoder;
-    private final ConsumerKeyPairGenerator keyPairGenerator;
+    private final ConsumerKeyPairGenerator consumerKeyPairGenerator;
     private final X509V3ExtensionUtil v3ExtensionUtil;
     private final V3CapabilityCheck v3CapabilityCheck;
     private final ContentAccessPayloadBuilderProvider caPayloadBuilderProvider;
@@ -90,7 +92,7 @@ public class SCACertificateGenerator {
         Configuration configuration,
         CryptoManager cryptoManager,
         PemEncoder pemEncoder,
-        ConsumerKeyPairGenerator keyPairGenerator,
+        ConsumerKeyPairGenerator consumerKeyPairGenerator,
         X509V3ExtensionUtil v3ExtensionUtil,
         V3CapabilityCheck v3CapabilityCheck,
         ContentAccessPayloadBuilderProvider caPayloadBuilderProvider,
@@ -102,7 +104,7 @@ public class SCACertificateGenerator {
 
         this.cryptoManager = Objects.requireNonNull(cryptoManager);
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
-        this.keyPairGenerator = Objects.requireNonNull(keyPairGenerator);
+        this.consumerKeyPairGenerator = Objects.requireNonNull(consumerKeyPairGenerator);
         this.v3ExtensionUtil = Objects.requireNonNull(v3ExtensionUtil);
         this.v3CapabilityCheck = Objects.requireNonNull(v3CapabilityCheck);
         this.caPayloadBuilderProvider = Objects.requireNonNull(caPayloadBuilderProvider);
@@ -201,6 +203,62 @@ public class SCACertificateGenerator {
 
         try {
             return this.getCertificate(scheme, owner, consumer, environments);
+        }
+        catch (KeyException e) {
+            throw new CertificateCreationException("Exception occurred while building certificate", e);
+        }
+    }
+
+    /**
+     * Retrieves the SCA certificate components for a provided {@link Consumer}. This method combines
+     * functionality from {@link #getX509Certificate} and {@link #getContentPayload} into one method.
+     *
+     * @param consumer
+     *  the consumer to retrieve SCA certificate components for
+     *
+     * @throws IllegalArgumentException
+     *  if the provided consumer is null
+     *
+     * @throws ConcurrentContentPayloadCreationException
+     *  if a concurrent request persists the content payload and causes a database constraint violation
+     *
+     * @throws CryptoCapabilitiesException
+     *  if unable to resolve a crypto scheme for the provided consumer or the consumer has specified
+     *  cryptographic capabilities that do not permit any known scheme to be selected
+     *
+     * @return the consumer's SCA certificate components or null if the consumer belongs to a non-SCA owner or
+     *  the consumer is not v3 cert capable
+     */
+    public SCACertificateComponents getSCACertificateComponents(Consumer consumer)
+        throws ConcurrentContentPayloadCreationException, CryptoCapabilitiesException {
+
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        Owner owner = consumer.getOwner();
+        if (owner == null || !owner.isUsingSimpleContentAccess()) {
+            log.debug("Consumer is not in SCA mode");
+            return null;
+        }
+
+        if (!v3CapabilityCheck.isCertV3Capable(consumer)) {
+            log.debug("Consumer is not v3 cert capable");
+            return null;
+        }
+
+        // Impl note:
+        // These need to be ordered according to priority! At the time of writing, getConsumerEnvironments
+        // does this, but if that ever changes, we absolutely need that sorting here.
+        Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
+        List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
+
+        try {
+            SCACertificate certificate = this.getCertificate(scheme, owner, consumer, environments);
+            ContentAccessPayload payload = this.getContentAccessPayload(scheme, owner, consumer,
+                environments);
+
+            return new SCACertificateComponents(certificate, payload);
         }
         catch (KeyException e) {
             throw new CertificateCreationException("Exception occurred while building certificate", e);
@@ -308,12 +366,11 @@ public class SCACertificateGenerator {
             consumer.setContentAccessCert(scaCertificate);
         }
 
-        KeyPair keypair = this.keyPairGenerator.getConsumerKeyPair(consumer);
-        byte[] privateKeyBytes = this.pemEncoder.encodeAsBytes(keypair.getPrivate());
+        boolean certExpired = this.hasCertificateExpired(scaCertificate);
+        boolean keyChanged = this.consumerKeyPairGenerator.hasKeyPairChangedSince(scheme, consumer,
+            scaCertificate.getUpdated());
 
-        if (this.hasCertificateExpired(scaCertificate) ||
-            this.hasCertificatePrivateKeyChanged(scaCertificate, privateKeyBytes)) {
-
+        if (certExpired || keyChanged) {
             log.info("Generating new SCA x509 certificate for consumer: \"{}\"", consumer.getUuid());
 
             CertificateSerial serial = scaCertificate.getSerial();
@@ -325,6 +382,9 @@ public class SCACertificateGenerator {
             OffsetDateTime end = start.plusYears(1L);
 
             serial = this.createSerial(end);
+
+            KeyPair keypair = this.consumerKeyPairGenerator.getConsumerKeyPair(scheme, consumer);
+            byte[] privateKeyBytes = this.pemEncoder.encodeAsBytes(keypair.getPrivate());
 
             X509Certificate x509Cert = this.buildX509Certificate(scheme, owner, consumer, environments,
                 serial, keypair, start, end);
