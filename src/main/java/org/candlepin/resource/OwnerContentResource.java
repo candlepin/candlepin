@@ -311,7 +311,6 @@ public class OwnerContentResource implements OwnerContentApi {
     @Transactional
     public Stream<ContentDTO> createContentBatch(String ownerKey, List<ContentDTO> contents) {
         Owner owner = this.getOwnerByKey(ownerKey);
-        String namespace = owner.getKey();
 
         contents.forEach(this::validateContentForCreation);
 

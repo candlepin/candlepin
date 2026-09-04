@@ -1660,7 +1660,6 @@ public class ConsumerResource implements ConsumerApi {
         this.validator.validateCollectionElementsNotNull(dto::getInstalledProducts,
             dto::getGuestIds, dto::getCapabilities);
 
-        Principal principal = this.principalProvider.get();
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
         dto.setUuid(uuid);
 
@@ -2237,7 +2236,6 @@ public class ConsumerResource implements ConsumerApi {
     @Transactional
     public void deleteConsumer(@Verify(Consumer.class) String uuid) {
         log.debug("Deleting consumer_uuid {}", uuid);
-        Principal principal = this.principalProvider.get();
         Consumer toDelete = consumerCurator.findByUuid(uuid);
         // The consumer may have already been deleted if multiple requests come in at the same time.
         // NOTE: The Verify on the Consumer class should handle cases where a 404 should be thrown
@@ -2981,7 +2979,6 @@ public class ConsumerResource implements ConsumerApi {
     @Transactional
     public void unbindByEntitlementId(@Verify(Consumer.class) String consumerUuid,
         @Verify(Entitlement.class) String dbid) {
-        Principal principal = this.principalProvider.get();
         consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Entitlement toDelete = entitlementCurator.get(dbid);
         if (toDelete != null) {
@@ -3043,7 +3040,6 @@ public class ConsumerResource implements ConsumerApi {
         String entitlementId, Boolean lazyRegen, Boolean cleanupEntitlements) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         // Normalize boxed flags to avoid any NPEs during unboxing
         lazyRegen = lazyRegen == null || lazyRegen;
@@ -3116,9 +3112,7 @@ public class ConsumerResource implements ConsumerApi {
     @Transactional
     public AsyncJobStatusDTO exportDataAsync(@Verify(Consumer.class) String consumerUuid,
         String cdnLabel, String webAppPrefix, String apiUrl) {
-        HttpServletResponse response = ResteasyContext.getContextData(HttpServletResponse.class);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
 
@@ -3151,7 +3145,6 @@ public class ConsumerResource implements ConsumerApi {
     @Transactional
     public File downloadExistingExport(@Verify(Consumer.class) String consumerUuid, String exportId) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
         HttpServletResponse response = ResteasyContext.getContextData(HttpServletResponse.class);
         // *******************************************************************************
         // NOTE: If changing the path or parameters of this end point, be sure to update
@@ -3191,7 +3184,6 @@ public class ConsumerResource implements ConsumerApi {
     @Transactional
     public ConsumerDTO regenerateIdentityCertificates(@Verify(Consumer.class) String uuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
         consumer = regenerateIdentityCertificate(consumer);
         return translator.translate(consumer, ConsumerDTO.class);
     }
@@ -3289,7 +3281,6 @@ public class ConsumerResource implements ConsumerApi {
     @Override
     @Transactional
     public ConsumerDTO getHost(@Verify(Consumer.class) String consumerUuid) {
-        Principal principal = this.principalProvider.get();
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
         if (consumer.getFact(Consumer.Facts.VIRT_UUID) == null ||
@@ -3363,7 +3354,6 @@ public class ConsumerResource implements ConsumerApi {
 
         if (uuids != null && !uuids.isEmpty()) {
             for (Consumer consumer : consumerCurator.findByUuids(uuids)) {
-                ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
                 ComplianceStatus status;
 
                 status = complianceRules.getStatus(consumer, null);
