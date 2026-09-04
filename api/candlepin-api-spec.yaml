@@ -6665,7 +6665,7 @@ paths:
 
   /owners/{owner_key}/products/{product_id}/subscriptions:
     put:
-      description: Refreshes Pools by Product
+      description: Refreshes Pools by Product and certificated are regenerated for them immediately.
       tags:
         - owner_product
       operationId: refreshPoolsForProduct
@@ -6683,13 +6683,6 @@ paths:
           required: true
           schema:
             type: string
-        - name: lazy_regen
-          in: query
-          description: Regenerate certificates immediatelly or allow them to be regenerated on demand
-          required: true
-          schema:
-            type: boolean
-            default: true
       responses:
         200:
           description: A successful operation
