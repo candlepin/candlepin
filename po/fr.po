@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-09 08:08+0000\n"
-"PO-Revision-Date: 2026-05-03 13:31+0000\n"
+"PO-Revision-Date: 2026-09-08 15:21+0000\n"
 "Last-Translator: Léane GRASSER <leane.grasser@proton.me>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
 "candlepin/master/fr/>\n"
@@ -21,7 +21,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 5.17.1\n"
+"X-Generator: Weblate 2026.9.1\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -1757,9 +1757,7 @@ msgstr ""
 "partir des ID : {1}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:246
-#, fuzzy, java-format
-#| msgid ""
-#| "Cannot attach content defined outside of the organization's namespace: {0}"
+#, java-format
 msgid ""
 "Cannot attach content defined outside of the organization''s namespace: {0}"
 msgstr ""
@@ -1789,9 +1787,7 @@ msgstr ""
 "à partir des ID : {1}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:416
-#, fuzzy, java-format
-#| msgid ""
-#| "Cannot attach product defined outside of the organization's namespace: {0}"
+#, java-format
 msgid ""
 "Cannot attach product defined outside of the organization''s namespace: {0}"
 msgstr ""
@@ -2685,8 +2681,7 @@ msgid "may have unsafe HTML content"
 msgstr "peut avoir un contenu HTML non sécurisé"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:86
-#, fuzzy, java-format
-#| msgid "script expression \"{0}\" didn't evaluate to true"
+#, java-format
 msgid "script expression \"{0}\" didn''t evaluate to true"
 msgstr "l’expression de script « {0} » n’a pas été évaluée comme vraie"
 
