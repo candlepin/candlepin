@@ -164,8 +164,8 @@ public class IdentityCertificateGenerator {
         // otherwise we could have used cascading create
         this.serialCurator.create(serial);
 
-        KeyPair keyPair = this.keyPairGenerator.getConsumerKeyPair(consumer);
         Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
+        KeyPair keyPair = this.keyPairGenerator.getConsumerKeyPair(scheme, consumer);
 
         X509Certificate certificate = this.cryptoManager.getCertificateBuilder(scheme)
             .withDN(dn)
