@@ -711,7 +711,7 @@ public class OwnerProductResource implements OwnerProductApi {
 
     @Override
     @Transactional
-    public AsyncJobStatusDTO refreshPoolsForProduct(String ownerKey, String productId, Boolean lazyRegen) {
+    public AsyncJobStatusDTO refreshPoolsForProduct(String ownerKey, String productId) {
         if (config.getBoolean(ConfigProperties.STANDALONE)) {
             log.warn("Ignoring refresh pools request due to standalone config.");
             return null;
@@ -720,8 +720,7 @@ public class OwnerProductResource implements OwnerProductApi {
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.resolveProductId(owner, productId, null);
         JobConfig config = RefreshPoolsForProductJob.createJobConfig()
-            .setProduct(product)
-            .setLazy(lazyRegen);
+            .setProduct(product);
 
         try {
             AsyncJobStatus status = jobManager.queueJob(config);
