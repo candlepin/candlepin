@@ -21,10 +21,12 @@ import static org.candlepin.model.CloudIdentifierFacts.AWS_INSTANCE_ID;
 import static org.candlepin.model.CloudIdentifierFacts.AWS_MARKETPLACE_PRODUCT_CODES;
 import static org.candlepin.model.CloudIdentifierFacts.AWS_SHORT_NAME;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 public class AWSProviderFactParser implements CloudProviderFactParser {
@@ -51,10 +53,15 @@ public class AWSProviderFactParser implements CloudProviderFactParser {
         }
 
         List<String> offeringIds = Stream.of(AWS_MARKETPLACE_PRODUCT_CODES.getValue(),
-                AWS_BILLING_PRODUCTS.getValue())
-            .map(facts::get)
-            .filter(Objects::nonNull)
-            .toList();
+                        AWS_BILLING_PRODUCTS.getValue())
+                .map(facts::get)
+                .filter(Objects::nonNull)
+                .map(IdListParsingUtil::parseIdListWSDelimiter)
+                .collect(Collector.of(
+                        ArrayList::new,
+                        ArrayList::addAll,
+                        (a, b) -> { a.addAll(b); return a; }
+                ));
         return offeringIds.isEmpty() ? Optional.empty() : Optional.of(offeringIds);
     }
 
@@ -88,8 +95,8 @@ public class AWSProviderFactParser implements CloudProviderFactParser {
         }
 
         return facts.containsKey(AWS_ACCOUNT_ID.getValue()) ||
-            facts.containsKey(AWS_INSTANCE_ID.getValue()) ||
-            facts.containsKey(AWS_MARKETPLACE_PRODUCT_CODES.getValue()) ||
-            facts.containsKey(AWS_BILLING_PRODUCTS.getValue());
+                facts.containsKey(AWS_INSTANCE_ID.getValue()) ||
+                facts.containsKey(AWS_MARKETPLACE_PRODUCT_CODES.getValue()) ||
+                facts.containsKey(AWS_BILLING_PRODUCTS.getValue());
     }
 }

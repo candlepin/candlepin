@@ -15,93 +15,53 @@
 
 package org.candlepin.resource.util;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
 import static org.candlepin.model.CloudIdentifierFacts.AWS_ACCOUNT_ID;
 import static org.candlepin.model.CloudIdentifierFacts.AWS_BILLING_PRODUCTS;
 import static org.candlepin.model.CloudIdentifierFacts.AWS_INSTANCE_ID;
 import static org.candlepin.model.CloudIdentifierFacts.AWS_MARKETPLACE_PRODUCT_CODES;
 import static org.candlepin.model.CloudIdentifierFacts.AWS_SHORT_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.NullSource;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 public class AWSProviderFactParserTest {
 
     private static AWSProviderFactParser parser;
-    private static final Map<String, String> PRESENT_FACTS = new HashMap<>();
 
     @BeforeAll
     public static void setUp() {
         parser = new AWSProviderFactParser();
-
-        PRESENT_FACTS.put(AWS_ACCOUNT_ID.getValue(), "account123");
-        PRESENT_FACTS.put(AWS_INSTANCE_ID.getValue(), "instance123");
-        PRESENT_FACTS.put(AWS_MARKETPLACE_PRODUCT_CODES.getValue(), "offering123");
-        PRESENT_FACTS.put(AWS_BILLING_PRODUCTS.getValue(), "offering456");
-    }
-
-    @Test
-    public void testGetAccountIdIfFactPresent() {
-        Optional<String> accountId = parser.getAccountId(PRESENT_FACTS);
-
-        assertTrue(accountId.isPresent());
-        assertEquals("account123", accountId.get());
     }
 
     @ParameterizedTest
-    @NullSource
     @MethodSource("provideTestData")
-    void testGetAccountIdEmptyOptional(Map<String, String> facts) {
-        Optional<String> accountId = parser.getAccountId(facts);
+    void testGetAccountId(CloudProviderFactParserArgument argument) {
+        Optional<String> accountId = parser.getAccountId(argument.facts());
 
-        assertTrue(accountId.isEmpty());
-    }
-
-    @Test
-    public void testGetInstanceIdIfFactPresent() {
-        Optional<String> instanceId = parser.getInstanceId(PRESENT_FACTS);
-
-        assertTrue(instanceId.isPresent());
-        assertEquals("instance123", instanceId.get());
+        assertEquals(argument.accountId(), accountId.orElse(null));
     }
 
     @ParameterizedTest
-    @NullSource
     @MethodSource("provideTestData")
-    void testGetInstanceIdEmptyOptional(Map<String, String> facts) {
-        Optional<String> instanceId = parser.getInstanceId(facts);
+    void testGetInstanceId(CloudProviderFactParserArgument argument) {
+        Optional<String> instanceId = parser.getInstanceId(argument.facts());
 
-        assertTrue(instanceId.isEmpty());
-    }
-
-    @Test
-    public void testGetLicenseCodesIfFactPresent() {
-        Optional<List<String>> licenseCodes = parser.getOfferingIds(PRESENT_FACTS);
-
-        assertTrue(licenseCodes.isPresent());
-        assertEquals(List.of("offering123", "offering456"), licenseCodes.get());
+        assertEquals(argument.instanceId(), instanceId.orElse(null));
     }
 
     @ParameterizedTest
-    @NullSource
     @MethodSource("provideTestData")
-    void testGetOfferingIdsEmptyOptional(Map<String, String> facts) {
-        Optional<List<String>> offeringIds = parser.getOfferingIds(facts);
+    void testGetOfferingIds(CloudProviderFactParserArgument argument) {
+        Optional<List<String>> offeringIds = parser.getOfferingIds(argument.facts());
 
-        assertTrue(offeringIds.isEmpty());
+        assertEquals(argument.offeringIds(), offeringIds.orElse(null));
     }
 
     @Test
@@ -111,22 +71,51 @@ public class AWSProviderFactParserTest {
         assertEquals(AWS_SHORT_NAME, shortName);
     }
 
-    @Test
-    public void testIsSupportedIfFactsPresent() {
-        assertTrue(parser.isSupported(PRESENT_FACTS));
-    }
-
     @ParameterizedTest
-    @NullSource
     @MethodSource("provideTestData")
-    void testIsSupportedIfFactsNotPresent(Map<String, String> facts) {
-        assertFalse(parser.isSupported(facts));
+    void testIsSupported(CloudProviderFactParserArgument argument) {
+        assertEquals(argument.supported(), parser.isSupported(argument.facts()));
     }
 
-    static Stream<Arguments> provideTestData() {
+    static Stream<CloudProviderFactParserArgument> provideTestData() {
         return Stream.of(
-            Arguments.of(Collections.emptyMap()),
-            Arguments.of(Collections.singletonMap("randomKey", "randomValue"))
+                // facts provider as null
+                CloudProviderFactParserArgument.builder().build(),
+                // facts provider as empty map
+                CloudProviderFactParserArgument.builder()
+                        .withEmptyFacts()
+                        .build(),
+                // facts with random keys
+                CloudProviderFactParserArgument.builder()
+                        .withFact("randomKey", "randomValue")
+                        .asNotSupported()
+                        .build(),
+                // valid facts with single item offerings
+                CloudProviderFactParserArgument.builder()
+                        .withAccountId("account123")
+                        .withInstanceId("instance123")
+                        .withFact(AWS_ACCOUNT_ID.getValue(), "account123")
+                        .withFact(AWS_INSTANCE_ID.getValue(), "instance123")
+                        .withFact(AWS_MARKETPLACE_PRODUCT_CODES.getValue(), "offering123")
+                        .withFact(AWS_BILLING_PRODUCTS.getValue(), "offering456")
+                        .asSupported()
+                        .withOfferingId("offering123")
+                        .withOfferingId("offering456")
+                        .build(),
+                // valid facts with offerings provided as WS delimited string
+                CloudProviderFactParserArgument.builder()
+                        .withAccountId("account456")
+                        .withInstanceId("instance456")
+                        .withFact(AWS_ACCOUNT_ID.getValue(), "account456")
+                        .withFact(AWS_INSTANCE_ID.getValue(), "instance456")
+                        .withFact(AWS_MARKETPLACE_PRODUCT_CODES.getValue(), "offering123 offering789")
+                        .withFact(AWS_BILLING_PRODUCTS.getValue(), " offering456 offering0")
+                        .asSupported()
+                        .withOfferingId("offering123")
+                        .withOfferingId("offering789")
+                        .withOfferingId("offering456")
+                        .withOfferingId("offering0")
+                        .build()
         );
     }
 }
