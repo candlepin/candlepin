@@ -15,28 +15,20 @@
 
 package org.candlepin.resource.util;
 
-import static org.candlepin.model.CloudIdentifierFacts.*;
-import static org.candlepin.model.CloudIdentifierFacts.AWS_ACCOUNT_ID;
-import static org.candlepin.model.CloudIdentifierFacts.AWS_BILLING_PRODUCTS;
-import static org.candlepin.model.CloudIdentifierFacts.AWS_INSTANCE_ID;
-import static org.candlepin.model.CloudIdentifierFacts.AWS_MARKETPLACE_PRODUCT_CODES;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.NullSource;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import static org.candlepin.model.CloudIdentifierFacts.GCP_INSTANCE_ID;
+import static org.candlepin.model.CloudIdentifierFacts.GCP_LICENSE_CODES;
+import static org.candlepin.model.CloudIdentifierFacts.GCP_PROJECT_ID;
+import static org.candlepin.model.CloudIdentifierFacts.GCP_SHORT_NAME;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class GCPProviderFactParserTest {
 

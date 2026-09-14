@@ -54,14 +54,14 @@ record CloudProviderFactParserArgument(Map<String, String> facts, boolean suppor
         }
 
         Builder withOfferingId(String offeringId) {
-            if(offeringIds == null)
+            if (offeringIds == null)
                 offeringIds = new ArrayList<>();
             offeringIds.add(offeringId);
             return this;
         }
 
         Builder withFact(String key, String value) {
-            if(facts == null)
+            if( facts == null)
                 facts = new HashMap<>();
             facts.put(key, value);
             return this;
