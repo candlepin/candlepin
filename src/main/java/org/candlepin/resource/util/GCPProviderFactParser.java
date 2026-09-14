@@ -15,14 +15,14 @@
 
 package org.candlepin.resource.util;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import static org.candlepin.model.CloudIdentifierFacts.GCP_INSTANCE_ID;
 import static org.candlepin.model.CloudIdentifierFacts.GCP_LICENSE_CODES;
 import static org.candlepin.model.CloudIdentifierFacts.GCP_PROJECT_ID;
 import static org.candlepin.model.CloudIdentifierFacts.GCP_SHORT_NAME;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class GCPProviderFactParser implements CloudProviderFactParser {
 

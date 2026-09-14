@@ -20,7 +20,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-record CloudProviderFactParserArgument(Map<String, String> facts, boolean supported, String accountId, String instanceId, List<String> offeringIds) {
+record CloudProviderFactParserArgument(
+        Map<String, String> facts,
+        boolean supported,
+        String accountId,
+        String instanceId,
+        List<String> offeringIds) {
 
     static Builder builder() {
         return new Builder();
@@ -54,15 +59,17 @@ record CloudProviderFactParserArgument(Map<String, String> facts, boolean suppor
         }
 
         Builder withOfferingId(String offeringId) {
-            if (offeringIds == null)
+            if (offeringIds == null) {
                 offeringIds = new ArrayList<>();
+            }
             offeringIds.add(offeringId);
             return this;
         }
 
         Builder withFact(String key, String value) {
-            if (facts == null)
+            if (facts == null) {
                 facts = new HashMap<>();
+            }
             facts.put(key, value);
             return this;
         }

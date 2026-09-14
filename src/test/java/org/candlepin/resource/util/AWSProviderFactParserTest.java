@@ -15,6 +15,13 @@
 
 package org.candlepin.resource.util;
 
+import static org.candlepin.model.CloudIdentifierFacts.AWS_ACCOUNT_ID;
+import static org.candlepin.model.CloudIdentifierFacts.AWS_BILLING_PRODUCTS;
+import static org.candlepin.model.CloudIdentifierFacts.AWS_INSTANCE_ID;
+import static org.candlepin.model.CloudIdentifierFacts.AWS_MARKETPLACE_PRODUCT_CODES;
+import static org.candlepin.model.CloudIdentifierFacts.AWS_SHORT_NAME;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -23,13 +30,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-
-import static org.candlepin.model.CloudIdentifierFacts.AWS_ACCOUNT_ID;
-import static org.candlepin.model.CloudIdentifierFacts.AWS_BILLING_PRODUCTS;
-import static org.candlepin.model.CloudIdentifierFacts.AWS_INSTANCE_ID;
-import static org.candlepin.model.CloudIdentifierFacts.AWS_MARKETPLACE_PRODUCT_CODES;
-import static org.candlepin.model.CloudIdentifierFacts.AWS_SHORT_NAME;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AWSProviderFactParserTest {
 

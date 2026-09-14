@@ -15,6 +15,12 @@
 
 package org.candlepin.resource.util;
 
+import static org.candlepin.model.CloudIdentifierFacts.GCP_INSTANCE_ID;
+import static org.candlepin.model.CloudIdentifierFacts.GCP_LICENSE_CODES;
+import static org.candlepin.model.CloudIdentifierFacts.GCP_PROJECT_ID;
+import static org.candlepin.model.CloudIdentifierFacts.GCP_SHORT_NAME;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -23,12 +29,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-
-import static org.candlepin.model.CloudIdentifierFacts.GCP_INSTANCE_ID;
-import static org.candlepin.model.CloudIdentifierFacts.GCP_LICENSE_CODES;
-import static org.candlepin.model.CloudIdentifierFacts.GCP_PROJECT_ID;
-import static org.candlepin.model.CloudIdentifierFacts.GCP_SHORT_NAME;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class GCPProviderFactParserTest {
 
