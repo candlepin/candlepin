@@ -59,12 +59,15 @@ public class ContentChangeRegenerationTest extends DatabaseTestFixture {
     private static Stream<Arguments> apiContentChanges() {
         return Arrays.stream(ProductLocation.values())
             .flatMap(location -> Arrays.stream(ApiChange.values())
-                .map(change -> Arguments.of(location, change)));
+                .flatMap(change -> Stream.of(false, true)
+                    .map(uppercaseFlags -> Arguments.of(location, change, uppercaseFlags))));
     }
 
     @ParameterizedTest
     @MethodSource("apiContentChanges")
-    public void testApiContentChangesInvalidateAffectedEntitlements(ProductLocation location, ApiChange change) {
+    public void testApiContentChangesInvalidateAffectedEntitlements(ProductLocation location, ApiChange change,
+        boolean uppercaseFlags) {
+
         Owner owner = this.createOwner();
         Product target = this.createProduct(TestUtil.createProduct("target").setNamespace(owner.getKey()));
         Product sku = target;
@@ -105,6 +108,16 @@ public class ContentChangeRegenerationTest extends DatabaseTestFixture {
             this.productCurator.create(target);
         }
         this.getEntityManager().flush();
+
+        if (uppercaseFlags) {
+            // Migrations seed uppercase Y/N, while YesNoConverter writes lowercase y/n.
+            List<String> typeIds = Stream.of(distributorEnt, systemEnt, unrelatedEnt, otherEnt, derivedPoolEnt)
+                .map(ent -> ent.getConsumer().getTypeId()).distinct().toList();
+            this.getEntityManager().createNativeQuery("UPDATE cp_consumer_type SET manifest = UPPER(manifest) " +
+                "WHERE id IN (:type_ids)", Integer.class)
+                .setParameter("type_ids", typeIds)
+                .executeUpdate();
+        }
 
         boolean includesSystem = location == ProductLocation.DIRECT || location == ProductLocation.PROVIDED;
         Set<String> expectedEntitlements = new HashSet<>(Set.of(distributorEnt.getId()));

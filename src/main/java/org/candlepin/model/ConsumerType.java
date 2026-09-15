@@ -18,6 +18,7 @@ import org.candlepin.hibernate.YesNoConverter;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Objects;
@@ -94,6 +95,8 @@ public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
     private String label;
 
     @Column(nullable = false, length = 1)
+    // Match migration-seeded Y/N as well as the converter's y/n in SQL predicates.
+    @ColumnTransformer(read = "lower(manifest)")
     @Convert(converter = YesNoConverter.class)
     @NotNull
     private boolean manifest = false;

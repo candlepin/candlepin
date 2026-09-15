@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
@@ -25,6 +26,8 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 
 
@@ -32,6 +35,33 @@ import org.junit.jupiter.api.Test;
  * Test suite for the ConsumerTypeCurator
  */
 public class ConsumerTypeCuratorTest extends DatabaseTestFixture {
+    @ParameterizedTest
+    @ValueSource(strings = {"Y", "y", "N", "n"})
+    public void testManifestPredicatesHandleStoredFlagCase(String storedFlag) {
+        boolean manifest = "y".equalsIgnoreCase(storedFlag);
+        ConsumerType type = this.createConsumerType("case-test", manifest);
+        this.getEntityManager().flush();
+        // Bypass the converter to reproduce values inserted by database migrations.
+        this.getEntityManager().createNativeQuery("UPDATE cp_consumer_type SET manifest = :flag " +
+            "WHERE id = :id", Integer.class)
+            .setParameter("flag", storedFlag)
+            .setParameter("id", type.getId())
+            .executeUpdate();
+        this.getEntityManager().clear();
+
+        assertThat(this.consumerTypeCurator.get(type.getId()).isManifest()).isEqualTo(manifest);
+        assertThat(this.getEntityManager().createQuery("SELECT t.id FROM ConsumerType t " +
+            "WHERE t.id = :id AND t.manifest = :manifest", String.class)
+            .setParameter("id", type.getId())
+            .setParameter("manifest", manifest)
+            .getResultList()).containsExactly(type.getId());
+        assertThat(this.getEntityManager().createQuery("SELECT t.id FROM ConsumerType t " +
+            "WHERE t.id = :id AND t.manifest = :manifest", String.class)
+            .setParameter("id", type.getId())
+            .setParameter("manifest", !manifest)
+            .getResultList()).isEmpty();
+    }
+
     @Test
     public void testGetConsumerType() {
         ConsumerType ctype = this.createConsumerType();
