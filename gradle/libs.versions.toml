@@ -17,7 +17,7 @@ test-logger = "4.0.0"
 # These are NOT Gradle dependencies: they are written into the generated pom.xml files so that
 # Maven uses the correct plugin versions. Corresponding [libraries] entries at the bottom of this
 # file map these aliases to real Maven groupId:artifactId coordinates so Dependabot can detect them.
-maven-build-helper-plugin = "3.6.1"
+maven-build-helper-plugin = "3.6.2"
 maven-compiler-plugin = "3.16.0"
 maven-exec-plugin = "3.6.3"
 maven-jar-plugin = "3.5.1"
