@@ -14,6 +14,7 @@
  */
 package org.candlepin.spec.pools;
 
+import static org.candlepin.spec.bootstrap.assertions.CertificateAssert.assertThatCert;
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,21 +39,27 @@ import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ProvidedProductDTO;
+import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.client.v1.SubscriptionDTO;
+import org.candlepin.invoker.client.ApiException;
 import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
 import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
+import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
+import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 import org.candlepin.spec.bootstrap.data.builder.Branding;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
+import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
+import org.candlepin.spec.bootstrap.data.util.ExportUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -60,6 +67,7 @@ import org.junit.jupiter.api.Test;
 
 import tools.jackson.databind.JsonNode;
 
+import java.io.File;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -67,8 +75,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipFile;
 
 
 @SpecTest
@@ -1863,6 +1873,97 @@ public class RefreshPoolsSpecTest {
         assertThat(adminClient.pools().listPoolsByOwner(owner1.getId()))
             .isNotNull()
             .hasSize(2);
+    }
+
+    @Test
+    @OnlyInHosted
+    public void testing() throws Exception {
+        OwnerDTO owner1 = adminClient.owners().createOwner(Owners.randomSca());
+        OwnerDTO owner2 = adminClient.owners().createOwner(Owners.randomSca());
+
+        // Create provided product with initial content
+        ProductDTO engProd = adminClient.hosted().createProduct(Products.randomEng());
+        ContentDTO content = adminClient.hosted().createContent(Contents.random());
+        adminClient.hosted().addContentToProduct(engProd.getId(), content.getId(), true);
+
+        // Create 2 SKU products that have the same provided product
+        ProductDTO product1 = adminClient.hosted().createProduct(Products.random()
+            .addProvidedProductsItem(engProd));
+        ProductDTO product2 = adminClient.hosted().createProduct(Products.random()
+            .addProvidedProductsItem(engProd));
+
+        adminClient.hosted().createSubscription(Subscriptions.random(owner1, product1));
+        adminClient.hosted().createSubscription(Subscriptions.random(owner2, product2));
+
+        // Creates pools
+        this.refreshPools(adminClient, owner1.getKey());
+        this.refreshPools(adminClient, owner2.getKey());
+
+        // Create manifest consumer and bind
+        ConsumerDTO owner1ManConsumer = this.createAndBind(owner1, 10);
+        ConsumerDTO owner2ManConsumer = this.createAndBind(owner2, 1);
+
+        ApiClient manConsumerClient1 = ApiClients.ssl(owner1ManConsumer);
+        ApiClient manConsumerClient2 = ApiClients.ssl(owner2ManConsumer);
+
+        // Export to verify content
+        File export1 = manConsumerClient1.consumers().exportData(owner1ManConsumer.getUuid(), null, null, null);
+        export1.deleteOnExit();
+        File export2 = manConsumerClient1.consumers().exportData(owner2ManConsumer.getUuid(), null, null, null);
+        export2.deleteOnExit();
+
+        Thread.sleep(2000); // Ensure timestamp difference
+
+        // Add new content to the eng product
+        ContentDTO content2 = adminClient.hosted().createContent(Contents.random().name(StringUtil.random("new-")));
+        adminClient.hosted().addContentToProduct(engProd.getId(), content2.getId(), false);
+
+        System.out.println("TESTING: owner 1 id: " + owner1.getId() + ", key:" + owner1.getKey());
+        System.out.println("TESTING: owner 2 id: " + owner2.getId() + ", key:" + owner2.getKey());
+        System.out.println("TESTING: SKU prod 1: " + product1.getUuid());
+        System.out.println("TESTING: SKU prod 2: " + product2.getUuid());
+        System.out.println("TESTING: ENG prod (provided): " + engProd.getUuid());
+        System.out.println("TESTING: original content: " + content.getUuid());
+        System.out.println("TESTING: New content added to provided product: " + content2.getUuid());
+
+        this.refreshPools(adminClient, owner1.getKey());
+
+        // Check the exports
+        // File export1 = manConsumerClient1.consumers().exportData(owner1ManConsumer.getUuid(), null, null, null);
+        // File export2 = manConsumerClient2.consumers().exportData(owner2ManConsumer.getUuid(), null, null, null);
+    }
+
+    private boolean isDerivedPool(PoolDTO pool) {
+        return pool.getAttributes()
+            .stream()
+            .filter(attrib -> "pool_derived".equalsIgnoreCase(attrib.getName()))
+            .anyMatch(attrib -> "true".equalsIgnoreCase(attrib.getValue()));
+    }
+
+    private List<JsonNode> bindPoolsToConsumer(ConsumerClient consumerApi, String consumerUuid,
+        Collection<String> poolIds, int quantity) throws ApiException {
+        List<JsonNode> poolNodes = new ArrayList<>();
+        for (String poolId : poolIds) {
+            poolNodes.add(consumerApi.bindPool(consumerUuid, poolId, quantity));
+        }
+
+        return poolNodes;
+    }
+
+    private ConsumerDTO createAndBind(OwnerDTO owner, int quantity) {
+        ConsumerDTO manConsumer = adminClient.consumers().createConsumer(Consumers.random(owner, ConsumerTypes.Candlepin)
+            .contentAccessMode(Owners.ENTITLEMENT_ACCESS_MODE)
+            .releaseVer(new ReleaseVerDTO().releaseVer("")));
+
+        List<String> primaryPoolIds = this.adminClient.owners().listOwnerPools(owner.getKey()).stream()
+            .filter(Predicate.not(this::isDerivedPool))
+            .map(PoolDTO::getId)
+            .toList();
+
+        this.bindPoolsToConsumer(adminClient.consumers(),
+            manConsumer.getUuid(), primaryPoolIds, quantity).get(0);
+
+        return manConsumer;
     }
 
     @Test
