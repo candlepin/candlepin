@@ -7,13 +7,14 @@
 # Ali Ciloqlu <ali.ciloqlu@murena.io>, 2026.
 # Ali Ciloglu <ali.ciloqlu@murena.io>, 2026.
 # Weblate <noreply-mt-weblate@weblate.org>, 2026.
+# Emanuele Petriglia <inbox@emanuelepetriglia.com>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-09 08:08+0000\n"
-"PO-Revision-Date: 2026-06-23 23:17+0000\n"
-"Last-Translator: John Sefler <jsefler@redhat.com>\n"
+"PO-Revision-Date: 2026-08-18 16:18+0000\n"
+"Last-Translator: Emanuele Petriglia <inbox@emanuelepetriglia.com>\n"
 "Language-Team: Italian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/it/>\n"
 "Language: it\n"
@@ -21,7 +22,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.6.1\n"
+"X-Generator: Weblate 2026.8.1\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -1745,13 +1746,11 @@ msgstr ""
 "ID: {1}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:246
-#, fuzzy, java-format
-#| msgid ""
-#| "Cannot attach content defined outside of the organization's namespace: {0}"
+#, java-format
 msgid ""
 "Cannot attach content defined outside of the organization''s namespace: {0}"
 msgstr ""
-"Impossibile allegare contenuti definiti all''esterno dello spazio dei nomi "
+"Impossibile allegare contenuti definiti al di fuori dello spazio dei nomi "
 "dell''organizzazione: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:373
@@ -1776,9 +1775,7 @@ msgstr ""
 "{1}"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:416
-#, fuzzy, java-format
-#| msgid ""
-#| "Cannot attach product defined outside of the organization's namespace: {0}"
+#, java-format
 msgid ""
 "Cannot attach product defined outside of the organization''s namespace: {0}"
 msgstr ""
@@ -2670,10 +2667,9 @@ msgid "may have unsafe HTML content"
 msgstr "può avere contenuto HTML non sicuro"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:86
-#, fuzzy, java-format
-#| msgid "script expression \"{0}\" didn't evaluate to true"
+#, java-format
 msgid "script expression \"{0}\" didn''t evaluate to true"
-msgstr "l espressione script \"{0}\" non è stata valutata come vera"
+msgstr "l''espressione script \"{0}\" non è stata valutata come vera"
 
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
 msgid "must be a valid URL"
