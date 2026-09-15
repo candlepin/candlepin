@@ -24,8 +24,6 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
-import org.candlepin.model.PoolQualifier;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -40,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -70,7 +67,6 @@ public class EntitlementCertificateService {
     private final ContentAccessManager contentAccessManager;
     private final OwnerCurator ownerCurator;
     private final EntitlementCurator entitlementCurator;
-    private final PoolCurator poolCurator;
     private final EventSink eventSink;
     private final EventFactory eventFactory;
 
@@ -78,7 +74,7 @@ public class EntitlementCertificateService {
     @Inject
     public EntitlementCertificateService(EntitlementCertificateCurator entitlementCertificateCurator,
         EntitlementCertServiceAdapter entCertServiceAdapter, EntitlementCurator entitlementCurator,
-        PoolCurator poolCurator, EventSink eventSink, EventFactory eventFactory,
+        EventSink eventSink, EventFactory eventFactory,
         ContentAccessManager contentAccessManager, OwnerCurator ownerCurator) {
 
         this.entitlementCertificateCurator = entitlementCertificateCurator;
@@ -86,7 +82,6 @@ public class EntitlementCertificateService {
         this.contentAccessManager = contentAccessManager;
         this.ownerCurator = ownerCurator;
         this.entitlementCurator = entitlementCurator;
-        this.poolCurator = poolCurator;
 
         this.eventSink = eventSink;
         this.eventFactory = eventFactory;
@@ -367,19 +362,17 @@ public class EntitlementCertificateService {
      */
     @Transactional
     public void regenerateCertificatesOf(Owner owner, String productId, boolean lazy) {
-        PoolQualifier qualifier = new PoolQualifier()
-            .setOwnerId(owner.getId())
-            .addProductId(productId)
-            .setActiveOn(new Date());
+        this.regenerateCertificatesOfProducts(owner, List.of(productId), lazy);
+    }
 
-        Set<Entitlement> entitlements = this.poolCurator
-            .listAvailableEntitlementPools(qualifier)
-            .getPageData()
-            .stream()
-            .flatMap(pool -> pool.getEntitlements().stream())
-            .collect(Collectors.toSet());
-
-        this.regenerateCertificatesOf(entitlements, lazy);
+    private void regenerateCertificatesOfProducts(Owner owner, Collection<String> productIds, boolean lazy) {
+        if (lazy) {
+            this.entitlementCurator.markEntitlementsDirtyForProducts(owner, productIds);
+        }
+        else {
+            Set<String> entitlementIds = this.entitlementCurator.listEntitlementIdsForProducts(owner, productIds);
+            this.regenerateCertificatesByEntitlementIds(entitlementIds, false);
+        }
     }
 
     /**
@@ -429,34 +422,8 @@ public class EntitlementCertificateService {
             .map(Product::getId)
             .collect(Collectors.toSet());
 
-        // TODO: This is a very expensive operation. Update pool curator with something to let us
-        // do this without hitting the DB several times over.
-        if (lazy) {
-            for (Owner owner : owners) {
-                poolCurator.markCertificatesDirtyForPoolsWithProducts(owner, productIds);
-            }
-        }
-        else {
-            Date now = new Date();
-            Set<Entitlement> entitlements = new HashSet<>();
-
-            for (Owner owner : owners) {
-                PoolQualifier qualifier = new PoolQualifier()
-                    .setOwnerId(owner.getOwnerId())
-                    .addProductIds(productIds)
-                    .setActiveOn(now);
-
-                Collection<Entitlement> poolEntitlements = this.poolCurator
-                    .listAvailableEntitlementPools(qualifier)
-                    .getPageData()
-                    .stream()
-                    .flatMap(pool -> pool.getEntitlements().stream())
-                    .toList();
-
-                entitlements.addAll(poolEntitlements);
-            }
-
-            this.regenerateCertificatesOf(entitlements, lazy);
+        for (Owner owner : owners) {
+            this.regenerateCertificatesOfProducts(owner, productIds, lazy);
         }
     }
 

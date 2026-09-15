@@ -14,6 +14,7 @@
  */
 package org.candlepin.controller.refresher;
 
+import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.builders.ContentNodeBuilder;
 import org.candlepin.controller.refresher.builders.NodeFactory;
 import org.candlepin.controller.refresher.builders.PoolNodeBuilder;
@@ -46,6 +47,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -371,6 +373,41 @@ public class RefreshWorker {
         }
 
         this.contentMapper.addExistingEntities(content);
+    }
+
+    /**
+     * Finds all products affected by a refresh, including parents outside the refreshed organization's
+     * subscriptions. Product and content updates are global, so walking only the imported graph would
+     * lose changes for other SKUs sharing the updated entities.
+     *
+     * @param result the completed refresh result
+     * @return the UUIDs of changed products and all products referencing them or their changed content
+     */
+    public Set<String> getAffectedProductUuids(RefreshResult result) {
+        Set<String> affected = result.getEntities(Product.class, EntityState.UPDATED).values().stream()
+            .map(Product::getUuid)
+            .collect(Collectors.toSet());
+
+        Set<String> contentUuids = result.getEntities(Content.class, EntityState.UPDATED).values().stream()
+            .map(Content::getUuid)
+            .collect(Collectors.toSet());
+
+        if (!contentUuids.isEmpty()) {
+            this.contentCurator.getProductsReferencingContent(contentUuids).values()
+                .forEach(affected::addAll);
+        }
+
+        Set<String> pending = new HashSet<>(affected);
+        while (!pending.isEmpty()) {
+            Set<String> parents = new HashSet<>();
+            this.productCurator.getProductsReferencingProducts(pending).values()
+                .forEach(parents::addAll);
+            parents.removeAll(affected);
+            affected.addAll(parents);
+            pending = parents;
+        }
+
+        return affected;
     }
 
     /**

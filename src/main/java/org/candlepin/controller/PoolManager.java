@@ -213,13 +213,11 @@ public class PoolManager {
         // TODO: Move everything below this line to the refresher
         boolean poolsModified = false;
 
-        // Flag pools referencing the updated products as dirty
-        List<String> updatedProductUuids = updatedProducts.values()
-            .stream()
-            .map(Product::getUuid)
-            .toList();
+        // Include parents outside this refresh's graph: another org may use a different SKU backed
+        // by the same product or content, and its next refresh will already see the updated data.
+        Set<String> affectedProductUuids = refresher.getAffectedProductUuids(refreshResult);
 
-        int count = this.poolCurator.markPoolsDirtyReferencingProducts(updatedProductUuids);
+        int count = this.poolCurator.markPoolsDirtyReferencingProducts(affectedProductUuids);
         log.debug("Flagged {} pool-products as dirty", count);
 
         // TODO: We *could* also flag entitlements dirty here, but if the lazy flag is set to
@@ -316,7 +314,7 @@ public class PoolManager {
 
         // Set the last content update for all (other*) orgs with pools referencing any of the
         // products that changed as part of this refresh.
-        this.ownerCurator.setLastContentUpdateForOwnersWithProducts(updatedProductUuids);
+        this.ownerCurator.setLastContentUpdateForOwnersWithProducts(affectedProductUuids);
 
         log.info("Refresh pools for owner: {} completed in: {}ms", resolvedOwner.getKey(),
             System.currentTimeMillis() - now.getTime());

@@ -834,6 +834,85 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     /**
+     * Finds existing entitlements whose certificates include any of the given products. Distributors
+     * also include derived products and their provided products, unless the pool is itself derived.
+     * This lookup deliberately does not use pool availability: an existing entitlement can still
+     * require regeneration when its pool is future-dated or its validity extends beyond the pool.
+     *
+     * @param owner the organization owning the entitlements
+     * @param productIds the product IDs whose certificate data changed
+     * @return the IDs of affected entitlements, without duplicates
+     */
+    public Set<String> listEntitlementIdsForProducts(Owner owner, Collection<String> productIds) {
+        Set<String> entitlementIds = new HashSet<>();
+        if (owner == null || productIds == null || productIds.isEmpty()) {
+            return entitlementIds;
+        }
+
+        String jpql = "SELECT e.id FROM Entitlement e " + this.getEntitlementProductFilter();
+        TypedQuery<String> query = this.getEntityManager().createQuery(jpql, String.class)
+            .setParameter("owner", owner)
+            .setParameter("derived_pool", Pool.Attributes.DERIVED_POOL);
+        // Each product ID occurs four times, alongside the owner and pool attribute parameters.
+        int blockSize = Math.min(this.getInBlockSize(), (this.getQueryParameterLimit() - 2) / 4);
+        for (List<String> block : this.partition(productIds, blockSize)) {
+            entitlementIds.addAll(query.setParameter("product_ids", block).getResultList());
+        }
+
+        return entitlementIds;
+    }
+
+    /**
+     * Marks certificates containing the given products dirty without loading their entitlements.
+     * Uses the same product selection as {@link #listEntitlementIdsForProducts}.
+     *
+     * @param owner the organization owning the entitlements
+     * @param productIds the product IDs whose certificate data changed
+     * @return the number of updates, potentially counting an entitlement in multiple batches
+     */
+    @Transactional
+    public int markEntitlementsDirtyForProducts(Owner owner, Collection<String> productIds) {
+        if (owner == null || productIds == null || productIds.isEmpty()) {
+            return 0;
+        }
+
+        String jpql = "UPDATE Entitlement e SET e.dirty = true " + this.getEntitlementProductFilter();
+        Query query = this.getEntityManager().createQuery(jpql)
+            .setParameter("owner", owner)
+            .setParameter("derived_pool", Pool.Attributes.DERIVED_POOL);
+        int blockSize = Math.min(this.getInBlockSize(), (this.getQueryParameterLimit() - 2) / 4);
+        int count = 0;
+        for (List<String> block : this.partition(productIds, blockSize)) {
+            count += query.setParameter("product_ids", block).executeUpdate();
+        }
+
+        return count;
+    }
+
+    private String getEntitlementProductFilter() {
+        // Match the products included by EntitlementCertificateGenerator, without multiplying rows
+        // by joining the provided-product collections of both the SKU and its derived product.
+        return """
+            WHERE e.owner = :owner AND e.pool.id IN (
+                SELECT pool.id FROM Pool pool JOIN pool.product product
+                WHERE product.id IN (:product_ids)
+                OR EXISTS (SELECT 1 FROM Product parent JOIN parent.providedProducts provided
+                    WHERE parent = product AND provided.id IN (:product_ids))
+                OR (
+                    EXISTS (SELECT 1 FROM Product parent JOIN parent.derivedProduct derived
+                        LEFT JOIN derived.providedProducts provided
+                        WHERE parent = product AND
+                            (derived.id IN (:product_ids) OR provided.id IN (:product_ids)))
+                    AND EXISTS (SELECT 1 FROM ConsumerType type
+                        WHERE type.id = e.consumer.typeId AND type.manifest = true)
+                    AND NOT EXISTS (SELECT 1 FROM PoolAttribute attribute
+                        WHERE attribute.poolId = pool.id AND attribute.name = :derived_pool)
+                )
+            )
+            """;
+    }
+
+    /**
      * Marks the given entitlements as dirty; forcing a regeneration the next time it is requested.
      *
      * @param entitlementIds

@@ -14,7 +14,6 @@
  */
 package org.candlepin.controller;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -24,7 +23,6 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -44,12 +42,9 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
-import org.candlepin.model.PoolQualifier;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.paging.Page;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.test.TestUtil;
 
@@ -84,7 +79,6 @@ public class EntitlementCertificateServiceTest {
     @Mock private EntitlementCertServiceAdapter mockEntCertAdapter;
     @Mock private EntitlementCertificateCurator mockEntCertCurator;
     @Mock private EntitlementCurator mockEntitlementCurator;
-    @Mock private PoolCurator mockPoolCurator;
     @Mock private EventSink mockEventSink;
     @Mock private EventFactory mockEventFactory;
     @Mock private OwnerCurator mockOwnerCurator;
@@ -99,14 +93,14 @@ public class EntitlementCertificateServiceTest {
     public void init() throws Exception {
         this.ecService = new EntitlementCertificateService(
             this.mockEntCertCurator, this.mockEntCertAdapter, this.mockEntitlementCurator,
-            this.mockPoolCurator, this.mockEventSink, this.mockEventFactory,
+            this.mockEventSink, this.mockEventFactory,
             this.mockContentAccessManager, this.mockOwnerCurator);
     }
 
     @Test
     public void testGenerateEntitlementCertificate() throws GeneralSecurityException, IOException {
         this.ecService = new EntitlementCertificateService(this.mockEntCertCurator,
-                this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
+                this.mockEntCertAdapter, this.mockEntitlementCurator,
                 this.mockEventSink, this.mockEventFactory,
                 this.mockContentAccessManager, this.mockOwnerCurator);
 
@@ -131,7 +125,7 @@ public class EntitlementCertificateServiceTest {
     @Test
     public void testGenerateEntitlementCertificates() throws GeneralSecurityException, IOException {
         this.ecService = new EntitlementCertificateService(this.mockEntCertCurator,
-            this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
+            this.mockEntCertAdapter, this.mockEntitlementCurator,
             this.mockEventSink, this.mockEventFactory,
             this.mockContentAccessManager, this.mockOwnerCurator);
         Consumer consumer = mock(Consumer.class);
@@ -285,24 +279,11 @@ public class EntitlementCertificateServiceTest {
     @Test
     public void testLazyRegenerationForProductById() {
         Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
-        Consumer consumer = TestUtil.createConsumer(owner);
         Product product = TestUtil.createProduct();
-        Pool pool = TestUtil.createPool(owner, product);
-        Entitlement entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
-        Set<Entitlement> entitlements = new HashSet<>();
-        entitlements.add(entitlement);
-        pool.setEntitlements(entitlements);
-
-        Page<List<Pool>> page = new Page();
-        page.setPageData(Arrays.asList(pool));
-
-        when(this.mockPoolCurator.listAvailableEntitlementPools(any(PoolQualifier.class)))
-            .thenReturn(page);
-        when(mockEventFactory.entitlementChanged(any(Entitlement.class))).thenReturn(mock(Event.class));
         this.ecService.regenerateCertificatesOf(owner, product.getId(), true);
 
-        assertTrue(entitlement.isDirty());
-
+        verify(this.mockEntitlementCurator).markEntitlementsDirtyForProducts(owner, List.of(product.getId()));
+        verify(this.mockEntitlementCurator, never()).listEntitlementIdsForProducts(any(), any());
         verifyNoInteractions(this.mockEntCertAdapter);
     }
 
@@ -313,18 +294,12 @@ public class EntitlementCertificateServiceTest {
         Product product = TestUtil.createProduct();
         Pool pool = TestUtil.createPool(owner, product);
         Entitlement entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
-        Set<Entitlement> entitlements = new HashSet<>();
-        entitlements.add(entitlement);
-        pool.setEntitlements(entitlements);
-
         HashMap<String, EntitlementCertificate> ecMap = new HashMap<>();
         ecMap.put(pool.getId(), new EntitlementCertificate());
 
-        Page<List<Pool>> page = new Page();
-        page.setPageData(Arrays.asList(pool));
-
-        when(this.mockPoolCurator.listAvailableEntitlementPools(any(PoolQualifier.class)))
-            .thenReturn(page);
+        when(this.mockEntitlementCurator.listEntitlementIdsForProducts(owner, List.of(product.getId())))
+            .thenReturn(Set.of(entitlement.getId()));
+        when(this.mockEntitlementCurator.get(entitlement.getId())).thenReturn(entitlement);
         when(this.mockEntCertAdapter.generateEntitlementCerts(any(Consumer.class), anyMap(),
             anyMap(), anyMap(), anyBoolean())).thenReturn(ecMap);
 
@@ -445,14 +420,8 @@ public class EntitlementCertificateServiceTest {
         List<Owner> owners = new ArrayList<>();
 
         this.ecService.regenerateCertificatesOf(owners, List.of(product), false);
-        verify(mockPoolCurator, never())
-            .markCertificatesDirtyForPoolsWithProducts(any(Owner.class), any(Collection.class));
-        verify(mockPoolCurator, never()).listAvailableEntitlementPools(any(PoolQualifier.class));
-
         this.ecService.regenerateCertificatesOf(null, List.of(product), false);
-        verify(mockPoolCurator, never())
-            .markCertificatesDirtyForPoolsWithProducts(any(Owner.class), any(Collection.class));
-        verify(mockPoolCurator, never()).listAvailableEntitlementPools(any(PoolQualifier.class));
+        verifyNoInteractions(this.mockEntitlementCurator, this.mockEntCertAdapter);
     }
 
     @Test
@@ -461,14 +430,8 @@ public class EntitlementCertificateServiceTest {
         List<Product> products = new ArrayList<>();
 
         this.ecService.regenerateCertificatesOf(List.of(owner), products, false);
-        verify(mockPoolCurator, never())
-            .markCertificatesDirtyForPoolsWithProducts(any(Owner.class), any(Collection.class));
-        verify(mockPoolCurator, never()).listAvailableEntitlementPools(any(PoolQualifier.class));
-
         this.ecService.regenerateCertificatesOf(List.of(owner), null, false);
-        verify(mockPoolCurator, never())
-            .markCertificatesDirtyForPoolsWithProducts(any(Owner.class), any(Collection.class));
-        verify(mockPoolCurator, never()).listAvailableEntitlementPools(any(PoolQualifier.class));
+        verifyNoInteractions(this.mockEntitlementCurator, this.mockEntCertAdapter);
     }
 
     @Test
@@ -477,9 +440,9 @@ public class EntitlementCertificateServiceTest {
         Product product = TestUtil.createProduct();
 
         this.ecService.regenerateCertificatesOf(List.of(owner), List.of(product), true);
-        verify(mockPoolCurator)
-            .markCertificatesDirtyForPoolsWithProducts(owner, Set.of(product.getId()));
-        verify(mockPoolCurator, never()).listAvailableEntitlementPools(any(PoolQualifier.class));
+        verify(this.mockEntitlementCurator).markEntitlementsDirtyForProducts(owner, Set.of(product.getId()));
+        verify(this.mockEntitlementCurator, never()).listEntitlementIdsForProducts(any(), any());
+        verifyNoInteractions(this.mockEntCertAdapter);
     }
 
     @Test
@@ -487,23 +450,10 @@ public class EntitlementCertificateServiceTest {
         Owner owner = TestUtil.createOwner();
         Product product = TestUtil.createProduct();
 
-        Page<List<Pool>> page = new Page<>();
-        page.setPageData(new ArrayList<>());
-
-        doReturn(page).when(mockPoolCurator)
-            .listAvailableEntitlementPools(any(PoolQualifier.class));
-
         this.ecService.regenerateCertificatesOf(owner, product, false);
-        verify(mockPoolCurator, never())
-            .markCertificatesDirtyForPoolsWithProducts(any(Owner.class), any(Collection.class));
-        ArgumentCaptor<PoolQualifier> qualifierCaptor = ArgumentCaptor.forClass(PoolQualifier.class);
-        verify(mockPoolCurator).listAvailableEntitlementPools(qualifierCaptor.capture());
-
-        assertThat(qualifierCaptor.getValue())
-            .returns(owner.getId(), PoolQualifier::getOwnerId)
-            .returns(Set.of(product.getId()), PoolQualifier::getProductIds)
-            .extracting(PoolQualifier::getActiveOn)
-            .isNotNull();
+        verify(this.mockEntitlementCurator).listEntitlementIdsForProducts(owner, List.of(product.getId()));
+        verify(this.mockEntitlementCurator, never()).markEntitlementsDirtyForProducts(any(), any());
+        verifyNoInteractions(this.mockEntCertAdapter);
     }
 
 }
