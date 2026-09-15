@@ -20,6 +20,8 @@ import static org.candlepin.model.CloudIdentifierFacts.AZURE_OFFER;
 import static org.candlepin.model.CloudIdentifierFacts.AZURE_SHORT_NAME;
 import static org.candlepin.model.CloudIdentifierFacts.AZURE_SUBSCRIPTION_ID;
 
+import org.candlepin.util.Util;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -47,7 +49,9 @@ public class AzureProviderFactParser implements CloudProviderFactParser {
             return Optional.empty();
         }
 
-        return Optional.ofNullable(facts.get(AZURE_OFFER.getValue())).map(List::of);
+        List<String> offeringIds = Util.toListSpaceDelimiter(facts.get(AZURE_OFFER.getValue()));
+
+        return offeringIds.isEmpty() ? Optional.empty() : Optional.of(offeringIds);
     }
 
     /**

@@ -21,6 +21,8 @@ import static org.candlepin.model.CloudIdentifierFacts.AWS_INSTANCE_ID;
 import static org.candlepin.model.CloudIdentifierFacts.AWS_MARKETPLACE_PRODUCT_CODES;
 import static org.candlepin.model.CloudIdentifierFacts.AWS_SHORT_NAME;
 
+import org.candlepin.util.Util;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -54,6 +56,8 @@ public class AWSProviderFactParser implements CloudProviderFactParser {
                 AWS_BILLING_PRODUCTS.getValue())
             .map(facts::get)
             .filter(Objects::nonNull)
+            .map(Util::toListSpaceDelimiter)
+            .flatMap(List::stream)
             .toList();
         return offeringIds.isEmpty() ? Optional.empty() : Optional.of(offeringIds);
     }
