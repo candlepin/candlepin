@@ -14,7 +14,6 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -29,15 +28,12 @@ import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.PoolService;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.exceptions.ServiceUnavailableException;
-import org.candlepin.model.Consumer;
+import org.candlepin.exceptions.NotImplementedException;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.service.SubscriptionServiceAdapter;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,9 +45,6 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
-import jakarta.ws.rs.core.Response;
-
 
 
 @ExtendWith(MockitoExtension.class)
@@ -116,64 +109,10 @@ public class SubscriptionResourceTest {
     }
 
     @Test
-    public void activateNoEmail() {
-        this.config.setProperty(ConfigProperties.STANDALONE, "false");
-
-        assertThrows(BadRequestException.class,
-            () -> subResource.activateSubscription("random", null, "en_us"));
-    }
-
-    @Test
-    public void activateNoEmailLocale() {
-        this.config.setProperty(ConfigProperties.STANDALONE, "false");
-
-        assertThrows(BadRequestException.class,
-            () -> subResource.activateSubscription("random", "random@somthing.com", null));
-    }
-
-    @Test
-    public void activateBadConsumer() {
-        this.config.setProperty(ConfigProperties.STANDALONE, "false");
-
-        assertThrows(BadRequestException.class,
-            () -> subResource.activateSubscription("test_consumer", "email@whatever.net", "en_us"));
-    }
-
-    @Test
-    public void activateSubServiceCalled() {
-        this.config.setProperty(ConfigProperties.STANDALONE, "false");
-
-        Consumer consumer = new Consumer()
-            .setName("test_consumer")
-            .setUsername("alf");
-
-        when(consumerCurator.findByUuid("ae843603bdc73")).thenReturn(consumer);
-
-        subResource.activateSubscription("ae843603bdc73", "alf@alfnet.com", "en");
-
-        verify(subService).activateSubscription(consumer, "alf@alfnet.com", "en");
-    }
-
-    @Test
-    public void activateCorrectResponseCode() {
-        this.config.setProperty(ConfigProperties.STANDALONE, "false");
-
-        Consumer consumer = new Consumer()
-            .setName("test_consumer")
-            .setUsername("alf");
-
-        when(consumerCurator.findByUuid("ae843603bdc73")).thenReturn(consumer);
-
-        Response result = subResource.activateSubscription("ae843603bdc73", "alf@alfnet.com", "en");
-
-        assertEquals(result.getStatus(), 202);
-    }
-
-    @Test
-    public void testActivateSubscriptionRequiresHostedMode() {
+    public void testActivateSubscriptionThrowsNotImplemented() {
         this.config.setProperty(ConfigProperties.STANDALONE, "true");
 
-        assertThrows(ServiceUnavailableException.class,
+        assertThrows(NotImplementedException.class,
             () -> this.subResource.activateSubscription("uuid", "consumer@email.com", "consumer_locale"));
     }
 

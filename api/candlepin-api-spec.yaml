@@ -8420,19 +8420,15 @@ paths:
           schema:
             type: string
       responses:
-        202:
-          description: A Subscription is being activated
-        400:
-          description: Invalid request such as missing email/locale or when the consumer with the given uuid was not found
+        501:
+          description: Subscription activation through this endpoint is no longer supported
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
-                displayMessage: The consumer with the given uuid was not found
+                displayMessage: Subscription activation through 'subscription-manager redeem' is no longer supported, please visit https://access.redhat.com/subscriptions/activate/dell to redeem your service tag.
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
 
   /subscriptions/{id}:
     delete:

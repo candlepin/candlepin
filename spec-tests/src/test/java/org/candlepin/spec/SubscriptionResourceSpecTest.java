@@ -16,6 +16,7 @@ package org.candlepin.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotImplemented;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertUnavailable;
 import static org.candlepin.spec.bootstrap.data.builder.Pools.PRIMARY_POOL_SUB_KEY;
 
@@ -92,7 +93,7 @@ public class SubscriptionResourceSpecTest {
         createSubscriptionOrPool(owner);
         assertThat(ownerApi.getOwnerSubscriptions(owner.getKey())).hasSize(1);
         ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
-        client.subscriptions().activateSubscription(consumer.getUuid(), "mail", "locale");
+        assertNotImplemented(() -> client.subscriptions().activateSubscription(consumer.getUuid(), "mail", "locale"));
     }
 
     @Test
