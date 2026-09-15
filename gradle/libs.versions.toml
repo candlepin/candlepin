@@ -19,7 +19,7 @@ test-logger = "4.0.0"
 # file map these aliases to real Maven groupId:artifactId coordinates so Dependabot can detect them.
 maven-build-helper-plugin = "3.6.1"
 maven-compiler-plugin = "3.16.0"
-maven-exec-plugin = "3.6.3"
+maven-exec-plugin = "3.6.4"
 maven-jar-plugin = "3.5.1"
 maven-resources-plugin = "3.5.0"
 maven-war-plugin = "3.5.1"
