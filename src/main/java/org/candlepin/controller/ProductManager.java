@@ -389,6 +389,79 @@ public class ProductManager {
     }
 
     /**
+     * Recursively retrieves the UUIDs of all ancestor products for the specified products and content.
+     * The resulting set includes the specified product UUIDs.
+     *
+     * @param productUuids
+     *  the UUIDs of products to retrieve parent products for
+     *
+     * @param contentUuids
+     * the UUIDs of content to retrieve parent products for
+     *
+     * @return all parent products for the provided product UUIDs, as well as all of the products that use the
+     *  provided content and their parent products. This method does not return null.
+     */
+    public Set<String> getFullParentProductGraph(Collection<String> productUuids,
+        Collection<String> contentUuids) {
+
+        Set<String> allProductUuids = productUuids == null ? new HashSet<>() : new HashSet<>(productUuids);
+        if (contentUuids != null && !contentUuids.isEmpty()) {
+            this.contentCurator.getProductsReferencingContent(contentUuids).values()
+                .forEach(allProductUuids::addAll);
+        }
+
+        this.resolveFullParentProductGraph(allProductUuids);
+
+        return allProductUuids;
+    }
+
+    /**
+     * Recursively retrieves the UUIDs of all ancestor products for the specified product UUIDs. The resulting
+     * set includes the specified product UUIDs.
+     *
+     * @param productUuids
+     *  the UUIDs of products to retrieve ancestor products for
+     *
+     * @return all ancestor products for the specified product UUIDs. This method does not return null.
+     */
+    public Set<String> getFullParentProductGraph(Collection<String> productUuids) {
+        if (productUuids == null || productUuids.isEmpty()) {
+            return Set.of();
+        }
+
+        Set<String> allProductUuids = new HashSet<>(productUuids);
+
+        this.resolveFullParentProductGraph(allProductUuids);
+
+        return allProductUuids;
+    }
+
+    /**
+     * Traverses the product graph starting with the specified {@link Product} UUIDs and adds parent products
+     * until reaching the top-level SKU product. This method will not include children of parent products.
+     * All ancestor products are added to the provided set.
+     *
+     * @param productUuids
+     *  list of product UUIDs to retrieve ancestor products for.
+     */
+    private void resolveFullParentProductGraph(Set<String> productUuids) {
+        if (productUuids == null || productUuids.isEmpty()) {
+            return;
+        }
+
+        Set<String> current = new HashSet<>(productUuids);
+        while (!current.isEmpty()) {
+            this.productCurator.getProductsReferencingProducts(current).values()
+                .forEach(current::addAll);
+
+            // discard already visited products
+            current.removeAll(productUuids);
+
+            productUuids.addAll(current);
+        }
+    }
+
+    /**
      * Tests if the given product entity would be changed by the collection of updates captured by
      * the specified product info container, ignoring any identifier fields.
      * <p></p>
