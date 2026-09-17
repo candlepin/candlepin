@@ -166,6 +166,7 @@ import org.candlepin.util.function.CheckedSupplier;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.core.ResteasyContext;
@@ -175,6 +176,7 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -3074,7 +3076,7 @@ public class ConsumerResource implements ConsumerApi {
      * @param cdnLabel
      * @param webAppPrefix
      * @param apiUrl
-     * @return the generated file archive.
+     * @return null; the generated archive is written directly to the servlet response.
      */
     @Deprecated
     @Override
@@ -3083,10 +3085,20 @@ public class ConsumerResource implements ConsumerApi {
         String apiUrl) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         HttpServletResponse response = ResteasyContext.getContextData(HttpServletResponse.class);
+        File workDir = null;
         try {
             File archive = manifestManager.generateManifest(consumerUuid, cdnLabel, webAppPrefix, apiUrl);
+            workDir = archive.getParentFile();
+            response.setContentType("application/zip");
             response.addHeader("Content-Disposition", "attachment; filename=" + archive.getName());
-            return archive;
+            response.setContentLengthLong(archive.length());
+
+            // Consume the archive before cleanup; RESTEasy reads a returned File after this method exits.
+            FileUtils.copyFile(archive, response.getOutputStream());
+            response.flushBuffer();
+
+            // Done intentionally due to OpenAPI constraints on return type.
+            return null;
         }
         catch (ExportCreationException e) {
             throw new IseException(i18n.tr("Unable to create export archive"), e);
@@ -3094,6 +3106,24 @@ public class ConsumerResource implements ConsumerApi {
         catch (CryptoCapabilitiesException e) {
             throw new ConflictException(i18n.tr("Unable to determine the signature scheme for consumer: {0}",
                 consumer.getUuid()), e);
+        }
+        catch (IOException e) {
+            if (!response.isCommitted()) {
+                response.reset();
+            }
+            throw new IseException(i18n.tr("Unable to download manifest: {0}", consumerUuid), e);
+        }
+        finally {
+            if (workDir != null) {
+                try {
+                    FileUtils.deleteDirectory(workDir);
+                }
+                catch (IOException ioe) {
+                    log.warn("Unable to delete export directory: {}", workDir, ioe);
+                    // It'll get cleaned up by the ManifestCleanerJob or pod restart if it couldn't
+                    // be deleted for some reason.
+                }
+            }
         }
     }
 

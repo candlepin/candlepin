@@ -16,12 +16,18 @@ package org.candlepin.resource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.test.TestUtil.createConsumerDTO;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Access;
@@ -29,6 +35,7 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.PoolService;
 import org.candlepin.dto.api.server.v1.CertificateDTO;
@@ -44,6 +51,7 @@ import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.ForbiddenException;
+import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CertificateSerial;
@@ -75,12 +83,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -92,7 +105,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
+import java.util.zip.ZipInputStream;
 
+import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.core.Response;
 
@@ -503,7 +518,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testReadOnlyUsersCanGenerateExports() {
+    public void testReadOnlyUsersCanGenerateExports() throws IOException {
         // add an identity certificate for the export
         IdentityCertificate idCert = TestUtil.createIdCert();
         idCert.setId(null); // needs to be null to persist
@@ -515,9 +530,65 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerCurator.update(consumer);
         setupPrincipal(owner, Access.READ_ONLY);
         securityInterceptor.enable();
-        ResteasyContext.pushContext(HttpServletResponse.class, mock(HttpServletResponse.class));
-        consumerResource.exportData(consumer.getUuid(), null, null, null);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        when(response.getOutputStream()).thenReturn(mock(ServletOutputStream.class));
+        ResteasyContext.pushContext(HttpServletResponse.class, response);
+        String consumerUuid = consumer.getUuid();
+        assertDoesNotThrow(
+                () -> consumerResource.exportData(consumerUuid, null, null, null)
+        );
         // if no exception, we're good
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    public void testTempDirDeletedAfterExport(boolean disconnect, @TempDir Path workDir) throws IOException {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, workDir.toString());
+        // add an identity certificate for the export
+        IdentityCertificate idCert = TestUtil.createIdCert();
+        idCert.setId(null); // needs to be null to persist
+        certSerialCurator.create(idCert.getSerial());
+        identityCertificateCurator.create(idCert);
+        consumer.setIdCert(idCert);
+
+        consumer.setType(consumerTypeCurator.create(new ConsumerType(ConsumerTypeEnum.CANDLEPIN)));
+        consumerCurator.update(consumer);
+        setupPrincipal(owner, Access.READ_ONLY);
+        securityInterceptor.enable();
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        ServletOutputStream output = mock(ServletOutputStream.class);
+        ByteArrayOutputStream body = new ByteArrayOutputStream();
+        IOException failure = new IOException("Client disconnected");
+        when(response.getOutputStream()).thenReturn(output);
+        doAnswer(invocation -> {
+            assertThat(workDir.toFile()).isNotEmptyDirectory();
+            if (disconnect) {
+                throw failure;
+            }
+            body.write(invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2));
+            return null;
+        }).when(output).write(any(byte[].class), anyInt(), anyInt());
+        ResteasyContext.pushContext(HttpServletResponse.class, response);
+
+        String consumerUuid = consumer.getUuid();
+        if (disconnect) {
+            IseException exception = assertThrows(IseException.class,
+                () -> consumerResource.exportData(consumerUuid, null, null, null));
+            assertThat(exception).hasCause(failure);
+        }
+        else {
+            assertNull(consumerResource.exportData(consumerUuid, null, null, null));
+            verify(response).setContentType("application/zip");
+            verify(response).setContentLengthLong(body.size());
+            verify(response).flushBuffer();
+            try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(body.toByteArray()))) {
+                assertNotNull(zip.getNextEntry());
+                assertThat(zip.readAllBytes()).isNotEmpty();
+            }
+        }
+
+        assertThat(workDir.toFile()).isEmptyDirectory();
+        verify(output, never()).close();
     }
 
     @SuppressWarnings("unchecked")
