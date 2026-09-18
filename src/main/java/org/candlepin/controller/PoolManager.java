@@ -228,7 +228,7 @@ public class PoolManager {
             .map(Product::getUuid)
             .collect(Collectors.toSet());
 
-        Set<String> allAffectedProducts = this.productManager.getAllProducts(updatedProductUuids, updateContentUuids);
+        Set<String> allAffectedProducts = this.productManager.getFullProductGraph(updatedProductUuids, updateContentUuids);
 
         int dirtyPoolsCount = this.poolCurator.markPoolsDirtyReferencingProducts(allAffectedProducts);
         log.debug("Flagged {} pool-products as dirty", dirtyPoolsCount);

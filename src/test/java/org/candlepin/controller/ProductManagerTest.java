@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -40,8 +41,9 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -49,6 +51,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -754,4 +757,296 @@ public class ProductManagerTest extends DatabaseTestFixture {
         }
     }
 
+    @Test
+    public void testGetFullProductGraphWithNullOrEmptyProductUuids() {
+        Set<String> actual = productManager.getFullProductGraph(null);
+
+        assertThat(actual)
+            .as("verify null product UUID collection")
+            .isNotNull()
+            .isEmpty();
+
+        actual = productManager.getFullProductGraph(List.of());
+
+        assertThat(actual)
+            .as("verify empty product UUID collection")
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetFullProductGraphWithSKUProduct() {
+        Product skuProduct1 = this.createProduct(TestUtil.randomString("sku-prod-1-"));
+        this.createProduct(TestUtil.randomString("sku-prod-2-"));
+
+        List<String> expected = List.of(skuProduct1.getUuid());
+
+        Set<String> actual = this.productManager.getFullProductGraph(List.of(skuProduct1.getUuid()));
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    public void testGetFullProductGraphWithDerivedProduct() {
+        Product providedProd1 = createProduct(TestUtil.randomString("provided-prod-1-"));
+        Product providedProd2 = createProduct(TestUtil.randomString("provided-prod-2-"));
+
+        Product derivedProd = TestUtil.createProduct(TestUtil.randomString("derived-prod-1-"));
+        derivedProd.addProvidedProduct(providedProd1);
+        derivedProd.addProvidedProduct(providedProd2);
+        derivedProd = this.createProduct(derivedProd);
+
+        Product skuProduct = TestUtil.createProduct(TestUtil.randomString("sku-prod-2-"));
+        skuProduct.setDerivedProduct(derivedProd);
+        skuProduct = this.createProduct(skuProduct);
+
+        List<String> expected = List.of(
+            providedProd2.getUuid(),
+            derivedProd.getUuid(),
+            skuProduct.getUuid()
+        );
+
+        Set<String> actual = this.productManager.getFullProductGraph(List.of(providedProd2.getUuid()));
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    public void testGetFullProductGraphWithSharedProvidedProduct() {
+        Product providedProd = this.createProduct(TestUtil.randomString("provided-prod-1-"));
+
+        Product skuProduct1 = TestUtil.createProduct(TestUtil.randomString("sku-prod-1-"));
+        skuProduct1.addProvidedProduct(providedProd);
+        skuProduct1 = this.createProduct(skuProduct1);
+
+        Product skuProduct2 = TestUtil.createProduct(TestUtil.randomString("sku-prod-2-"));
+        skuProduct2.addProvidedProduct(providedProd);
+        skuProduct2 = this.createProduct(skuProduct2);
+
+        // SKU product 1 and 2 share provided product providedProd1, so we should get both parent SKU products
+        List<String> expected = List.of(
+            providedProd.getUuid(),
+            skuProduct1.getUuid(),
+            skuProduct2.getUuid()
+        );
+
+        Set<String> actual = this.productManager.getFullProductGraph(List.of(providedProd.getUuid()));
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    public void testGetFullProductGraphWithSharedDerivedProduct() {
+        Product providedProd = this.createProduct(TestUtil.randomString("provided-prod-1-"));
+
+        Product derivedProd1 = TestUtil.createProduct(TestUtil.randomString("derived-prod-1-"));
+        derivedProd1.addProvidedProduct(providedProd);
+        derivedProd1 = this.createProduct(derivedProd1);
+
+        Product skuProduct1 = TestUtil.createProduct(TestUtil.randomString("sku-prod-1-"));
+        skuProduct1.setDerivedProduct(derivedProd1);
+        skuProduct1 = this.createProduct(skuProduct1);
+
+        Product skuProduct2 = TestUtil.createProduct(TestUtil.randomString("sku-prod-2-"));
+        skuProduct2.setDerivedProduct(derivedProd1);
+        skuProduct2 = this.createProduct(skuProduct2);
+
+        // SKU product 1 and 2 share derived product derivedProd1, so we should get both parent SKU products
+        List<String> expected = List.of(
+            providedProd.getUuid(),
+            derivedProd1.getUuid(),
+            skuProduct1.getUuid(),
+            skuProduct2.getUuid()
+        );
+
+        Set<String> actual = this.productManager.getFullProductGraph(List.of(providedProd.getUuid()));
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    public void testGetFullProductGraphWithDisjointGraphs() {
+        Product providedProd1 = this.createProduct(TestUtil.randomString("provided-prod-1-"));
+        Product providedProd2 = this.createProduct(TestUtil.randomString("provided-prod-2-"));
+
+        Product skuProduct1 = TestUtil.createProduct(TestUtil.randomString("sku-prod-1-"));
+        skuProduct1.addProvidedProduct(providedProd1);
+        skuProduct1 = this.createProduct(skuProduct1);
+
+        Product skuProduct2 = TestUtil.createProduct(TestUtil.randomString("sku-prod-2-"));
+        skuProduct2.addProvidedProduct(providedProd2);
+        skuProduct2 = this.createProduct(skuProduct2);
+
+        // First make sure we only retrieve the graph for provided product 1
+
+        Set<String> actual = this.productManager.getFullProductGraph(List.of(providedProd1.getUuid()));
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(List.of(providedProd1.getUuid(), skuProduct1.getUuid()));
+
+        // Now retrieve both graphs
+
+        List<String> expected = List.of(
+            providedProd1.getUuid(),
+            providedProd2.getUuid(),
+            skuProduct1.getUuid(),
+            skuProduct2.getUuid()
+        );
+
+        actual = this.productManager
+            .getFullProductGraph(List.of(providedProd1.getUuid(), providedProd2.getUuid()));
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    public void testGetFullProductGraphDoesNotIncludChildren() {
+        Product providedProd1 = createProduct(TestUtil.randomString("provided-prod-1-"));
+        Product providedProd2 = createProduct(TestUtil.randomString("provided-prod-2-"));
+
+        Product derivedProd = TestUtil.createProduct(TestUtil.randomString("derived-prod-1-"));
+        derivedProd.addProvidedProduct(providedProd1);
+        derivedProd.addProvidedProduct(providedProd2);
+        derivedProd = this.createProduct(derivedProd);
+
+        Product skuProduct = TestUtil.createProduct(TestUtil.randomString("sku-prod-2-"));
+        skuProduct.setDerivedProduct(derivedProd);
+        skuProduct = this.createProduct(skuProduct);
+
+        // We should get back provided product 1 or provided product 2 becuase they are children to the
+        // derived product
+        List<String> expected = List.of(
+            derivedProd.getUuid(),
+            skuProduct.getUuid()
+        );
+
+        Set<String> actual = this.productManager.getFullProductGraph(List.of(derivedProd.getUuid()));
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    public void testGetFullProductGraphWithNullOrEmptyContentUuids() {
+        Product providedProd1 = this.createProduct(TestUtil.randomString("provided-prod-1-"));
+        Product providedProd2 = this.createProduct(TestUtil.randomString("provided-prod-2-"));
+
+        Product skuProduct1 = TestUtil.createProduct(TestUtil.randomString("sku-prod-1-"));
+        skuProduct1.addProvidedProduct(providedProd1);
+        skuProduct1 = this.createProduct(skuProduct1);
+
+        Product skuProduct2 = TestUtil.createProduct(TestUtil.randomString("sku-prod-2-"));
+        skuProduct2.addProvidedProduct(providedProd2);
+        skuProduct2 = this.createProduct(skuProduct2);
+
+        List<String> expected = List.of(
+            providedProd1.getUuid(),
+            skuProduct1.getUuid()
+        );
+
+        Set<String> actual = this.productManager.getFullProductGraph(List.of(providedProd1.getUuid()), null);
+
+        assertThat(actual)
+            .as("verify with null content UUIDs")
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+
+        actual = this.productManager.getFullProductGraph(List.of(providedProd1.getUuid()), List.of());
+
+        assertThat(actual)
+            .as("verify with empty content UUIDs")
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    public void testGetFullProductGraphWithOnlyContentUuids() {
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+
+        Product providedProd1 = TestUtil.createProduct(TestUtil.randomString("provided-prod-1-"));
+        providedProd1.addContent(content1, true);
+        providedProd1 = this.createProduct(providedProd1);
+
+        Product providedProd2 = TestUtil.createProduct(TestUtil.randomString("provided-prod-2-"));
+        providedProd2.addContent(content2, true);
+        providedProd2 = this.createProduct(providedProd2);
+
+        Product skuProduct1 = TestUtil.createProduct(TestUtil.randomString("sku-prod-1-"));
+        skuProduct1.addProvidedProduct(providedProd1);
+        skuProduct1 = this.createProduct(skuProduct1);
+
+        Product skuProduct2 = TestUtil.createProduct(TestUtil.randomString("sku-prod-2-"));
+        skuProduct2.addProvidedProduct(providedProd2);
+        skuProduct2 = this.createProduct(skuProduct2);
+
+        Set<String> actual = this.productManager
+            .getFullProductGraph(null, List.of(content1.getUuid()));
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(List.of(providedProd1.getUuid(), skuProduct1.getUuid()));
+    }
+
+    @Test
+    public void testGetFullProductGraphWithContentUuids() {
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+
+        Product providedProd1 = TestUtil.createProduct(TestUtil.randomString("provided-prod-1-"));
+        providedProd1.addContent(content1, true);
+        providedProd1 = this.createProduct(providedProd1);
+
+        Product providedProd2 = TestUtil.createProduct(TestUtil.randomString("provided-prod-2-"));
+        providedProd2.addContent(content2, true);
+        providedProd2 = this.createProduct(providedProd2);
+
+        Product providedProd3 = TestUtil.createProduct(TestUtil.randomString("provided-prod-3-"));
+        providedProd3.addContent(content2, true);
+        providedProd3 = this.createProduct(providedProd3);
+
+        Product skuProduct1 = TestUtil.createProduct(TestUtil.randomString("sku-prod-1-"));
+        skuProduct1.addProvidedProduct(providedProd1);
+        skuProduct1 = this.createProduct(skuProduct1);
+
+        Product skuProduct2 = TestUtil.createProduct(TestUtil.randomString("sku-prod-2-"));
+        skuProduct2.addProvidedProduct(providedProd2);
+        skuProduct2 = this.createProduct(skuProduct2);
+
+        Product skuProduct3 = TestUtil.createProduct(TestUtil.randomString("sku-prod-3-"));
+        skuProduct3.addProvidedProduct(providedProd3);
+        skuProduct3 = this.createProduct(skuProduct3);
+
+        // By provided content2's UUID, we should also get the graph of skuProduct2 and skuProduct3 because
+        // they both have provided products that use this content
+        List<String> expected = List.of(
+            providedProd1.getUuid(),
+            providedProd2.getUuid(),
+            providedProd3.getUuid(),
+            skuProduct1.getUuid(),
+            skuProduct2.getUuid(),
+            skuProduct3.getUuid()
+        );
+
+        Set<String> actual = this.productManager
+            .getFullProductGraph(List.of(providedProd1.getUuid()), List.of(content2.getUuid()));
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(expected);
+    }
+
 }
+

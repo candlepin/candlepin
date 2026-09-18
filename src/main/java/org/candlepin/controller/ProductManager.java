@@ -31,6 +31,7 @@ import org.candlepin.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -388,11 +389,23 @@ public class ProductManager {
         return product;
     }
 
-    // TODO: Better name
-    // TODO: Java Doc
-    public Set<String> getAllProducts(Collection<String> productUuids, Collection<String> contentUuids) {
+    /**
+     * Retrieves all of the parent product UUIDs for the provided product UUIDs and content UUID then returns
+     * the union of both sets. All products that reference the provided content UUIDs will be returned and
+     * all of their parent products.
+     *
+     * @param productUuids
+     *  the UUIDs of products to retrieve parent products for
+     *
+     * @param contentUuids
+     * the UUIDs of content to retrieve parent products for
+     *
+     * @return the union of the provided product UUIDs, the UUIDs of products that reference the provided
+     *  content UUIDs, and all the parent product UUIDs
+     */
+    public Set<String> getFullProductGraph(Collection<String> productUuids, Collection<String> contentUuids) {
         if (productUuids == null) {
-            productUuids = List.of();
+            productUuids = Set.of();
         }
 
         Set<String> allProductUuids = new HashSet<>(productUuids);
@@ -401,22 +414,42 @@ public class ProductManager {
                 .forEach(allProductUuids::addAll);
         }
 
-        Set<String> productsToCheck = Set.copyOf(allProductUuids);
+        return this.getFullProductGraph(allProductUuids);
+    }
 
-        // TODO: Need to check for cycles
-
-        while (!productsToCheck.isEmpty()) {
-            Set<String> parents = new HashSet<>();
-            this.productCurator.getProductsReferencingProducts(productsToCheck).values()
-                .forEach(parents::addAll);
-
-            allProductUuids.addAll(parents);
-            productsToCheck = parents;
+    /**
+     * Retrieves all of the parent product UUIDs for the provided product UUIDs and returns the union of both
+     * sets.
+     *
+     * @param productUuids
+     *  the UUIDs of products to retrieve parent products for
+     *
+     * @return the union of the provided product UUIDs and all of their parent product UUIDs
+     */
+    public Set<String> getFullProductGraph(Collection<String> productUuids) {
+        if (productUuids == null || productUuids.isEmpty()) {
+            return Set.of();
         }
 
-        log.info("TESTING: ProductManager.getAllProducts - " + allProductUuids.toString());
+        return recurseFullProductGraph(new HashSet<>(productUuids));
+    }
 
-        return allProductUuids;
+    private Set<String> recurseFullProductGraph(Set<String> productUuids) {
+        if (productUuids == null || productUuids.isEmpty()) {
+            return productUuids;
+        }
+
+        // Note that we should not have cycles because cycle validation is currently handled in the Product
+        // class before persisting
+
+        Set<String> parentProducts = new HashSet<>();
+        this.productCurator.getProductsReferencingProducts(productUuids).values()
+            .forEach(parentProducts::addAll);
+
+        parentProducts.addAll(this.getFullProductGraph(parentProducts));
+        productUuids.addAll(parentProducts);
+
+        return productUuids;
     }
 
     /**
