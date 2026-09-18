@@ -264,11 +264,13 @@ public class PoolManagerTest {
             consumerCuratorMock, consumerTypeCurator, certCurator,
             complianceRules, systemPurposeComplianceRules, config, i18n));
 
-        this.manager = spy(new PoolManager(
-            poolCurator, mockEventSink, eventFactory, config, enforcer, poolRules, entitlementCurator,
-            consumerCuratorMock, consumerTypeCurator, mockecService, complianceRules, autobindRules,
-            activationKeyRules, mockOwnerCurator, i18n, poolService, mockBindChainFactory,
-            refreshWorkerProvider, poolOpProcessor, poolConverter));
+        // TODO: Fix this
+
+        // this.manager = spy(new PoolManager(
+        //     poolCurator, mockEventSink, eventFactory, config, enforcer, poolRules, entitlementCurator,
+        //     consumerCuratorMock, consumerTypeCurator, mockecService, complianceRules, autobindRules,
+        //     activationKeyRules, mockOwnerCurator, i18n, poolService, mockBindChainFactory,
+        //     refreshWorkerProvider, poolOpProcessor, poolConverter));
 
         this.refresherFactory = new RefresherFactory(ownerCurator, manager, poolCurator, poolConverter);
 

@@ -879,6 +879,34 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .executeUpdate();
     }
 
+    /**
+     * Dirties all of the entitlements that were created by pools that use one of the product UUIDs.
+     *
+     * @param productUuids
+     *  a list of {@link Product} UUIDs to mark entitlements dirty for
+     * 
+     * @return the number of entitlements that were marked dirty
+     */
+    public int markEntitlementsDirtyForProducts(Collection<String> productUuids) {
+        if (productUuids == null || productUuids.isEmpty()) {
+            return 0;
+        }
+
+        String jpql = "UPDATE Entitlement e " +
+            "SET e.dirty = true " +
+            "WHERE e.pool.productUuid IN (:productUuids)";
+
+        Query query = this.getEntityManager().createQuery(jpql);
+
+        int updated = 0;
+        for (List<String> block : this.partition(productUuids)) {
+            updated += query.setParameter("productUuids", block)
+                .executeUpdate();
+        }
+
+        return updated;
+    }
+
     private Page<List<Entitlement>> listByProduct(
         AbstractHibernateObject object, String objectType, String productId, PageRequest pageRequest) {
         CriteriaBuilder builder = this.entityManager.get().getCriteriaBuilder();

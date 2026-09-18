@@ -32,6 +32,8 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
@@ -116,6 +118,7 @@ public class PoolManager {
     private final PoolOpProcessor poolOpProcessor;
     private final PoolConverter poolConverter;
     private final PoolService poolService;
+    private final ProductManager productManager;
     private final boolean isStandalone;
 
     @Inject
@@ -139,7 +142,8 @@ public class PoolManager {
         BindChainFactory bindChainFactory,
         Provider<RefreshWorker> refreshWorkerProvider,
         PoolOpProcessor poolOpProcessor,
-        PoolConverter poolConverter) {
+        PoolConverter poolConverter,
+        ProductManager productManager) {
 
         this.poolCurator = Objects.requireNonNull(poolCurator);
         this.sink = Objects.requireNonNull(sink);
@@ -160,6 +164,7 @@ public class PoolManager {
         this.poolOpProcessor = Objects.requireNonNull(poolOpProcessor);
         this.poolConverter = Objects.requireNonNull(poolConverter);
         this.poolService = Objects.requireNonNull(poolService);
+        this.productManager = Objects.requireNonNull(productManager);
         this.isStandalone = config.getBoolean(ConfigProperties.STANDALONE);
     }
 
@@ -210,22 +215,26 @@ public class PoolManager {
         Map<String, Product> existingProducts = refreshResult.getEntities(Product.class, existingStates);
         Map<String, Product> updatedProducts = refreshResult.getEntities(Product.class, EntityState.UPDATED);
 
+        Set<String> updateContentUuids = refreshResult.getEntities(Content.class, EntityState.UPDATED).values().stream()
+            .map(Content::getUuid)
+            .collect(Collectors.toSet());
+
         // TODO: Move everything below this line to the refresher
         boolean poolsModified = false;
 
         // Flag pools referencing the updated products as dirty
-        List<String> updatedProductUuids = updatedProducts.values()
+        Set<String> updatedProductUuids = updatedProducts.values()
             .stream()
             .map(Product::getUuid)
-            .toList();
+            .collect(Collectors.toSet());
 
-        int count = this.poolCurator.markPoolsDirtyReferencingProducts(updatedProductUuids);
-        log.debug("Flagged {} pool-products as dirty", count);
+        Set<String> allAffectedProducts = this.productManager.getAllProducts(updatedProductUuids, updateContentUuids);
 
-        // TODO: We *could* also flag entitlements dirty here, but if the lazy flag is set to
-        // false, we'll need to pull all of them back and immediately regen; which could be
-        // catastrophic in terms of memory utilization and refresh runtime. Perhaps revisit this
-        // when we get around to a refresh refactor. :/
+        int dirtyPoolsCount = this.poolCurator.markPoolsDirtyReferencingProducts(allAffectedProducts);
+        log.debug("Flagged {} pool-products as dirty", dirtyPoolsCount);
+
+        int dirtiedEntsCount = this.entitlementCurator.markEntitlementsDirtyForProducts(allAffectedProducts);
+        log.info("Flagged {} entitlements as dirty", dirtiedEntsCount);
 
         // Gather local subscriptions for pool refresh
         Map<String, List<Pool>> subscriptionPools = this.poolCurator

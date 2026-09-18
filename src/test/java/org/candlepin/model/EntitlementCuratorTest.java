@@ -1767,4 +1767,75 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             .isNotNull()
             .containsExactlyInAnyOrder(ent1, ent2);
     }
+
+    @Test
+    public void testMarkEntitlementsDirtyForProductsWithNullProductUuids() {
+        int actual = this.entitlementCurator.markEntitlementsDirtyForProducts(null);
+
+        assertEquals(0, actual);
+    }
+
+    @Test
+    public void testMarkEntitlementsDirtyForProductsWithEmptyProductUuids() {
+        int actual = this.entitlementCurator.markEntitlementsDirtyForProducts(List.of());
+
+        assertEquals(0, actual);
+    }
+
+    @Test
+    public void testMarkEntitlementsDirtyForProducts() {
+        Owner owner = this.createOwner("test_owner");
+        Consumer consumer1 = this.createConsumer(owner);
+        Consumer consumer2 = this.createConsumer(owner);
+        Consumer consumer3 = this.createConsumer(owner);
+
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+        Content content3 = this.createContent();
+
+        Product product1 = new Product()
+            .setId(TestUtil.randomString())
+            .setName(TestUtil.randomString());
+        product1.addContent(content1, true);
+        product1.addContent(content2, false);
+        product1 = this.createProduct(product1);
+
+        Product product2 = new Product()
+            .setId(TestUtil.randomString())
+            .setName(TestUtil.randomString());
+        product2.addContent(content2, true);
+        product2 = this.createProduct(product2);
+
+        Product product3 = new Product()
+            .setId(TestUtil.randomString())
+            .setName(TestUtil.randomString());
+        product3.addContent(content3, true);
+        product3 = this.createProduct(product3);
+
+        Pool pool1 = this.createPool(owner, product1);
+        Pool pool2 = this.createPool(owner, product2);
+        Pool pool3 = this.createPool(owner, product3);
+
+        Entitlement ent1 = bind(consumer1, pool1);
+        Entitlement ent2 = bind(consumer2, pool2);
+        Entitlement ent3 = bind(consumer3, pool3);
+
+        int actual = this.entitlementCurator
+            .markEntitlementsDirtyForProducts(Set.of(product1.getUuid(), product3.getUuid()));
+
+        this.entitlementCurator.flush();
+        this.entitlementCurator.clear();
+
+        assertEquals(2, actual);
+        assertThat(this.entitlementCurator.get(ent1.getId()))
+            .isNotNull()
+            .returns(true, Entitlement::isDirty);
+        assertThat(this.entitlementCurator.get(ent2.getId()))
+            .isNotNull()
+            .returns(false, Entitlement::isDirty);
+        assertThat(this.entitlementCurator.get(ent3.getId()))
+            .isNotNull()
+            .returns(true, Entitlement::isDirty);
+    }
+
 }

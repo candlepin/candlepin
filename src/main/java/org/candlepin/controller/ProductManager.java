@@ -388,6 +388,37 @@ public class ProductManager {
         return product;
     }
 
+    // TODO: Better name
+    // TODO: Java Doc
+    public Set<String> getAllProducts(Collection<String> productUuids, Collection<String> contentUuids) {
+        if (productUuids == null) {
+            productUuids = List.of();
+        }
+
+        Set<String> allProductUuids = new HashSet<>(productUuids);
+        if (contentUuids != null && !contentUuids.isEmpty()) {
+            this.contentCurator.getProductsReferencingContent(contentUuids).values()
+                .forEach(allProductUuids::addAll);
+        }
+
+        Set<String> productsToCheck = Set.copyOf(allProductUuids);
+
+        // TODO: Need to check for cycles
+
+        while (!productsToCheck.isEmpty()) {
+            Set<String> parents = new HashSet<>();
+            this.productCurator.getProductsReferencingProducts(productsToCheck).values()
+                .forEach(parents::addAll);
+
+            allProductUuids.addAll(parents);
+            productsToCheck = parents;
+        }
+
+        log.info("TESTING: ProductManager.getAllProducts - " + allProductUuids.toString());
+
+        return allProductUuids;
+    }
+
     /**
      * Tests if the given product entity would be changed by the collection of updates captured by
      * the specified product info container, ignoring any identifier fields.
