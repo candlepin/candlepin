@@ -24,9 +24,9 @@ import org.hibernate.generator.EventTypeSets;
 import java.util.EnumSet;
 
 /**
- * Generates certificate serial numbers while preserving explicitly assigned identifiers.
+ * Generates random UUIDs without hyphens for Candlepin's 32-character identifier columns.
  */
-public class CertificateSerialIdGenerator implements BeforeExecutionGenerator {
+public class DbUuidGenerator implements BeforeExecutionGenerator {
 
     @Override
     public EnumSet<EventType> getEventTypes() {
@@ -35,18 +35,13 @@ public class CertificateSerialIdGenerator implements BeforeExecutionGenerator {
 
     @Override
     public Class<?> getGeneratedType() {
-        return Long.class;
-    }
-
-    @Override
-    public boolean allowAssignedIdentifiers() {
-        return true;
+        return String.class;
     }
 
     @Override
     public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue,
         EventType eventType) {
 
-        return currentValue != null ? currentValue : Util.generateUniqueLong();
+        return Util.generateDbUUID();
     }
 }

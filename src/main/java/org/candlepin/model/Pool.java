@@ -20,10 +20,8 @@ import org.candlepin.util.DateSource;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.type.NumericBooleanConverter;
 import org.xnap.commons.i18n.I18n;
 
@@ -43,7 +41,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -181,8 +178,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     }
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @GeneratedDbUuid
     @Column(length = 32)
     @NotNull
     private String id;
@@ -209,18 +205,14 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      * Signifies that this pool is a derived pool linked to this stack (only one
      * sub pool per stack allowed)
      */
-    @OneToOne(mappedBy = "derivedPool", targetEntity = SourceStack.class)
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @OneToOne(mappedBy = "derivedPool", cascade = CascadeType.ALL, orphanRemoval = true)
     private SourceStack sourceStack;
 
     /**
      * Signifies that this pool was created from this subscription (only one
      * pool per subscription id/subkey is allowed)
      */
-    @OneToOne(mappedBy = "pool", targetEntity = SourceSubscription.class)
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @OneToOne(mappedBy = "pool", cascade = CascadeType.ALL, orphanRemoval = true)
     private SourceSubscription sourceSubscription;
 
     @Column(nullable = false)
@@ -250,7 +242,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @CollectionTable(name = "cp_pool_attribute", joinColumns = @JoinColumn(name = "pool_id"))
     @MapKeyColumn(name = "name")
     @Column(name = "value")
-    @Cascade({ org.hibernate.annotations.CascadeType.ALL })
     @Fetch(FetchMode.SUBSELECT)
     private Map<String, String> attributes;
 

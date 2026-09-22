@@ -17,6 +17,7 @@ package org.candlepin.spec.consumers;
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.InstanceOfAssertFactories.map;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
@@ -449,7 +450,7 @@ public class ConsumerResourceEntitlementSpecTest {
             .hasSize(2)
             .map(PoolQuantityDTO::getPool)
             .map(PoolDTO::getId)
-            .containsExactly(pool1.getId(), pool2.getId());
+            .containsExactlyInAnyOrder(pool1.getId(), pool2.getId());
 
         // dry run against the override service level:
         // should return both pools because we no longer filter on the SLA override
@@ -459,7 +460,7 @@ public class ConsumerResourceEntitlementSpecTest {
             .hasSize(2)
             .map(PoolQuantityDTO::getPool)
             .map(PoolDTO::getId)
-            .containsExactly(pool1.getId(), pool2.getId());
+            .containsExactlyInAnyOrder(pool1.getId(), pool2.getId());
 
         // ensure the override use did not change the setting
         consumer = consumerClient.consumers().getConsumer(consumer.getUuid());
@@ -481,7 +482,7 @@ public class ConsumerResourceEntitlementSpecTest {
             .hasSize(2)
             .map(PoolQuantityDTO::getPool)
             .map(PoolDTO::getId)
-            .containsExactly(pool1.getId(), pool2.getId());
+            .containsExactlyInAnyOrder(pool1.getId(), pool2.getId());
     }
 
     @Test
@@ -525,12 +526,13 @@ public class ConsumerResourceEntitlementSpecTest {
         // so 'Ultra-VIP' & 'VIP' both pools are considered and eligible during auto attach.
         List<PoolQuantityDTO> pools = adminClient.consumers().dryBind(consumer.getUuid(), null);
         assertThat(pools).hasSize(2);
-        assertThat(pools.get(0))
-            .returns(pool1.getId(), x -> x.getPool().getId())
-            .returns(serviceLevel1, x -> getProductAttributeValue(x.getPool(), "support_level"));
-        assertThat(pools.get(1))
-            .returns(pool3.getId(), x -> x.getPool().getId())
-            .returns(serviceLevel2, x -> getProductAttributeValue(x.getPool(), "support_level"));
+        assertThat(pools)
+            .extracting(
+                x -> x.getPool().getId(),
+                x -> getProductAttributeValue(x.getPool(), "support_level"))
+            .containsExactlyInAnyOrder(
+                tuple(pool1.getId(), serviceLevel1),
+                tuple(pool3.getId(), serviceLevel2));
     }
 
     @Test
@@ -577,7 +579,7 @@ public class ConsumerResourceEntitlementSpecTest {
             .hasSize(2)
             .map(PoolQuantityDTO::getPool)
             .map(PoolDTO::getId)
-            .containsExactly(pool1.getId(), pool2.getId());
+            .containsExactlyInAnyOrder(pool1.getId(), pool2.getId());
 
         // This product should also get pulled, exempt overrides
         // based on name match

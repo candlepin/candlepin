@@ -161,43 +161,43 @@ public class HypervisorCheckInSpecTest {
         HypervisorTestData data1 = new HypervisorTestData();
         HypervisorTestData data2 = new HypervisorTestData();
 
+        // Create hosts in reverse name order so paging does not depend on creation order or database IDs.
         hypervisorCheckin(owner, userClient,
-            data1.getExpectedHostName(), data1.getExpectedHostHypervisorId(), new ArrayList<>(), null,
+            "hypervisor-b", data2.getExpectedHostHypervisorId(), new ArrayList<>(), null,
             reporterId, true);
         hypervisorCheckin(owner, userClient,
-            data2.getExpectedHostName(), data2.getExpectedHostHypervisorId(), new ArrayList<>(), null,
+            "hypervisor-a", data1.getExpectedHostHypervisorId(), new ArrayList<>(), null,
             reporterId, true);
 
         // By owner
-        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), null, 1, 2, "asc", "hypervisorId"),
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), null, 1, 2, "asc", "name"),
             data1.getExpectedHostHypervisorId(), data2.getExpectedHostHypervisorId());
-        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), null, 1, 2, "desc", "hypervisorId"),
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), null, 1, 2, "desc", "name"),
             data2.getExpectedHostHypervisorId(), data1.getExpectedHostHypervisorId());
-        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), null, 1, 1, "asc", "hypervisorId"),
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), null, 1, 1, "asc", "name"),
             data1.getExpectedHostHypervisorId());
-        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), null, 1, 1, "desc", "hypervisorId"),
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), null, 1, 1, "desc", "name"),
             data2.getExpectedHostHypervisorId());
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), null, 2, 1, "asc", "name"),
+            data2.getExpectedHostHypervisorId());
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), null, 2, 1, "desc", "name"),
+            data1.getExpectedHostHypervisorId());
 
-        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), List.of(
-                data1.getExpectedHostHypervisorId(),
-                data2.getExpectedHostHypervisorId()
-            ), 1, 2, "asc", "hypervisorId"),
-            data1.getExpectedHostHypervisorId(), data2.getExpectedHostHypervisorId());
-        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), List.of(
-                data1.getExpectedHostHypervisorId(),
-                data2.getExpectedHostHypervisorId()
-            ), 1, 2, "desc", "hypervisorId"),
-            data2.getExpectedHostHypervisorId(), data1.getExpectedHostHypervisorId());
-        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), List.of(
-                data1.getExpectedHostHypervisorId(),
-                data2.getExpectedHostHypervisorId()
-            ), 1, 1, "asc", "hypervisorId"),
-            data1.getExpectedHostHypervisorId());
-        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), List.of(
-                data1.getExpectedHostHypervisorId(),
-                data2.getExpectedHostHypervisorId()
-            ), 1, 1, "desc", "hypervisorId"),
+        // By hypervisor IDs
+        List<String> hypervisorIds = List.of(data1.getExpectedHostHypervisorId(),
             data2.getExpectedHostHypervisorId());
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), hypervisorIds, 1, 2, "asc", "name"),
+            data1.getExpectedHostHypervisorId(), data2.getExpectedHostHypervisorId());
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), hypervisorIds, 1, 2, "desc", "name"),
+            data2.getExpectedHostHypervisorId(), data1.getExpectedHostHypervisorId());
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), hypervisorIds, 1, 1, "asc", "name"),
+            data1.getExpectedHostHypervisorId());
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), hypervisorIds, 1, 1, "desc", "name"),
+            data2.getExpectedHostHypervisorId());
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), hypervisorIds, 2, 1, "asc", "name"),
+            data2.getExpectedHostHypervisorId());
+        assertHypervisors(ownerApi.getHypervisors(owner.getKey(), hypervisorIds, 2, 1, "desc", "name"),
+            data1.getExpectedHostHypervisorId());
     }
 
     private static void assertHypervisors(List<ConsumerDTOArrayElement> hypervisors, String... expected) {

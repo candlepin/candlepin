@@ -24,10 +24,8 @@ import org.candlepin.util.Util;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import java.util.ArrayList;
@@ -55,7 +53,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -152,8 +149,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
 
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @GeneratedDbUuid
     @Column(length = 32)
     @NotNull
     private String id;
@@ -269,9 +265,6 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @CollectionTable(name = "cp_consumer_facts", joinColumns = @JoinColumn(name = "cp_consumer_id"))
     @MapKeyColumn(name = "mapkey")
     @Column(name = "element")
-    //FIXME A cascade shouldn't be necessary here as ElementCollections cascade by default
-    //See http://stackoverflow.com/a/7696147
-    @Cascade({org.hibernate.annotations.CascadeType.ALL})
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Map<String, String> facts;
 
@@ -344,7 +337,6 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @CollectionTable(name = "cp_consumer_environments", joinColumns = @JoinColumn(name = "cp_consumer_id"))
     @MapKeyColumn(name = "priority")
     @Column(name = "environment_id")
-    @Cascade({org.hibernate.annotations.CascadeType.ALL})
     @Fetch(FetchMode.SELECT)
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Map<Integer, String> environmentIds;

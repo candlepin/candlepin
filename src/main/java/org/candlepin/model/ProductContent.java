@@ -19,14 +19,13 @@ import org.candlepin.service.model.ProductContentInfo;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Immutable;
 
 import java.io.Serializable;
 import java.util.Objects;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -51,8 +50,8 @@ public class ProductContent extends AbstractHibernateObject<ProductContent> impl
     public static final Boolean DEFAULT_ENABLED_STATE = Boolean.FALSE;
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @GeneratedDbUuid
+    @Column(length = 32)
     @NotNull
     private String id;
 

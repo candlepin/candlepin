@@ -16,14 +16,11 @@ package org.candlepin.model;
 
 import org.candlepin.service.model.CertificateSerialInfo;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import java.math.BigInteger;
 import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
@@ -44,9 +41,7 @@ public class CertificateSerial extends AbstractHibernateObject<CertificateSerial
 
     @Id
     @NotNull
-    @GeneratedValue(generator = "CertificateSerialIdGenerator")
-    @GenericGenerator(name = "CertificateSerialIdGenerator",
-        strategy = "org.candlepin.model.CertificateSerialIdGenerator")
+    @GeneratedCertificateSerial
     private Long id;
 
     @NotNull

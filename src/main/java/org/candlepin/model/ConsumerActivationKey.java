@@ -14,12 +14,9 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -37,9 +34,8 @@ public class ConsumerActivationKey extends AbstractHibernateObject<ConsumerActiv
     public static final String DB_TABLE = "cp_consumer_activation_key";
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(length = 37)
+    @GeneratedDbUuid
+    @Column(length = 32)
     @NotNull
     private String id;
 

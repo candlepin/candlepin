@@ -14,12 +14,9 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
@@ -41,8 +38,7 @@ public class SourceSubscription extends AbstractHibernateObject<SourceSubscripti
     public static final String DERIVED_POOL_SUB_KEY = "derived";
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @GeneratedDbUuid
     @Column(length = 32)
     private String id;
 

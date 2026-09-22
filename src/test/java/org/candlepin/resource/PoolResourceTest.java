@@ -61,6 +61,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -302,7 +303,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
             pageOrder = Order.ASCENDING;
         }
         else {
-            Collections.reverse(expectedPoolIds);
+            expectedPoolIds.sort(Comparator.reverseOrder());
             pageOrder = Order.DESCENDING;
         }
 

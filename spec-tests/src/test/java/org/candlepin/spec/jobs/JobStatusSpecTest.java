@@ -216,7 +216,11 @@ class JobStatusSpecTest {
             Set.of(job1.getId(), job2.getId(), job3.getId()), null, null, Set.of(owner.getKey()), null,
             null, null, null, null, 3, 1, "desc", "id");
         assertEquals(1, jobs.size());
-        assertEquals(job1.getId(), jobs.get(0).getId());
+        String expectedId = List.of(job1, job2, job3).stream()
+            .map(AsyncJobStatusDTO::getId)
+            .min(String::compareTo)
+            .orElseThrow();
+        assertEquals(expectedId, jobs.get(0).getId());
     }
 
     @Test

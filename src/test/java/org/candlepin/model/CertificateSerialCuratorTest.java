@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2023 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -22,6 +22,8 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -87,6 +89,49 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         serial = certSerialCurator.create(serial);
         assertNotNull(serial);
         assertNotNull(serial.getId());
+        assertTrue(serial.getId() >= 0);
+
+        Long id = serial.getId();
+        certSerialCurator.flush();
+        certSerialCurator.clear();
+        assertNotNull(certSerialCurator.get(id));
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = {0L, 42L, Long.MAX_VALUE})
+    public void testSerialCreationPreservesAssignedId(long id) {
+        CertificateSerial serial = new CertificateSerial(id, NOT_EXPIRED);
+        certSerialCurator.create(serial);
+        certSerialCurator.flush();
+        certSerialCurator.clear();
+
+        assertEquals(id, serial.getId());
+        CertificateSerial retrieved = certSerialCurator.get(id);
+        assertNotNull(retrieved);
+        assertEquals(id, retrieved.getId());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    public void testSerialIdSurvivesMerge(boolean assignedId) {
+        CertificateSerial serial = new CertificateSerial(NOT_EXPIRED);
+        if (assignedId) {
+            serial.setId(42L);
+        }
+        certSerialCurator.create(serial);
+        certSerialCurator.flush();
+        certSerialCurator.clear();
+
+        Long id = serial.getId();
+        serial.setRevoked(true);
+        CertificateSerial merged = certSerialCurator.merge(serial);
+        certSerialCurator.flush();
+        certSerialCurator.clear();
+
+        assertEquals(id, merged.getId());
+        CertificateSerial retrieved = certSerialCurator.get(id);
+        assertNotNull(retrieved);
+        assertTrue(retrieved.isRevoked());
     }
 
     @Test

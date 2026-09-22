@@ -516,6 +516,7 @@ public class ConsumerResourceSpecTest {
             .setPathParam("owner_key", owner.getKey())
             .addQueryParam("page", "1")
             .addQueryParam("per_page", "1")
+            .addQueryParam("sort_by", "created")
             .addQueryParam("order", "asc")
             .execute();
         assertNotNull(response);
@@ -529,6 +530,7 @@ public class ConsumerResourceSpecTest {
             .setPathParam("owner_key", owner.getKey())
             .addQueryParam("page", "2")
             .addQueryParam("per_page", "1")
+            .addQueryParam("sort_by", "created")
             .addQueryParam("order", "asc")
             .execute();
         assertNotNull(response);
@@ -542,6 +544,7 @@ public class ConsumerResourceSpecTest {
             .setPathParam("owner_key", owner.getKey())
             .addQueryParam("page", "3")
             .addQueryParam("per_page", "1")
+            .addQueryParam("sort_by", "created")
             .addQueryParam("order", "asc")
             .execute();
         assertNotNull(response);
@@ -555,6 +558,7 @@ public class ConsumerResourceSpecTest {
             .setPathParam("owner_key", owner.getKey())
             .addQueryParam("page", "4")
             .addQueryParam("per_page", "1")
+            .addQueryParam("sort_by", "created")
             .addQueryParam("order", "asc")
             .execute();
         assertNotNull(response);
