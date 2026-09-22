@@ -20,6 +20,8 @@ import static org.candlepin.model.CloudIdentifierFacts.GCP_LICENSE_CODES;
 import static org.candlepin.model.CloudIdentifierFacts.GCP_PROJECT_ID;
 import static org.candlepin.model.CloudIdentifierFacts.GCP_SHORT_NAME;
 
+import org.candlepin.util.Util;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -47,7 +49,9 @@ public class GCPProviderFactParser implements CloudProviderFactParser {
             return Optional.empty();
         }
 
-        return Optional.ofNullable(facts.get(GCP_LICENSE_CODES.getValue())).map(List::of);
+        List<String> offeringIds = Util.toListWSDelimiter(facts.get(GCP_LICENSE_CODES.getValue()));
+
+        return offeringIds.isEmpty() ? Optional.empty() : Optional.of(offeringIds);
     }
 
     /**

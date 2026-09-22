@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="20260914000000-1" author="kvaigl">
+        <update tableName="cp_consumer_cloud_data">
+            <column name="cloud_offering_ids" valueComputed="REPLACE(cloud_offering_ids, ' ', ',')" />
+        </update>
+    </changeSet>
+
+</databaseChangeLog>
