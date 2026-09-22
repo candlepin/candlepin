@@ -16,13 +16,10 @@ package org.candlepin.model;
 
 import org.candlepin.util.Util;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -38,9 +35,8 @@ public class ContentAccessPayload extends AbstractHibernateObject<ContentAccessP
     public static final String DB_TABLE = "cp_content_access_payload";
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(name = "id", nullable = false)
+    @GeneratedDbUuid
+    @Column(name = "id", nullable = false, length = 32)
     private String id;
 
     @Column(name = "owner_id", nullable = false)

@@ -14,12 +14,9 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
@@ -41,8 +38,7 @@ public class SubscriptionsCertificate extends AbstractCertificate<SubscriptionsC
     public static final String DB_TABLE = "cp_certificate";
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @GeneratedDbUuid
     @Column(length = 32)
     @NotNull
     private String id;

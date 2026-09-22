@@ -17,8 +17,6 @@ package org.candlepin.model;
 import org.candlepin.sync.file.ManifestFile;
 import org.candlepin.sync.file.ManifestFileType;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import java.beans.Transient;
 import java.io.InputStream;
 import java.sql.Blob;
@@ -30,7 +28,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
@@ -51,8 +48,7 @@ public class ManifestFileRecord extends AbstractHibernateObject implements Manif
     public static final String DB_TABLE = "cp_manifest_file_record";
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @GeneratedDbUuid
     @Column(length = 32)
     @NotNull
     private String id;

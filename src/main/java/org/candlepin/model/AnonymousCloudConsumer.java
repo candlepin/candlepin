@@ -17,8 +17,6 @@ package org.candlepin.model;
 import org.candlepin.model.exceptions.ValueTooLargeException;
 import org.candlepin.util.Util;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
@@ -27,7 +25,6 @@ import java.util.stream.Collectors;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
@@ -65,8 +62,8 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
 
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @GeneratedDbUuid
+    @Column(length = ID_MAX_LENGTH)
     @NotNull
     private String id;
 
