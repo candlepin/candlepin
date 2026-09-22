@@ -633,6 +633,29 @@ public class Util {
     }
 
     /**
+     * Splits a given string by whitespace(s) and returns it as a List. The returned list should not be expected
+     * to be mutable. If the input string is null or empty, this method returns an empty list.
+     * <p></p>
+     * The given input string is split on commas and will throw out any whitespace surrounding each
+     * WS-delimited value using the regular expression: "\\s+"
+     *
+     * @param values
+     *  the string to split and convert into a list of values
+     *
+     * @return
+     *  a list containing the split values from the input string, if any
+     */
+    public static List<String> toListWSDelimiter(String values) {
+        if (values == null || values.isBlank()) {
+            return List.of();
+        }
+
+        return Stream.of(values.split("\\s+"))
+            .filter(id -> !id.isBlank())
+            .toList();
+    }
+
+    /**
      * Splits a given string by comma and returns it as an immutable set, silently discarding empty or blank
      * elements. If the input string is null or empty, this function returns an empty set.
      * <p></p>
