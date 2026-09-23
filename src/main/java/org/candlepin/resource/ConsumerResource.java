@@ -1020,6 +1020,12 @@ public class ConsumerResource implements ConsumerApi {
 
         this.validator.validateCollectionElementsNotNull(dto::getInstalledProducts,
             dto::getGuestIds, dto::getCapabilities);
+
+        // The UUID validation is placed before hypervisor matching, so an invalid UUID is always rejected
+        if (dto.getUuid() != null && !Util.isUuid(dto.getUuid())) {
+            throw new BadRequestException(this.i18n.tr("Consumer UUID must be in UUID format."));
+        }
+
         Principal principal = this.principalProvider.get();
 
         // Resolve or create owner if needed

@@ -20,6 +20,7 @@ import static org.candlepin.spec.bootstrap.assertions.PrivateKeyAssert.assertTha
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertGone;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -74,6 +75,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -973,15 +975,37 @@ public class ConsumerResourceSpecTest {
     @Test
     public void shouldAllowConsumerToSpecifyTheirOwnUuid() {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
-        ConsumerDTO consumer = Consumers.random(owner)
-            .uuid("custom-uuid");
-        assertThat(consumer).returns("custom-uuid", ConsumerDTO::getUuid);
+        String uuid = UUID.randomUUID().toString();
+        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner).uuid(uuid));
+        assertThat(consumer).returns(uuid, ConsumerDTO::getUuid);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "", " ", "invalid-uuid", "#/$%?", "1-1-1-1-1",
+        "78d7e200b7d64cfeb7a95700e8094df3",
+        "78d7e200-b7d6-4cfe-b7a9-5700e8094df",
+        "78d7e200-b7d6-4cfe-b7g9-5700e8094df3",
+        "78d7e200-b7d6-4cfe-b7a9-5700e8094df3\n"
+    })
+    public void shouldRejectConsumerWithInvalidUuid(String uuid) {
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
+        assertBadRequest(() -> userClient.consumers().createConsumer(Consumers.random(owner).uuid(uuid)))
+            .hasMessageContaining("Consumer UUID must be in UUID format.");
+    }
+
+    @Test
+    public void shouldGenerateUuidWhenNotProvided() {
+        ConsumerDTO consumer = this.adminClient.consumers().createConsumer(Consumers.random(this.owner));
+        String uuid = consumer.getUuid();
+        assertThat(uuid).isNotNull();
+        assertDoesNotThrow(() -> UUID.fromString(uuid));
     }
 
     @Test
     public void shouldNotAllowTheSameUuidToBeRegisteredTwice() {
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
-        String testUuid = StringUtil.random("ALF");
+        String testUuid = UUID.randomUUID().toString();
         // Register the UUID initially
         userClient.consumers().createConsumer(Consumers.random(owner).uuid(testUuid));
 
