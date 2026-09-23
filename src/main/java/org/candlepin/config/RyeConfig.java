@@ -43,15 +43,16 @@ public class RyeConfig implements Configuration {
     public Map<String, String> getValuesByPrefix(String prefix) {
         return StreamSupport.stream(this.config.getPropertyNames().spliterator(), false)
             .filter(key -> key.startsWith(prefix))
-            .collect(Collectors.toMap(Function.identity(), this.config::getRawValue));
+            .collect(Collectors.toMap(Function.identity(), key -> this.config.getConfigValue(key).getRawValue()));
     }
 
     @Override
     public Properties toProperties() {
         Properties result = new Properties();
         this.config.getPropertyNames().forEach(x -> {
-            if (this.config.getRawValue(x) != null) {
-                result.put(x, this.config.getRawValue(x));
+            String value = this.config.getConfigValue(x).getRawValue();
+            if (value != null) {
+                result.put(x, value);
             }
         });
 
