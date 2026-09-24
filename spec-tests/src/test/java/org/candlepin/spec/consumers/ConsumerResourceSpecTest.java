@@ -1106,6 +1106,15 @@ public class ConsumerResourceSpecTest {
     }
 
     @Test
+    public void shouldAllowAnRhsmApiClientToRegisterAManifestConsumer() {
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
+        userClient.getApiClient().addDefaultHeader("user-agent", "RHSM-API/1.0 (cmd=subscription-manager)");
+        ConsumerDTO consumer = userClient.consumers()
+            .createConsumer(Consumers.random(owner).type(ConsumerTypes.Candlepin.value()));
+        // this test succeeds if and only if the response code is 2xx, which means the REST call was successful
+    }
+
+    @Test
     public void shouldAllowAConsumerFactToBeRemovedWhenUpdatedBadly() {
         // typing for certain facts. violation means value for fact is entirely removed
         ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
