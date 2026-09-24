@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -387,6 +388,19 @@ public class ConsumerResourceCreationTest {
         when(this.principalProvider.get()).thenReturn(principal);
         ConsumerDTO consumer = TestUtil.createConsumerDTO(consumerName, null, null, systemDto);
         return this.resource.createConsumer(consumer, USER, owner.getKey(), null, true);
+    }
+
+    @Test
+    public void testRejectInvalidUuidBeforeMatchingHypervisor() {
+        ConsumerDTO consumer = TestUtil.createConsumerDTO(USER, null, null, this.systemDto)
+            .uuid("invalid-uuid")
+            .putFactsItem(Consumer.Facts.DMI_SYSTEM_UUID, "hypervisor-id");
+        String ownerKey = this.owner.getKey();
+
+        assertThrows(BadRequestException.class,
+            () -> this.resource.createConsumer(consumer, USER, ownerKey, null, true));
+
+        verify(this.consumerCurator, never()).getHypervisor("hypervisor-id", this.owner.getId());
     }
 
     @Test

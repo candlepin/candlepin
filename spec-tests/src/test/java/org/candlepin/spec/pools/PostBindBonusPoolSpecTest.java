@@ -50,6 +50,7 @@ import tools.jackson.databind.JsonNode;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 
@@ -292,7 +293,7 @@ class PostBindBonusPoolSpecTest {
     void shouldNotChangeBonusPoolQuantityWhenUnlimitedVirtLimitedPrimaryPoolIsConsumedByNonManifestConsumer()
         throws Exception {
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
-        guest.setUuid(StringUtil.random("guest"));
+        guest.setUuid(UUID.randomUUID().toString());
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
         ApiClient guestClient = ApiClients.ssl(guest);
@@ -456,7 +457,7 @@ class PostBindBonusPoolSpecTest {
         ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
-        guest.setUuid(StringUtil.random("guest"));
+        guest.setUuid(UUID.randomUUID().toString());
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
         ApiClient guestClient = ApiClients.ssl(guest);
@@ -498,13 +499,13 @@ class PostBindBonusPoolSpecTest {
         ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
-        guest.setUuid(StringUtil.random("guest"));
+        guest.setUuid(UUID.randomUUID().toString());
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
         ApiClient guestClient = ApiClients.ssl(guest);
 
         ConsumerDTO guest2 = Consumers.random(owner, ConsumerTypes.System);
-        guest2.setUuid(StringUtil.random("guest"));
+        guest2.setUuid(UUID.randomUUID().toString());
         guest2.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest2.getUuid()));
         guest2 = adminClient.consumers().createConsumer(guest2);
         ApiClient guestClient2 = ApiClients.ssl(guest2);
@@ -568,7 +569,7 @@ class PostBindBonusPoolSpecTest {
         ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
-        guest.setUuid(StringUtil.random("guest"));
+        guest.setUuid(UUID.randomUUID().toString());
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
         ApiClient guestClient = ApiClients.ssl(guest);
@@ -625,7 +626,7 @@ class PostBindBonusPoolSpecTest {
         ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
-        guest.setUuid(StringUtil.random("guest"));
+        guest.setUuid(UUID.randomUUID().toString());
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
         ApiClient guestClient = ApiClients.ssl(guest);
@@ -663,13 +664,13 @@ class PostBindBonusPoolSpecTest {
         ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
-        guest.setUuid(StringUtil.random("guest"));
+        guest.setUuid(UUID.randomUUID().toString());
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
         ApiClient guestClient = ApiClients.ssl(guest);
 
         ConsumerDTO guest2 = Consumers.random(owner, ConsumerTypes.System);
-        guest2.setUuid(StringUtil.random("guest"));
+        guest2.setUuid(UUID.randomUUID().toString());
         guest2.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest2.getUuid()));
         guest2 = adminClient.consumers().createConsumer(guest2);
         ApiClient guestClient2 = ApiClients.ssl(guest2);
@@ -707,7 +708,7 @@ class PostBindBonusPoolSpecTest {
     void shouldAllowUnlimitedConsumptionOfBonusPoolsForUnlimitedQuantityPrimaryPoolStandalone()
         throws Exception {
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
-        guest.setUuid(StringUtil.random("guest"));
+        guest.setUuid(UUID.randomUUID().toString());
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
         ApiClient guestClient = ApiClients.ssl(guest);
@@ -773,7 +774,7 @@ class PostBindBonusPoolSpecTest {
     @Test
     void shouldAllowUnlimitedConsumptionOfUnmappedGuestPoolForUnlimitedVirtLimit() throws Exception {
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
-        guest.setUuid(StringUtil.random("guest"));
+        guest.setUuid(UUID.randomUUID().toString());
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
         ApiClient guestClient = ApiClients.ssl(guest);
@@ -804,7 +805,7 @@ class PostBindBonusPoolSpecTest {
         ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
-        guest.setUuid(StringUtil.random("guest"));
+        guest.setUuid(UUID.randomUUID().toString());
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
         ApiClient guestClient = ApiClients.ssl(guest);
@@ -867,7 +868,7 @@ class PostBindBonusPoolSpecTest {
         @Test
         void shouldAllowUnlimitedConsumptionOfBonusPoolsForUnlimitedQuantityPrimaryPool() throws Exception {
             ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
-            guest.setUuid(StringUtil.random("guest"));
+            guest.setUuid(UUID.randomUUID().toString());
             guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
             guest = adminClient.consumers().createConsumer(guest);
             ApiClient guestClient = ApiClients.ssl(guest);
@@ -957,7 +958,7 @@ class PostBindBonusPoolSpecTest {
             ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
             ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
-            guest.setUuid(StringUtil.random("guest"));
+            guest.setUuid(UUID.randomUUID().toString());
             guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
             guest = adminClient.consumers().createConsumer(guest);
             ApiClient guestClient = ApiClients.ssl(guest);

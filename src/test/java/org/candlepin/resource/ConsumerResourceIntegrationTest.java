@@ -78,6 +78,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
 import java.io.IOException;
@@ -349,6 +350,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void testCreateConsumer() {
         ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null,
             standardSystemTypeDTO);
+        assertNull(toSubmit.getUuid());
         toSubmit.putFactsItem(METADATA_NAME, METADATA_VALUE);
         ConsumerDTO submitted = consumerResource.createConsumer(
             toSubmit,
@@ -356,6 +358,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             owner.getKey(), null, true);
 
         assertNotNull(submitted);
+        assertThat(Util.isUuid(submitted.getUuid())).isTrue();
         assertNotNull(consumerCurator.get(submitted.getId()));
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
         assertEquals(METADATA_VALUE, consumerResource.getFactValue(submitted.getFacts(), METADATA_NAME));
@@ -401,9 +404,15 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     }
 
-    @Test
-    public void testCreateConsumerWithUUID() {
-        String uuid = "Jar Jar Binks";
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "78d7e200-b7d6-4cfe-b7a9-5700e8094df3",
+        "78D7E200-B7D6-4CFE-B7A9-5700E8094DF3",
+        "78d7E200-b7d6-4cfe-B7a9-5700e8094DF3",
+        "00000000-0000-0000-0000-000000000000",
+        "ffffffff-ffff-ffff-ffff-ffffffffffff"
+    })
+    public void testCreateConsumerWithUUID(String uuid) {
         ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
         assertNull(toSubmit.getId());
         toSubmit.setUuid(uuid);
@@ -427,6 +436,32 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         anotherToSubmit.setId(null);
         assertThrows(BadRequestException.class,
             () -> consumerResource.createConsumer(anotherToSubmit, null, owner.getKey(), null, true));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "", " ", "invalid-uuid", "#/$%?", "1-1-1-1-1",
+        "78d7e200b7d64cfeb7a95700e8094df3",
+        "78d7e200-b7d6-4cfe-b7a9-5700e8094df",
+        "78d7e200-b7d6-4cfe-b7a9-5700e8094df34",
+        "78d7e20-0b7d6-4cfe-b7a9-5700e8094df3",
+        "78d7e200-b7d6-4cfe-b7g9-5700e8094df3",
+        " 78d7e200-b7d6-4cfe-b7a9-5700e8094df3",
+        "78d7e200-b7d6-4cfe-b7a9-5700e8094df3\n",
+        "{78d7e200-b7d6-4cfe-b7a9-5700e8094df3}",
+        "７8d7e200-b7d6-4cfe-b7a9-5700e8094df3"
+    })
+    public void testCreateConsumerWithInvalidUUID(String uuid) {
+        ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, this.standardSystemTypeDTO)
+            .uuid(uuid);
+        String ownerKey = this.owner.getKey();
+
+        BadRequestException exception = assertThrows(BadRequestException.class,
+            () -> this.consumerResource.createConsumer(toSubmit, null, ownerKey, null, true));
+
+        assertEquals(Response.Status.BAD_REQUEST, exception.httpReturnCode());
+        assertEquals("Consumer UUID must be in UUID format.", exception.getMessage());
+        assertNull(this.consumerCurator.findByUuid(uuid));
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0} {1} {2} {3}")
@@ -546,7 +581,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     public void testRegisterWithConsumerId() {
         ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
-        toSubmit.setUuid("1023131");
+        toSubmit.setUuid(Util.generateUUID());
         toSubmit.putFactsItem(METADATA_NAME, METADATA_VALUE);
 
         ConsumerDTO submitted = consumerResource.createConsumer(toSubmit, null, null, null, true);
