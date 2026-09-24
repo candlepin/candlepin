@@ -1312,7 +1312,7 @@ public class ConsumerResource implements ConsumerApi {
         if (httpRequest != null) {
             List<String> userAgent = httpRequest.getHttpHeaders().getRequestHeader("user-agent");
             if (type.isManifest() && userAgent != null &&
-                userAgent.size() > 0 && userAgent.get(0).startsWith("RHSM")) {
+                userAgent.size() > 0 && userAgent.get(0).startsWith("RHSM/")) {
                 throw new BadRequestException(
                     i18n.tr("You may not create a manifest consumer via Subscription Manager."));
             }
