@@ -15,17 +15,14 @@
 package org.candlepin.resource;
 
 import org.candlepin.auth.Verify;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.PoolService;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.SubscriptionDTO;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.exceptions.ServiceUnavailableException;
+import org.candlepin.exceptions.NotImplementedException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Owner;
@@ -33,6 +30,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.resource.server.v1.SubscriptionApi;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
+import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
@@ -44,11 +42,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
-
-
 
 /**
  * SubscriptionResource
@@ -67,8 +61,9 @@ public class SubscriptionResource implements SubscriptionApi {
 
     @Inject
     public SubscriptionResource(Configuration config, SubscriptionServiceAdapter subService,
-        ConsumerCurator consumerCurator, PoolManager poolManager, I18n i18n,
-        ModelTranslator translator, ContentAccessManager contentAccessManager, PoolService poolService) {
+                                ConsumerCurator consumerCurator, PoolManager poolManager, I18n i18n,
+                                ModelTranslator translator, ContentAccessManager contentAccessManager,
+                                PoolService poolService) {
 
         this.config = Objects.requireNonNull(config);
         this.subService = Objects.requireNonNull(subService);
@@ -91,35 +86,11 @@ public class SubscriptionResource implements SubscriptionApi {
     @Override
     @Transactional
     public Response activateSubscription(@Verify(Consumer.class) String consumerUuid, String email,
-        String emailLocale) {
+                                         String emailLocale) {
 
-        if (this.config.getBoolean(ConfigProperties.STANDALONE)) {
-            throw new ServiceUnavailableException(
-                this.i18n.tr("Standalone candlepin does not support redeeming a subscription."));
-        }
-
-        if (email == null) {
-            throw new BadRequestException(i18n.tr("email is required for notification"));
-        }
-
-        if (emailLocale == null) {
-            throw new BadRequestException(i18n.tr("email locale is required for notification"));
-        }
-
-        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
-        if (consumer == null) {
-            throw new BadRequestException(i18n.tr("No such unit: {0}", consumerUuid));
-        }
-
-        this.subService.activateSubscription(consumer, email, emailLocale);
-        String message = i18n.tr(
-            "Your subscription redemption is being processed and should be available soon. " +
-                "You will be notified via email once it is available. If you have any questions, " +
-                "additional information can be found here: " +
-                "https://access.redhat.com/kb/docs/DOC-53864.");
-        // setting response status to 202 because subscription does not
-        // exist yet, but is currently being processed
-        return Response.status(Status.ACCEPTED).entity(new ExceptionMessage(message)).build();
+        throw new NotImplementedException(
+            i18n.tr("Subscription activation through 'subscription-manager redeem' is no longer supported, " +
+                "please visit https://access.redhat.com/subscriptions/activate/dell to redeem your service tag."));
     }
 
     @Override

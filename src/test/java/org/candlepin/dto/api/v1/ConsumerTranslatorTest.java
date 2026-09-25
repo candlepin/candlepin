@@ -143,7 +143,6 @@ public class ConsumerTranslatorTest extends
         consumer.addEnvironment(environment2);
         consumer.setEntitlementCount(0L);
         consumer.setLastCheckin(new Date());
-        consumer.setCanActivate(Boolean.TRUE);
         consumer.setHypervisorId(hypervisorIdTranslatorTest.initSourceObject());
         consumer.setAutoheal(Boolean.TRUE);
         consumer.setAnnotations("test_annotations");
@@ -236,7 +235,6 @@ public class ConsumerTranslatorTest extends
             assertEquals(source.getEntitlementCount(), (long) dest.getEntitlementCount());
             assertEquals(source.getFacts(), dest.getFacts());
             assertEquals(source.getLastCheckin(), Util.toDate(dest.getLastCheckin()));
-            assertEquals(source.isCanActivate(), dest.getCanActivate());
             assertEquals(source.getContentTags(), dest.getContentTags());
             assertEquals(source.isAutoheal(), dest.getAutoheal());
             assertEquals(source.getAnnotations(), dest.getAnnotations());

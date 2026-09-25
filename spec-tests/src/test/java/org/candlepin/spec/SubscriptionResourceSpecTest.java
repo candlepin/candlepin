@@ -16,7 +16,7 @@ package org.candlepin.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
-import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertUnavailable;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotImplemented;
 import static org.candlepin.spec.bootstrap.data.builder.Pools.PRIMARY_POOL_SUB_KEY;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
@@ -28,8 +28,6 @@ import org.candlepin.dto.api.client.v1.SubscriptionDTO;
 import org.candlepin.resource.HostedTestApi;
 import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
-import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
-import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -46,7 +44,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 import java.util.stream.Collectors;
-
 
 
 @SpecTest
@@ -86,27 +83,12 @@ public class SubscriptionResourceSpecTest {
     }
 
     @Test
-    @OnlyInHosted
     public void shouldActivateSubscription() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         createSubscriptionOrPool(owner);
         assertThat(ownerApi.getOwnerSubscriptions(owner.getKey())).hasSize(1);
         ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
-        client.subscriptions().activateSubscription(consumer.getUuid(), "mail", "locale");
-    }
-
-    @Test
-    @OnlyInStandalone
-    public void shouldThrowExceptionOnActivateSubscriptionInStandalone() {
-        ApiClient adminClient = ApiClients.admin();
-
-        OwnerDTO owner = adminClient.owners()
-            .createOwner(Owners.random());
-        ConsumerDTO consumer = adminClient.consumers()
-            .createConsumer(Consumers.random(owner));
-
-        assertUnavailable(() -> adminClient.subscriptions()
-            .activateSubscription(consumer.getUuid(), "consumer@e.mail", "consumer_locale"));
+        assertNotImplemented(() -> client.subscriptions().activateSubscription(consumer.getUuid(), "mail", "locale"));
     }
 
     @Test

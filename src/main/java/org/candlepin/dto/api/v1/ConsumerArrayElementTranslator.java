@@ -114,7 +114,6 @@ public class ConsumerArrayElementTranslator implements ObjectTranslator<Consumer
             .serviceType(source.getServiceType())
             .entitlementCount(source.getEntitlementCount())
             .lastCheckin(Util.toDateTime(source.getLastCheckin()))
-            .canActivate(source.isCanActivate())
             .contentTags(source.getContentTags())
             .autoheal(source.isAutoheal())
             .annotations(source.getAnnotations())

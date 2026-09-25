@@ -800,9 +800,6 @@ public class ConsumerResource implements ConsumerApi {
                 }
             }
 
-            // enrich with subscription data
-            consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
-
             // enrich with installed product data
             this.consumerEnricher.enrich(consumer);
         }
@@ -833,8 +830,8 @@ public class ConsumerResource implements ConsumerApi {
 
     /**
      * Populates the specified entity with data from the provided DTO, during consumer creation (not update).
-     * This method will not set the ID, entitlementStatus, complianceStatusHash, idCert, entitlements,
-     * keyPair and canActivate, because clients are not allowed to create or update those properties.
+     * This method will not set the ID, entitlementStatus, complianceStatusHash, idCert, entitlements and
+     * keyPair, because clients are not allowed to create or update those properties.
      *
      * while autoheal is populated, it is overridden in create method.
      *
@@ -1102,8 +1099,6 @@ public class ConsumerResource implements ConsumerApi {
 
         this.populateEntity(consumerToCreate, consumer);
         consumerToCreate.setType(type);
-
-        consumerToCreate.setCanActivate(subAdapter.canActivateSubscription(consumerToCreate));
 
         HypervisorId hvsrId = consumerToCreate.getHypervisorId();
         if (hvsrId != null && hvsrId.getHypervisorId() != null && !hvsrId.getHypervisorId().isEmpty()) {

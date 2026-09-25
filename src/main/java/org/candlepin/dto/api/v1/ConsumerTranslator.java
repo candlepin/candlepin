@@ -131,7 +131,6 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
             .entitlementCount(source.getEntitlementCount())
             .facts(source.getFacts())
             .lastCheckin(Util.toDateTime(source.getLastCheckin()))
-            .canActivate(source.isCanActivate())
             .contentTags(source.getContentTags())
             .autoheal(source.isAutoheal())
             .annotations(source.getAnnotations())
