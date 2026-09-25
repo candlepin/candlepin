@@ -1328,6 +1328,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             expectedIds.add(pool.getId());
         }
 
+        expectedIds.sort(String::compareTo);
+
         Date setActiveOn = TestUtil.createDate(2011, 2, 2);
 
         PoolQualifier qualifier = new PoolQualifier()
@@ -2152,7 +2154,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     private Pool getPrimaryPoolBySubscriptionId(String subscriptionId) {
         for (Pool pool : this.poolCurator.getPoolsBySubscriptionId(subscriptionId)) {
-            if (pool.getType() == Pool.PoolType.NORMAL) {
+            if (PRIMARY_POOL_SUB_KEY.equals(pool.getSubscriptionSubKey())) {
                 return pool;
             }
         }
@@ -2182,7 +2184,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         expected.add(pools.get(4));
 
         List<Pool> actual = this.poolCurator.getPrimaryPools();
-        assertEquals(expected, actual);
+        assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
@@ -3763,7 +3765,9 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         assertThat(actual)
             .isNotNull()
-            .containsExactly(pool1, pool2);
+            .containsExactlyInAnyOrder(pool1, pool2)
+            .extracting(Pool::getId)
+            .isSorted();
     }
 
     @Test

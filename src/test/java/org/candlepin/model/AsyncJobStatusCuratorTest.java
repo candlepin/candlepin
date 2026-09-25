@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +68,22 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         }
 
         this.asyncJobCurator.flush();
+    }
+
+    private void assertJobsInStates(List<AsyncJobStatus> jobs, int perState, JobState... states) {
+        List<String> expectedNames = new LinkedList<>();
+
+        for (JobState state : states) {
+            for (int i = 0; i < perState; ++i) {
+                expectedNames.add("test_job-" + (state.ordinal() * perState + i + 1));
+            }
+        }
+
+        assertNotNull(jobs);
+        assertEquals(expectedNames.size(), jobs.size());
+        assertEquals(new HashSet<>(expectedNames), jobs.stream()
+            .map(AsyncJobStatus::getName)
+            .collect(Collectors.toSet()));
     }
 
     /**
@@ -113,18 +130,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int perState = 3;
 
         this.createJobsInStates("test_job-", perState, JobState.values());
-        List<AsyncJobStatus> result;
-
-        int counter = 0;
         for (JobState state : JobState.values()) {
-            result = this.asyncJobCurator.getJobsInState(state);
-
-            assertNotNull(result);
-            assertEquals(perState, result.size());
-
-            for (AsyncJobStatus status : result) {
-                assertEquals("test_job-" + ++counter, status.getName());
-            }
+            assertJobsInStates(this.asyncJobCurator.getJobsInState(state), perState, state);
         }
     }
 
@@ -136,7 +143,6 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         this.createJobsInStates("test_job-", perState, JobState.values());
         List<AsyncJobStatus> result;
 
-        int counter = 0;
         JobState[] states = JobState.values();
 
         int extra = states.length % statesPerLoop;
@@ -145,13 +151,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         for (int i = 0; i < max; i += statesPerLoop) {
             JobState[] group = Arrays.copyOfRange(states, i, i + statesPerLoop);
             result = this.asyncJobCurator.getJobsInState(group);
-
-            assertNotNull(result);
-            assertEquals(perState * statesPerLoop, result.size());
-
-            for (AsyncJobStatus status : result) {
-                assertEquals("test_job-" + ++counter, status.getName());
-            }
+            assertJobsInStates(result, perState, group);
         }
     }
 
@@ -160,18 +160,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         int perState = 3;
 
         this.createJobsInStates("test_job-", perState, JobState.values());
-        List<AsyncJobStatus> result;
-
-        int counter = 0;
         for (JobState state : JobState.values()) {
-            result = this.asyncJobCurator.getJobsInState(Arrays.asList(state));
-
-            assertNotNull(result);
-            assertEquals(perState, result.size());
-
-            for (AsyncJobStatus status : result) {
-                assertEquals("test_job-" + ++counter, status.getName());
-            }
+            assertJobsInStates(this.asyncJobCurator.getJobsInState(Arrays.asList(state)), perState, state);
         }
     }
 
@@ -183,7 +173,6 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         this.createJobsInStates("test_job-", perState, JobState.values());
         List<AsyncJobStatus> result;
 
-        int counter = 0;
         JobState[] states = JobState.values();
 
         int extra = states.length % statesPerLoop;
@@ -192,13 +181,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         for (int i = 0; i < max; i += statesPerLoop) {
             JobState[] group = Arrays.copyOfRange(states, i, i + statesPerLoop);
             result = this.asyncJobCurator.getJobsInState(Arrays.asList(group));
-
-            assertNotNull(result);
-            assertEquals(perState * statesPerLoop, result.size());
-
-            for (AsyncJobStatus status : result) {
-                assertEquals("test_job-" + ++counter, status.getName());
-            }
+            assertJobsInStates(result, perState, group);
         }
     }
 

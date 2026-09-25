@@ -602,6 +602,7 @@ class PoolResourceSpecTest {
 
             List<String> expectedPoolIds = pools.stream()
                 .map(PoolDTO::getId)
+                .sorted()
                 .toList();
 
             assertThat(actualPoolsIds)
@@ -624,6 +625,7 @@ class PoolResourceSpecTest {
 
             List<String> expectedPoolIds = pools.stream()
                 .map(PoolDTO::getId)
+                .sorted()
                 .toList();
 
             assertThat(actualPoolsIds)

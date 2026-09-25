@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2025 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -21,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
+import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -31,6 +34,8 @@ import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Date;
+
+import jakarta.persistence.EntityManager;
 
 
 
@@ -81,6 +86,46 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         assertNotNull(key.getPools());
         assertEquals(1, key.getPools().size());
         assertEquals(5L, key.getPools().iterator().next().getQuantity());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    public void testPoolLinksAndContentOverridesFollowKeyLifecycle(boolean removeKey) {
+        EntityManager entityManager = this.getEntityManager();
+        Pool pool = this.createPool(this.owner, this.createProduct());
+        ActivationKeyContentOverride override = new ActivationKeyContentOverride()
+            .setContentLabel("test-content")
+            .setName("enabled")
+            .setValue("1");
+        ActivationKey key = new ActivationKey("test-key", this.owner)
+            .addPool(pool, 1L)
+            .addContentOverride(override);
+
+        entityManager.persist(key);
+        entityManager.flush();
+        String keyId = key.getId();
+        String poolLinkId = key.getPools().iterator().next().getId();
+        String overrideId = override.getId();
+        assertThat(keyId).matches("[0-9a-f]{32}");
+        entityManager.clear();
+
+        key = entityManager.find(ActivationKey.class, keyId);
+        assertNotNull(entityManager.find(ActivationKeyPool.class, poolLinkId));
+        assertNotNull(entityManager.find(ActivationKeyContentOverride.class, overrideId));
+
+        if (removeKey) {
+            entityManager.remove(key);
+        }
+        else {
+            assertTrue(key.removePool(pool));
+            key.removeAllContentOverrides();
+        }
+        entityManager.flush();
+        entityManager.clear();
+
+        assertNull(entityManager.find(ActivationKeyPool.class, poolLinkId));
+        assertNull(entityManager.find(ActivationKeyContentOverride.class, overrideId));
+        assertNotNull(entityManager.find(Pool.class, pool.getId()));
     }
 
     @Test

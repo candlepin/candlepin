@@ -15,7 +15,7 @@
 package org.candlepin.hibernate;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 import java.io.Serializable;
@@ -100,8 +100,7 @@ public class NullAsEmptyStringType implements UserType<String> {
      * {@inheritDoc}
      */
     @Override
-    public String nullSafeGet(ResultSet resultSet, int position,
-        SharedSessionContractImplementor session, Object owner) throws SQLException {
+    public String nullSafeGet(ResultSet resultSet, int position, WrapperOptions options) throws SQLException {
 
         String value = resultSet.getString(position);
 
@@ -114,7 +113,7 @@ public class NullAsEmptyStringType implements UserType<String> {
      */
     @Override
     public void nullSafeSet(PreparedStatement statement, String value, int index,
-        SharedSessionContractImplementor session) throws SQLException {
+        WrapperOptions options) throws SQLException {
 
         statement.setString(index, value != null ? value : "");
     }

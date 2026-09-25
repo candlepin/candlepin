@@ -39,6 +39,7 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -292,6 +293,35 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
             }
 
             assertTrue(found, "expected entity was not found in output: " + expected.getId());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    public void testLockAndLoadMultiIdAcquiresWriteLocks(boolean preloadEntities) {
+        Owner owner1 = this.createOwner("owner_key-1", "owner-1");
+        Owner owner2 = this.createOwner("owner_key-2", "owner-2");
+
+        // Clear the insert-time WRITE locks from Hibernate's session state before testing lock upgrades.
+        this.testOwnerCurator.flush();
+        this.testOwnerCurator.clear();
+
+        if (preloadEntities) {
+            for (Owner owner : List.of(owner1, owner2)) {
+                Owner loaded = this.testOwnerCurator.get(owner.getId());
+                assertEquals(LockModeType.NONE, this.getEntityManager().getLockMode(loaded));
+            }
+        }
+
+        List<String> input = Arrays.asList(owner2.getId(), null, owner1.getId(), owner2.getId());
+        List<Owner> output = this.testOwnerCurator.lockAndLoad(input);
+
+        assertThat(output)
+            .extracting(Owner::getId)
+            .containsExactlyInAnyOrder(owner1.getId(), owner2.getId());
+
+        for (Owner owner : output) {
+            assertEquals(LockModeType.PESSIMISTIC_WRITE, this.getEntityManager().getLockMode(owner));
         }
     }
 

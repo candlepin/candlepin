@@ -614,8 +614,9 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         this.contentCurator.flush();
         this.contentCurator.clear();
 
-        assertIterableEquals(List.of(content1, content2, content3), this.contentCurator
-            .getContentsByUuids(List.of(content1.getUuid(), content2.getUuid(), content3.getUuid())));
+        assertThat(this.contentCurator.getContentsByUuids(
+            List.of(content1.getUuid(), content2.getUuid(), content3.getUuid())))
+            .containsExactlyInAnyOrder(content1, content2, content3);
 
         this.contentCurator.flush();
         this.contentCurator.clear();

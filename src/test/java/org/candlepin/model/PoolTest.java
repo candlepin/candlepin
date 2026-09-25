@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -37,6 +38,8 @@ import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.lang.reflect.Field;
+
+import jakarta.persistence.EntityManager;
 
 /**
  * Test suite for the Pool object
@@ -329,6 +332,115 @@ public class PoolTest {
 
         // Assert default value of "false" when managed ends up as a null
         assertFalse(pool.isManaged());
+    }
+
+    @Nested
+    @DisplayName("Persistence Mapping Tests")
+    public class PersistenceMappingTest extends DatabaseTestFixture {
+
+        @Test
+        public void testGeneratedIdFitsDatabaseColumnAndSurvivesUpdate() {
+            EntityManager entityManager = this.getEntityManager();
+            Pool pool = TestUtil.createPool(this.createOwner(), this.createProduct());
+            entityManager.persist(pool);
+            entityManager.flush();
+
+            String id = pool.getId();
+            assertThat(id).matches("[0-9a-f]{32}");
+
+            pool.setQuantity(42L);
+            entityManager.flush();
+            entityManager.clear();
+
+            Pool retrieved = entityManager.find(Pool.class, id);
+            assertNotNull(retrieved);
+            assertEquals(id, retrieved.getId());
+            assertEquals(42L, retrieved.getQuantity());
+        }
+
+        @Test
+        public void testAttributesFollowPoolLifecycle() {
+            EntityManager entityManager = this.getEntityManager();
+            Pool pool = TestUtil.createPool(this.createOwner(), this.createProduct())
+                .setAttribute("retained", "original")
+                .setAttribute("removed", "value");
+            entityManager.persist(pool);
+            entityManager.flush();
+            entityManager.clear();
+
+            String id = pool.getId();
+            pool = entityManager.find(Pool.class, id);
+            assertEquals("original", pool.getAttributeValue("retained"));
+            assertEquals("value", pool.getAttributeValue("removed"));
+
+            pool.setAttribute("retained", "updated");
+            pool.removeAttribute("removed");
+            entityManager.flush();
+            entityManager.clear();
+
+            pool = entityManager.find(Pool.class, id);
+            assertEquals("updated", pool.getAttributeValue("retained"));
+            assertNull(pool.getAttributeValue("removed"));
+
+            entityManager.remove(pool);
+            entityManager.flush();
+            assertEquals(0L, entityManager.createNativeQuery(
+                "SELECT COUNT(*) FROM cp_pool_attribute WHERE pool_id = :id", Long.class)
+                .setParameter("id", id)
+                .getSingleResult());
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = {false, true})
+        public void testSourceSubscriptionLifecycle(boolean removePool) {
+            EntityManager entityManager = this.getEntityManager();
+            Pool pool = TestUtil.createPool(this.createOwner(), this.createProduct());
+            entityManager.persist(pool);
+            entityManager.flush();
+
+            String sourceId = pool.getSourceSubscription().getId();
+            entityManager.clear();
+            assertNotNull(entityManager.find(SourceSubscription.class, sourceId));
+            pool = entityManager.find(Pool.class, pool.getId());
+
+            if (removePool) {
+                entityManager.remove(pool);
+            }
+            else {
+                pool.setSourceSubscription(null);
+            }
+            entityManager.flush();
+            entityManager.clear();
+
+            assertNull(entityManager.find(SourceSubscription.class, sourceId));
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = {false, true})
+        public void testSourceStackLifecycle(boolean removePool) {
+            EntityManager entityManager = this.getEntityManager();
+            Owner owner = this.createOwner();
+            Pool pool = TestUtil.createPool(owner, this.createProduct())
+                .setSourceStack(new SourceStack(this.createConsumer(owner), "test-stack"));
+            entityManager.persist(pool);
+            entityManager.flush();
+
+            String sourceId = pool.getSourceStack().getId();
+            entityManager.clear();
+            assertNotNull(entityManager.find(SourceStack.class, sourceId));
+            pool = entityManager.find(Pool.class, pool.getId());
+
+            if (removePool) {
+                entityManager.remove(pool);
+            }
+            else {
+                pool.setSourceStack(null);
+            }
+            entityManager.flush();
+            entityManager.clear();
+
+            assertNull(entityManager.find(SourceStack.class, sourceId));
+        }
     }
 
     @Nested

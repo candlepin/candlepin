@@ -18,7 +18,6 @@ import org.candlepin.async.JobArguments;
 import org.candlepin.async.ResultSerializationException;
 import org.candlepin.util.ObjectMapperFactory;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.slf4j.event.Level;
 
 import tools.jackson.databind.ObjectMapper;
@@ -33,7 +32,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -105,8 +103,8 @@ public class AsyncJobStatus extends AbstractHibernateObject {
     }
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @GeneratedDbUuid
+    @Column(length = 32)
     @NotNull
     private String id;
 

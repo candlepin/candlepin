@@ -25,9 +25,6 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,12 +43,12 @@ import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -172,8 +169,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     // Object ID
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @GeneratedDbUuid
+    @Column(length = 32)
     @NotNull
     private String uuid;
 
@@ -207,12 +204,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @CollectionTable(name = "cp_product_attributes", joinColumns = @JoinColumn(name = "product_uuid"))
     @MapKeyColumn(name = "name")
     @Column(name = "value")
-    @Cascade({ CascadeType.ALL })
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Map<String, String> attributes;
 
-    @OneToMany(mappedBy = "product", orphanRemoval = true, fetch = FetchType.LAZY)
-    @Cascade({ CascadeType.ALL })
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<ProductContent> productContent;
 
@@ -222,8 +217,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<String> dependentProductIds;
 
-    @OneToMany(mappedBy = "product", orphanRemoval = true, fetch = FetchType.LAZY)
-    @Cascade({ CascadeType.ALL })
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Branding> branding;
 

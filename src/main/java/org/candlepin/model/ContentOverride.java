@@ -15,11 +15,9 @@
 package org.candlepin.model;
 
 import org.hibernate.annotations.DiscriminatorFormula;
-import org.hibernate.annotations.GenericGenerator;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
@@ -54,8 +52,7 @@ public abstract class ContentOverride<T extends ContentOverride, P extends Abstr
     public static final int MAX_VALUE_LENGTH = 2048;
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @GeneratedDbUuid
     @Column(length = 32)
     @NotNull
     private String id;

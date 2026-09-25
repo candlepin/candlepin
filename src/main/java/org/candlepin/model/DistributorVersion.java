@@ -14,16 +14,13 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.GenericGenerator;
-
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -48,8 +45,7 @@ public class DistributorVersion extends AbstractHibernateObject {
     public static final String DB_TABLE = "cp_dist_version";
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @GeneratedDbUuid
     @Column(length = 32)
     @NotNull
     private String id;
@@ -64,10 +60,8 @@ public class DistributorVersion extends AbstractHibernateObject {
     @NotNull
     private String displayName;
 
-    @OneToMany(mappedBy = "distributorVersion", targetEntity =
-        DistributorVersionCapability.class)
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @OneToMany(mappedBy = "distributorVersion", targetEntity = DistributorVersionCapability.class,
+        cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<DistributorVersionCapability> capabilities;
 
     public DistributorVersion() {

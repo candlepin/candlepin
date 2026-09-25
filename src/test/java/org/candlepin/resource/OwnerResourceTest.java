@@ -157,6 +157,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1143,7 +1144,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             Collections.sort(expectedPoolIds);
         }
         else {
-            Collections.reverse(expectedPoolIds);
+            expectedPoolIds.sort(Comparator.reverseOrder());
         }
 
         for (int page = 1; page <= numberOfPools / pageSize; page++) {

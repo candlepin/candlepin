@@ -15,8 +15,6 @@
 package org.candlepin.model;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +24,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -51,8 +48,7 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
     public static final String DB_TABLE = "cp_consumer_guests";
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @GeneratedDbUuid
     @Column(length = 32)
     @NotNull
     private String id;
@@ -77,7 +73,6 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
         joinColumns = @JoinColumn(name = "cp_consumer_guest_id"))
     @MapKeyColumn(name = "mapkey")
     @Column(name = "element")
-    @Cascade({org.hibernate.annotations.CascadeType.ALL})
     @Size(max = 255)
     private Map<String, String> attributes;
 

@@ -18,7 +18,6 @@ import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -478,7 +477,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         OwnerQueryArguments args = new OwnerQueryArguments()
             .setOffset(0)
             .setKeys(List.of("test_owner-1", "test_owner-3"));
-        assertIterableEquals(List.of(owner1, owner3), ownerCurator.listAll(args));
+        assertThat(ownerCurator.listAll(args)).containsExactlyInAnyOrder(owner1, owner3);
     }
 
     @Test
@@ -504,6 +503,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         });
 
         OwnerQueryArguments args = new OwnerQueryArguments()
+            .addOrder("key", false)
             .setOffset(5)
             .setLimit(5);
         List<Owner> page = ownerCurator.listAll(args);
