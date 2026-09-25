@@ -137,7 +137,6 @@ public class ConfigProperties {
     public static final String SSL_AUTHENTICATION = "candlepin.auth.ssl.enable";
     public static final String OAUTH_AUTHENTICATION = "candlepin.auth.oauth.enable";
     public static final String BASIC_AUTHENTICATION = "candlepin.auth.basic.enable";
-    public static final String KEYCLOAK_AUTHENTICATION = "candlepin.auth.keycloak.enable";
     public static final String CLOUD_AUTHENTICATION = "candlepin.auth.cloud.enable";
     public static final String ACTIVATION_KEY_AUTHENTICATION = "candlepin.auth.activation_key.enable";
 
@@ -342,12 +341,6 @@ public class ConfigProperties {
 
     public static final String SWAGGER_ENABLED = "candlepin.swagger.enabled";
 
-    /** Enabled dev page used to interactively login to a Keycloak instance and generate offline token. */
-    public static final String TOKENPAGE_ENABLED = "candlepin.tokenpage.enabled";
-
-    /** Path to keycloak.json */
-    public static final String KEYCLOAK_FILEPATH = "candlepin.keycloak.config";
-
     // Async Job Properties and utilities
     public static final String ASYNC_JOBS_NODE_NAME = "candlepin.async.node_name";
     public static final String ASYNC_JOBS_THREADS = "candlepin.async.threads";
@@ -516,7 +509,6 @@ public class ConfigProperties {
             this.put(TRUSTED_AUTHENTICATION, "false");
             this.put(SSL_AUTHENTICATION, "true");
             this.put(OAUTH_AUTHENTICATION, "false");
-            this.put(KEYCLOAK_AUTHENTICATION, "false");
             this.put(BASIC_AUTHENTICATION, "true");
             this.put(CLOUD_AUTHENTICATION, "false");
             this.put(ACTIVATION_KEY_AUTHENTICATION, "true");
@@ -562,7 +554,6 @@ public class ConfigProperties {
             this.put(PREFIX_WEBURL, "localhost:8443/candlepin");
             this.put(PREFIX_APIURL, "localhost:8443/candlepin");
             this.put(PASSPHRASE_SECRET_FILE, "/etc/katello/secure/passphrase");
-            this.put(KEYCLOAK_FILEPATH, "/etc/candlepin/keycloak.json");
 
             /**
              *  Defines the maximum number of products allowed in the product cache.
@@ -582,7 +573,6 @@ public class ConfigProperties {
             this.put(BOOLEAN_ATTRIBUTES, BOOLEAN_ATTRIBUTE_LIST);
 
             this.put(SWAGGER_ENABLED, Boolean.toString(true));
-            this.put(TOKENPAGE_ENABLED, Boolean.toString(true));
 
             // Async job defaults and scheduling
             // Quartz scheduling bits

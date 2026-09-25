@@ -14,7 +14,6 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.auth.KeycloakConfiguration;
 import org.candlepin.auth.SecurityHole;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.cache.StatusCache;
@@ -32,7 +31,6 @@ import org.candlepin.resource.server.v1.StatusApi;
 import org.candlepin.util.Util;
 import org.candlepin.version.VersionUtil;
 
-import org.keycloak.representations.adapters.config.AdapterConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +41,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import jakarta.inject.Inject;
-
 
 
 /**
@@ -62,23 +59,19 @@ public class StatusResource implements StatusApi {
      */
     private String release = "Unknown";
     private boolean standalone;
-    private boolean keycloakEnabled;
     private RulesCurator rulesCurator;
     private JsRunnerProvider jsProvider;
     private CandlepinCache candlepinCache;
     private CandlepinModeManager modeManager;
-    private KeycloakConfiguration keycloakConfig;
 
     @Inject
     public StatusResource(RulesCurator rulesCurator, Configuration config, JsRunnerProvider jsProvider,
-        CandlepinCache candlepinCache, CandlepinModeManager modeManager,
-        KeycloakConfiguration keycloakConfig) {
+        CandlepinCache candlepinCache, CandlepinModeManager modeManager) {
 
         this.rulesCurator = Objects.requireNonNull(rulesCurator);
         this.jsProvider = Objects.requireNonNull(jsProvider);
         this.candlepinCache = Objects.requireNonNull(candlepinCache);
         this.modeManager = Objects.requireNonNull(modeManager);
-        this.keycloakConfig = Objects.requireNonNull(keycloakConfig);
 
         Map<String, String> map = VersionUtil.getVersionMap();
         version = map.get("version");
@@ -86,11 +79,9 @@ public class StatusResource implements StatusApi {
 
         if (config != null) {
             this.standalone = config.getBoolean(ConfigProperties.STANDALONE);
-            this.keycloakEnabled = config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION);
         }
         else {
             this.standalone = true;
-            this.keycloakEnabled = false;
         }
     }
 
@@ -160,19 +151,6 @@ public class StatusResource implements StatusApi {
             .modeChangeTime(Util.toDateTime(mcr != null ? mcr.getTime() : null))
             .managerCapabilities(caps)
             .timeUTC(OffsetDateTime.now(ZoneOffset.UTC));
-
-        if (keycloakEnabled) {
-            AdapterConfig adapterConfig = keycloakConfig.getAdapterConfig();
-
-            status.keycloakResource(adapterConfig.getResource())
-                .keycloakAuthUrl(adapterConfig.getAuthServerUrl())
-                .keycloakRealm(adapterConfig.getRealm());
-
-            status.deviceAuthRealm(adapterConfig.getRealm())
-                .deviceAuthUrl(adapterConfig.getAuthServerUrl())
-                .deviceAuthClientId(adapterConfig.getResource())
-                .deviceAuthScope(""); // Currently not applicable
-        }
 
         statusCache.setStatus(status);
 

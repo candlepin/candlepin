@@ -17,18 +17,14 @@ package org.candlepin.resource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.auth.KeycloakConfiguration;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.cache.StatusCache;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
@@ -46,7 +42,6 @@ import ch.qos.logback.core.Appender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.keycloak.representations.adapters.config.AdapterConfig;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -70,8 +65,6 @@ public class StatusResourceTest {
     @Mock private CandlepinCache candlepinCache;
     @Mock private StatusCache mockedStatusCache;
     @Mock private CandlepinModeManager modeManager;
-    @Mock private KeycloakConfiguration keycloakConfig;
-    @Mock private AdapterConfig mockKeycloakAdapterConfig;
 
     @BeforeEach
     public void setUp() {
@@ -84,16 +77,11 @@ public class StatusResourceTest {
         when(candlepinCache.getStatusCache()).thenReturn(mockedStatusCache);
 
         when(modeManager.getCurrentMode()).thenReturn(Mode.NORMAL);
-
-        when(keycloakConfig.getAdapterConfig()).thenReturn(mockKeycloakAdapterConfig);
-        when(mockKeycloakAdapterConfig.getRealm()).thenReturn("realm");
-        when(mockKeycloakAdapterConfig.getAuthServerUrl()).thenReturn("https://example.com/auth");
-        when(mockKeycloakAdapterConfig.getResource()).thenReturn("resource");
     }
 
     private StatusResource createResource() {
         return new StatusResource(this.rulesCurator, this.config, this.jsProvider, this.candlepinCache,
-            this.modeManager, this.keycloakConfig);
+            this.modeManager);
     }
 
     @Test
@@ -168,39 +156,4 @@ public class StatusResourceTest {
         assertFalse(s.getStandalone());
     }
 
-    @Test
-    public void keycloakParamsPresentWhenKeycloakActive() {
-        when(config.getBoolean(eq(ConfigProperties.KEYCLOAK_AUTHENTICATION))).thenReturn(true);
-
-        AdapterConfig config = this.mockKeycloakAdapterConfig;
-
-        StatusResource sr = this.createResource();
-        StatusDTO statusDTO = sr.status();
-        assertEquals(config.getRealm(), statusDTO.getKeycloakRealm());
-        assertEquals(config.getAuthServerUrl(), statusDTO.getKeycloakAuthUrl());
-        assertEquals(config.getResource(), statusDTO.getKeycloakResource());
-
-        // Also verify that keycloak's presence populates the generic device auth fields
-        assertEquals(config.getRealm(), statusDTO.getDeviceAuthRealm());
-        assertEquals(config.getAuthServerUrl(), statusDTO.getDeviceAuthUrl());
-        assertEquals(config.getResource(), statusDTO.getDeviceAuthClientId());
-        assertEquals("", statusDTO.getDeviceAuthScope());
-    }
-
-    @Test
-    public void keycloakParamsMissingWhenKeycloakInactive() {
-        when(config.getBoolean(eq(ConfigProperties.KEYCLOAK_AUTHENTICATION))).thenReturn(false);
-
-        StatusResource sr = this.createResource();
-
-        StatusDTO statusDTO = sr.status();
-        assertNull(statusDTO.getKeycloakRealm(), "keycloak realm is not null");
-        assertNull(statusDTO.getKeycloakAuthUrl(), "keycloak auth URL is not null");
-        assertNull(statusDTO.getKeycloakResource(), "keycloak resource is not null");
-
-        assertNull(statusDTO.getDeviceAuthRealm());
-        assertNull(statusDTO.getDeviceAuthUrl());
-        assertNull(statusDTO.getDeviceAuthClientId());
-        assertNull(statusDTO.getDeviceAuthScope());
-    }
 }

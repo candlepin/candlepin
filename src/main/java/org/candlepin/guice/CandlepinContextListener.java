@@ -276,11 +276,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         CandlepinCapabilities capabilities = new CandlepinCapabilities();
 
         // Update our capabilities with configurable features
-        if (config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION)) {
-            capabilities.add(CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY);
-            capabilities.add(CandlepinCapabilities.DEVICE_AUTH_CAPABILITY);
-        }
-
         if (config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION)) {
             capabilities.add(CandlepinCapabilities.CLOUD_REGISTRATION_CAPABILITY);
         }

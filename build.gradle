@@ -175,7 +175,6 @@ dependencies {
     implementation(libs.quartz)
 
     // Keycloak
-    implementation(libs.keycloak)
     implementation(libs.keycloak.core)
 
     // Hibernate JPA integration

@@ -126,30 +126,6 @@ public class CandlepinContextListenerTest {
     }
 
     @Test
-    void keycloakCapabilityPresentWhenKeycloakEnabled() {
-        this.config.setProperty(ConfigProperties.KEYCLOAK_AUTHENTICATION, "true");
-
-        prepareForInitialization();
-        listener.contextInitialized(evt);
-
-        assertThat(CandlepinCapabilities.getCapabilities())
-            .contains(
-                CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY, CandlepinCapabilities.DEVICE_AUTH_CAPABILITY);
-    }
-
-    @Test
-    void keycloakCapabilityAbsentWhenKeycloakDisabled() {
-        this.config.setProperty(ConfigProperties.KEYCLOAK_AUTHENTICATION, "false");
-
-        prepareForInitialization();
-        listener.contextInitialized(evt);
-
-        assertThat(CandlepinCapabilities.getCapabilities())
-            .doesNotContain(
-                CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY, CandlepinCapabilities.DEVICE_AUTH_CAPABILITY);
-    }
-
-    @Test
     void sslVerifyCapabilityPresentWhenSslVerifyEnabled() {
         this.config.setProperty(ConfigProperties.SSL_VERIFY, "true");
 
