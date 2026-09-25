@@ -31,7 +31,7 @@ The Artemis installation can be cleaned up by running:
 ```
 
 The artemis service can be automatically started after installation if the
-start option is specifed. By default, the service is not started.
+start option is specified. By default, the service is not started.
 ```bash
 # ./configure-artemis --start
 ```

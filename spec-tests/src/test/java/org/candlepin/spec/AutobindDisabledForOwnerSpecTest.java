@@ -82,7 +82,7 @@ public class AutobindDisabledForOwnerSpecTest {
 
         assertBadRequest(() -> consumerClient.consumers().bindProduct(consumer.getUuid(), product))
             .hasMessageContaining("Ignoring request to auto-attach. It is disabled for org")
-            .hasMessageContaining("because of the hypervisor autobind setting.");
+            .hasMessageContaining("because of the hypervisor auto-attach setting.");
     }
 
     @Test
