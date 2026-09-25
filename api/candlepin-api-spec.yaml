@@ -1780,7 +1780,7 @@ paths:
             Cannot bind by multiple parameters |
             Cannot specify a quantity when auto-binding. |
             Ignoring request to auto-attach. It is disabled for org because of the content access
-            mode setting or hypervisor autobind setting.
+            mode setting or hypervisor auto-attach setting.
           content:
             application/json:
               schema:
@@ -1790,7 +1790,7 @@ paths:
                   Cannot bind by multiple parameters |
                   Cannot specify a quantity when auto-binding. |
                   Ignoring request to auto-attach. It is disabled for org because of the content access
-                  mode setting or hypervisor autobind setting.
+                  mode setting or hypervisor auto-attach setting.
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
           description: Consumer with this UUID could not be found.
@@ -2471,13 +2471,13 @@ paths:
                 type: string
                 format: binary
         400:
-          description: Could not validate export against specifed consumer
+          description: Could not validate export against specified consumer
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
-                displayMessage: Could not validate export against specifed consumer
+                displayMessage: Could not validate export against specified consumer
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
           description: Consumer with this UUID could not be found.

@@ -189,7 +189,7 @@ public class ManifestManager {
     }
 
     /**
-     * Imports the specified manifest archive into the specifed {@link Owner}.
+     * Imports the specified manifest archive into the specified {@link Owner}.
      *
      * @param owner
      *  the target owner.
@@ -315,7 +315,7 @@ public class ManifestManager {
         // The specified consumer must match that of the manifest.
         if (!exportedConsumer.getUuid().equals(manifest.getTargetId())) {
             throw new BadRequestException(
-                i18n.tr("Could not validate export against specifed consumer: {0}",
+                i18n.tr("Could not validate export against specified consumer: {0}",
                     exportedConsumer.getUuid()));
         }
 
@@ -364,7 +364,7 @@ public class ManifestManager {
     }
 
     /**
-     * Generates a manifest for the specifed consumer and stores the resulting file via the
+     * Generates a manifest for the specified consumer and stores the resulting file via the
      * {@link ManifestFileService}.
      *
      * @param consumerUuid
