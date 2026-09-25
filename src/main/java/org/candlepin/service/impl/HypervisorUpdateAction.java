@@ -364,7 +364,6 @@ public class HypervisorUpdateAction {
         consumer.setLastCheckin(new Date());
         consumer.setOwner(owner);
         consumer.setAutoheal(true);
-        consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
         consumer.setServiceLevel(owner.getDefaultServiceLevel() != null ?
             owner.getDefaultServiceLevel() :
             "");

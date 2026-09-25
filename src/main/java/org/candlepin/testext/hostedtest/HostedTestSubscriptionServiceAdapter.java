@@ -15,7 +15,6 @@
 package org.candlepin.testext.hostedtest;
 
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.service.model.ConsumerInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
@@ -134,30 +133,6 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
     @Override
     public boolean hasUnacceptedSubscriptionTerms(String ownerKey) {
         return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void sendActivationEmail(String subscriptionId) {
-        // method intentionally left blank
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean canActivateSubscription(ConsumerInfo consumer) {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void activateSubscription(ConsumerInfo consumer, String email, String emailLocale) {
-        // method intentionally left blank
     }
 
     /**

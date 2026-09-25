@@ -17,7 +17,6 @@ package org.candlepin.service.impl;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.service.model.ConsumerInfo;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -98,27 +97,12 @@ public class ImportSubscriptionServiceAdapter implements SubscriptionServiceAdap
     }
 
     @Override
-    public void activateSubscription(ConsumerInfo consumer, String email, String emailLocale) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public boolean isReadOnly() {
         return false;
     }
 
     @Override
     public boolean hasUnacceptedSubscriptionTerms(String ownerKey) {
-        return false;
-    }
-
-    @Override
-    public void sendActivationEmail(String subscriptionId) {
-        // hosted-only
-    }
-
-    @Override
-    public boolean canActivateSubscription(ConsumerInfo consumer) {
         return false;
     }
 

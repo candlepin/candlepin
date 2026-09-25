@@ -64,11 +64,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 
 
 /**
@@ -283,9 +281,6 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
 
     @OneToMany(mappedBy = "consumer", orphanRemoval = true, cascade = { CascadeType.ALL })
     private Set<ConsumerInstalledProduct> installedProducts;
-
-    @Transient
-    private boolean canActivate;
 
     @BatchSize(size = 32)
     @OneToMany(mappedBy = "consumer", orphanRemoval = true, cascade = { CascadeType.ALL })
@@ -984,15 +979,6 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @Override
     public String getHref() {
         return "/consumers/" + this.getUuid();
-    }
-
-    public boolean isCanActivate() {
-        return this.canActivate;
-    }
-
-    public Consumer setCanActivate(boolean canActivate) {
-        this.canActivate = canActivate;
-        return this;
     }
 
     public Set<ConsumerInstalledProduct> getInstalledProducts() {

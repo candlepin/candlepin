@@ -132,7 +132,6 @@
             <address name="event.default">
                 <multicast>
                     <queue name="event.org.candlepin.audit.LoggingListener" />
-                    <queue name="event.org.candlepin.audit.ActivationListener" />
                 </multicast>
             </address>
             <address name="job">

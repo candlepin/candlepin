@@ -14,7 +14,6 @@
  */
 package org.candlepin.service;
 
-import org.candlepin.service.model.ConsumerInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
 import java.util.Collection;
@@ -72,31 +71,6 @@ public interface SubscriptionServiceAdapter {
      * if there are terms to be accepted
      */
     boolean hasUnacceptedSubscriptionTerms(String ownerKey);
-
-    /**
-     * A pool for a subscription id has been created. Send the activation email
-     * if necessary
-     *
-     * @param subscriptionId
-     */
-    void sendActivationEmail(String subscriptionId);
-
-    /**
-     * Can this consumer activate a subscription?
-     *
-     * @param consumer
-     * @return <code>true</code> if and only if this consumer can activate a subscription
-     */
-    boolean canActivateSubscription(ConsumerInfo consumer);
-
-    /**
-     * Activate a subscription associated with the consumer
-     *
-     * @param consumer the Consumer with the associated subscription
-     * @param email the email address tied to this consumer
-     * @param emailLocale the i18n locale for the email
-     */
-    void activateSubscription(ConsumerInfo consumer, String email, String emailLocale);
 
     /**
      * Some subscription services are read-only. This allows us to avoid certain

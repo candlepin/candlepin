@@ -15,7 +15,6 @@
 package org.candlepin.controller;
 
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.service.model.ConsumerInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
@@ -93,21 +92,6 @@ class MockSubscriptionServiceAdapter implements SubscriptionServiceAdapter {
     @Override
     public boolean hasUnacceptedSubscriptionTerms(String ownerKey) {
         return false;
-    }
-
-    @Override
-    public void sendActivationEmail(String subscriptionId) {
-        // intentionally left empty
-    }
-
-    @Override
-    public boolean canActivateSubscription(ConsumerInfo consumer) {
-        return true;
-    }
-
-    @Override
-    public void activateSubscription(ConsumerInfo consumer, String email, String emailLocale) {
-        // intentionally left empty
     }
 
     @Override
