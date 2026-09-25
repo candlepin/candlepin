@@ -109,24 +109,6 @@ public interface CryptoManager {
     Scheme getCryptoScheme(AnonymousCloudConsumer consumer) throws CryptoCapabilitiesException;
 
     /**
-     * Checks whether or not a consumer has provided cryptographic capabilities and is getting a negotiated
-     * crypto scheme, or if they are using the default or legacy scheme selection process. Returns true if the
-     * consumer does not provide the necessary metrics for scheme negotiation or negotiation is disabled for
-     * the consumer; false otherwise.
-     *
-     * @param consumer
-     *  the consumer to test
-     *
-     * @throws IllegalArgumentException
-     *  if consumer is null
-     *
-     * @return
-     *  true if the consumer is *not* providing scheme negotiation metrics or for which negotiation is
-     *  disabled; false otherwise.
-     */
-    boolean isUsingDefaultCryptoScheme(Consumer consumer);
-
-    /**
      * Fetches the default scheme to use when scheme negotiation is not possible or otherwise cannot be
      * determined. This should typically be reserved for legacy behavior or communication with clients that
      * do not indicate the cryptographic scheme to use.
