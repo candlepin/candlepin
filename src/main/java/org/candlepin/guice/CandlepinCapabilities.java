@@ -31,16 +31,6 @@ public class CandlepinCapabilities extends HashSet<String> {
         "multi_environment", "typed_environments"
     };
 
-    /**
-     * @deprecated
-     *  Keycloak-specific capability; predates the more generic device_auth capability and should no
-     *  longer be used. Will eventually be removed entirely.
-     */
-    @Deprecated
-    public static final String KEYCLOAK_AUTH_CAPABILITY = "keycloak_auth";
-
-    public static final String DEVICE_AUTH_CAPABILITY = "device_auth";
-
     public static final String CLOUD_REGISTRATION_CAPABILITY = "cloud_registration";
 
     public static final String SSL_VERIFY_CAPABILITY = "ssl_verify_status";

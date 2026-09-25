@@ -19,7 +19,6 @@ import org.candlepin.auth.AnonymousCloudRegistrationAuth;
 import org.candlepin.auth.AuthProvider;
 import org.candlepin.auth.BasicAuth;
 import org.candlepin.auth.CloudRegistrationAuth;
-import org.candlepin.auth.KeycloakAuth;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.OAuth;
 import org.candlepin.auth.Principal;
@@ -97,11 +96,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
 
     public void setupAuthStrategies() {
-        // use keycloak authentication
-        if (config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION)) {
-            providers.add(injector.getInstance(KeycloakAuth.class));
-        }
-
         // Check if the cloud provider/jwt auth should be enabled
         if (config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION)) {
             providers.add(injector.getInstance(CloudRegistrationAuth.class));
