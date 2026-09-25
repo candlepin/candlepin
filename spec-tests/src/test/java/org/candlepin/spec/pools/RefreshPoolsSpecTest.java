@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2025 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -33,6 +33,8 @@ import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
+import org.candlepin.dto.api.client.v1.DistributorVersionCapabilityDTO;
+import org.candlepin.dto.api.client.v1.DistributorVersionDTO;
 import org.candlepin.dto.api.client.v1.EntitlementDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
@@ -53,13 +55,23 @@ import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
+import org.candlepin.spec.bootstrap.data.util.ExportUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import tools.jackson.databind.JsonNode;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -67,13 +79,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
 
 
 @SpecTest
 public class RefreshPoolsSpecTest {
     private static final String POOL_REFRESH_RESULT_PREFIX = "Pools refreshed for owner: ";
+
+    /** Directory holding the entitlement certificates within an exported manifest */
+    private static final String MANIFEST_ENT_CERT_PATH = "export/entitlement_certificates/";
 
     private ApiClient adminClient;
     private OwnerDTO owner;
@@ -409,7 +428,7 @@ public class RefreshPoolsSpecTest {
         user = adminClient.consumers().getConsumer(user.getUuid());
         assertEquals(0, user.getEntitlementCount());
 
-        assertNotFound(() -> adminClient.entitlements().getEntitlement(root.get(0).get("id").asText()));
+        assertNotFound(() -> adminClient.entitlements().getEntitlement(root.get(0).get("id").asString()));
     }
 
     @Test
@@ -445,7 +464,7 @@ public class RefreshPoolsSpecTest {
         JsonNode ent = ents.get(0);
         user = adminClient.consumers().getConsumer(user.getUuid());
         assertEquals(1, user.getEntitlementCount());
-        String entId = ent.get("id").asText();
+        String entId = ent.get("id").asString();
         JsonNode cert = ent.get("certificates").get(0);
         CertificateDTO originalCert = ApiClient.MAPPER.convertValue(cert, CertificateDTO.class);
         CertificateSerialDTO originalSerial = originalCert.getSerial();
@@ -593,7 +612,7 @@ public class RefreshPoolsSpecTest {
         assertEquals(updatedName, actualProd.getName());
 
         // Verify the entitlement cert has changed as a result
-        EntitlementDTO updatedEnt = adminClient.entitlements().getEntitlement(ents.get(0).get("id").asText());
+        EntitlementDTO updatedEnt = adminClient.entitlements().getEntitlement(ents.get(0).get("id").asString());
         assertNotNull(updatedEnt);
         assertEquals(1, updatedEnt.getCertificates().size());
         CertificateDTO updatedCert = updatedEnt.getCertificates().stream().iterator().next();
@@ -663,7 +682,7 @@ public class RefreshPoolsSpecTest {
 
         assertThat(adminClient.consumers().listEntitlements(user.getUuid()))
             .map(EntitlementDTO::getId)
-            .containsExactlyInAnyOrder(bindEnt1.get("id").asText(), bindEnt2.get("id").asText());
+            .containsExactlyInAnyOrder(bindEnt1.get("id").asString(), bindEnt2.get("id").asString());
 
         // Verify the entitlements contains the products and content
         List<String> certs = ApiClient.MAPPER.convertValue(bindEnt1.get("certificates"), List.class);
@@ -697,7 +716,7 @@ public class RefreshPoolsSpecTest {
             .getContentById(ownerKey, content2.getId()).getModifiedProductIds());
 
         // Verify the entitlement has been regenerated
-        EntitlementDTO updatedEnt = adminClient.entitlements().getEntitlement(bindEnt2.get("id").asText());
+        EntitlementDTO updatedEnt = adminClient.entitlements().getEntitlement(bindEnt2.get("id").asString());
         assertEquals(1, updatedEnt.getCertificates().size());
         CertificateDTO cert = updatedEnt.getCertificates().stream().iterator().next();
         assertNotEquals(bindEnt2.get("certificates").get(0).path("serial").path("serial").asLong(), cert
@@ -727,7 +746,7 @@ public class RefreshPoolsSpecTest {
             .getContentById(ownerKey, content3.getId()).getModifiedProductIds());
 
         // Verify the entitlement has been regenerated
-        updatedEnt = adminClient.entitlements().getEntitlement(bindEnt2.get("id").asText());
+        updatedEnt = adminClient.entitlements().getEntitlement(bindEnt2.get("id").asString());
         assertEquals(1, updatedEnt.getCertificates().size());
         cert = updatedEnt.getCertificates().stream().iterator().next();
         assertNotEquals(bindEnt2.get("certificates").get(0).path("serial").path("serial").asLong(), cert
@@ -793,7 +812,7 @@ public class RefreshPoolsSpecTest {
         compareBrandings(prod.getBranding(), actualProd.getBranding());
 
         // Verify the entitlement cert has changed as a result
-        EntitlementDTO updatedEnt = adminClient.entitlements().getEntitlement(ent.get("id").asText());
+        EntitlementDTO updatedEnt = adminClient.entitlements().getEntitlement(ent.get("id").asString());
         assertThat(updatedEnt.getCertificates())
             .singleElement()
             .isNotNull()
@@ -1090,7 +1109,7 @@ public class RefreshPoolsSpecTest {
         pools = adminClient.pools().listPoolsByOwner(owner.getId());
         assertThat(pools).hasSize(1);
 
-        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asText()))
+        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asString()))
             .isNotNull()
             .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
             .singleElement()
@@ -1138,7 +1157,7 @@ public class RefreshPoolsSpecTest {
         pools = adminClient.pools().listPoolsByOwner(owner.getId());
         assertThat(pools).hasSize(1);
 
-        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asText()))
+        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asString()))
             .isNotNull()
             .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
             .singleElement()
@@ -1195,7 +1214,7 @@ public class RefreshPoolsSpecTest {
         pools = adminClient.pools().listPoolsByOwner(owner.getId());
         assertThat(pools).hasSize(1);
 
-        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asText()))
+        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asString()))
             .isNotNull()
             .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
             .singleElement()
@@ -1237,7 +1256,7 @@ public class RefreshPoolsSpecTest {
         pools = adminClient.pools().listPoolsByOwner(owner.getId());
         assertThat(pools).hasSize(1);
 
-        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asText()))
+        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asString()))
             .isNotNull()
             .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
             .singleElement()
@@ -1283,7 +1302,7 @@ public class RefreshPoolsSpecTest {
         pools = adminClient.pools().listPoolsByOwner(owner.getId());
         assertThat(pools).hasSize(1);
 
-        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asText()))
+        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asString()))
             .isNotNull()
             .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
             .singleElement()
@@ -1324,7 +1343,7 @@ public class RefreshPoolsSpecTest {
         pools = adminClient.pools().listPoolsByOwner(owner.getId());
         assertThat(pools).hasSize(1);
 
-        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asText()))
+        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asString()))
             .isNotNull()
             .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
             .singleElement()
@@ -1365,7 +1384,7 @@ public class RefreshPoolsSpecTest {
         pools = adminClient.pools().listPoolsByOwner(owner.getId());
         assertThat(pools).hasSize(1);
 
-        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asText()))
+        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asString()))
             .isNotNull()
             .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
             .singleElement()
@@ -1406,7 +1425,7 @@ public class RefreshPoolsSpecTest {
         pools = adminClient.pools().listPoolsByOwner(owner.getId());
         assertThat(pools).hasSize(1);
 
-        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asText()))
+        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asString()))
             .isNotNull()
             .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
             .singleElement()
@@ -1445,7 +1464,7 @@ public class RefreshPoolsSpecTest {
         pools = adminClient.pools().listPoolsByOwner(owner.getId());
         assertThat(pools).hasSize(1);
 
-        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asText()))
+        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asString()))
             .isNotNull()
             .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
             .singleElement()
@@ -1485,7 +1504,7 @@ public class RefreshPoolsSpecTest {
         pools = adminClient.pools().listPoolsByOwner(owner.getId());
         assertThat(pools).hasSize(1);
 
-        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asText()))
+        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asString()))
             .isNotNull()
             .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
             .singleElement()
@@ -1524,7 +1543,7 @@ public class RefreshPoolsSpecTest {
         pools = adminClient.pools().listPoolsByOwner(owner.getId());
         assertThat(pools).hasSize(1);
 
-        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asText()))
+        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asString()))
             .isNotNull()
             .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
             .singleElement()
@@ -1563,7 +1582,7 @@ public class RefreshPoolsSpecTest {
         pools = adminClient.pools().listPoolsByOwner(owner.getId());
         assertThat(pools).hasSize(1);
 
-        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asText()))
+        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asString()))
             .isNotNull()
             .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
             .singleElement()
@@ -1607,7 +1626,7 @@ public class RefreshPoolsSpecTest {
         pools = adminClient.pools().listPoolsByOwner(owner.getId());
         assertThat(pools).hasSize(1);
 
-        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asText()))
+        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asString()))
             .isNotNull()
             .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
             .singleElement()
@@ -1671,7 +1690,7 @@ public class RefreshPoolsSpecTest {
         pools = adminClient.pools().listPoolsByOwner(owner.getId());
         assertThat(pools).hasSize(1);
 
-        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asText()))
+        assertThat(adminClient.entitlements().getEntitlement(ents.get(0).get("id").asString()))
             .isNotNull()
             .extracting(EntitlementDTO::getCertificates, as(collection(CertificateDTO.class)))
             .singleElement()
@@ -1819,6 +1838,188 @@ public class RefreshPoolsSpecTest {
 
     @Test
     @OnlyInHosted
+    public void shouldRegenManifestEntCertsWhenAnotherOrgRefreshesSharedContentFirst() throws Exception {
+        // Two orgs with distinct SKUs that share a single engineering product, and therefore share a
+        // single piece of content. Refreshing the first org mutates that global content in place, so
+        // the second org must still detect the change during its own refresh and regenerate the
+        // entitlements backing its manifest.
+
+        OwnerDTO owner1 = adminClient.owners().createOwner(Owners.random());
+        OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
+
+        String originalUrl = StringUtil.random("/original-url-");
+        ContentDTO content = adminClient.hosted()
+            .createContent(Contents.random().contentUrl(originalUrl));
+
+        ProductDTO engProduct = adminClient.hosted().createProduct(Products.randomEng());
+        engProduct = adminClient.hosted()
+            .addContentToProduct(engProduct.getId(), content.getId(), true);
+
+        ProductDTO sku1 = adminClient.hosted()
+            .createProduct(Products.random().providedProducts(Set.of(engProduct)));
+        ProductDTO sku2 = adminClient.hosted()
+            .createProduct(Products.random().providedProducts(Set.of(engProduct)));
+
+        adminClient.hosted().createSubscription(Subscriptions.random(owner1, sku1));
+        adminClient.hosted().createSubscription(Subscriptions.random(owner2, sku2));
+
+        this.refreshPools(adminClient, owner1.getKey());
+        this.refreshPools(adminClient, owner2.getKey());
+
+        List<PoolDTO> owner1Pools = adminClient.pools().listPoolsByOwner(owner1.getId());
+        assertThat(owner1Pools).hasSize(1);
+
+        List<PoolDTO> owner2Pools = adminClient.pools().listPoolsByOwner(owner2.getId());
+        assertThat(owner2Pools).hasSize(1);
+
+        ConsumerDTO owner1Consumer = adminClient.consumers().createConsumer(Consumers.random(owner1));
+
+        // Org 2's consumer is a v3-capable distributor, so the manifest it exports contains an
+        // entitlement certificate whose content we can inspect.
+        String distVersion = StringUtil.random("version-");
+        adminClient.distributorVersions().create(new DistributorVersionDTO()
+            .name(distVersion)
+            .displayName("SAM")
+            .capabilities(Set.of(new DistributorVersionCapabilityDTO().name("cert_v3"))));
+
+        ConsumerDTO owner2Consumer = adminClient.consumers().createConsumer(Consumers
+            .random(owner2, ConsumerTypes.Candlepin)
+            .putFactsItem("distributor_version", distVersion));
+
+        adminClient.consumers().bindPoolSync(owner1Consumer.getUuid(), owner1Pools.get(0).getId(), 1);
+        adminClient.consumers().bindPoolSync(owner2Consumer.getUuid(), owner2Pools.get(0).getId(), 1);
+
+        assertThat(this.consumerContentPaths(owner2Consumer.getUuid(), engProduct.getId(), content.getId()))
+            .singleElement()
+            .asString()
+            .endsWith(originalUrl);
+
+        // Update the shared content upstream
+        String updatedUrl = StringUtil.random("/updated-url-");
+        content.setContentUrl(updatedUrl);
+        adminClient.hosted().updateContent(content.getId(), content);
+
+        // Refreshing org 1 first consumes the global content change...
+        this.refreshPools(adminClient, owner1.getKey());
+
+        assertThat(this.consumerContentPaths(owner1Consumer.getUuid(), engProduct.getId(), content.getId()))
+            .singleElement()
+            .asString()
+            .endsWith(updatedUrl);
+
+        // ...but org 2 must still detect it when it refreshes in turn
+        this.refreshPools(adminClient, owner2.getKey());
+
+        assertThat(this.consumerContentPaths(owner2Consumer.getUuid(), engProduct.getId(), content.getId()))
+            .singleElement()
+            .asString()
+            .endsWith(updatedUrl);
+
+        // ...and the manifest org 2 exports must carry the updated content as well
+        File manifest = adminClient.consumers().exportData(owner2Consumer.getUuid(), null, null, null);
+        manifest.deleteOnExit();
+
+        assertThat(this.manifestContentPaths(manifest, engProduct.getId(), content.getId()))
+            .singleElement()
+            .asString()
+            .endsWith(updatedUrl);
+    }
+
+    @Test
+    @OnlyInHosted
+    public void shouldRegenManifestEntCertsWhenAnotherOrgRefreshesSharedContentFromNonSharedEngProductFirst()
+        throws Exception {
+        // Two orgs with distinct SKUs and two distinct engineering products, but the two engineering
+        // products share a single piece of content. Refreshing the first org mutates that global content in
+        // place, so the second org must still detect the change during its own refresh and regenerate the
+        // entitlements backing its manifest.
+
+        OwnerDTO owner1 = adminClient.owners().createOwner(Owners.random());
+        OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
+
+        String originalUrl = StringUtil.random("/original-url-");
+        ContentDTO content = adminClient.hosted()
+            .createContent(Contents.random().contentUrl(originalUrl));
+
+        ProductDTO engProduct1 = adminClient.hosted().createProduct(Products.randomEng());
+        engProduct1 = adminClient.hosted()
+            .addContentToProduct(engProduct1.getId(), content.getId(), true);
+        ProductDTO engProduct2 = adminClient.hosted().createProduct(Products.randomEng());
+        engProduct2 = adminClient.hosted()
+            .addContentToProduct(engProduct2.getId(), content.getId(), true);
+
+        ProductDTO sku1 = adminClient.hosted()
+            .createProduct(Products.random().providedProducts(Set.of(engProduct1)));
+        ProductDTO sku2 = adminClient.hosted()
+            .createProduct(Products.random().providedProducts(Set.of(engProduct2)));
+
+        adminClient.hosted().createSubscription(Subscriptions.random(owner1, sku1));
+        adminClient.hosted().createSubscription(Subscriptions.random(owner2, sku2));
+
+        this.refreshPools(adminClient, owner1.getKey());
+        this.refreshPools(adminClient, owner2.getKey());
+
+        List<PoolDTO> owner1Pools = adminClient.pools().listPoolsByOwner(owner1.getId());
+        assertThat(owner1Pools).hasSize(1);
+
+        List<PoolDTO> owner2Pools = adminClient.pools().listPoolsByOwner(owner2.getId());
+        assertThat(owner2Pools).hasSize(1);
+
+        ConsumerDTO owner1Consumer = adminClient.consumers().createConsumer(Consumers.random(owner1));
+
+        // Org 2's consumer is a v3-capable distributor, so the manifest it exports contains an
+        // entitlement certificate whose content we can inspect.
+        String distVersion = StringUtil.random("version-");
+        adminClient.distributorVersions().create(new DistributorVersionDTO()
+            .name(distVersion)
+            .displayName("SAM")
+            .capabilities(Set.of(new DistributorVersionCapabilityDTO().name("cert_v3"))));
+
+        ConsumerDTO owner2Consumer = adminClient.consumers().createConsumer(Consumers
+            .random(owner2, ConsumerTypes.Candlepin)
+            .putFactsItem("distributor_version", distVersion));
+
+        adminClient.consumers().bindPoolSync(owner1Consumer.getUuid(), owner1Pools.get(0).getId(), 1);
+        adminClient.consumers().bindPoolSync(owner2Consumer.getUuid(), owner2Pools.get(0).getId(), 1);
+
+        assertThat(this.consumerContentPaths(owner2Consumer.getUuid(), engProduct2.getId(), content.getId()))
+            .singleElement()
+            .asString()
+            .endsWith(originalUrl);
+
+        // Update the shared content upstream
+        String updatedUrl = StringUtil.random("/updated-url-");
+        content.setContentUrl(updatedUrl);
+        adminClient.hosted().updateContent(content.getId(), content);
+
+        // Refreshing org 1 first consumes the global content change...
+        this.refreshPools(adminClient, owner1.getKey());
+
+        assertThat(this.consumerContentPaths(owner1Consumer.getUuid(), engProduct1.getId(), content.getId()))
+            .singleElement()
+            .asString()
+            .endsWith(updatedUrl);
+
+        // ...but org 2 must also detect the change
+        this.refreshPools(adminClient, owner2.getKey());
+
+        assertThat(this.consumerContentPaths(owner2Consumer.getUuid(), engProduct2.getId(), content.getId()))
+            .singleElement()
+            .asString()
+            .endsWith(updatedUrl);
+
+        // ...and the manifest org 2 exports must carry the updated content as well
+        File manifest = adminClient.consumers().exportData(owner2Consumer.getUuid(), null, null, null);
+        manifest.deleteOnExit();
+
+        assertThat(this.manifestContentPaths(manifest, engProduct2.getId(), content.getId()))
+            .singleElement()
+            .asString()
+            .endsWith(updatedUrl);
+    }
+
+    @Test
+    @OnlyInHosted
     public void shouldDetectProductChangesAcrossMultipleOrgsDerivedPoolGeneration() {
         // With global products, we need to verify that one org refreshing the global product
         // definitions does not prevent subsequent refreshes for orgs using the same products from
@@ -1896,13 +2097,13 @@ public class RefreshPoolsSpecTest {
         JsonNode owner1SCAContentBody1 = adminClient.consumers()
             .getContentAccessBodyJson(owner1Consumer.getUuid(), null);
 
-        String owner1SCALastUpdate1 = owner1SCAContentBody1.get("lastUpdate").asText();
+        String owner1SCALastUpdate1 = owner1SCAContentBody1.get("lastUpdate").asString();
         String owner1SCAContent1 = owner1SCAContentBody1.get("contentListing")
             .valueStream()
             .findFirst()
             .orElseThrow()
             .get(1)
-            .asText();
+            .asString();
 
         List<PoolDTO> owner2Pools = adminClient.pools().listPoolsByOwner(owner2.getId());
         assertThat(owner2Pools).hasSize(1);
@@ -1910,13 +2111,13 @@ public class RefreshPoolsSpecTest {
         JsonNode owner2SCAContentBody1 = adminClient.consumers()
             .getContentAccessBodyJson(owner2Consumer.getUuid(), null);
 
-        String owner2SCALastUpdate1 = owner2SCAContentBody1.get("lastUpdate").asText();
+        String owner2SCALastUpdate1 = owner2SCAContentBody1.get("lastUpdate").asString();
         String owner2SCAContent1 = owner2SCAContentBody1.get("contentListing")
             .valueStream()
             .findFirst()
             .orElseThrow()
             .get(1)
-            .asText();
+            .asString();
 
         // Update the product with new content
         ContentDTO content = adminClient.hosted().createContent(Contents.random());
@@ -1929,13 +2130,13 @@ public class RefreshPoolsSpecTest {
         JsonNode owner1SCAContentBody2 = adminClient.consumers()
             .getContentAccessBodyJson(owner1Consumer.getUuid(), null);
 
-        String owner1SCALastUpdate2 = owner1SCAContentBody2.get("lastUpdate").asText();
+        String owner1SCALastUpdate2 = owner1SCAContentBody2.get("lastUpdate").asString();
         String owner1SCAContent2 = owner1SCAContentBody2.get("contentListing")
             .valueStream()
             .findFirst()
             .orElseThrow()
             .get(1)
-            .asText();
+            .asString();
 
         assertNotEquals(owner1SCAContent1, owner1SCAContent2);
         assertNotEquals(owner1SCALastUpdate1, owner1SCALastUpdate2);
@@ -1945,13 +2146,13 @@ public class RefreshPoolsSpecTest {
         JsonNode owner2SCAContentBody2 = adminClient.consumers()
             .getContentAccessBodyJson(owner2Consumer.getUuid(), null);
 
-        String owner2SCALastUpdate2 = owner2SCAContentBody2.get("lastUpdate").asText();
+        String owner2SCALastUpdate2 = owner2SCAContentBody2.get("lastUpdate").asString();
         String owner2SCAContent2 = owner2SCAContentBody2.get("contentListing")
             .valueStream()
             .findFirst()
             .orElseThrow()
             .get(1)
-            .asText();
+            .asString();
 
         assertNotEquals(owner2SCAContent1, owner2SCAContent2);
         assertNotEquals(owner2SCALastUpdate1, owner2SCALastUpdate2);
@@ -1965,13 +2166,13 @@ public class RefreshPoolsSpecTest {
         JsonNode owner2SCAContentBody3 = adminClient.consumers()
             .getContentAccessBodyJson(owner2Consumer.getUuid(), null);
 
-        String owner2SCALastUpdate3 = owner2SCAContentBody3.get("lastUpdate").asText();
+        String owner2SCALastUpdate3 = owner2SCAContentBody3.get("lastUpdate").asString();
         String owner2SCAContent3 = owner2SCAContentBody3.get("contentListing")
             .valueStream()
             .findFirst()
             .orElseThrow()
             .get(1)
-            .asText();
+            .asString();
 
         assertNotEquals(owner2SCAContent1, owner2SCAContent2);
         assertNotEquals(owner2SCALastUpdate1, owner2SCALastUpdate2);
@@ -1979,6 +2180,656 @@ public class RefreshPoolsSpecTest {
         assertNotEquals(owner2SCALastUpdate1, owner2SCALastUpdate3);
         assertNotEquals(owner2SCAContent2, owner2SCAContent3);
         assertNotEquals(owner2SCALastUpdate2, owner2SCALastUpdate3);
+    }
+
+    @Nested
+    @OnlyInHosted
+    @TestInstance(Lifecycle.PER_CLASS)
+    @Execution(ExecutionMode.SAME_THREAD)
+    public class EntitlementCertificateRegenerationTests {
+        // These tests verify entitlement certificate regeneration caused by the RefreshPoolsJob. Nested
+        // classes are used to build a product graph to be tested. Entitlement certificates for subscriptions
+        // to parent products are also verified when child products are updated.
+
+        private OwnerDTO owner;
+        private ProductDTO skuProduct;
+        private ConsumerDTO consumer;
+        private String distVersion;
+
+        // These are manifest consumers from different owners that have a subscription to a product in the
+        // product graph that is being tested. Entitlement certificates for these consumers are expected to be
+        // updated properly.
+        private List<ConsumerDTO> sharedProductConsumers = new ArrayList<>();
+
+        @BeforeEach
+        public void beforeEach() {
+            this.owner = adminClient.owners().createOwner(Owners.random());
+            skuProduct = adminClient.hosted().createProduct(Products.random());
+
+            adminClient.hosted().createSubscription(Subscriptions.random(this.owner, this.skuProduct));
+
+            // Create our pool for the subscription
+            refreshPools(adminClient, this.owner.getKey());
+
+            List<PoolDTO> pools = adminClient.pools().listPoolsByOwner(this.owner.getId());
+            assertThat(pools).hasSize(1);
+
+            // The derived_product capability is needed to bind to a derived product
+            this.distVersion = StringUtil.random("version-");
+            adminClient.distributorVersions().create(new DistributorVersionDTO()
+                .name(this.distVersion)
+                .displayName("SAM")
+                .capabilities(Set.of(
+                    new DistributorVersionCapabilityDTO().name("cert_v3"),
+                    new DistributorVersionCapabilityDTO().name("derived_product")
+                )));
+
+            this.consumer = adminClient.consumers().createConsumer(Consumers
+                .random(owner, ConsumerTypes.Candlepin)
+                .putFactsItem("distributor_version", this.distVersion));
+
+            adminClient.consumers().bindPoolSync(this.consumer.getUuid(), pools.get(0).getId(), 1);
+
+            // Create another owner that has a subscription to this SKU product.
+            // We will validate that this owner's entitlement certificates are also updated when there are
+            // changes to the SKU product.
+            OwnerDTO otherOwner = adminClient.owners().createOwner(Owners.random());
+            adminClient.hosted().createSubscription(Subscriptions.random(otherOwner, this.skuProduct));
+
+            refreshPools(adminClient, otherOwner.getKey());
+
+            ConsumerDTO otherConsumer = adminClient.consumers().createConsumer(Consumers
+                .random(otherOwner, ConsumerTypes.Candlepin)
+                .putFactsItem("distributor_version", this.distVersion));
+
+            pools = adminClient.pools().listPoolsByOwner(otherOwner.getId());
+            assertThat(pools).singleElement();
+            adminClient.consumers().bindPoolSync(otherConsumer.getUuid(), pools.get(0).getId(), 1);
+
+            // Add the manifest consumers to sharedProductConsumers so their manifests will be validated
+            this.sharedProductConsumers.add(this.consumer);
+            this.sharedProductConsumers.add(otherConsumer);
+        }
+
+        @AfterEach
+        public void afterEach() {
+            // Since we are creating a new product graph per test, we need to clear the shared product
+            // consumers because these consumers consume products that we are no longer testing.
+            this.sharedProductConsumers.clear();
+        }
+
+        @Test
+        public void testSKUProductModification() {
+            // This test validates that entitlements certificates are updated for consumers and owners that
+            // share a SKU that has a modification like the name changing.
+
+            String newName = StringUtil.random("modified-");
+            this.skuProduct.setName(newName);
+            this.skuProduct = adminClient.hosted().updateProduct(this.skuProduct.getId(), this.skuProduct);
+
+            // Verify that entitlement certificates are regenerated for all owners that have a subscription to
+            // this SKU product.
+            for (ConsumerDTO manConsumer : this.sharedProductConsumers) {
+                refreshPools(adminClient, manConsumer.getOwner().getKey());
+
+                List<JsonNode> nodes = getSubsFromEntCerts(manConsumer.getUuid(), this.skuProduct.getId());
+
+                String errMsg = "verify that the SKU subscription exists for manifest consumers that share this " +
+                    "SKU product";
+                assertThat(nodes)
+                    .as(errMsg)
+                    .singleElement();
+
+                errMsg = "subscription name not updated for manifest consumer that shares the SKU product";
+                assertEquals(newName, nodes.getFirst().get("name").asString(), errMsg);
+            }
+        }
+
+        @Test
+        public void testAddingAndRemovingProvidedProducts() throws Exception {
+            // This test validates that entitlements certificates are updated for consumers and owners that
+            // share a SKU that has a provided product added and removed.
+
+            // Test adding provided product
+            ProductDTO providedProduct = adminClient.hosted().createProduct(Products.randomEng());
+
+            String expectedUrl = StringUtil.random("/url-");
+            ContentDTO content = adminClient.hosted()
+                .createContent(Contents.random().contentUrl(expectedUrl));
+            providedProduct = adminClient.hosted()
+                .addContentToProduct(providedProduct.getId(), content.getId(), true);
+
+            this.skuProduct.addProvidedProductsItem(providedProduct);
+            adminClient.hosted().updateProduct(this.skuProduct.getId(), this.skuProduct);
+
+            assertContentUrl(this.sharedProductConsumers, providedProduct.getId(), content.getId(), expectedUrl);
+
+            // Test removing provided product
+            Set<ProductDTO> updatedProvidedProducts = this.skuProduct.getProvidedProducts();
+            updatedProvidedProducts.remove(providedProduct);
+            this.skuProduct.setProvidedProducts(updatedProvidedProducts);
+            adminClient.hosted().updateProduct(this.skuProduct.getId(), this.skuProduct);
+
+            assertNoContent(this.sharedProductConsumers, providedProduct.getId(), content.getId());
+        }
+
+        @Test
+        public void testAddingAndRemovingDerivedProducts() throws Exception {
+            // This test validates that entitlements certificates are updated for consumers and owners that
+            // share a SKU that has a derived product added and removed.
+
+            // Test adding derived product
+            ProductDTO providedProduct = adminClient.hosted().createProduct(Products.randomEng());
+
+            String expectedUrl = StringUtil.random("/url-");
+            ContentDTO content = adminClient.hosted()
+                .createContent(Contents.random().contentUrl(expectedUrl));
+            providedProduct = adminClient.hosted()
+                .addContentToProduct(providedProduct.getId(), content.getId(), true);
+
+            ProductDTO derivedProduct = adminClient.hosted().createProduct(Products.random()
+                .addProvidedProductsItem(providedProduct));
+
+            this.skuProduct.setDerivedProduct(derivedProduct);
+            adminClient.hosted().updateProduct(this.skuProduct.getId(), this.skuProduct);
+
+            assertContentUrl(this.sharedProductConsumers, providedProduct.getId(), content.getId(), expectedUrl);
+
+            // Test removing derived provided product
+            this.skuProduct.setDerivedProduct(null);
+            adminClient.hosted().updateProduct(this.skuProduct.getId(), this.skuProduct);
+
+            assertNoContent(this.sharedProductConsumers, providedProduct.getId(), content.getId());
+        }
+
+        /**
+         * WithProvidedProduct creates a product that is added to the SKU product of the parent class as a
+         * provided product. Various tests on this new provided product are run as part of
+         * {@link ProvidedProductTestScenarios}.
+         * <p></p>
+         * This class also creates a second owner with its own different top-level SKU and
+         * <strong>does not</strong> reuse the parent class top-level SKU. This second owner's SKU shares the
+         * newly created provided product with the parent class top-level SKU.
+         * <p></p>
+         * SKU product -> provided product
+         */
+        @Nested
+        public class WithProvidedProduct extends ProvidedProductTestScenarios {
+
+            private ProductDTO providedProduct;
+
+            @BeforeEach
+            public void beforeEach() {
+                this.providedProduct = adminClient.hosted().createProduct(Products.randomEng());
+
+                ContentDTO content = adminClient.hosted()
+                    .createContent(Contents.random().contentUrl(StringUtil.random("/original-url-")));
+                this.providedProduct = adminClient.hosted()
+                    .addContentToProduct(this.providedProduct.getId(), content.getId(), true);
+
+                skuProduct.addProvidedProductsItem(this.providedProduct);
+                adminClient.hosted().updateProduct(skuProduct.getId(), skuProduct);
+
+                refreshPools(adminClient, owner.getKey());
+
+                // Create another owner that uses a different SKU that shares this provided product
+                ConsumerDTO manifestConsumer = createdSharedProductOwner(this.providedProduct, true);
+                sharedProductConsumers.add(manifestConsumer);
+            }
+
+            @Override
+            public ProductDTO getProvidedProductToTest() {
+                return this.providedProduct;
+            }
+        }
+
+        /**
+         * WithDerivedProduct creates a new product that is added to the SKU product of the parent class as a
+         * derived product.
+         * <p></p>
+         * This class also creates a second owner with its own different top-level SKU and
+         * <strong>does not</strong> reuse the parent class top-level SKU. This second owner's SKU shares the
+         * newly created derived product with the parent class top-level SKU.
+         * <p></p>
+         * SKU product -> derived product
+         */
+        @Nested
+        public class WithDerivedProduct {
+
+            private ProductDTO derivedProduct;
+
+            @BeforeEach
+            public void beforeEach() {
+                this.derivedProduct = adminClient.hosted().createProduct(Products.random());
+                skuProduct.derivedProduct(this.derivedProduct)
+                    .addAttributesItem(ProductAttributes.VirtualLimit.withValue("unlimited"));
+                adminClient.hosted().updateProduct(skuProduct.getId(), skuProduct);
+
+                refreshPools(adminClient, owner.getKey());
+
+                // Create another owner that also uses this derived product. Changes made to provided
+                // provided products for this derived product should be reflected in the entitlement certs
+                // for this owner.
+                ConsumerDTO manifestConsumer = createdSharedProductOwner(this.derivedProduct, false);
+                sharedProductConsumers.add(manifestConsumer);
+            }
+
+            @Test
+            public void testAddingAndRemovingProvidedProducts() throws Exception {
+                // Test adding provided product
+                ProductDTO providedProduct = adminClient.hosted().createProduct(Products.randomEng());
+
+                String expectedUrl = StringUtil.random("/url-");
+                ContentDTO content = adminClient.hosted()
+                    .createContent(Contents.random().contentUrl(expectedUrl));
+                providedProduct = adminClient.hosted()
+                    .addContentToProduct(providedProduct.getId(), content.getId(), true);
+
+                this.derivedProduct.addProvidedProductsItem(providedProduct);
+                adminClient.hosted().updateProduct(this.derivedProduct.getId(), this.derivedProduct);
+
+                assertContentUrl(sharedProductConsumers, providedProduct.getId(), content.getId(), expectedUrl);
+
+                // Test removing provided product
+                Set<ProductDTO> updatedProvidedProducts = this.derivedProduct.getProvidedProducts();
+                updatedProvidedProducts.remove(providedProduct);
+                this.derivedProduct.setProvidedProducts(updatedProvidedProducts);
+                adminClient.hosted().updateProduct(this.derivedProduct.getId(), this.derivedProduct);
+
+                assertNoContent(sharedProductConsumers, providedProduct.getId(), content.getId());
+            }
+
+            /**
+             * WithProvidedProduct creates a product that is added to the derived product of the parent class
+             * as a provided product. Various tests on this new provided product are run as part of
+             * {@link ProvidedProductTestScenarios}.
+             * <p></p>
+             * This class also creates a second owner with its own different top-level SKU and
+             * <strong>does not</strong> reuse the parent class top-level SKU. This second owner's SKU shares
+             * the newly created provided product with the parent class top-level SKU.
+             * <p></p>
+             * SKU product -> derived product -> provided product
+             */
+            @Nested
+            public class WithProvidedProduct extends ProvidedProductTestScenarios {
+
+                private ProductDTO providedProduct;
+
+                @BeforeEach
+                public void beforeEach() {
+                    ContentDTO content = adminClient.hosted()
+                        .createContent(Contents.random().contentUrl(StringUtil.random("/original-url-")));
+
+                    this.providedProduct = adminClient.hosted().createProduct(Products.randomEng());
+                    this.providedProduct = adminClient.hosted()
+                        .addContentToProduct(this.providedProduct.getId(), content.getId(), true);
+
+                    derivedProduct.addProvidedProductsItem(this.providedProduct);
+                    adminClient.hosted().updateProduct(derivedProduct.getId(), derivedProduct);
+
+                    refreshPools(adminClient, owner.getKey());
+
+                    // Create another owner with a product tree that uses this product
+                    ConsumerDTO manifestConsumer = createdSharedProductOwner(this.providedProduct, true);
+                    sharedProductConsumers.add(manifestConsumer);
+                }
+
+                @Override
+                public ProductDTO getProvidedProductToTest() {
+                    return this.providedProduct;
+                }
+            }
+        }
+
+        /**
+         * This abstract class contains test cases to be run for a specific provided product in a product
+         * graph. These tests validate that entitlement certificates are regenerated appropriately by the
+         * RefreshPoolsJob. These entitlement certificates include the entitlement certificates to pools for
+         * products that are ancestors of the product under test.
+         */
+        public abstract class ProvidedProductTestScenarios {
+
+            /**
+             * Implementation will provide a provided product from a product graph that will be tested by
+             * scenarios provided in this abstract class. This product cannot be null.
+             *
+             * @return the provided product in the product hierarchy that will be tested; cannot be null
+             */
+            public abstract ProductDTO getProvidedProductToTest();
+
+            @Test
+            public void testAddingAndRemovingContent() throws Exception {
+                ProductDTO product = this.getProvidedProductToTest();
+                if (product == null) {
+                    throw new IllegalStateException("The product must not be null");
+                }
+
+                // Test adding a content to the product
+                String newContentUrl = StringUtil.random("/modified-url-");
+                ContentDTO newContent = adminClient.hosted()
+                    .createContent(Contents.random().contentUrl(newContentUrl));
+
+                product = adminClient.hosted()
+                    .addContentToProduct(product.getId(), newContent.getId(), true);
+
+                assertContentUrl(sharedProductConsumers, product.getId(), newContent.getId(), newContentUrl);
+
+                // Test removing the content from the product
+                adminClient.hosted().removeContentFromProduct(product.getId(), newContent.getId());
+
+                assertNoContent(sharedProductConsumers, product.getId(), newContent.getId());
+            }
+
+            @Test
+            public void testContentUrlModifications() throws Exception {
+                ProductDTO product = this.getProvidedProductToTest();
+                if (product == null) {
+                    throw new IllegalStateException("The product must not be null");
+                }
+
+                // If there is no content on the product, then we have nothing to validate
+                if (product.getProductContent() == null || product.getProductContent().isEmpty()) {
+                    return;
+                }
+
+                ContentDTO content = product.getProductContent().iterator().next().getContent();
+
+                String updatedUrl = StringUtil.random("/updated-url-");
+                content.setContentUrl(updatedUrl);
+                adminClient.hosted().updateContent(content.getId(), content);
+
+                assertContentUrl(sharedProductConsumers, product.getId(), content.getId(), updatedUrl);
+            }
+
+            @Test
+            public void testProductFieldModifications() {
+                ProductDTO product = this.getProvidedProductToTest();
+                if (product == null) {
+                    throw new IllegalStateException("the product must not be null");
+                }
+
+                String newName = StringUtil.random("modified-");
+                product.setName(newName);
+                product = adminClient.hosted().updateProduct(product.getId(), product);
+
+                refreshPools(adminClient, consumer.getOwner().getKey());
+
+                List<JsonNode> actual = getProductFromEntCerts(consumer.getUuid(), product.getId());
+
+                assertThat(actual)
+                    .as("verify that the modified product exists in the entitlement cert")
+                    .singleElement();
+
+                String errMsg = "verify product field modification exists in the entitlement cert";
+                assertEquals(newName, actual.getFirst().get("name").asString(), errMsg);
+
+                // Verify that entitlement certificates for consumers that use this product are regenerated
+                for (ConsumerDTO sharedConsumer : sharedProductConsumers) {
+                    // Refreshing the pools for the owner should mark the entitlements dirty
+                    refreshPools(adminClient, sharedConsumer.getOwner().getKey());
+
+                    List<JsonNode> nodes = getProductFromEntCerts(sharedConsumer.getUuid(), product.getId());
+                    assertThat(nodes)
+                        .as("verify the product exists for shared-product consumer")
+                        .singleElement();
+
+                    errMsg = "product name not regenerated in entitlement cert for shared-product consumer";
+                    assertEquals(newName, nodes.getFirst().get("name").asString(), errMsg);
+                }
+            }
+        }
+
+        /**
+         * Creates a new owner with a subscription to a newly created SKU product. The shared product is
+         * added to this new SKU product. A manifest consumer is then created for this new owner.
+         *
+         * @param product
+         *  the product that will be added as a provided product for the newly created SKU product
+         *
+         * @param isProvidedProduct
+         *  if true then the shared product is added to the new SKU product as a provided product; false adds
+         *  the shared product as a derived product
+         *
+         * @return the manifest consumer for the newly created owner
+         */
+        private ConsumerDTO createdSharedProductOwner(ProductDTO product, boolean isProvidedProduct) {
+            if (product == null) {
+                throw new IllegalStateException("product cannot be null");
+            }
+
+            OwnerDTO otherOwner = adminClient.owners().createOwner(Owners.random());
+            ProductDTO productToCreate = Products.randomSKU();
+            if (isProvidedProduct) {
+                productToCreate.addProvidedProductsItem(product);
+            }
+            else {
+                productToCreate.setDerivedProduct(product);
+            }
+
+            ProductDTO otherSku = adminClient.hosted().createProduct(productToCreate);
+            adminClient.hosted().createSubscription(Subscriptions.random(otherOwner, otherSku));
+
+            refreshPools(adminClient, otherOwner.getKey());
+
+            List<PoolDTO> pools = adminClient.pools().listPoolsByOwner(otherOwner.getId());
+            assertThat(pools).singleElement();
+
+            ConsumerDTO otherConsumer = adminClient.consumers().createConsumer(Consumers
+                .random(otherOwner, ConsumerTypes.Candlepin)
+                .putFactsItem("distributor_version", distVersion));
+
+            adminClient.consumers().bindPoolSync(otherConsumer.getUuid(), pools.get(0).getId(), 1);
+
+            return otherConsumer;
+        }
+
+        /**
+         * Asserts that the entitlement certificates for the provided manifest consumers contain the provided
+         * content URL for the specified product and content. This method refreshes all of the pools for all
+         * of the manifest consumers before validating the entitlement certificates in their manifest.
+         *
+         * @param consumers
+         *  manifest consumers who have entitlement certificates to validate
+         *
+         * @param productId
+         *  ID of the target product
+         *
+         * @param contentId
+         *  ID of the target content
+         *
+         * @param contentUrl
+         *  expected URL that should exist in the entitlement certificates
+         *
+         * @throws IOException
+         *  if unable to read manifest
+         */
+        private void assertContentUrl(Collection<ConsumerDTO> consumers, String productId, String contentId,
+            String contentUrl) throws IOException {
+
+            for (ConsumerDTO sharedConsumer : consumers) {
+                // Refreshing the pools for the owner should mark the entitlements dirty
+                refreshPools(adminClient, sharedConsumer.getOwner().getKey());
+
+                File sharedConsumerManifest = adminClient.consumers()
+                    .exportData(consumer.getUuid(), null, null, null);
+                sharedConsumerManifest.deleteOnExit();
+
+                assertThat(manifestContentPaths(sharedConsumerManifest, productId, contentId))
+                    .as("consumer %s should have content %s (URL ending in '%s') in its entitlement cert",
+                        sharedConsumer.getUuid(), contentId, contentUrl)
+                    .singleElement()
+                    .asString()
+                    .endsWith(contentUrl);
+            }
+        }
+
+        /**
+         * Asserts that the entitlement certificates for the provided manifest consumers does not contain the
+         * provided content for the specified product. This method refreshes all of the pools for all
+         * of the manifest consumers before validating the entitlement certificates in their manifest.
+         *
+         * @param consumers
+         *  manifest consumers who have entitlement certificates to validate
+         *
+         * @param productId
+         *  ID of the target product
+         *
+         * @param contentId
+         *  ID of the target content
+         */
+        private void assertNoContent(Collection<ConsumerDTO> consumers, String productId, String contentId) {
+            for (ConsumerDTO sharedConsumer : consumers) {
+                // Refreshing the pools for the owner should mark the entitlements dirty
+                refreshPools(adminClient, sharedConsumer.getOwner().getKey());
+
+                assertThat(consumerContentPaths(sharedConsumer.getUuid(), productId, contentId))
+                    .as("shared-product consumer %s should have content %s removed after regeneration",
+                        sharedConsumer.getUuid(), contentId)
+                    .isEmpty();
+            }
+        }
+    }
+
+    /**
+     * Fetches the paths of the given content, as found in the given consumer's entitlement certificates.
+     *
+     * @param consumerUuid
+     *  the UUID of the consumer whose entitlement certificates should be inspected
+     *
+     * @param productId
+     *  the ID of the product providing the content to look up
+     *
+     * @param contentId
+     *  the ID of the content to look up
+     *
+     * @return
+     *  the paths of the given content within the consumer's entitlement certificates
+     */
+    private List<String> consumerContentPaths(String consumerUuid, String productId, String contentId) {
+        return contentPaths(adminClient.consumers().exportCertificatePayloads(consumerUuid, null),
+            productId, contentId);
+    }
+
+    /**
+     * Retrieves {@link JsonNode}s of ENG products that exist in the entitlement certificates for the provided
+     * manifest {@link Consumer}.
+     *
+     * @param consumerUuid
+     *  the consumer to retrieve products for
+     *
+     * @param productId
+     *  the ID of the product to retrieve
+     *
+     * @return all of the products that have the provided ID in the provided consumer's entitlement certs
+     */
+    private List<JsonNode> getProductFromEntCerts(String consumerUuid, String productId) {
+        return getProductsFromEntCerts(adminClient.consumers().exportCertificatePayloads(consumerUuid, null),
+            productId);
+    }
+
+    /**
+     * Retrieves the subscription {@link JsonNode}s from the entitlement certificates for the provided
+     * manifest {@link Consumer}. This subscription JSON must also have a SKU value that matches the provided
+     * SKU product ID.
+     *
+     * @param consumerUuid
+     *  manifest consumer to retrieve subscription JSON for
+     *
+     * @param skuProductId
+     *  the SKU product ID to filter on
+     *
+     * @return subscription JSON from entitlement certificates
+     */
+    private List<JsonNode> getSubsFromEntCerts(String consumerUuid, String skuProductId) {
+        List<JsonNode> certs = adminClient.consumers().exportCertificatePayloads(consumerUuid, null);
+
+        return certs.stream()
+            .map(cert -> cert.get("subscription"))
+            .filter(sub -> sub.get("sku") != null && skuProductId.equals(sub.get("sku").asString()))
+            .toList();
+    }
+
+    /**
+     * Fetches the paths of the given content, as found in the entitlement certificates contained in the
+     * given manifest.
+     *
+     * @param manifest
+     *  the exported manifest to inspect
+     *
+     * @param productId
+     *  the ID of the product providing the content to look up
+     *
+     * @param contentId
+     *  the ID of the content to look up
+     *
+     * @throws IOException
+     *  if the manifest cannot be read
+     *
+     * @return
+     *  the paths of the given content within the manifest's entitlement certificates
+     */
+    private List<String> manifestContentPaths(File manifest, String productId, String contentId)
+        throws IOException {
+
+        List<JsonNode> certs = new ArrayList<>();
+
+        try (ZipFile export = ExportUtil.getExportArchive(manifest)) {
+            List<? extends ZipEntry> entries = export.stream()
+                .filter(entry -> entry.getName().startsWith(MANIFEST_ENT_CERT_PATH))
+                .filter(entry -> entry.getName().lastIndexOf('/') == MANIFEST_ENT_CERT_PATH.length() - 1)
+                .toList();
+
+            for (ZipEntry entry : entries) {
+                String cert = new String(ExportUtil.extractEntry(export, entry), StandardCharsets.UTF_8);
+                certs.add(CertificateUtil.decodeAndUncompressCertificate(cert, ApiClient.MAPPER));
+            }
+        }
+
+        return contentPaths(certs, productId, contentId);
+    }
+
+    /**
+     * Fetches the paths of the given content, as found in the given decoded entitlement certificate
+     * bodies.
+     *
+     * @param certs
+     *  the decoded entitlement certificate bodies to inspect
+     *
+     * @param productId
+     *  the ID of the product providing the content to look up
+     *
+     * @param contentId
+     *  the ID of the content to look up
+     *
+     * @return
+     *  the paths of the given content within the provided certificate bodies
+     */
+    private static List<String> contentPaths(List<JsonNode> certs, String productId, String contentId) {
+        return certs.stream()
+            .flatMap(cert -> cert.get("products").valueStream())
+            .filter(product -> productId.equals(product.get("id").asString()))
+            .flatMap(product -> product.get("content").valueStream())
+            .filter(content -> contentId.equals(content.get("id").asString()))
+            .map(content -> content.get("path").asString())
+            .toList();
+    }
+
+    /**
+     * Retrieves products that have the provided product ID from the provided entitlement certificates.
+     *
+     * @param certs
+     *  entitlement certificates to retrieve products from
+     *
+     * @param productId
+     *  the ID of the product to retrieve
+     *
+     * @return all of the product nodes from the provided entitlement certs based on the provided product ID
+     */
+    private static List<JsonNode> getProductsFromEntCerts(List<JsonNode> certs, String productId) {
+        return certs.stream()
+            .flatMap(cert -> cert.get("products").valueStream())
+            .filter(product -> productId.equals(product.get("id").asString()))
+            .toList();
     }
 
     private AsyncJobStatusDTO refreshPools(ApiClient client, String ownerKey) {

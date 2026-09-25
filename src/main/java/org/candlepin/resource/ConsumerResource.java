@@ -421,6 +421,7 @@ public class ConsumerResource implements ConsumerApi {
     @Transactional
     @RootResource.LinkedResource
     public org.candlepin.dto.api.server.v1.ExceptionMessage getConsumerPackages(String consumerUuid) {
+
         throw new NotImplementedException(
             this.i18n.tr("Consumer package profile uploads are not implemented"));
     }

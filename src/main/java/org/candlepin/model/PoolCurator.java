@@ -2102,15 +2102,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     /**
-     * Sets the "dirtyProduct" flag for any pool referencing a product in the given list of product
+     * Sets the "dirtyProduct" flag for any non-dirty pool referencing a product in the given list of product
      * uuids.
      *
      * @param productUuids
      *  a collection of product UUIDs to use for flagging pools
      *
      * @return
-     *  the number of pools flagged by this method, which may include pools which were already
-     *  flagged
+     *  the number of pools flagged by this method
      */
     public int markPoolsDirtyReferencingProducts(Collection<String> productUuids) {
         if (productUuids == null || productUuids.isEmpty()) {
@@ -2118,7 +2117,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
 
         String jpql = "UPDATE Pool pool SET pool.dirtyProduct = true " +
-            "WHERE pool.product.uuid IN (:product_uuids)";
+            "WHERE pool.product.uuid IN (:product_uuids) AND pool.dirtyProduct = false";
 
         int count = 0;
 

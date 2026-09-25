@@ -3673,6 +3673,32 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testMarkPoolsDirtyReferencingProductsDoesNotUpdateAlreadyDirtyPools() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product prod1 = this.createProduct();
+        Product prod2 = this.createProduct();
+
+        // Create an already dirty pool and verify that this pool is not updated
+        Pool pool1 = this.createPool(owner1, prod1);
+        pool1.setDirtyProduct(true);
+        this.poolCurator.saveOrUpdate(pool1);
+
+        Pool pool2 = this.createPool(owner2, prod2);
+
+        List<String> prodUuids = List.of(prod1.getUuid(), prod2.getUuid());
+
+        int actual = this.poolCurator.markPoolsDirtyReferencingProducts(prodUuids);
+
+        // We should only update pool 2 because pool 1 is already dirty
+        assertEquals(1, actual);
+        this.poolCurator.refresh(pool1, pool2);
+        assertTrue(pool1.hasDirtyProduct());
+        assertTrue(pool2.hasDirtyProduct());
+    }
+
+    @Test
     public void testListByOwner() {
         Owner owner1 = this.createOwner(TestUtil.randomString());
         Owner owner2 = this.createOwner(TestUtil.randomString());
