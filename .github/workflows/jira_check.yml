@@ -10,6 +10,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+env:
+  ATLASSIAN_API_VERSION: 5.0.5
+
 jobs:
   target_version_validation:
     if: github.event.pull_request.head.repo.fork == false
@@ -22,7 +25,7 @@ jobs:
         run: sudo apt-get install -y python3 python3-pip python3-requests git-core
 
       - name: Install python dependencies
-        run: pip install atlassian-python-api
+        run: pip install atlassian-python-api==$ATLASSIAN_API_VERSION --only-binary ':all:'
 
       - name: Check out repository
         uses: actions/checkout@v7
