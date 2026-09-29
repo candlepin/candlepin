@@ -2815,7 +2815,7 @@ public class ConsumerResource implements ConsumerApi {
             }
             catch (AutobindHypervisorDisabledException e) {
                 throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
-                    "It is disabled for org \"{0}\" because of the hypervisor autobind setting.",
+                    "It is disabled for org \"{0}\" because of the hypervisor auto-attach setting.",
                     owner.getKey()), e);
             }
         }

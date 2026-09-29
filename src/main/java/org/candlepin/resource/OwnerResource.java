@@ -1768,7 +1768,7 @@ public class OwnerResource implements OwnerApi {
             .filter(keyAlgoMatcher)
             .filter(sigAlgoMatcher)
             .findFirst()
-            .orElseThrow(() -> new ConflictException(this.i18n.tr("Unable to generate an ueber certificate " +
+            .orElseThrow(() -> new ConflictException(this.i18n.tr("Unable to generate an uber certificate " +
                 "compatible with the provided cryptographic capabilities")));
     }
 
@@ -1808,9 +1808,9 @@ public class OwnerResource implements OwnerApi {
         catch (CertificateException e) {
             // This really shouldn't be a bad request exception, but we're keeping it as such for backward
             // compatibility purposes
-            log.error("Problem generating ueber cert for owner: {}", ownerKey, e);
+            log.error("Problem generating uber cert for owner: {}", ownerKey, e);
             throw new BadRequestException(
-                this.i18n.tr("Problem generating ueber cert for owner {0}", ownerKey), e);
+                this.i18n.tr("Problem generating uber cert for owner {0}", ownerKey), e);
         }
     }
 

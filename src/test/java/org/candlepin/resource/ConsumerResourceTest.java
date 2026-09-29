@@ -985,7 +985,7 @@ public class ConsumerResourceTest {
         when(ownerCurator.findOwnerById(o.getId())).thenReturn(o);
 
         assertEquals(i18n.tr("Ignoring request to auto-attach. " +
-                    "It is disabled for org \"{0}\" because of the hypervisor autobind setting.",
+                    "It is disabled for org \"{0}\" because of the hypervisor auto-attach setting.",
                 o.getKey()),
             assertThrows(BadRequestException.class, () -> consumerResource.bind("fakeConsumer", null,
                 Arrays.asList(prodIds), null, null, null, false, null, null)).getMessage());
