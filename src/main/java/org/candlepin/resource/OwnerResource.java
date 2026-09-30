@@ -1075,7 +1075,7 @@ public class OwnerResource implements OwnerApi {
 
         Owner owner = findOwnerByKey(ownerKey);
 
-        List<ActivationKey> keys = this.activationKeyCurator.listByOwner(owner, keyName);
+        List<ActivationKey> keys = this.activationKeyCurator.listByOwnerWithCollections(owner, keyName);
         return keys.stream()
             .map(this.translator.getStreamMapper(ActivationKey.class, ActivationKeyDTO.class));
     }
@@ -2120,4 +2120,3 @@ public class OwnerResource implements OwnerApi {
         sink.queueEvent(event);
     }
 }
-

@@ -68,6 +68,48 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
         return this.listByOwner(owner, null);
     }
 
+    /**
+     * Lists an owner's activation keys with the collections needed for API translation initialized.
+     * Collections are fetched separately to avoid both per-key queries and a Cartesian product
+     * between independent collections.
+     *
+     * @param owner
+     *  the owner of the activation keys
+     *
+     * @param keyName
+     *  the exact activation key name to match, or null to include all names
+     *
+     * @return
+     *  the matching activation keys with their products, add-ons, pools, and content overrides loaded
+     */
+    public List<ActivationKey> listByOwnerWithCollections(Owner owner, String keyName) {
+        List<ActivationKey> keys = this.listByOwner(owner, keyName);
+        if (keys.isEmpty()) {
+            return keys;
+        }
+
+        List<String> keyIds = keys.stream()
+            .map(ActivationKey::getId)
+            .toList();
+        EntityManager entityManager = this.getEntityManager();
+
+        for (String collection : List.of(ActivationKey_.PRODUCT_IDS, ActivationKey_.ADD_ONS,
+            ActivationKey_.POOLS, ActivationKey_.CONTENT_OVERRIDES)) {
+
+            String jpql = "SELECT ak FROM ActivationKey ak LEFT JOIN FETCH ak." + collection +
+                " WHERE ak.id IN (:key_ids)";
+            TypedQuery<ActivationKey> query = entityManager.createQuery(jpql, ActivationKey.class);
+
+            for (List<String> block : this.partition(keyIds)) {
+                // Fetch joins populate the collections on the already managed activation keys,
+                // including empty collections through the left join.
+                query.setParameter("key_ids", block).getResultList();
+            }
+        }
+
+        return keys;
+    }
+
     public ActivationKey getByKeyName(Owner owner, String name) {
         // Impl note:
         // The usage of "getSingleResult" here is valid as long as we maintain the unique index on the
