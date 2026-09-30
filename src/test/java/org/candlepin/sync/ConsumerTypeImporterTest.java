@@ -16,6 +16,7 @@ package org.candlepin.sync;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -36,6 +37,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -78,7 +80,7 @@ public class ConsumerTypeImporterTest {
 
         ConsumerTypeCurator curator = mock(ConsumerTypeCurator.class);
 
-        when(curator.getByLabel("prosumer")).thenReturn(testType);
+        when(curator.getByLabels(anyCollection())).thenReturn(List.of(testType));
 
         ConsumerTypeImporter importer = new ConsumerTypeImporter(curator);
         importer.store(Set.of(testType));
@@ -94,7 +96,7 @@ public class ConsumerTypeImporterTest {
 
         ConsumerTypeCurator curator = mock(ConsumerTypeCurator.class);
 
-        when(curator.getByLabel("prosumer")).thenReturn(null);
+        when(curator.getByLabels(anyCollection())).thenReturn(List.of());
 
         ConsumerTypeImporter importer = new ConsumerTypeImporter(curator);
         importer.store(Set.of(testType));
