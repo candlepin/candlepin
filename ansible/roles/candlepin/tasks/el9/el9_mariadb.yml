@@ -82,7 +82,7 @@
     - mariadb
 
 - name: "Create the 'candlepin' MariaDB database"
-  community.mysql.mysql_db:
+  ansible.mysql.mysql_db:
     login_user: candlepin
     name: candlepin
     state: present
