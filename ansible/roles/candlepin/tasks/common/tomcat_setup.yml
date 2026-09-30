@@ -36,7 +36,7 @@
       ansible.builtin.file:
         path: "/var/lib/tomcat"
         state: directory
-        mode: 0755
+        mode: '0755'
 
     - name: "Extract"
       ansible.builtin.unarchive:
@@ -50,13 +50,13 @@
       ansible.builtin.file:
         path: "/etc/tomcat"
         state: directory
-        mode: 0755
+        mode: '0755'
 
     - name: "Copy server.xml file"
       ansible.builtin.copy:
         src: "{{ playbook_dir }}/../containers/common/server.xml"
         dest: "/etc/tomcat/server.xml"
-        mode: 0755
+        mode: '0755'
 
     - name: "Create server.xml symlink"
       ansible.builtin.file:
@@ -69,7 +69,7 @@
       ansible.builtin.file:
         path: "/var/cache/tomcat/temp"
         state: directory
-        mode: 0755
+        mode: '0755'
 
     - name: "Create tomcat group"
       ansible.builtin.group:
@@ -112,7 +112,7 @@
           CATALINA_HOME="/var/lib/tomcat"
           CATALINA_TMPDIR="/var/cache/tomcat/temp"
           SECURITY_MANAGER="false"
-        mode: 0755
+        mode: '0755'
 
     - name: "Create tomcat systemd service file"
       ansible.builtin.copy:
@@ -129,7 +129,7 @@
 
           [Install]
           WantedBy=multi-user.target
-        mode: 0755
+        mode: '0755'
 
     - name: "Create setenv.sh and remote debugging JVM arguments"
       become: true
@@ -139,5 +139,5 @@
           CATALINA_OPTS="${CATALINA_OPTS} -Xdebug -Xrunjdwp:transport=dt_socket,address=*:8000,server=y,suspend=n"
         state: present
         create: true
-        mode: 0755
+        mode: '0755'
         group: tomcat
