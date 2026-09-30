@@ -44,12 +44,6 @@ public class AdminResourceTest {
     }
 
     @Test
-    public void initialize() {
-        // Should always no-op and return the default "already initialized" string
-        assertEquals("Already initialized.", this.ar.initialize());
-    }
-
-    @Test
     public void testQueueStats() {
         when(sink.getQueueInfo()).thenReturn(new ArrayList<>());
         assertEquals(0, ar.getQueueStats().size());

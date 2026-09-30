@@ -244,12 +244,6 @@ notify() {
     fi
 }
 
-initialize_cp() {
-    info_msg "Initializing Candlepin..."
-    wget --no-check-certificate -qO- https://localhost:8443/candlepin/admin/init
-    printf "\nDone initializing CP\n"
-}
-
 init() {
     # Source useful bash functions
     source "$(git rev-parse --show-toplevel)/bin/deployment/bash_functions"
@@ -423,8 +417,6 @@ do
     sleep 1
 done
 echo
-
-initialize_cp
 
 upload_products
 create_test_repos

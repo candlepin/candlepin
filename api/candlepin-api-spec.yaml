@@ -33,26 +33,6 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
-  /admin/init:
-    get:
-      deprecated: true
-      description: |
-        Deprecated. Formerly used to finish deployment by creating a default admin user in select
-        environments, but no longer performs any action. Will be removed entirely in a future release.
-      tags:
-        - admin
-      operationId: initialize
-      security: [ ]
-      responses:
-        200:
-          description: always returns a 200
-          content:
-            text/plain:
-              schema:
-                type: string
-        default:
-          $ref: '#/components/responses/default'
-
   /admin/queues:
     get:
       description: Basic information on the ActiveMQ queues and how many messages are pending in each.
