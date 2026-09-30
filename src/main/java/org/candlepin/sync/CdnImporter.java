@@ -26,7 +26,9 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 /**
@@ -54,10 +56,14 @@ public class CdnImporter {
      */
     public void store(Set<CdnDTO> cdnSet) {
         log.debug("Creating/updating cdns");
+        Set<String> labels = cdnSet.stream()
+            .map(CdnDTO::getLabel)
+            .collect(Collectors.toSet());
+        Map<String, Cdn> existingByLabel = curator.getByLabels(labels);
+
         for (CdnDTO cdnDTO : cdnSet) {
-            // TODO: this should be using bulk entity lookup to improve performance
             cdnDTO.setCertificate(null);
-            Cdn existing = curator.getByLabel(cdnDTO.getLabel());
+            Cdn existing = existingByLabel.get(cdnDTO.getLabel());
             if (existing == null) {
                 Cdn entity = new Cdn();
                 populateEntity(entity, cdnDTO);
