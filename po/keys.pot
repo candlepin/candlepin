@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-27 07:04+0000\n"
+"POT-Creation-Date: 2026-10-01 07:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -292,7 +292,7 @@ msgstr ""
 
 #: src/main/java/org/candlepin/controller/ManifestManager.java:318
 #, java-format
-msgid "Could not validate export against specifed consumer: {0}"
+msgid "Could not validate export against specified consumer: {0}"
 msgstr ""
 
 #: src/main/java/org/candlepin/controller/ManifestManager.java:343
@@ -1138,7 +1138,7 @@ msgstr ""
 #, java-format
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
-"the hypervisor autobind setting."
+"the hypervisor auto-attach setting."
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2859
@@ -1715,13 +1715,13 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1771
 msgid ""
-"Unable to generate an ueber certificate compatible with the provided "
+"Unable to generate an uber certificate compatible with the provided "
 "cryptographic capabilities"
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1813
 #, java-format
-msgid "Problem generating ueber cert for owner {0}"
+msgid "Problem generating uber cert for owner {0}"
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1825
