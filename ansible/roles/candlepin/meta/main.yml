@@ -1,4 +1,5 @@
 galaxy_info:
+  author: "Candlepin contributors"
   description: "Candlepin Entitlement Management"
   company: "Red Hat"
   license: license (GPLv2)
