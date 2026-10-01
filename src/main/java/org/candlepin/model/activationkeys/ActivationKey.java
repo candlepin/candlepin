@@ -16,6 +16,7 @@ package org.candlepin.model.activationkeys;
 
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Eventful;
+import org.candlepin.model.GeneratedDbUuid;
 import org.candlepin.model.Named;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
@@ -26,9 +27,6 @@ import org.candlepin.util.Util;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -36,12 +34,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -65,8 +63,7 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
     public static final int RELEASE_VERSION_LENGTH = 255;
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @GeneratedDbUuid
     @Column(length = 32)
     @NotNull
     private String id;
@@ -87,8 +84,7 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
     @JoinColumn(name = "owner_id", insertable = false, updatable = false)
     private Owner owner;
 
-    @OneToMany(mappedBy = "activationKey")
-    @Cascade({CascadeType.ALL, CascadeType.DELETE_ORPHAN})
+    @OneToMany(mappedBy = "activationKey", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ActivationKeyPool> pools = new HashSet<>();
 
     @ElementCollection
@@ -96,8 +92,7 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
     @Column(name = "product_id")
     private Set<String> productIds = new HashSet<>();
 
-    @OneToMany(targetEntity = ActivationKeyContentOverride.class, mappedBy = "key")
-    @Cascade({CascadeType.ALL, CascadeType.DELETE_ORPHAN})
+    @OneToMany(mappedBy = "key", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ActivationKeyContentOverride> contentOverrides = new HashSet<>();
 
     @Column(length = RELEASE_VERSION_LENGTH, nullable =  true)

@@ -16,15 +16,12 @@ package org.candlepin.model;
 
 import org.candlepin.service.model.RoleInfo;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import java.util.HashSet;
 import java.util.Set;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -45,8 +42,7 @@ public class Role extends AbstractHibernateObject implements Linkable, RoleInfo 
     public static final String DB_TABLE = "cp_role";
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @GeneratedDbUuid
     @Column(length = 32)
     @NotNull
     private String id;

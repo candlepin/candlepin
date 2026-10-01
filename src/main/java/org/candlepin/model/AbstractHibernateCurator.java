@@ -30,8 +30,7 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
+import org.hibernate.OrderingMode;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
 import org.slf4j.Logger;
@@ -1018,10 +1017,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         // Fetch the entities from the DB...
         if (ordered.size() > 0) {
             return this.currentSession()
-                .byMultipleIds(entityClass)
-                .enableOrderedReturn(false)
-                .with(new LockOptions(LockMode.PESSIMISTIC_WRITE))
-                .multiLoad(ordered);
+                .findMultiple(entityClass, ordered, LockModeType.PESSIMISTIC_WRITE, OrderingMode.UNORDERED);
         }
 
         return new ArrayList<>();
