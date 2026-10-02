@@ -167,9 +167,10 @@ public class EntitlementCertificateGenerator {
 
         try {
             Owner owner = this.ownerCurator.findOwnerById(consumer.getOwnerId());
+            Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
 
             log.debug("Generating entitlement cert for entitlements");
-            KeyPair keyPair = this.keyPairGenerator.getConsumerKeyPair(consumer);
+            KeyPair keyPair = this.keyPairGenerator.getConsumerKeyPair(scheme, consumer);
             byte[] pemEncodedKeyPair = this.pemEncoder.encodeAsBytes(keyPair.getPrivate());
 
             Map<String, CertificateSerial> serialMap = createSerials(poolQuantities);
@@ -181,8 +182,6 @@ public class EntitlementCertificateGenerator {
             ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(owner, environments);
             PromotedContent promotedContent = new PromotedContent(contentPathBuilder)
                 .withAll(environments);
-
-            Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
 
             Map<String, EntitlementCertificate> entitlementCerts = new HashMap<>();
             boolean shouldCreateV3Certificate = shouldGenerateV3(consumer);
