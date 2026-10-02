@@ -19,6 +19,7 @@ import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.EntitleByProductsJob;
 import org.candlepin.async.tasks.EntitlerJob;
+import org.candlepin.async.tasks.ExportJobV2;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
@@ -3119,6 +3120,29 @@ public class ConsumerResource implements ConsumerApi {
 
         JobConfig config = manifestManager.generateManifestAsync(consumerUuid, owner, cdnLabel,
             webAppPrefix, apiUrl);
+
+        AsyncJobStatus job = null;
+
+        try {
+            job = this.jobManager.queueJob(config);
+        }
+        catch (JobException e) {
+            String errmsg = this.i18n.tr("An unexpected exception occurred " +
+                "while scheduling job \"{0}\"", config.getJobKey());
+            log.error(errmsg, e);
+            throw new IseException(errmsg, e);
+        }
+
+        return this.translator.translate(job, AsyncJobStatusDTO.class);
+    }
+
+    @Override
+    public AsyncJobStatusDTO exportDataAsyncV2(@Verify(Consumer.class) String consumerUuid) {
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+
+        JobConfig<ExportJobV2.ExportJobConfigV2> config = manifestManager.generateManifestAsyncV2(consumerUuid, owner);
 
         AsyncJobStatus job = null;
 

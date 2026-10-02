@@ -20,6 +20,8 @@ import org.candlepin.exceptions.IseException;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import jakarta.inject.Inject;
 
@@ -48,6 +50,10 @@ public class SyncUtils {
         }
 
         return (tmp);
+    }
+
+    public Path getWorkDirectory() {
+        return Paths.get(config.getString(ConfigProperties.SYNC_WORK_DIR));
     }
 
     @Inject
