@@ -321,6 +321,30 @@ public class ConsumerResourceSpecTest {
         this.registerAndCheckinWithCloudFacts(facts, "");
     }
 
+    private static Stream<String> singleCloudFactSource() {
+        return Stream.of("aws_instance_id", "aws_account_id", "aws_billing_products",
+            "aws_marketplace_product_codes", "azure_instance_id", "azure_subscription_id", "azure_offer",
+            "gcp_instance_id", "gcp_project_id", "gcp_license_codes");
+    }
+
+    @ParameterizedTest
+    @MethodSource("singleCloudFactSource")
+    public void shouldUpdateConsumerCloudDataWhenAnyCloudFactChanges(String fact) {
+        ConsumerDTO consumer = Consumers.random(this.owner);
+        consumer.putFactsItem(fact, "initial-value");
+        ConsumerDTO registeredConsumer = this.adminClient.consumers().createConsumer(consumer);
+        assertThat(registeredConsumer.getFacts()).containsEntry(fact, "initial-value");
+
+        registeredConsumer.putFactsItem(fact, "updated-value");
+
+        assertDoesNotThrow(() -> this.adminClient.consumers()
+            .updateConsumer(registeredConsumer.getUuid(), registeredConsumer));
+
+        ConsumerDTO updatedConsumer = this.adminClient.consumers()
+            .getConsumer(registeredConsumer.getUuid());
+        assertThat(updatedConsumer.getFacts()).containsEntry(fact, "updated-value");
+    }
+
     @Test
     public void shouldPopulateGeneratedFieldsWhenUpdatingConsumers() throws Exception {
         ConsumerDTO entity = this.adminClient.consumers().createConsumer(Consumers.random(this.owner));
