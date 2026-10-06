@@ -37,6 +37,8 @@ import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.config.Configuration;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
@@ -53,6 +55,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ExportResult;
 import org.candlepin.sync.Exporter;
+import org.candlepin.sync.ExporterV2;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.Importer.Conflict;
 import org.candlepin.sync.file.ManifestFile;
@@ -87,6 +90,7 @@ public class ManifestManagerTest {
 
     @Mock private ManifestFileService fileService;
     @Mock private Exporter exporter;
+    @Mock private ExporterV2 exporterV2;
     @Mock private Importer importer;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
@@ -98,14 +102,17 @@ public class ManifestManagerTest {
     @Mock private I18n i18n;
     @Mock private EventSink eventSink;
     @Mock private EventFactory eventFactory;
+    @Mock private ModelTranslator modelTranslator;
+    @Mock private Configuration config;
 
     private ManifestManager manager;
 
     @BeforeEach
     public void setupTest() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        manager = new ManifestManager(fileService, exporter, importer, consumerCurator, consumerTypeCurator,
-            entitlementCurator, cdnCurator, poolManager, principalProvider, i18n, eventSink, eventFactory);
+        manager = new ManifestManager(fileService, exporter, exporterV2, importer, consumerCurator, consumerTypeCurator,
+            entitlementCurator, cdnCurator, poolManager, principalProvider, i18n, eventSink, eventFactory
+        );
     }
 
     protected Consumer createMockConsumer(Owner owner, boolean manifestDistributor) {
