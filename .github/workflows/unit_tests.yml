@@ -46,7 +46,7 @@ jobs:
         run: ./gradlew test coverage
 
       - name: Archive reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: unit_test_reports
           path: |
@@ -113,4 +113,3 @@ jobs:
             -Dsonar.pullrequest.base="$BASE_REF" \
             -Dsonar.pullrequest.branch="$HEAD_REF" \
             -Dsonar.scanner.skipJreProvisioning=true
-
