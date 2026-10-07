@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
+import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
@@ -854,16 +855,45 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .getResultList();
     }
 
-
+    /**
+     * Retrieves an ordered list of {@link Entitlement} IDs for the provided pools.
+     * This method does not return null.
+     * <p></p>
+     * This method <b>does not</b> use automatic flushing.
+     *
+     * @param pools
+     *  the pools to retrieve entitlement IDs for
+     *
+     * @return a list of entitlement IDs for the provided pools
+     */
     public List<String> retrieveOrderedEntitlementIdsOf(Collection<Pool> pools) {
+        if (pools == null || pools.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         String jpql = """
             SELECT e.id FROM Entitlement e
-            WHERE e.pool IN :pools
+            WHERE e.pool.id IN :pool_ids
             ORDER BY e.created DESC""";
 
-        return getEntityManager().createQuery(jpql, String.class)
-            .setParameter("pools", pools)
-            .getResultList();
+        List<String> poolIds = new ArrayList<>();
+        for (Pool pool : pools) {
+            if (pool != null && pool.getId() != null) {
+                poolIds.add(pool.getId());
+            }
+        }
+
+        TypedQuery<String> query = this.getEntityManager()
+            .createQuery(jpql, String.class)
+            .setFlushMode(FlushModeType.COMMIT);
+
+        List<String> entitlementIds = new ArrayList<>();
+        for (List<String> block : this.partition(poolIds)) {
+            query.setParameter("pool_ids", block);
+            entitlementIds.addAll(query.getResultList());
+        }
+
+        return entitlementIds;
     }
 
     public List<Entitlement> retrieveOrderedEntitlementsOf(Collection<Pool> existingPools) {
@@ -1862,6 +1892,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     /**
      * Fetches a set of pool IDs which represent the set of provided pool IDs that currently exist
      * in the database
+     * <p></p>
+     * This method <b>does not</b> use automatic flushing.
      *
      * @param poolIds
      *  A collection of pool IDs to use to fetch existing pool IDs
@@ -1875,7 +1907,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         if (poolIds != null && poolIds.iterator().hasNext()) {
             String jpql = "SELECT DISTINCT p.id FROM Pool p WHERE p.id IN (:pids)";
             TypedQuery<String> query = this.getEntityManager()
-                .createQuery(jpql, String.class);
+                .createQuery(jpql, String.class)
+                .setFlushMode(FlushModeType.COMMIT);
 
             for (List<String> block : this.partition(poolIds)) {
                 query.setParameter("pids", block);
