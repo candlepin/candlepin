@@ -214,7 +214,9 @@ public class PoolManager {
         Map<String, Product> existingProducts = refreshResult.getEntities(Product.class, existingStates);
         Map<String, Product> updatedProducts = refreshResult.getEntities(Product.class, EntityState.UPDATED);
 
-        Set<String> updatedContentUuids = refreshResult.getEntities(Content.class, EntityState.UPDATED).values().stream()
+        Set<String> updatedContentUuids = refreshResult.getEntities(Content.class, EntityState.UPDATED)
+            .values()
+            .stream()
             .map(Content::getUuid)
             .collect(Collectors.toSet());
 
