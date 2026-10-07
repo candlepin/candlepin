@@ -14,9 +14,12 @@
  */
 package org.candlepin.auth;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
@@ -26,8 +29,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.permissions.PermissionFactory;
+import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.user.UserServiceException;
+import org.candlepin.service.exception.user.UserUnauthorizedException;
 
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.spi.HttpRequest;
@@ -44,6 +50,7 @@ import java.util.Locale;
 
 import jakarta.inject.Provider;
 import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.Response.Status;
 
 public class TrustedUserAuthTest {
 
@@ -118,4 +125,31 @@ public class TrustedUserAuthTest {
         assertEquals(USERNAME, p.getUsername());
     }
 
+    @Test
+    public void testUnexpectedPermissionsLookupFailureReturnsUnauthorized() {
+        this.headerMap.add(TrustedUserAuth.USER_HEADER, USERNAME);
+        this.headerMap.add(TrustedUserAuth.LOOKUP_PERMISSIONS_HEADER, "true");
+        UserServiceException failure = new UserServiceException("unavailable");
+        when(this.userService.findByLogin(USERNAME)).thenThrow(failure);
+
+        CandlepinException result = assertThrows(CandlepinException.class,
+            () -> this.auth.getPrincipal(this.request));
+
+        assertThat(result)
+            .returns(Status.UNAUTHORIZED, CandlepinException::httpReturnCode)
+            .returns("Error contacting user service", CandlepinException::getMessage);
+        assertSame(failure, result.getCause());
+    }
+
+    @Test
+    public void testRejectedPermissionsLookupReturnsUnauthorized() {
+        this.headerMap.add(TrustedUserAuth.USER_HEADER, USERNAME);
+        this.headerMap.add(TrustedUserAuth.LOOKUP_PERMISSIONS_HEADER, "true");
+        when(this.userService.findByLogin(USERNAME)).thenThrow(new UserUnauthorizedException(USERNAME));
+
+        CandlepinException result = assertThrows(CandlepinException.class,
+            () -> this.auth.getPrincipal(this.request));
+
+        assertEquals(Status.UNAUTHORIZED, result.httpReturnCode());
+    }
 }

@@ -14,14 +14,19 @@
  */
 package org.candlepin.resource;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.exceptions.CandlepinException;
+import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.exception.user.UserDisabledException;
+import org.candlepin.service.exception.user.UserServiceException;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * ProductResourceTest
@@ -57,6 +63,20 @@ public class RoleResourceTest extends DatabaseTestFixture {
         assertThrows(NotFoundException.class, () -> roleResource.fetchUserByUsername("test_user"));
 
         when(this.mockUserServiceAdapter.findByLogin(anyString())).thenThrow(UserDisabledException.class);
-        assertThrows(UserDisabledException.class, () -> roleResource.fetchUserByUsername("test_user"));
+        assertThrows(NotAuthorizedException.class, () -> roleResource.fetchUserByUsername("test_user"));
+    }
+
+    @Test
+    public void testUnexpectedUserLookupFailureReturnsUnauthorized() {
+        UserServiceException failure = new UserServiceException("unavailable");
+        when(this.mockUserServiceAdapter.findByLogin("test_user")).thenThrow(failure);
+
+        CandlepinException result = assertThrows(CandlepinException.class,
+            () -> this.roleResource.fetchUserByUsername("test_user"));
+
+        assertThat(result)
+            .returns(Status.UNAUTHORIZED, CandlepinException::httpReturnCode)
+            .returns("Error contacting user service", CandlepinException::getMessage);
+        assertSame(failure, result.getCause());
     }
 }

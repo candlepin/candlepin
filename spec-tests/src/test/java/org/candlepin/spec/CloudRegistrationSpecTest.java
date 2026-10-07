@@ -22,6 +22,7 @@ import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.asser
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotImplemented;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertThatStatus;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertUnauthorized;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.catchApiException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -76,6 +77,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.HashMap;
@@ -1202,5 +1204,29 @@ class CloudRegistrationSpecTest {
 
             assertThatJob(jobs.get(0)).isCanceled();
         }
+    }
+
+    @Test
+    void shouldHideMalformedCloudMetadataDetails() {
+        String metadata = Base64.getEncoder().encodeToString("not-json".getBytes(StandardCharsets.UTF_8));
+        CloudRegistrationDTO dto = CloudRegistrations.random().metadata(metadata);
+
+        ApiException failure = catchApiException(() -> ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(dto));
+
+        assertThat(failure.getCode()).isEqualTo(400);
+        String message = ApiClient.MAPPER.readTree(failure.getResponseBody())
+            .get("displayMessage").asString();
+        assertThat(message).isEqualTo("Unable to complete Cloud Registration with provided data");
+        assertThat(failure.getResponseBody()).doesNotContain("unable to parse", "not-json");
+    }
+
+    @Test
+    public void testRejectsUnknownCloudOrganizationWithoutRuntimeErrorDetails() {
+        assertThatStatus(() -> ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorize(StringUtil.random("unknown-org-"), "test-type", "test-signature"))
+            .isUnauthorized()
+            .hasMessageContaining("Cloud provider or account details could not be resolved to an organization")
+            .hasMessageNotContaining("Runtime Error");
     }
 }
