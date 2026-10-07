@@ -81,7 +81,6 @@ The following checks are run on every Pull Request:
 * **Unit Tests**: Runs the unit test suite (`./gradlew test`) and generates coverage reports.
 * **Spec Tests**: Runs the specification tests against different database backends (PostgreSQL, MariaDB) and modes (Standalone, Hosted). This involves spinning up the necessary containers (Candlepin, Database) and executing the tests.
 * **Checkstyle**: Enforces code style guidelines using Checkstyle (`./gradlew checkstyle`).
-* **Woke**: Detects non-inclusive language in the source code.
 * **Validate Translations**: Validates translation files (`./gradlew validate_translation`).
 * **Jira Check**: Validates that the Jira ticket associated with the PR has a valid Target Version.
 
