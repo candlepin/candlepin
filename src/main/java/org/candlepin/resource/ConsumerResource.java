@@ -149,11 +149,15 @@ import org.candlepin.resource.util.EntitlementEnvironmentFilter;
 import org.candlepin.resource.util.EnvironmentUpdates;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.KeyValueStringParser;
+import org.candlepin.resource.util.SubscriptionServiceExceptionTranslator;
+import org.candlepin.resource.util.UserServiceExceptionTranslator;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.subscription.SubscriptionServiceException;
+import org.candlepin.service.exception.user.UserServiceException;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.UserInfo;
 import org.candlepin.sync.ExportCreationException;
@@ -1461,6 +1465,9 @@ public class ConsumerResource implements ConsumerApi {
         try {
             user = userService.findByLogin(username);
         }
+        catch (UserServiceException e) {
+            throw UserServiceExceptionTranslator.translate(e, this.i18n, log);
+        }
         catch (UnsupportedOperationException e) {
             log.warn("User service does not allow user lookups, cannot verify person consumer.", e);
         }
@@ -2728,6 +2735,9 @@ public class ConsumerResource implements ConsumerApi {
 
             log.debug("Checked if consumer has unaccepted subscription terms in {}ms",
                 (System.currentTimeMillis() - subTermsStart));
+        }
+        catch (SubscriptionServiceException e) {
+            throw SubscriptionServiceExceptionTranslator.translate(e, this.i18n, log);
         }
         catch (CandlepinException e) {
             log.debug(e.getMessage(), e);

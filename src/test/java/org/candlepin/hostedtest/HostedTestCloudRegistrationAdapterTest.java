@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.candlepin.TestingModules;
 import org.candlepin.auth.CloudRegistrationData;
 import org.candlepin.service.CloudRegistrationAdapter;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationAuthorizationException;
 import org.candlepin.service.exception.cloudregistration.CloudRegistrationMalformedDataException;
 import org.candlepin.service.model.CloudRegistrationInfo;
 import org.candlepin.testext.hostedtest.HostedTestCloudRegistrationAdapter;
@@ -56,5 +57,13 @@ public class HostedTestCloudRegistrationAdapterTest {
         CloudRegistrationInfo nullMeta = new CloudRegistrationData();
         assertThrows(CloudRegistrationMalformedDataException.class,
             () -> adapter.resolveCloudRegistrationData(nullMeta));
+    }
+
+    @Test
+    public void testRejectsUnknownCloudOrganization() {
+        CloudRegistrationData data = new CloudRegistrationData();
+        data.setMetadata("unknown-org");
+        assertThrows(CloudRegistrationAuthorizationException.class,
+            () -> this.adapter.resolveCloudRegistrationData(data));
     }
 }

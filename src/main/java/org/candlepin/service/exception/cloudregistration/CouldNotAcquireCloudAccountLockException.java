@@ -18,7 +18,7 @@ package org.candlepin.service.exception.cloudregistration;
  * The CouldNotAcquireCloudAccountLockException is used when organization already being created
  * and/or entitled
  */
-public class CouldNotAcquireCloudAccountLockException extends Exception {
+public class CouldNotAcquireCloudAccountLockException extends RuntimeException {
 
     /**
      * Constructs a new exception with null as its detail message. The cause is not initialized, and may

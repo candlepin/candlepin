@@ -43,7 +43,10 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.exceptions.ValueTooLargeException;
 import org.candlepin.resource.server.v1.CloudRegistrationApi;
 import org.candlepin.service.CloudRegistrationAdapter;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationAuthorizationException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationMalformedDataException;
 import org.candlepin.service.exception.cloudregistration.CloudRegistrationNotSupportedForOfferingException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationServiceException;
 import org.candlepin.service.model.CloudAuthenticationResult;
 
 import com.google.inject.persist.Transactional;
@@ -68,7 +71,7 @@ import jakarta.ws.rs.core.Response;
  * End point(s) for cloud registration token generation
  */
 public class CloudRegistrationResource implements CloudRegistrationApi {
-    private static Logger log = LoggerFactory.getLogger(CloudRegistrationResource.class);
+    private static final Logger log = LoggerFactory.getLogger(CloudRegistrationResource.class);
 
     private final Configuration config;
     private final CloudRegistrationAdapter cloudRegistrationAdapter;
@@ -193,10 +196,30 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
             String errmsg = this.i18n.tr("Cloud registration is not supported by this Candlepin instance");
             throw new NotImplementedException(errmsg, e);
         }
+        catch (CloudRegistrationAuthorizationException e) {
+            String message = this.i18n.tr("Cloud provider or account details could not be resolved to an organization");
+            log.warn("{}", message);
+            throw new NotAuthorizedException(message, false);
+        }
+        catch (CloudRegistrationMalformedDataException e) {
+            String responseMessage = this.i18n.tr("Unable to complete Cloud Registration with provided data");
+            String logMessage = e.getMessage();
+            if (logMessage == null || logMessage.isEmpty()) {
+                logMessage = responseMessage;
+            }
+            log.warn("{}", logMessage);
+            throw new BadRequestException(responseMessage, e);
+        }
         catch (CloudRegistrationNotSupportedForOfferingException e) {
             String errmsg = this.i18n.tr("Cloud registration is not supported for the type of " +
                 "offering the client is using");
+            log.warn("{}", errmsg);
             throw new NotImplementedException(errmsg, e);
+        }
+        catch (CloudRegistrationServiceException e) {
+            String message = this.i18n.tr("Unexpected error from Cloud Registration Service: {0}", e.getMessage());
+            log.error(message, e);
+            throw new BadRequestException(this.i18n.tr("Error contacting cloud registration service"), e);
         }
     }
 
