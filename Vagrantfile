@@ -96,12 +96,23 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.define("el9", autostart: false) do |vm_config|
     vm_config.vm.box = "centos.cloud/centos9s"
-    vm_config.vm.box_url = "https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-Vagrant-9-latest.x86_64.vagrant-libvirt.box"
+    vm_config.vm.box_url = "https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-Vagrant-Libvirt-9-latest.x86_64.vagrant-libvirt.box"
     vm_config.vm.host_name = "candlepin-el9.example.com"
 
     # Increase box disk size and resize partitions accordingly
     vm_config.vm.disk :disk, size: "100GB", primary: true
-    vm_config.vm.provision "shell", inline: "echo '- +' | sfdisk --no-reread -N 1 /dev/vda && partprobe && resize2fs /dev/vda1"
+    vm_config.vm.provision "shell", inline: <<~SHELL
+      growpart_output="$(growpart /dev/vda 4 2>&1)"
+      growpart_status=$?
+      printf '%s\n' "$growpart_output"
+
+      nochange_pattern='^NOCHANGE: partition 4 .*cannot be grown'
+      if [ "$growpart_status" -ne 0 ] && ! printf '%s\n' "$growpart_output" | grep -q "$nochange_pattern"; then
+        exit "$growpart_status"
+      fi
+
+      xfs_growfs /
+    SHELL
 
     # Update DNF CA certs
     vm_config.vm.provision "shell", inline: "dnf update -y dnf ca-certificates"
