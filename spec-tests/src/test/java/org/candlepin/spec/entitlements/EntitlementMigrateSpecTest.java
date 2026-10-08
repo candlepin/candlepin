@@ -16,6 +16,7 @@ package org.candlepin.spec.entitlements;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 
 import org.candlepin.dto.api.client.v1.CapabilityDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
@@ -32,6 +33,7 @@ import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
+import org.candlepin.spec.bootstrap.data.builder.Permissions;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
@@ -181,6 +183,29 @@ public class EntitlementMigrateSpecTest {
             .doesNotReturn(entitlement.get("id").asText(), EntitlementDTO::getId);
     }
 
+    @Test
+    public void shouldNotAllowMigrationToADestinationUnitTheCallerCannotManage() {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        ProductDTO product = ownerProductApi.createProduct(owner.getKey(), Products.random());
+        ownerApi.createPool(owner.getKey(), Pools.random(product).quantity(25L));
 
+        // This user may only manage the units it registered itself, and may merely read the rest of
+        // the org. The destination consumer below therefore resolves for this principal, while managing
+        // it must still be denied.
+        ApiClient restrictedClient = ApiClients.basic(UserUtil.createWith(client,
+            Permissions.USERNAME_CONSUMERS.all(owner), Permissions.OWNER.readOnly(owner)));
+        ApiClient otherUserClient = ApiClients.basic(UserUtil.createUser(client, owner));
+
+        ConsumerDTO source = restrictedClient.consumers()
+            .createConsumer(Consumers.random(owner).type(ConsumerTypes.Candlepin.value()));
+        ConsumerDTO destination = otherUserClient.consumers()
+            .createConsumer(Consumers.random(owner).type(ConsumerTypes.Candlepin.value()));
+
+        PoolDTO pool = client.pools().listPoolsByOwnerAndProduct(owner.getId(), product.getId()).get(0);
+        JsonNode entitlement = client.consumers().bindPool(source.getUuid(), pool.getId(), 25).get(0);
+
+        assertForbidden(() -> restrictedClient.entitlements()
+            .migrateEntitlement(entitlement.get("id").asText(), destination.getUuid(), 25));
+    }
 
 }
