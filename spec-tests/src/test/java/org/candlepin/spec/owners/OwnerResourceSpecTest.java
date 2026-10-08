@@ -1316,6 +1316,114 @@ public class OwnerResourceSpecTest {
             .isEmpty();
     }
 
+    @Test
+    public void listConsumersShouldRejectInaccessibleConsumerUuidFromAnotherOrg() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO ownerA = adminClient.owners().createOwner(Owners.random());
+        OwnerDTO ownerB = adminClient.owners().createOwner(Owners.random());
+
+        UserDTO user = UserUtil.createWith(adminClient, Permissions.USERNAME_CONSUMERS.all(ownerA));
+        ApiClient userClient = ApiClients.basic(user);
+
+        // This consumer lives in ownerB, so the user must not be allowed to reference it. It does
+        // carry the user's username though, which is all the query restriction applied while
+        // resolving the @Verify(Consumer.class) argument checks for.
+        ConsumerDTO foreign = adminClient.consumers()
+            .createConsumer(Consumers.random(ownerB), user.getUsername(), ownerB.getKey(), null, true);
+
+        assertForbidden(() -> userClient.owners().listConsumers(ownerA.getKey(), null, null,
+            List.of(foreign.getUuid()), null, null, null, null, null, null));
+    }
+
+    @Test
+    public void countConsumersShouldRejectInaccessibleConsumerUuidFromAnotherOrg() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO ownerA = adminClient.owners().createOwner(Owners.random());
+        OwnerDTO ownerB = adminClient.owners().createOwner(Owners.random());
+
+        UserDTO user = UserUtil.createWith(adminClient, Permissions.USERNAME_CONSUMERS.all(ownerA));
+        ApiClient userClient = ApiClients.basic(user);
+
+        ConsumerDTO foreign = adminClient.consumers()
+            .createConsumer(Consumers.random(ownerB), user.getUsername(), ownerB.getKey(), null, true);
+
+        assertForbidden(() -> userClient.owners().countConsumers(ownerA.getKey(), null, null,
+            List.of(foreign.getUuid()), null));
+    }
+
+    @Test
+    public void listConsumersShouldRejectInaccessibleConsumerUuidMixedWithAccessibleOne() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO ownerA = adminClient.owners().createOwner(Owners.random());
+        OwnerDTO ownerB = adminClient.owners().createOwner(Owners.random());
+
+        UserDTO user = UserUtil.createWith(adminClient, Permissions.USERNAME_CONSUMERS.all(ownerA));
+        ApiClient userClient = ApiClients.basic(user);
+
+        ConsumerDTO accessible = userClient.consumers().createConsumer(Consumers.random(ownerA));
+        ConsumerDTO foreign = adminClient.consumers()
+            .createConsumer(Consumers.random(ownerB), user.getUsername(), ownerB.getKey(), null, true);
+
+        // Both UUIDs are resolved by a single @Verify(Consumer.class) parameter. The request must be
+        // rejected regardless of the order in which the two consumers happen to be resolved.
+        assertForbidden(() -> userClient.owners().listConsumers(ownerA.getKey(), null, null,
+            List.of(accessible.getUuid(), foreign.getUuid()), null, null, null, null, null, null));
+        assertForbidden(() -> userClient.owners().listConsumers(ownerA.getKey(), null, null,
+            List.of(foreign.getUuid(), accessible.getUuid()), null, null, null, null, null, null));
+    }
+
+    @Test
+    public void countConsumersShouldRejectInaccessibleConsumerUuidMixedWithAccessibleOne() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO ownerA = adminClient.owners().createOwner(Owners.random());
+        OwnerDTO ownerB = adminClient.owners().createOwner(Owners.random());
+
+        UserDTO user = UserUtil.createWith(adminClient, Permissions.USERNAME_CONSUMERS.all(ownerA));
+        ApiClient userClient = ApiClients.basic(user);
+
+        ConsumerDTO accessible = userClient.consumers().createConsumer(Consumers.random(ownerA));
+        ConsumerDTO foreign = adminClient.consumers()
+            .createConsumer(Consumers.random(ownerB), user.getUsername(), ownerB.getKey(), null, true);
+
+        assertForbidden(() -> userClient.owners().countConsumers(ownerA.getKey(), null, null,
+            List.of(accessible.getUuid(), foreign.getUuid()), null));
+        assertForbidden(() -> userClient.owners().countConsumers(ownerA.getKey(), null, null,
+            List.of(foreign.getUuid(), accessible.getUuid()), null));
+    }
+
+    @Test
+    public void listConsumersShouldNotRevealConsumerFromAnotherOrgToOrgScopedUser() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO ownerA = adminClient.owners().createOwner(Owners.random());
+        OwnerDTO ownerB = adminClient.owners().createOwner(Owners.random());
+
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, ownerA));
+        ConsumerDTO foreign = adminClient.consumers().createConsumer(Consumers.random(ownerB));
+
+        assertNotFound(() -> userClient.owners().listConsumers(ownerA.getKey(), null, null,
+            List.of(foreign.getUuid()), null, null, null, null, null, null));
+    }
+
+    @Test
+    public void listConsumersShouldNotLeakForeignConsumerMixedWithAccessibleUuid() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO ownerA = adminClient.owners().createOwner(Owners.random());
+        OwnerDTO ownerB = adminClient.owners().createOwner(Owners.random());
+
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, ownerA));
+        ConsumerDTO accessible = userClient.consumers().createConsumer(Consumers.random(ownerA));
+        ConsumerDTO foreign = adminClient.consumers().createConsumer(Consumers.random(ownerB));
+
+        List<ConsumerDTOArrayElement> fetched = userClient.owners().listConsumers(ownerA.getKey(), null,
+            null, List.of(accessible.getUuid(), foreign.getUuid()), null, null, null, null, null, null);
+
+        assertThat(fetched)
+            .isNotNull()
+            .extracting(ConsumerDTOArrayElement::getUuid)
+            .contains(accessible.getUuid())
+            .doesNotContain(foreign.getUuid());
+    }
+
     private List<ConsumerDTO> fetchConsumers(List<ConsumerDTO> consumers, ApiClient client) {
         return consumers.stream()
             .map(consumer -> client.consumers().getConsumer(consumer.getUuid()))

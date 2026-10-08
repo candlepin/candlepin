@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -91,10 +90,10 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
                 method.getName());
         }
 
-        Map<Verify, Object> argMap = getArguments(requestContext, method);
+        List<VerifiedArgument> arguments = getArguments(requestContext, method);
 
         // Couldn't find a match in Resteasy for method
-        if (argMap.isEmpty()) {
+        if (arguments.isEmpty()) {
             /* It would also be possible to get here if a super-admin only method
              * were inadvertently being filtered through this filter.  Normally the
              * AuthorizationFeature takes care of sending methods without any @Verify
@@ -104,7 +103,7 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
 
         Access defaultAccess = getDefaultAccess(method);
 
-        if (!hasAccess(argMap, principal, defaultAccess)) {
+        if (!hasAccess(arguments, principal, defaultAccess)) {
             denyAccess(principal, method);
         }
     }
@@ -112,7 +111,9 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
     /**
      * Fetches the arguments for parameters flagged with the Verify annotation from the request
      * context. If the method does not have any Verify-annotated parameters, this method returns
-     * an empty map.
+     * an empty list.
+     * <p></p>
+     * The list returned preserves order of annotations/arguments as they appear on a resource.
      *
      * @param requestContext
      *  the context data for the request
@@ -121,12 +122,18 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
      *  the method handling the request
      *
      * @return
-     *  a mapping of verify annotations to their respective arguments
+     *  the verified arguments in resource method parameter order
      */
-    protected Map<Verify, Object> getArguments(ContainerRequestContext requestContext, Method method) {
-
-        // LinkedHashMap preserves insertion order
-        Map<Verify, Object> argMap = new LinkedHashMap<>();
+    protected List<VerifiedArgument> getArguments(ContainerRequestContext requestContext, Method method) {
+        // Impl. note: @Verify annotations with identical values could occur on multiple parameters.
+        // We replaced the LinkedHashMap<Verify, Object> with an ArrayList<VerifiedArgument> to avoid
+        // identical @Verify annotations overwriting each other, but at the same preserving the insertion
+        // ordering that the LinkedHashMap provided before.
+        //
+        // While no such API url case exists in Candlepin today, this is guarding future cases, such as this
+        // example: 'POST /candlepin/consumers/{consumerA}/copy/{consumerB}' where two
+        // @Verify(Consumer.class) annotations are set on the endpoint (one for each consumer).
+        List<VerifiedArgument> arguments = new ArrayList<>();
 
         Annotation[][] annotations = annotationLocator.getParameterAnnotations(method);
 
@@ -181,21 +188,40 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
                     throw new IllegalStateException("Null passed to a non-nullable Verify annotation.");
                 }
 
-                argMap.put(verify, value);
+                arguments.add(new VerifiedArgument(verify, value));
             }
         }
 
-        return argMap;
+        return arguments;
     }
 
-    protected boolean hasAccess(Map<Verify, Object> argMap, Principal principal, Access defaultAccess) {
-        boolean hasAccess = false;
+    /**
+     * Determines if the provided principal is allowed to access the resource method, based on whether
+     * the principal has the correct permissions to access all the entities present in all @Verify
+     * annotations.
+     * <p><b>
+     * IMPORTANT: If the principal is forbidden access to AT LEAST ONE entity, then this method fails closed
+     * immediately, and the principal is denied access.
+     * </b></p>
+     * There is also a special case of this method returning false when no entities were specified in the
+     * request and the @Verify annotation(s) were marked as nullable.
+     *
+     * @param arguments the verified arguments in resource method parameter order
+     * @param principal the principal making the request
+     * @param defaultAccess the default access mode for this resource method (e.g. read only, create, all).
+     *      This can be overridden by the resource method itself
+     * @return true if the principal is allowed to access the resource, or false otherwise
+     */
+    protected boolean hasAccess(List<VerifiedArgument> arguments, Principal principal,
+        Access defaultAccess) {
+
+        boolean anyEntityVerified = false;
         Owner owner = null;
 
-        for (Map.Entry<Verify, Object> entry : argMap.entrySet()) {
+        for (VerifiedArgument argument : arguments) {
             List<Persisted> accessedObjects = new ArrayList<>();
-            Object obj = entry.getValue();
-            Verify verify = entry.getKey();
+            Object obj = argument.value();
+            Verify verify = argument.annotation();
             Class<? extends Persisted>[] verifyTypes = verify.value();
 
             accessedObjects.addAll(getAccessedEntities(verify, obj));
@@ -210,13 +236,14 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
             SubResource subResource = verify.subResource();
             for (Persisted entity : accessedObjects) {
                 if (!principal.canAccess(entity, subResource, requiredAccess)) {
-                    break;
+                    // Stop all further checking with any authorization failure
+                    return false;
                 }
 
-                hasAccess = true;
+                anyEntityVerified = true;
 
                 if (!storeFactory.canValidate(entity.getClass())) {
-                    break;
+                    continue;
                 }
 
                 Owner entityOwner = ((EntityStore) storeFactory.getFor(entity.getClass())).getOwner(entity);
@@ -229,14 +256,9 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
                     owner = entityOwner;
                 }
             }
-
-            // Stop all further checking with any authorization failure
-            if (!hasAccess) {
-                break;
-            }
         }
 
-        if (hasAccess && owner != null) {
+        if (owner != null) {
             MDC.put(LoggingUtil.MDC_OWNER_KEY, owner.getKey());
 
             if (owner.getLogLevel() != null) {
@@ -244,7 +266,16 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
             }
         }
 
-        return hasAccess;
+        // At this point, if this returns false, no @Verify parameter resolved to an entity (all were
+        // nullable and absent), so there is nothing to authorize against.
+        return anyEntityVerified;
+    }
+
+    protected record VerifiedArgument(Verify annotation, Object value) {
+    }
+
+    protected VerifiedArgument createVerifiedArgument(Verify annotation, Object value) {
+        return new VerifiedArgument(annotation, value);
     }
 
     @SuppressWarnings("unchecked")

@@ -30,8 +30,8 @@ import org.xnap.commons.i18n.I18n;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.inject.Inject;
 
@@ -81,12 +81,12 @@ public class VerifyAuthorizationFilterFactory implements MethodInterceptor {
 
             Method method = invocation.getMethod();
             Access defaultAccess = getDefaultAccess(method);
-            Map<Verify, Object> argMap = getArguments(invocation);
+            List<VerifiedArgument> arguments = getArguments(invocation);
 
             /* Under normal circumstances the AuthorizationFeature has already determined
              * that VerifyAuthorizationFilter doesn't apply to superadmin only methods.
              */
-            if (argMap.isEmpty()) {
+            if (arguments.isEmpty()) {
                 if (principal.hasFullAccess()) {
                     return invocation.proceed();
                 }
@@ -95,19 +95,19 @@ public class VerifyAuthorizationFilterFactory implements MethodInterceptor {
                 }
             }
 
-            if (!hasAccess(argMap, principal, defaultAccess)) {
+            if (!hasAccess(arguments, principal, defaultAccess)) {
                 denyAccess(principal, method);
             }
 
             return invocation.proceed();
         }
 
-        private Map<Verify, Object> getArguments(MethodInvocation invocation) {
+        private List<VerifiedArgument> getArguments(MethodInvocation invocation) {
             Object[] args = invocation.getArguments();
 
             Annotation[][] allAnnotations = invocation.getMethod().getParameterAnnotations();
 
-            Map<Verify, Object> argMap = new LinkedHashMap<>();
+            List<VerifiedArgument> arguments = new ArrayList<>();
 
             // Any occurrence of the Verify annotation means the method is not superadmin exclusive.
             for (int i = 0; i < allAnnotations.length; i++) {
@@ -120,13 +120,13 @@ public class VerifyAuthorizationFilterFactory implements MethodInterceptor {
                                 "Null passed to a non-nullable Verify annotation.");
                         }
                         else {
-                            argMap.put(v, args[i]);
+                            arguments.add(this.createVerifiedArgument(v, args[i]));
                         }
                     }
                 }
             }
 
-            return argMap;
+            return arguments;
         }
     }
 }

@@ -15,12 +15,17 @@
 package org.candlepin.resteasy.filter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.auth.Access;
 import org.candlepin.auth.AnonymousCloudConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SSLAuth;
@@ -30,6 +35,7 @@ import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Persisted;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -62,6 +68,7 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -125,10 +132,19 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         interceptor = new VerifyAuthorizationFilter(i18nProvider, storeFactory, annotationLocator);
     }
 
-    private void configureResourceClass(Class<?> resourceClass, String methodName)
+    /**
+     * Pushes a ResourceInfo for the named FakeResource method into the Resteasy context.
+     * It accepts an arbitrary parameter list, so methods declaring more than
+     * one parameter can be exercised through the filter.
+     *
+     * @param methodName the name of the FakeResource method being invoked
+     * @param parameterTypes the parameter types of the FakeResource method being invoked
+     * @throws NoSuchMethodException if FakeResource declares no matching method
+     */
+    private void configureResourceMethod(String methodName, Class<?>... parameterTypes)
         throws NoSuchMethodException {
         ResourceInfo mockInfo = mock(ResourceInfo.class);
-        Method method = FakeResource.class.getMethod(methodName, String.class);
+        Method method = FakeResource.class.getMethod(methodName, parameterTypes);
         when(mockInfo.getResourceMethod()).thenReturn(method);
         Class clazz = FakeResource.class;
         when(mockInfo.getResourceClass()).thenReturn(clazz);
@@ -136,9 +152,59 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         ResteasyContext.pushContext(ResourceInfo.class, mockInfo);
     }
 
+    /**
+     * Builds a mock Principal which is denied access to the consumer carrying the given UUID, and is
+     * allowed access to every other entity. Matching on UUID rather than on instance identity keeps the
+     * test independent of which instances entity resolution happens to return.
+     *
+     * @param deniedConsumerUuid the UUID of the consumer the Principal is denied access to
+     * @return a mock Principal that is denied access to the given consumer
+     */
+    private Principal buildPrincipalDeniedConsumerUuid(String deniedConsumerUuid) {
+        Principal principal = mock(Principal.class);
+        doAnswer(invocation -> {
+            Object target = invocation.getArgument(0);
+            return !(target instanceof Consumer) ||
+                !deniedConsumerUuid.equals(((Consumer) target).getUuid());
+        })
+            .when(principal).canAccess(any(), any(), any());
+
+        return principal;
+    }
+
     @Test
     public void testAccessToConsumer() throws Exception {
         testAccessToConsumerForResource(FakeResource.class);
+    }
+
+    /**
+     * Two parameters carrying identical Verify annotations must both be authorized. Annotation equality
+     * is defined by annotation type plus member values, so identical annotations collide when used as
+     * map keys and only one of the two parameters survives to be checked.
+     */
+    @Test
+    public void filterShouldDenyWhenDuplicateVerifyAnnotationsHideAnInaccessibleEntity() throws Exception {
+        configureResourceMethod("duplicateVerifyParams", String.class, String.class);
+
+        Owner owner = createOwner();
+        Consumer inaccessible = createConsumer(owner);
+        Consumer accessible = createConsumer(owner);
+
+        // The inaccessible consumer is bound to the first parameter, so it is the one whose value is
+        // discarded when the two identical annotations collapse into a single map entry.
+        this.mockPathParameters.add("first", inaccessible.getUuid());
+        this.mockPathParameters.add("second", accessible.getUuid());
+
+        Method method = FakeResource.class.getMethod("duplicateVerifyParams", String.class, String.class);
+        List<VerifyAuthorizationFilter.VerifiedArgument> arguments = interceptor.getArguments(
+            mockRequestContext, method);
+        assertEquals(List.of(inaccessible.getUuid(), accessible.getUuid()),
+            arguments.stream().map(VerifyAuthorizationFilter.VerifiedArgument::value).toList());
+
+        Principal principal = this.buildPrincipalDeniedConsumerUuid(inaccessible.getUuid());
+        when(mockSecurityContext.getUserPrincipal()).thenReturn(principal);
+
+        assertThrows(ForbiddenException.class, () -> interceptor.filter(mockRequestContext));
     }
 
     @Test
@@ -147,7 +213,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
     }
 
     void testAccessToConsumerForResource(Class<?> resourceClass) throws Exception {
-        configureResourceClass(resourceClass, "someMethod");
+        configureResourceMethod("someMethod", String.class);
 
         mockReq = MockHttpRequest.create("POST", "http://localhost/candlepin/fake/123");
         ResteasyContext.pushContext(HttpRequest.class, mockReq);
@@ -184,7 +250,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
     }
 
     void noAccessToOtherConsumerForResource(Class<?> resourceClass) throws Exception {
-        configureResourceClass(resourceClass, "someMethod");
+        configureResourceMethod("someMethod", String.class);
         mockReq = MockHttpRequest.create("POST", "http://localhost/candlepin/fake/123");
         ResteasyContext.pushContext(HttpRequest.class, mockReq);
         mockReq.setAttribute(ResteasyProviderFactory.class.getName(), ResteasyProviderFactory.getInstance());
@@ -211,7 +277,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
 
     @Test
     public void testAccessForMultiValueVerifyParameterWithExistingConsumer() throws Exception {
-        configureResourceClass(FakeResource.class, "multiValueVerify");
+        configureResourceMethod("multiValueVerify", String.class);
 
         Consumer consumer = createConsumer(createOwner());
         String uri = "http://localhost/candlepin/fake/multiValueVerify/" + consumer.getUuid();
@@ -237,7 +303,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
 
     @Test
     public void testAccessForMultiValueVerifyParameterWithExistingAnonymousCloudConsumer() throws Exception {
-        configureResourceClass(FakeResource.class, "multiValueVerify");
+        configureResourceMethod("multiValueVerify", String.class);
 
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId("account-id")
@@ -247,18 +313,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
             .setProductIds(List.of("product-id"));
         consumer = this.anonymousCloudConsumerCurator.create(consumer);
 
-        String uri = "http://localhost/candlepin/fake/multiValueVerify/" + consumer.getUuid();
-        mockReq = MockHttpRequest.create("GET", uri);
-        ResteasyContext.pushContext(HttpRequest.class, mockReq);
-        mockReq.setAttribute(ResteasyProviderFactory.class.getName(), ResteasyProviderFactory.getInstance());
-
         mockPathParameters.add("uuid", consumer.getUuid());
-
-        X509Certificate cert = mock(X509Certificate.class);
-        doReturn(new X500Principal("CN=123, C=US, L=Raleigh")).when(cert).getSubjectX500Principal();
-        X509Certificate[] certs = new X509Certificate[1];
-        certs[0] = cert;
-        mockReq.setAttribute("jakarta.servlet.request.X509Certificate", certs);
 
         doReturn(new AnonymousCloudConsumerPrincipal(consumer)).when(mockSecurityContext).getUserPrincipal();
 
@@ -268,7 +323,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
 
     @Test
     public void testAccessForMultiValueVerifyParameterWithUnknownUuid() throws Exception {
-        configureResourceClass(FakeResource.class, "multiValueVerify");
+        configureResourceMethod("multiValueVerify", String.class);
 
         String uuid = Util.generateUUID();
         mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/fake/multiValueVerify/" + uuid);
@@ -290,11 +345,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
 
     @Test
     public void testAccessForCollectionWithExistingValue() throws Exception {
-        configureResourceClass(FakeResource.class, "multiValueVerify");
-
-        mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/fake");
-        ResteasyContext.pushContext(HttpRequest.class, mockReq);
-        mockReq.setAttribute(ResteasyProviderFactory.class.getName(), ResteasyProviderFactory.getInstance());
+        configureResourceMethod("multiValueVerify", String.class);
 
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId("account-id")
@@ -305,16 +356,184 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         consumer = this.anonymousCloudConsumerCurator.create(consumer);
         mockPathParameters.addAll("uuid", List.of(consumer.getUuid(), Util.generateUUID()));
 
-        X509Certificate cert = mock(X509Certificate.class);
-        doReturn(new X500Principal("CN=123, C=US, L=Raleigh")).when(cert).getSubjectX500Principal();
-        X509Certificate[] certs = new X509Certificate[1];
-        certs[0] = cert;
-        mockReq.setAttribute("jakarta.servlet.request.X509Certificate", certs);
-
         doReturn(new AnonymousCloudConsumerPrincipal(consumer)).when(mockSecurityContext).getUserPrincipal();
 
         // Expect no errors
         interceptor.filter(mockRequestContext);
+    }
+
+    /**
+     * Builds a Verify annotation declared on the given parameter of a FakeResource method, so the
+     * tests below can build argument maps keyed by real annotation instances.
+     *
+     * @param methodName
+     *     the name of the FakeResource method declaring the annotation
+     *
+     * @param parameterIndex
+     *     the index of the annotated parameter
+     *
+     * @return the Verify annotation declared on the given parameter
+     */
+    private Verify buildVerifyAnnotationOf(String methodName, int parameterIndex) {
+        Method method = Arrays.stream(FakeResource.class.getMethods())
+            .filter(candidate -> candidate.getName().equals(methodName))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("no such method: " + methodName));
+
+        return Arrays.stream(method.getParameterAnnotations()[parameterIndex])
+            .filter(Verify.class::isInstance)
+            .map(Verify.class::cast)
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("parameter is not annotated with @Verify"));
+    }
+
+    /**
+     * Builds a filter whose entity resolution is driven by the provided mapping, so the tests below can
+     * control exactly which entities each Verify parameter resolves to, and in what order.
+     *
+     * @param resolved
+     *     a mapping of request values to the entities they resolve to
+     *
+     * @return a filter resolving entities from the given mapping
+     */
+    private VerifyAuthorizationFilter buildFilterResolving(Map<Object, List<Persisted>> resolved) {
+        return new VerifyAuthorizationFilter(i18nProvider, storeFactory, annotationLocator) {
+            @Override
+            protected List<Persisted> getAccessedEntities(Verify verify, Object requestValue) {
+                return resolved.getOrDefault(requestValue, List.of());
+            }
+        };
+    }
+
+    /**
+     * Builds a mock Principal whose .canAccess() method will deny any of the entities passed as arguments,
+     * but will not deny any entities not passed in.
+     * <p></p>
+     * Passing in an empty list means the Principal is allowed access to all entities.
+     *
+     * @param denied the list of entities that the Principal is denied access to
+     * @return a mock Principal that is denied access to the entities passed in as arguments
+     */
+    private Principal buildPrincipalThatIsDenied(Persisted... denied) {
+        List<Persisted> deniedEntities = Arrays.asList(denied);
+
+        Principal principal = mock(Principal.class);
+        doAnswer(invocation -> deniedEntities.stream()
+            .noneMatch(entity -> entity == invocation.getArgument(0)))
+            .when(principal).canAccess(any(), any(), any());
+
+        return principal;
+    }
+
+    @Test
+    public void hasAccessShouldDenyWhenALaterVerifyParameterIsInaccessible() {
+        Owner owner = createOwner();
+        Consumer consumer = new Consumer().setOwner(owner);
+        Pool pool = new Pool().setOwner(owner);
+
+        List<VerifyAuthorizationFilter.VerifiedArgument> arguments = List.of(
+            new VerifyAuthorizationFilter.VerifiedArgument(
+                this.buildVerifyAnnotationOf("twoVerifyParams", 0), "consumer-uuid"),
+            new VerifyAuthorizationFilter.VerifiedArgument(
+                this.buildVerifyAnnotationOf("twoVerifyParams", 1), "pool-id"));
+
+        VerifyAuthorizationFilter filter = this.buildFilterResolving(Map.of(
+            "consumer-uuid", List.of(consumer),
+            "pool-id", List.of(pool)));
+
+        assertFalse(filter.hasAccess(arguments, this.buildPrincipalThatIsDenied(pool), Access.READ_ONLY));
+    }
+
+    @Test
+    public void hasAccessShouldDenyWhenALaterEntityInASingleVerifyParameterIsInaccessible() {
+        Owner owner = createOwner();
+        Consumer accessible = new Consumer().setOwner(owner);
+        Consumer inaccessible = new Consumer().setOwner(owner);
+
+        List<VerifyAuthorizationFilter.VerifiedArgument> arguments = List.of(
+            new VerifyAuthorizationFilter.VerifiedArgument(
+                this.buildVerifyAnnotationOf("getCollection", 0), List.of("uuid-1", "uuid-2")));
+
+        VerifyAuthorizationFilter filter = this.buildFilterResolving(Map.of(
+            List.of("uuid-1", "uuid-2"), List.of(accessible, inaccessible)));
+
+        assertFalse(filter.hasAccess(arguments, this.buildPrincipalThatIsDenied(inaccessible),
+            Access.READ_ONLY));
+    }
+
+    @Test
+    public void hasAccessShouldDenyWhenTheFirstEntityInASingleVerifyParameterIsInaccessible() {
+        Owner owner = createOwner();
+        Consumer inaccessible = new Consumer().setOwner(owner);
+        Consumer accessible = new Consumer().setOwner(owner);
+
+        List<VerifyAuthorizationFilter.VerifiedArgument> arguments = List.of(
+            new VerifyAuthorizationFilter.VerifiedArgument(
+                this.buildVerifyAnnotationOf("getCollection", 0), List.of("uuid-1", "uuid-2")));
+
+        VerifyAuthorizationFilter filter = this.buildFilterResolving(Map.of(
+            List.of("uuid-1", "uuid-2"), List.of(inaccessible, accessible)));
+
+        assertFalse(filter.hasAccess(arguments, this.buildPrincipalThatIsDenied(inaccessible),
+            Access.READ_ONLY));
+    }
+
+    @Test
+    public void hasAccessShouldGrantWhenAnEntityHasNoRegisteredEntityStore() {
+        Persisted proxied = new ProxiedOwner();
+
+        List<VerifyAuthorizationFilter.VerifiedArgument> arguments = List.of(
+            new VerifyAuthorizationFilter.VerifiedArgument(
+                this.buildVerifyAnnotationOf("twoVerifyParams", 0), "owner-key"));
+
+        VerifyAuthorizationFilter filter = this.buildFilterResolving(Map.of("owner-key", List.of(proxied)));
+
+        assertTrue(filter.hasAccess(arguments, this.buildPrincipalThatIsDenied(), Access.READ_ONLY));
+    }
+
+    @Test
+    public void hasAccessShouldKeepCheckingAfterAnEntityWithNoRegisteredEntityStore() {
+        Owner owner = createOwner();
+        Persisted proxied = new ProxiedOwner();
+        Consumer inaccessible = new Consumer().setOwner(owner);
+
+        List<VerifyAuthorizationFilter.VerifiedArgument> arguments = List.of(
+            new VerifyAuthorizationFilter.VerifiedArgument(
+                this.buildVerifyAnnotationOf("getCollection", 0), List.of("uuid-1", "uuid-2")));
+
+        VerifyAuthorizationFilter filter = this.buildFilterResolving(Map.of(
+            List.of("uuid-1", "uuid-2"), List.of(proxied, inaccessible)));
+
+        assertFalse(filter.hasAccess(arguments, this.buildPrincipalThatIsDenied(inaccessible),
+            Access.READ_ONLY));
+    }
+
+    @Test
+    public void hasAccessShouldGrantWhenAnEarlierNullableVerifyParameterResolvedNoEntities() {
+        Owner owner = createOwner();
+        Consumer consumer = new Consumer().setOwner(owner);
+
+        List<VerifyAuthorizationFilter.VerifiedArgument> arguments = List.of(
+            new VerifyAuthorizationFilter.VerifiedArgument(
+                this.buildVerifyAnnotationOf("nullableVerifyFirst", 0), "absent-pool-id"),
+            new VerifyAuthorizationFilter.VerifiedArgument(
+                this.buildVerifyAnnotationOf("nullableVerifyFirst", 1), "consumer-uuid"));
+
+        VerifyAuthorizationFilter filter = this.buildFilterResolving(Map.of(
+            "consumer-uuid", List.of(consumer)));
+
+        assertTrue(filter.hasAccess(arguments, this.buildPrincipalThatIsDenied(), Access.READ_ONLY));
+    }
+
+    @Test
+    public void hasAccessShouldDenyWhenNoVerifyParameterResolvedAnyEntity() {
+        List<VerifyAuthorizationFilter.VerifiedArgument> arguments = List.of(
+            new VerifyAuthorizationFilter.VerifiedArgument(
+                this.buildVerifyAnnotationOf("nullableVerifyFirst", 0), "absent-pool-id"));
+
+        VerifyAuthorizationFilter filter = this.buildFilterResolving(Map.of());
+
+        assertFalse(filter.hasAccess(arguments, this.buildPrincipalThatIsDenied(), Access.READ_ONLY));
     }
 
     @Test
@@ -346,6 +565,34 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
             @Verify({AnonymousCloudConsumer.class, Consumer.class}) String uuid) {
             return uuid;
         }
+
+        @GET
+        @Path("/twoVerifyParams")
+        public String twoVerifyParams(@Verify(Consumer.class) String uuid,
+            @Verify(Pool.class) String poolId) {
+            return uuid;
+        }
+
+        @GET
+        @Path("/nullableVerifyFirst")
+        public String nullableVerifyFirst(@Verify(value = Pool.class, nullable = true) String poolId,
+            @Verify(Consumer.class) String uuid) {
+            return uuid;
+        }
+
+        @GET
+        @Path("/duplicateVerifyParams/{first}/{second}")
+        public String duplicateVerifyParams(@PathParam("first") @Verify(Consumer.class) String first,
+            @PathParam("second") @Verify(Consumer.class) String second) {
+            return first;
+        }
+    }
+
+    /**
+     * Stands in for a Hibernate proxy: a runtime subclass of a registered entity type which is not
+     * itself a key in the StoreFactory type map, so StoreFactory.canValidate returns false for it.
+     */
+    public static class ProxiedOwner extends Owner {
     }
 
     /**
