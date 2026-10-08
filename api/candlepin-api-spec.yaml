@@ -2171,6 +2171,63 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /v2/consumers/{consumer_uuid}/export:
+    post:
+      description: Initiates an async generation of a Compressed File representation of a Consumer
+        (manifest). The response will contain the id of the job from which its result data
+        will contain the href to download the generated file. This generates v2 of manifest file.
+      tags:
+        - consumer
+      operationId: exportDataAsyncV2
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the target consumer.
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        400:
+          description: Consumer is null or does not have a defined type ID or Consumer is not associated
+            with a valid type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer is null or does not have a defined type ID or Consumer is
+                  not associated with a valid type
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Unit cannot be exported. | A manifest cannot be made for units this type.
+            | A CDN with this label does not exist on this system.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Unit cannot be exported. | A manifest cannot be made for units this type.
+                  | A CDN with this label does not exist on this system.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /consumers/{consumer_uuid}/export/async:
     get:
       description: Initiates an async generation of a Compressed File representation of a Consumer

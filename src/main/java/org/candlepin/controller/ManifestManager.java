@@ -16,6 +16,7 @@ package org.candlepin.controller;
 
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.tasks.ExportJob;
+import org.candlepin.async.tasks.ExportJobV2;
 import org.candlepin.async.tasks.ImportJob;
 import org.candlepin.async.tasks.ManifestCleanerJob;
 import org.candlepin.audit.EventFactory;
@@ -39,6 +40,7 @@ import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ExportCreationException;
 import org.candlepin.sync.ExportResult;
 import org.candlepin.sync.Exporter;
+import org.candlepin.sync.ExporterV2;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.file.ManifestFile;
@@ -60,6 +62,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Set;
 
 import jakarta.inject.Inject;
@@ -76,6 +79,7 @@ public class ManifestManager {
     private static Logger log = LoggerFactory.getLogger(ManifestManager.class);
     private ManifestFileService manifestFileService;
     private Exporter exporter;
+    private final ExporterV2 exporterV2;
     private Importer importer;
     private EntitlementCurator entitlementCurator;
     private PoolManager poolManager;
@@ -88,13 +92,14 @@ public class ManifestManager {
     private EventFactory eventFactory;
 
     @Inject
-    public ManifestManager(ManifestFileService manifestFileService, Exporter exporter, Importer importer,
-        ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator,
-        EntitlementCurator entitlementCurator, CdnCurator cdnCurator, PoolManager poolManager,
-        PrincipalProvider principalProvider, I18n i18n, EventSink eventSink, EventFactory eventFactory) {
+    public ManifestManager(ManifestFileService manifestFileService, Exporter exporter, ExporterV2 exporterV2, Importer importer,
+                           ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator,
+                           EntitlementCurator entitlementCurator, CdnCurator cdnCurator, PoolManager poolManager,
+                           PrincipalProvider principalProvider, I18n i18n, EventSink eventSink, EventFactory eventFactory) {
 
         this.manifestFileService = manifestFileService;
         this.exporter = exporter;
+        this.exporterV2 = exporterV2;
         this.importer = importer;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -107,20 +112,29 @@ public class ManifestManager {
         this.eventFactory = eventFactory;
     }
 
+    public JobConfig<ExportJobV2.ExportJobConfigV2> generateManifestAsyncV2(String consumerUuid, Owner owner) {
+        log.info("Scheduling Async Export V2 for consumer {}", consumerUuid);
+        Consumer consumer = validateConsumerForExport(consumerUuid);
+
+        return ExportJobV2.createJobConfig()
+            .setConsumer(consumer)
+            .setOwner(owner);
+    }
+
     /**
      * Asynchronously generates a manifest for the target consumer.
      *
      * @param consumerUuid the target consumer's UUID.
-     * @param cdnLabel the CDN label to store in the meta file.
-     * @param webUrl the URL pointing to the manifest's originating web application.
-     * @param apiUrl the API URL pointing to the manifest's originating candlepin API.
+     * @param cdnLabel     the CDN label to store in the meta file.
+     * @param webUrl       the URL pointing to the manifest's originating web application.
+     * @param apiUrl       the API URL pointing to the manifest's originating candlepin API.
      * @return the details of the async export job.
      */
     public JobConfig generateManifestAsync(String consumerUuid, Owner owner, String cdnLabel,
-        String webUrl, String apiUrl) {
+                                           String webUrl, String apiUrl) {
 
         log.info("Scheduling Async Export for consumer {}", consumerUuid);
-        Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
+        Consumer consumer = validateConsumerAndCdnForExport(consumerUuid, cdnLabel);
 
         return ExportJob.createJobConfig()
             .setConsumer(consumer)
@@ -133,32 +147,20 @@ public class ManifestManager {
     /**
      * Generates a manifest for the specified consumer.
      *
-     * @param consumerUuid
-     *  the target consumer's UUID.
-     *
-     * @param cdnLabel
-     *  the CDN label to store in the meta file.
-     *
-     * @param webUrl
-     *  the URL pointing to the manifest's originating web application.
-     *
-     * @param apiUrl
-     *  the API URL pointing to the manifest's originating candlepin API.
-     *
-     * @throws ExportCreationException
-     *  when an export fails.
-     *
-     * @throws CryptoCapabilitiesException
-     *  if unable to determine a cryptographic scheme for the consumer
-     *
+     * @param consumerUuid the target consumer's UUID.
+     * @param cdnLabel     the CDN label to store in the meta file.
+     * @param webUrl       the URL pointing to the manifest's originating web application.
+     * @param apiUrl       the API URL pointing to the manifest's originating candlepin API.
      * @return an archive of the target consumer
+     * @throws ExportCreationException     when an export fails.
+     * @throws CryptoCapabilitiesException if unable to determine a cryptographic scheme for the consumer
      */
     public File generateManifest(String consumerUuid, String cdnLabel, String webUrl, String apiUrl)
         throws ExportCreationException, CryptoCapabilitiesException {
 
         log.info("Exporting consumer {}", consumerUuid);
 
-        Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
+        Consumer consumer = validateConsumerAndCdnForExport(consumerUuid, cdnLabel);
         poolManager.regenerateDirtyEntitlements(consumer);
 
         File export = exporter.getFullExport(consumer, cdnLabel, webUrl, apiUrl);
@@ -171,15 +173,15 @@ public class ManifestManager {
      * Stores the specified archive via the {@link ManifestFileService} and triggers an
      * asynchronous manifest import.
      *
-     * @param owner the target owner.
-     * @param archive the manifest file archive.
+     * @param owner            the target owner.
+     * @param archive          the manifest file archive.
      * @param uploadedFileName the name of the file as uploaded (archive will contain the cached name).
-     * @param overrides any {@link ConflictOverrides}s to apply during the import process.
+     * @param overrides        any {@link ConflictOverrides}s to apply during the import process.
      * @return the {@link JobDetail} that represents the asynchronous import job to start.
      * @throws ManifestFileServiceException if the archive could not be stored.
      */
     public JobConfig importManifestAsync(Owner owner, File archive, String uploadedFileName,
-        ConflictOverrides overrides) throws ManifestFileServiceException {
+                                         ConflictOverrides overrides) throws ManifestFileServiceException {
         ManifestFile manifestRecordId = storeImport(archive, owner);
         return ImportJob.createJobConfig()
             .setOwner(owner)
@@ -191,33 +193,23 @@ public class ManifestManager {
     /**
      * Imports the specified manifest archive into the specified {@link Owner}.
      *
-     * @param owner
-     *  the target owner.
-     *
-     * @param archive
-     *  the archive to import
-     *
-     * @param uploadedFileName
-     *  the name of the originally uploaded file.
-     *
-     * @param overrides
-     *  the {@link ConflictOverrides} to apply during the import process.
-     *
-     * @throws ImporterException
-     *  if there is an issue importing the manifest.
-     *
+     * @param owner            the target owner.
+     * @param archive          the archive to import
+     * @param uploadedFileName the name of the originally uploaded file.
+     * @param overrides        the {@link ConflictOverrides} to apply during the import process.
      * @return the result of the import.
+     * @throws ImporterException if there is an issue importing the manifest.
      */
     public ImportRecord importManifest(Owner owner, File archive, String uploadedFileName,
-        ConflictOverrides overrides) throws ImporterException {
+                                       ConflictOverrides overrides) throws ImporterException {
         return importer.loadExport(owner, archive, overrides, uploadedFileName);
     }
 
     /**
      * Records a failed import in the database.
      *
-     * @param owner the target owner.
-     * @param error the error that caused the failure.
+     * @param owner    the target owner.
+     * @param error    the error that caused the failure.
      * @param filename the uploaded filename.
      */
     public void recordImportFailure(Owner owner, Throwable error, String filename) {
@@ -228,29 +220,17 @@ public class ManifestManager {
      * Imports a stored manifest file into the target {@link Owner}. The stored file is deleted
      * as soon as the import is complete.
      *
-     * @param targetOwner
-     *  the target owner.
-     *
-     * @param fileId
-     *  the manifest file ID.
-     *
-     * @param overrides
-     *  the {@link ConflictOverrides} to apply to the import process.
-     *
-     * @param uploadedFileName
-     *  the originally uploaded file name.
-     *
-     * @throws BadRequestException
-     *  if the file is not found in the {@link ManifestFileService}
-     *
-     * @throws ImporterException
-     *  if there is an issue importing the file.
-     *
+     * @param targetOwner      the target owner.
+     * @param fileId           the manifest file ID.
+     * @param overrides        the {@link ConflictOverrides} to apply to the import process.
+     * @param uploadedFileName the originally uploaded file name.
      * @return the result of the import.
+     * @throws BadRequestException if the file is not found in the {@link ManifestFileService}
+     * @throws ImporterException   if there is an issue importing the file.
      */
     @Transactional
     public ImportRecord importStoredManifest(Owner targetOwner, String fileId, ConflictOverrides overrides,
-        String uploadedFileName) throws BadRequestException, ImporterException {
+                                             String uploadedFileName) throws BadRequestException, ImporterException {
         ManifestFile manifest = manifestFileService.get(fileId);
         if (manifest == null) {
             throw new BadRequestException(i18n.tr("The requested manifest file was not found: {0}", fileId));
@@ -284,18 +264,18 @@ public class ManifestManager {
      * Write the stored manifest file to the specified response output stream and update
      * the appropriate response data.
      *
-     * @param exportId the id of the manifest file to find.
+     * @param exportId             the id of the manifest file to find.
      * @param exportedConsumerUuid the UUID of the consumer the export was generated for.
-     * @param response the response to write the file to.
+     * @param response             the response to write the file to.
      * @throws ManifestFileServiceException if there was an issue getting the file from the service
-     * @throws NotFoundException if the manifest file is not found
-     * @throws BadRequestException if the manifests target consumer does not match the specified
-     *                             consumer.
-     * @throws IseException if there was an issue writing the file to the response.
+     * @throws NotFoundException            if the manifest file is not found
+     * @throws BadRequestException          if the manifests target consumer does not match the specified
+     *                                      consumer.
+     * @throws IseException                 if there was an issue writing the file to the response.
      */
     @Transactional
-    public void writeStoredExportToResponse(String exportId, String exportedConsumerUuid,
-        HttpServletResponse response) throws ManifestFileServiceException, NotFoundException,
+    public void writeStoredExportToResponse(String exportId, String exportedConsumerUuid, HttpServletResponse response)
+        throws ManifestFileServiceException, NotFoundException,
         BadRequestException, IseException {
         Consumer exportedConsumer = consumerCurator.verifyAndLookupConsumer(exportedConsumerUuid);
 
@@ -313,7 +293,8 @@ public class ManifestManager {
         }
 
         // The specified consumer must match that of the manifest.
-        if (!exportedConsumer.getUuid().equals(manifest.getTargetId())) {
+        if (!exportedConsumer.getUuid()
+            .equals(manifest.getTargetId())) {
             throw new BadRequestException(
                 i18n.tr("Could not validate export against specified consumer: {0}",
                     exportedConsumer.getUuid()));
@@ -344,16 +325,9 @@ public class ManifestManager {
         }
     }
 
-    private Consumer validateConsumerForExport(String consumerUuid, String cdnLabel) {
+    private Consumer validateConsumerAndCdnForExport(String consumerUuid, String cdnLabel) {
         // FIXME Should this be testing the CdnLabel as well?
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
-        if (ctype == null || !ctype.isManifest()) {
-            throw new ForbiddenException(
-                i18n.tr("Unit {0} cannot be exported. A manifest cannot be made for units of type \"{1}\".",
-                    consumerUuid, ctype != null ? ctype.getLabel() : "unknown type"));
-        }
+        Consumer consumer = validateConsumerForExport(consumerUuid);
 
         if (!StringUtils.isBlank(cdnLabel) && cdnCurator.getByLabel(cdnLabel) == null) {
             throw new ForbiddenException(
@@ -363,34 +337,34 @@ public class ManifestManager {
         return consumer;
     }
 
+    private Consumer validateConsumerForExport(String consumerUuid) {
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (ctype == null || !ctype.isManifest()) {
+            throw new ForbiddenException(
+                i18n.tr("Unit {0} cannot be exported. A manifest cannot be made for units of type \"{1}\".",
+                    consumerUuid, ctype != null ? ctype.getLabel() : "unknown type"));
+        }
+        return consumer;
+    }
+
     /**
      * Generates a manifest for the specified consumer and stores the resulting file via the
      * {@link ManifestFileService}.
      *
-     * @param consumerUuid
-     *  the target consumer's UUID.
-     *
-     * @param cdnLabel
-     *  the CDN label to store in the meta file.
-     *
-     * @param webUrl
-     *  the URL pointing to the manifest's originating web application.
-     *
-     * @param apiUrl
-     *  the API URL pointing to the manifest's originating candlepin API.
-     *
-     * @throws ExportCreationException
-     *  if there are any issues generating the manifest.
-     *
-     * @throws CryptoCapabilitiesException
-     *  if unable to determine a cryptographic scheme for the consumer
-     *
+     * @param consumerUuid the target consumer's UUID.
+     * @param cdnLabel     the CDN label to store in the meta file.
+     * @param webUrl       the URL pointing to the manifest's originating web application.
+     * @param apiUrl       the API URL pointing to the manifest's originating candlepin API.
      * @return an {@link ExportResult} containing the details of the stored file.
+     * @throws ExportCreationException     if there are any issues generating the manifest.
+     * @throws CryptoCapabilitiesException if unable to determine a cryptographic scheme for the consumer
      */
     public ExportResult generateAndStoreManifest(String consumerUuid, String cdnLabel, String webUrl,
-        String apiUrl) throws ExportCreationException, CryptoCapabilitiesException {
+                                                 String apiUrl) throws ExportCreationException, CryptoCapabilitiesException {
 
-        Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
+        Consumer consumer = validateConsumerAndCdnForExport(consumerUuid, cdnLabel);
 
         File export = null;
         try {
@@ -419,6 +393,37 @@ public class ManifestManager {
     }
 
     /**
+     * Generates a manifest (version 2) for the specified consumer and stores the resulting file via
+     * the {@link ManifestFileService}.
+     *
+     * @param consumerUuid the target consumer's UUID.
+     * @return an {@link ExportResult} containing the details of the stored file.
+     * @throws ExportCreationException if there are any issues generating the manifest.
+     */
+    public ExportResult generateAndStoreManifestV2(String consumerUuid) throws ExportCreationException {
+        Consumer consumer = validateConsumerForExport(consumerUuid);
+        try {
+            // this only succeeds if and only if the archive is successfully created
+            Path export = exporterV2.getFullExport(consumer);
+            try {
+                // store the export archive
+                File exportFile = export.toFile();
+                ManifestFile manifestFile = storeExport(exportFile, consumer);
+                sink.queueEvent(eventFactory.exportCreated(consumer));
+                return new ExportResult(consumer.getUuid(), manifestFile.getId());
+            }
+            finally {
+                // always delete export archive after it is stored in DB
+                exporterV2.deleteArchive(export);
+            }
+        }
+        catch (ManifestFileServiceException e)  {
+            log.error("Error generating manifest for consumer: {}", consumerUuid, e);
+            throw new ExportCreationException("Error generating manifest", e);
+        }
+    }
+
+    /**
      * Deletes the manifest file stored by the {@link ManifestFileService}. If there was
      * an issue deleting the manifest, the exception is just logged. The file will eventually
      * be deleted by the {@link ManifestCleanerJob}.
@@ -441,23 +446,16 @@ public class ManifestManager {
     /**
      * Generates an archive of the specified consumer's entitlements.
      *
-     * @param consumer
-     *  the target consumer
-     *
-     * @param serials
-     *  the entitlement serials to export
-     *
-     * @throws ExportCreationException
-     *  if the archive could not be created.
-     *
-     * @throws ConcurrentContentPayloadCreationException
-     *  if a concurrent request persists the content payload and causes a database constraint violation
-     *
+     * @param consumer the target consumer
+     * @param serials  the entitlement serials to export
      * @return an archive to the specified consumer's entitlements.
+     * @throws ExportCreationException                   if the archive could not be created.
+     * @throws ConcurrentContentPayloadCreationException if a concurrent request persists the content payload and causes a
+     *                                                   database constraint violation
      */
     public File generateEntitlementArchive(Consumer consumer, Set<Long> serials)
         throws ExportCreationException, ConcurrentContentPayloadCreationException,
-            CryptoCapabilitiesException {
+        CryptoCapabilitiesException {
 
         log.debug("Getting client certificate zip file for consumer: {}", consumer.getUuid());
         poolManager.regenerateDirtyEntitlements(consumer);
@@ -496,7 +494,7 @@ public class ManifestManager {
 
     private ManifestFile storeFile(File targetFile, ManifestFileType type, String targetId)
         throws ManifestFileServiceException {
-        return manifestFileService.store(type, targetFile, principalProvider.get().getName(), targetId);
+        return manifestFileService.store(type, targetFile, principalProvider.get()
+            .getName(), targetId);
     }
-
 }
