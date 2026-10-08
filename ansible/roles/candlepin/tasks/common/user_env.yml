@@ -2,9 +2,9 @@
 # {{ candlepin_user }}, but if these are included or imported anywhere else, that will likely need to
 # be done there as well.
 ---
-- name: "Add JAVA_HOME to .bashrc"
+- name: "Add JAVA_HOME to .bash_profile"
   ansible.builtin.lineinfile:
-    path: "{{ candlepin_user_home }}/.bashrc"
+    path: "{{ candlepin_user_home }}/.bash_profile"
     regexp: "^export JAVA_HOME="
     line: "export JAVA_HOME=/usr/lib/jvm/java-25-openjdk"
     state: present
