@@ -18,7 +18,7 @@ ANSIBLE_VARS = {
   :cp_deploy => false
 }
 
-def configure_ansible_provisioning(vm_config)
+def configure_ansible_provisioning(vm_config, ansible_python_interpreter: nil)
   vm_config.vm.provision "ansible" do |ansible|
     # ansible.verbose = "vvv"
     ansible.compatibility_mode = "2.0"
@@ -34,6 +34,9 @@ def configure_ansible_provisioning(vm_config)
     ansible.galaxy_command = "ansible-galaxy install -r %{role_file} --force"
 
     ansible.extra_vars = ANSIBLE_VARS.clone
+    if ansible_python_interpreter
+      ansible.extra_vars[:ansible_python_interpreter] = ansible_python_interpreter
+    end
 
     # Pass through ansible variables and tags from the environment variables
     ENV.each do |key, value|
@@ -94,7 +97,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8443, host: 8443
     vm_config.vm.provision "shell", inline: "dnf update -y dnf ca-certificates"
 
-    configure_ansible_provisioning(vm_config)
+    # EL8's default Python 3.6 is not supported by ansible-core 2.17+.
+    vm_config.vm.provision "shell", inline: "dnf install -y python39"
+
+    configure_ansible_provisioning(vm_config, ansible_python_interpreter: "/usr/bin/python3.9")
   end
 
   config.vm.define("el9", autostart: false) do |vm_config|
