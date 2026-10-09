@@ -16,18 +16,12 @@
         - debugging
 
     - name: "Enable debugging ports in firewalld"
-      become: true
-      ansible.posix.firewalld:
-        port: "{{ item }}/tcp"
-        state: enabled
-        permanent: true
-        offline: false
-      with_items:
-        - 8000 # Tomcat remote debugging port
-        - 5005 # Gradle remote debugging port
-      when:
-        - "'services' in ansible_facts"
-        - "'firewalld.service' in ansible_facts.services"
+      ansible.builtin.include_tasks:
+        file: firewalld_ports.yml
+      vars:
+        cp_firewalld_ports:
+          - 8000 # Tomcat remote debugging port
+          - 5005 # Gradle remote debugging port
       tags:
         - system
         - candlepin
@@ -77,15 +71,11 @@
         - debugging
 
     - name: "Enable YourKit ports in firewalld"
-      become: true
-      ansible.posix.firewalld:
-        port: "{{ cp_yourkit_agent_port }}/tcp"
-        state: enabled
-        permanent: true
-        offline: false
-      when:
-        - "'services' in ansible_facts"
-        - "'firewalld.service' in ansible_facts.services"
+      ansible.builtin.include_tasks:
+        file: firewalld_ports.yml
+      vars:
+        cp_firewalld_ports:
+          - "{{ cp_yourkit_agent_port }}"
       tags:
         - system
         - candlepin
