@@ -8,15 +8,21 @@
     - postgresql
     - candlepin
 
-- name: "Install PostgreSQL packages"
+- name: "Install PostgreSQL packages" # noqa: command-instead-of-module
   become: true
-  ansible.builtin.package:
-    name:
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - install
+      - -y
       - postgresql-server
       - postgresql
       - postgresql-jdbc
       - python3-psycopg2
-    state: present
+  environment:
+    LC_ALL: C
+  register: cp_postgresql_package_install
+  changed_when: "'Nothing to do.' not in cp_postgresql_package_install.stdout"
   tags:
     - postgresql
     - candlepin
