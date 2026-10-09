@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.7.5
+Version: 4.7.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,22 @@ fi
 
 #raw
 %changelog
+* Fri Oct 09 2026 candlepin-bot 4.7.6-1
+- Add new translations using Weblate (hosted@weblate.org)
+- CANDLEPIN-1195: Added catch for EntityNotFoundException (jalbrech@redhat.com)
+- CANDLEPIN-1036: Fixed flaky VirtSpecTest test (joshmalbrecht@gmail.com)
+- CANDLEPIN-1252: Fix Ansible linter violations (jasmid@redhat.com)
+- Fixed multi-Verify hasAccess authz (nmoumoul@redhat.com)
+- Update centos cloud image url for vagrant (nmoumoul@redhat.com)
+- Sonar gh action set to use Java 21 (nmoumoul@redhat.com)
+- Stop using unverified gh action for docker log collection
+  (nmoumoul@redhat.com)
+- CANDLEPIN-1163: Update for migration to Atlassian cloud jira
+  (nmoumoul@redhat.com)
+- Add new translations using Weblate (hosted@weblate.org)
+- CANDLEPIN-1166: Added last checkin filtering to GET /consumers
+  (crog@redhat.com)
+
 * Thu Mar 05 2026 candlepin-bot 4.7.5-1
 - Add new translations using Weblate (hosted@weblate.org)
 - Bump org.sonarqube from 7.2.2.6593 to 7.2.3.7755
