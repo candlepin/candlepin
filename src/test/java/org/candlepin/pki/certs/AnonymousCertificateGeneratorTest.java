@@ -51,13 +51,19 @@ import org.candlepin.pki.OidUtil;
 import org.candlepin.pki.Scheme;
 import org.candlepin.pki.huffman.Huffman;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.exception.product.ProductServiceException;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.test.CryptoUtil;
+import org.candlepin.test.TestLogCapture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.ThrowableProxy;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,6 +79,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -84,11 +92,14 @@ import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import jakarta.inject.Provider;
 
 // TODO: FIXME: Rewrite this test suite. It's very reliant on mocks and doesn't actually test the generator
 // very well.
@@ -108,6 +119,8 @@ class AnonymousCertificateGeneratorTest {
     private EntitlementCurator entitlementCurator;
     @Mock
     private ProductServiceAdapter productAdapter;
+    @Mock
+    private Provider<I18n> i18nProvider;
 
     private DevConfig config;
     private AnonymousCertificateGenerator generator;
@@ -116,6 +129,8 @@ class AnonymousCertificateGeneratorTest {
     void setUp() throws CertificateException, KeyException {
         this.config = TestConfig.defaults();
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
+        when(this.i18nProvider.get())
+            .thenReturn(I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK));
 
         this.generator = this.createGenerator();
         this.mockCuratorMethods();
@@ -134,7 +149,8 @@ class AnonymousCertificateGeneratorTest {
             this.anonymousCertificateCurator,
             this.productAdapter,
             CryptoUtil.getPemEncoder(),
-            cryptoManager);
+            cryptoManager,
+            this.i18nProvider);
     }
 
     private AnonymousCertificateGenerator createGenerator() {
@@ -463,6 +479,43 @@ class AnonymousCertificateGeneratorTest {
         assertThrows(CertificateException.class, () -> generator.generate(consumer));
 
         verify(mockKeyPairGenerator, times(1)).generateKeyPair();
+    }
+
+    @Test
+    public void testTranslatesProductServiceFailureAndLogsItsCause() {
+        ProductServiceException failure = new ProductServiceException("product", "upstream unavailable");
+        when(this.productAdapter.getChildrenByProductIds(anyCollection())).thenThrow(failure);
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer().setProductIds(List.of("product"));
+
+        try (TestLogCapture logs = new TestLogCapture(AnonymousCertificateGenerator.class)) {
+            CertificateException result = assertThrows(CertificateException.class,
+                () -> this.generator.generate(consumer));
+            assertThat(result.getCause()).isSameAs(failure);
+            assertThat(result.getMessage()).isEqualTo("Unable to retrieve product \"product\" from ProductService");
+            assertThat(logs.getEvents()).singleElement().returns(Level.ERROR, ILoggingEvent::getLevel);
+            ThrowableProxy proxy = (ThrowableProxy) logs.getEvents().getFirst().getThrowableProxy();
+            assertThat(proxy.getThrowable()).isSameAs(failure);
+        }
+    }
+
+    @Test
+    void testTranslatesProductFailureUsingCurrentRequestLocale() {
+        when(this.productAdapter.getChildrenByProductIds(anyCollection()))
+            .thenThrow(new ProductServiceException("product", "upstream unavailable"));
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer().setProductIds(List.of("product"));
+
+        assertThatThrownBy(() -> this.generator.generate(consumer))
+            .isInstanceOf(CertificateException.class)
+            .hasMessage("Unable to retrieve product \"product\" from ProductService");
+
+        I18n nextRequestTranslator = mock(I18n.class);
+        when(nextRequestTranslator.tr("Unable to retrieve product \"{0}\" from ProductService", "product"))
+            .thenReturn("Localized product service failure");
+        when(this.i18nProvider.get()).thenReturn(nextRequestTranslator);
+
+        assertThatThrownBy(() -> this.generator.generate(consumer))
+            .isInstanceOf(CertificateException.class)
+            .hasMessage("Localized product service failure");
     }
 
     private static Content createContent() {

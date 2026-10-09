@@ -28,6 +28,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,8 +47,12 @@ import org.candlepin.dto.api.server.v1.CloudAuthenticationResultDTO;
 import org.candlepin.dto.api.server.v1.CloudRegistrationDTO;
 import org.candlepin.dto.api.server.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.CandlepinException;
+import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.exceptions.NotImplementedException;
+import org.candlepin.exceptions.mappers.CandlepinExceptionMapper;
+import org.candlepin.exceptions.mappers.RuntimeExceptionMapper;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
@@ -59,10 +64,18 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.service.CloudRegistrationAdapter;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationAuthorizationException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationMalformedDataException;
 import org.candlepin.service.exception.cloudregistration.CloudRegistrationNotSupportedForOfferingException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationServiceException;
 import org.candlepin.service.model.CloudAuthenticationResult;
+import org.candlepin.test.TestLogCapture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.ThrowableProxy;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -92,6 +105,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 
@@ -964,6 +978,85 @@ public class CloudRegistrationResourceTest {
             .delete(consumer);
         verify(this.mockAnonCloudCertCurator, Mockito.times(1))
             .delete(any(AnonymousContentAccessCertificate.class));
+    }
+
+    @ParameterizedTest
+    @MethodSource("cloudServiceFailures")
+    public void testTranslatesAndLogsCloudServiceFailure(int version, CloudRegistrationServiceException failure,
+        int status, String responseMessage, String logMessage, Level level) {
+
+        CloudRegistrationDTO dto = new CloudRegistrationDTO()
+            .type("test-type")
+            .metadata("test-metadata")
+            .signature("test-signature");
+        if (version == 1) {
+            doThrow(failure).when(mockCloudRegistrationAdapter).resolveCloudRegistrationData(any());
+        }
+        else {
+            doThrow(failure).when(mockCloudRegistrationAdapter).resolveCloudRegistrationDataV2(any());
+        }
+
+        try (TestLogCapture logs = new TestLogCapture(CloudRegistrationResource.class);
+            TestLogCapture mapperLogs = new TestLogCapture(CandlepinExceptionMapper.class);
+            TestLogCapture runtimeMapperLogs = new TestLogCapture(RuntimeExceptionMapper.class)) {
+
+            CandlepinException result = assertThrows(CandlepinException.class,
+                () -> cloudRegResource.cloudAuthorize(dto, version));
+
+            assertEquals(status, result.httpReturnCode().getStatusCode());
+            assertEquals(responseMessage, result.getMessage());
+            RuntimeExceptionMapper mapper = spy(new RuntimeExceptionMapper());
+            doReturn(MediaType.APPLICATION_JSON_TYPE).when(mapper).determineBestMediaType();
+            try (Response response = mapper.toResponse(result)) {
+                assertEquals(status, response.getStatus());
+                assertEquals(responseMessage, ((ExceptionMessage) response.getEntity()).getDisplayMessage());
+                assertThat(ObjectMapperFactory.getObjectMapper().writeValueAsString(response.getEntity()))
+                    .doesNotContain("backend-secret", "nested-secret");
+            }
+            assertThat(mapperLogs.getEvents()).isEmpty();
+            assertThat(runtimeMapperLogs.getEvents()).isEmpty();
+
+            if (!(failure instanceof CloudRegistrationAuthorizationException)) {
+                assertThat(result.getCause()).isSameAs(failure);
+            }
+            assertThat(logs.getEvents())
+                .singleElement()
+                .returns(level, ILoggingEvent::getLevel)
+                .returns(logMessage, ILoggingEvent::getFormattedMessage);
+            if (level == Level.WARN) {
+                assertThat(logs.getEvents().getFirst().getThrowableProxy()).isNull();
+            }
+            else {
+                ThrowableProxy proxy = (ThrowableProxy) logs.getEvents().getFirst().getThrowableProxy();
+                assertThat(proxy.getThrowable()).isSameAs(failure);
+            }
+        }
+    }
+
+    private static Stream<Arguments> cloudServiceFailures() {
+        String authorizationMessage = "Cloud provider or account details could not be resolved to an organization";
+        String malformedMessage = "Unable to complete Cloud Registration with provided data";
+        String unsupportedMessage = "Cloud registration is not supported for the type of offering the client is using";
+        return Stream.of(1, 2).flatMap(version -> Stream.of(
+            Arguments.of(version, new CloudRegistrationAuthorizationException("upstream 404"),
+                401, authorizationMessage, authorizationMessage, Level.WARN),
+            Arguments.of(version, new CloudRegistrationMalformedDataException(),
+                400, malformedMessage, malformedMessage, Level.WARN),
+            Arguments.of(version, new CloudRegistrationMalformedDataException(""),
+                400, malformedMessage, malformedMessage, Level.WARN),
+            Arguments.of(version, new CloudRegistrationMalformedDataException("backend-secret",
+                new RuntimeException("nested-secret")), 400, malformedMessage, "backend-secret", Level.WARN),
+            Arguments.of(version, new CloudRegistrationNotSupportedForOfferingException(),
+                501, unsupportedMessage, unsupportedMessage, Level.WARN),
+            Arguments.of(version, new CloudRegistrationServiceException(),
+                400, "Error contacting cloud registration service",
+                "Unexpected error from Cloud Registration Service: null", Level.ERROR),
+            Arguments.of(version, new CloudRegistrationServiceException(""),
+                400, "Error contacting cloud registration service",
+                "Unexpected error from Cloud Registration Service: ", Level.ERROR),
+            Arguments.of(version, new CloudRegistrationServiceException("backend-secret",
+                new RuntimeException("nested-secret")), 400, "Error contacting cloud registration service",
+                "Unexpected error from Cloud Registration Service: backend-secret", Level.ERROR)));
     }
 
     private CloudRegistrationData getCloudRegistrationData(CloudRegistrationDTO cloudRegistrationDTO) {

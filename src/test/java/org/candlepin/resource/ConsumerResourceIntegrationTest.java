@@ -29,6 +29,7 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.controller.PoolService;
 import org.candlepin.dto.api.server.v1.CertificateDTO;
@@ -67,21 +68,19 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import org.apache.commons.io.FileUtils;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.spi.HttpRequest;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.io.File;
-import java.io.IOException;
+import java.nio.file.Path;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -125,6 +124,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     private PrincipalProvider principalProvider;
 
     private User someuser;
+
+    @TempDir
+    private Path exportDirectory;
 
     private static final String DEFAULT_SERVICE_LEVEL = "VIP";
 
@@ -213,6 +215,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Override
     public void init() throws Exception {
         super.init(false);
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.exportDirectory.toString());
 
         poolService = injector.getInstance(PoolService.class);
         consumerResource = injector.getInstance(ConsumerResource.class);
@@ -261,24 +264,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         pool = createPool(owner, product, 10L,
             TestUtil.createDate(2010, 1, 1), TestUtil.createDateOffset(10, 0, 0));
-    }
-
-    @AfterEach
-    public void cleanup() {
-        // cleanup the temp exports
-        File tempDir = new File("/tmp");
-
-        for (File f : tempDir.listFiles()) {
-            if (f.isDirectory() && f.getName().startsWith("export")) {
-                try {
-                    FileUtils.deleteDirectory(f);
-                }
-                catch (IOException e) {
-                    throw new RuntimeException(
-                        "Failed to cleanup directory: " + "/tmp", e);
-                }
-            }
-        }
     }
 
     @Test

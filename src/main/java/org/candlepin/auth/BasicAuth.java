@@ -18,8 +18,10 @@ import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.exceptions.ServiceUnavailableException;
+import org.candlepin.resource.util.UserServiceExceptionTranslator;
 import org.candlepin.resteasy.filter.AuthUtil;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.user.UserServiceException;
 
 import org.apache.commons.codec.binary.Base64;
 import org.jboss.resteasy.spi.HttpRequest;
@@ -29,6 +31,7 @@ import org.xnap.commons.i18n.I18n;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * BasicAuth
@@ -65,7 +68,7 @@ public class BasicAuth extends UserAuth {
                 }
 
                 if (userServiceAdapter.validateUser(username, password)) {
-                    Principal principal = ((UserPrincipal) createPrincipal(username))
+                    Principal principal = ((UserPrincipal) createPrincipal(username, Status.SERVICE_UNAVAILABLE))
                         .setAuthenticationMethod(AuthenticationMethod.BASIC);
                     log.debug("principal created for user '{}'", username);
                     return principal;
@@ -75,11 +78,15 @@ public class BasicAuth extends UserAuth {
                 }
             }
         }
+        catch (UserServiceException e) {
+            throw hideAccountDetails(UserServiceExceptionTranslator.translate(e, this.i18nProvider.get(), log,
+                Status.SERVICE_UNAVAILABLE));
+        }
         catch (CandlepinException e) {
             if (log.isDebugEnabled()) {
                 log.debug("Error getting principal " + e);
             }
-            throw e;
+            throw hideAccountDetails(e);
         }
         catch (Exception e) {
             if (log.isDebugEnabled()) {
@@ -88,6 +95,15 @@ public class BasicAuth extends UserAuth {
             throw new ServiceUnavailableException(i18nProvider.get().tr("Error contacting user service"));
         }
         return null;
+    }
+
+    private CandlepinException hideAccountDetails(CandlepinException exception) {
+        // This also covers lookup failures already translated by UserAuth.createPrincipal.
+        if (exception instanceof NotAuthorizedException) {
+            return new NotAuthorizedException(this.i18nProvider.get().tr("Invalid Credentials"), false);
+        }
+
+        return exception;
     }
 
 }

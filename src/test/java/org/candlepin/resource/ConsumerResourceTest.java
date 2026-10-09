@@ -32,6 +32,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -72,12 +73,14 @@ import org.candlepin.dto.api.server.v1.ContentAccessDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.exceptions.NotImplementedException;
 import org.candlepin.exceptions.TooManyRequestsException;
+import org.candlepin.exceptions.mappers.RuntimeExceptionMapper;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
@@ -135,13 +138,23 @@ import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
-import org.candlepin.service.exception.product.ProductServiceException;
+import org.candlepin.service.exception.subscription.SubscriptionActivationException;
+import org.candlepin.service.exception.subscription.SubscriptionExhaustedTagException;
+import org.candlepin.service.exception.subscription.SubscriptionExpiredTagException;
+import org.candlepin.service.exception.subscription.SubscriptionInvalidTagException;
 import org.candlepin.service.exception.subscription.SubscriptionServiceException;
+import org.candlepin.service.exception.user.UserServiceException;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestLogCapture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.FactValidator;
+import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.ThrowableProxy;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jboss.resteasy.core.ResteasyContext;
@@ -158,6 +171,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -173,6 +188,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
+import java.security.cert.CertificateException;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -195,6 +211,7 @@ import jakarta.inject.Provider;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 
@@ -937,39 +954,47 @@ public class ConsumerResourceTest {
             ((ExceptionMessage) r.getEntity()).getDisplayMessage());
     }
 
-    @Test
-    public void testUnknownSubscriptionTerms() throws Exception {
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = "backend-secret")
+    public void testUnknownSubscriptionTerms(String serviceMessage) {
         Owner o = createNonSCAOwner();
         Consumer c = createConsumer(o);
         String[] prodIds = {"notthere"};
+        SubscriptionServiceException failure = new SubscriptionServiceException(serviceMessage,
+            new RuntimeException("nested-secret"));
 
-        when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(o.getKey()))
-            .thenThrow(new SubscriptionServiceException());
+        when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(o.getKey())).thenThrow(failure);
         when(consumerCurator.verifyAndLookupConsumerWithEntitlements("fakeConsumer")).thenReturn(c);
-        when(entitler.bindByProducts(any(AutobindData.class))).thenReturn(null);
         when(ownerCurator.findOwnerById(o.getId())).thenReturn(o);
 
-        assertNull(assertThrows(SubscriptionServiceException.class, () ->
-            consumerResource.bind("fakeConsumer", null, Arrays.asList(prodIds), null, null, null, false,
-                null, null))
-            .getMessage());
-    }
+        try (TestLogCapture logs = new TestLogCapture(ConsumerResource.class)) {
+            List<String> productIds = Arrays.asList(prodIds);
+            CandlepinException result = assertThrows(CandlepinException.class, () ->
+                consumerResource.bind("fakeConsumer", null, productIds, null, null, null,
+                    false, null, null));
+            assertEquals(Response.Status.EXPECTATION_FAILED, result.httpReturnCode());
+            assertEquals("Error contacting subscription service", result.getMessage());
+            assertSame(failure, result.getCause());
 
-    @Test
-    public void testUnknownProductRetrieval() throws Exception {
-        Owner o = createNonSCAOwner();
-        Consumer c = createConsumer(o);
-        String[] prodIds = {"notthere"};
+            RuntimeExceptionMapper mapper = spy(new RuntimeExceptionMapper());
+            doReturn(MediaType.APPLICATION_JSON_TYPE).when(mapper).determineBestMediaType();
+            try (Response response = mapper.toResponse(result)) {
+                assertEquals(417, response.getStatus());
+                assertEquals("Error contacting subscription service",
+                    ((ExceptionMessage) response.getEntity()).getDisplayMessage());
+                assertThat(ObjectMapperFactory.getObjectMapper().writeValueAsString(response.getEntity()))
+                    .doesNotContain("backend-secret", "nested-secret");
+            }
 
-        when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(o.getKey())).thenReturn(false);
-        when(consumerCurator.verifyAndLookupConsumerWithEntitlements("fakeConsumer")).thenReturn(c);
-        when(entitler.bindByProducts(any(AutobindData.class)))
-            .thenThrow(new ProductServiceException("notthere"));
-        when(ownerCurator.findOwnerById(o.getId())).thenReturn(o);
-
-        assertEquals("notthere",
-            assertThrows(ProductServiceException.class, () -> consumerResource.bind("fakeConsumer", null,
-                Arrays.asList(prodIds), null, null, null, false, null, null)).getProductId());
+            assertThat(logs.getEvents())
+                .singleElement()
+                .returns(Level.ERROR, ILoggingEvent::getLevel)
+                .returns("Unexpected error from Subscription Service: " + serviceMessage,
+                    ILoggingEvent::getFormattedMessage);
+            ThrowableProxy proxy = (ThrowableProxy) logs.getEvents().getFirst().getThrowableProxy();
+            assertSame(failure, proxy.getThrowable());
+        }
     }
 
     @Test
@@ -1155,6 +1180,28 @@ public class ConsumerResourceTest {
         // usa.findByLogin() will return null by default no need for a when
         assertThrows(NotFoundException.class,
             () -> consumerResource.createConsumer(consumerDto, null, owner.getKey(), null, true));
+    }
+
+    @Test
+    public void testPersonConsumerUserLookupFailureReturnsUnauthorized() {
+        Owner owner = this.createOwner();
+        ConsumerType type = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.PERSON));
+        Consumer consumer = this.createConsumer(owner, type);
+        ConsumerDTO consumerDto = this.translator.translate(consumer, ConsumerDTO.class);
+        UserPrincipal mockPrincipal = mock(UserPrincipal.class);
+        when(mockPrincipal.canAccess(owner, SubResource.CONSUMERS, Access.CREATE)).thenReturn(true);
+        when(this.principalProvider.get()).thenReturn(mockPrincipal);
+        UserServiceException failure = new UserServiceException("unavailable");
+        when(this.userServiceAdapter.findByLogin("test_user")).thenThrow(failure);
+        String ownerKey = owner.getKey();
+
+        CandlepinException result = assertThrows(CandlepinException.class,
+            () -> this.consumerResource.createConsumer(consumerDto, "test_user", ownerKey, null, true));
+
+        assertThat(result)
+            .returns(Response.Status.UNAUTHORIZED, CandlepinException::httpReturnCode)
+            .returns("Error contacting user service", CandlepinException::getMessage);
+        assertSame(failure, result.getCause());
     }
 
     @Test
@@ -1628,6 +1675,33 @@ public class ConsumerResourceTest {
 
         assertThrows(IseException.class, () -> consumerResource
             .exportCertificates(consumer.getUuid(), null));
+    }
+
+    @Test
+    public void testWrapsTranslatedProductFailureAsInternalServerError() throws Exception {
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer().setUuid("uuid");
+        ResteasyContext.pushContext(Principal.class, new AnonymousCloudConsumerPrincipal(consumer));
+        MockHttpRequest mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/fake")
+            .header("accept", "application/json");
+        ResteasyContext.pushContext(HttpRequest.class, mockReq);
+        CertificateException failure = new CertificateException("Unable to retrieve product");
+        doThrow(failure).when(this.anonymousCertificateGenerator).generate(consumer);
+
+        try (TestLogCapture logs = new TestLogCapture(ConsumerResource.class)) {
+            String consumerUuid = consumer.getUuid();
+            IseException result = assertThrows(IseException.class,
+                () -> this.consumerResource.exportCertificates(consumerUuid, null));
+            assertThat(result)
+                .returns(Response.Status.INTERNAL_SERVER_ERROR, IseException::httpReturnCode)
+                .returns(this.i18n.tr("Unable to retrieve or create anonymous content " +
+                    "access certificate for consumer"), IseException::getMessage);
+            assertThat(logs.getEvents())
+                .singleElement()
+                .returns(Level.ERROR, ILoggingEvent::getLevel)
+                .returns(failure.getMessage(), ILoggingEvent::getFormattedMessage);
+            ThrowableProxy proxy = (ThrowableProxy) logs.getEvents().getFirst().getThrowableProxy();
+            assertThat(proxy.getThrowable()).isSameAs(failure);
+        }
     }
 
     @Test
@@ -2680,5 +2754,41 @@ public class ConsumerResourceTest {
             .satisfies(status -> assertTrue(status.getCompliantProducts().isEmpty()))
             .satisfies(status -> assertTrue(status.getNonCompliantProducts().isEmpty()))
             .satisfies(status -> assertTrue(status.getPartialStacks().isEmpty()));
+    }
+
+    private static Stream<Arguments> expectedSubscriptionFailures() {
+        return Stream.of(
+            Arguments.of(new SubscriptionActivationException("tag", "owner"),
+                "No subscription was able to be activated with Dell service tag \"tag\"."),
+            Arguments.of(new SubscriptionExhaustedTagException("tag", "owner"),
+                "The Dell service tag \"tag\" has already been used to redeem a subscription."),
+            Arguments.of(new SubscriptionExpiredTagException("tag", "owner"), "The Dell service tag \"tag\" is expired."),
+            Arguments.of(new SubscriptionInvalidTagException("tag", "owner"),
+                "The Dell service tag \"tag\" could not be used to retrieve a subscription."));
+    }
+
+    @ParameterizedTest
+    @MethodSource("expectedSubscriptionFailures")
+    public void testLogsExpectedSubscriptionFailureWithoutStackTrace(SubscriptionServiceException failure,
+        String message) {
+
+        Owner owner = createNonSCAOwner();
+        Consumer consumer = createConsumer(owner);
+        when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(owner.getKey())).thenThrow(failure);
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements("fakeConsumer")).thenReturn(consumer);
+        when(ownerCurator.findOwnerById(owner.getId())).thenReturn(owner);
+
+        try (TestLogCapture logs = new TestLogCapture(ConsumerResource.class)) {
+            List<String> product = List.of("product");
+            CandlepinException result = assertThrows(CandlepinException.class,
+                () -> consumerResource.bind("fakeConsumer", null, product, null, null, null,
+                    false, null, null));
+            assertEquals(Response.Status.EXPECTATION_FAILED, result.httpReturnCode());
+            assertEquals(message, result.getMessage());
+            assertThat(logs.getEvents()).singleElement()
+                .returns(Level.WARN, ILoggingEvent::getLevel)
+                .returns(message, ILoggingEvent::getFormattedMessage)
+                .returns(null, ILoggingEvent::getThrowableProxy);
+        }
     }
 }

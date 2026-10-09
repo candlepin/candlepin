@@ -27,13 +27,17 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.User;
 import org.candlepin.resource.server.v1.UsersApi;
 import org.candlepin.resource.util.InfoAdapter;
+import org.candlepin.resource.util.UserServiceExceptionTranslator;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.user.UserServiceException;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
 
 import com.google.inject.persist.Transactional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
@@ -41,16 +45,16 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
-
-
 
 /**
  * UserResource
  */
 public class UserResource implements UsersApi {
+    private static final Logger log = LoggerFactory.getLogger(UserResource.class);
 
     private final UserServiceAdapter userService;
     private final I18n i18n;
@@ -87,7 +91,7 @@ public class UserResource implements UsersApi {
             throw new BadRequestException(this.i18n.tr("username is null or empty"));
         }
 
-        UserInfo user = this.userService.findByLogin(username);
+        UserInfo user = this.callUserService(() -> this.userService.findByLogin(username));
         if (user == null) {
             throw new NotFoundException(this.i18n.tr("User not found: {0}", username));
         }
@@ -98,7 +102,7 @@ public class UserResource implements UsersApi {
     @Override
     @Transactional
     public Stream<UserDTO> listUsers() {
-        Collection<? extends UserInfo> users = userService.listUsers();
+        Collection<? extends UserInfo> users = this.callUserService(this.userService::listUsers);
 
         return users != null ?
             users.stream().map(this.modelTranslator.getStreamMapper(UserInfo.class, UserDTO.class)) :
@@ -146,13 +150,13 @@ public class UserResource implements UsersApi {
             throw new BadRequestException(this.i18n.tr("Username not specified"));
         }
 
-        if (this.userService.findByLogin(dto.getUsername()) != null) {
+        if (this.callUserService(() -> this.userService.findByLogin(dto.getUsername())) != null) {
             throw new ConflictException(this.i18n.tr("User already exists: {0}", dto.getUsername()));
         }
 
         return this.modelTranslator.translate(
             // Translating UserDTO to User Info because UserDTO is no longer supporting UserInfo
-            userService.createUser(InfoAdapter.userInfoAdapter(dto)),
+            this.callUserService(() -> this.userService.createUser(InfoAdapter.userInfoAdapter(dto))),
             UserDTO.class);
     }
 
@@ -165,7 +169,7 @@ public class UserResource implements UsersApi {
         UserInfo user = this.fetchUserByUsername(username);
 
         return this.modelTranslator.translate(
-            userService.updateUser(username, InfoAdapter.userInfoAdapter(dto)),
+            this.callUserService(() -> this.userService.updateUser(username, InfoAdapter.userInfoAdapter(dto))),
             UserDTO.class);
     }
 
@@ -173,7 +177,10 @@ public class UserResource implements UsersApi {
     @Transactional
     public void deleteUser(String username) {
         UserInfo user = this.fetchUserByUsername(username);
-        userService.deleteUser(username);
+        this.callUserService(() -> {
+            this.userService.deleteUser(username);
+            return null;
+        });
     }
 
     /**
@@ -192,7 +199,8 @@ public class UserResource implements UsersApi {
         // Fetch the user for a simple existence check. We don't actually need it.
         UserInfo user = this.fetchUserByUsername(username);
 
-        Collection<? extends OwnerInfo> owners =  this.userService.getAccessibleOwners(username);
+        Collection<? extends OwnerInfo> owners = this.callUserService(() ->
+            this.userService.getAccessibleOwners(username));
         if (owners != null) {
             // If this ends up being a bottleneck, change this to do a bulk owner lookup
 
@@ -225,4 +233,12 @@ public class UserResource implements UsersApi {
         return null;
     }
 
+    private <T> T callUserService(Supplier<T> operation) {
+        try {
+            return operation.get();
+        }
+        catch (UserServiceException e) {
+            throw UserServiceExceptionTranslator.translate(e, this.i18n, log);
+        }
+    }
 }

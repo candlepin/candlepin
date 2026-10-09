@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.when;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.exceptions.ConflictException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
@@ -51,7 +53,13 @@ import org.candlepin.model.Product;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.paging.Page;
 import org.candlepin.service.EntitlementCertServiceAdapter;
+import org.candlepin.service.exception.entitlementcert.CryptoCapabilitiesException;
+import org.candlepin.test.TestLogCapture;
 import org.candlepin.test.TestUtil;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.ThrowableProxy;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,6 +70,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -72,6 +81,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -100,15 +110,17 @@ public class EntitlementCertificateServiceTest {
         this.ecService = new EntitlementCertificateService(
             this.mockEntCertCurator, this.mockEntCertAdapter, this.mockEntitlementCurator,
             this.mockPoolCurator, this.mockEventSink, this.mockEventFactory,
-            this.mockContentAccessManager, this.mockOwnerCurator);
+            this.mockContentAccessManager, this.mockOwnerCurator,
+            I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK));
     }
 
     @Test
     public void testGenerateEntitlementCertificate() throws GeneralSecurityException, IOException {
         this.ecService = new EntitlementCertificateService(this.mockEntCertCurator,
-                this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
-                this.mockEventSink, this.mockEventFactory,
-                this.mockContentAccessManager, this.mockOwnerCurator);
+            this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
+            this.mockEventSink, this.mockEventFactory,
+            this.mockContentAccessManager, this.mockOwnerCurator,
+            I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK));
 
         Consumer consumer = mock(Consumer.class);
         Pool pool = mock(Pool.class);
@@ -133,7 +145,8 @@ public class EntitlementCertificateServiceTest {
         this.ecService = new EntitlementCertificateService(this.mockEntCertCurator,
             this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
             this.mockEventSink, this.mockEventFactory,
-            this.mockContentAccessManager, this.mockOwnerCurator);
+            this.mockContentAccessManager, this.mockOwnerCurator,
+            I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK));
         Consumer consumer = mock(Consumer.class);
         Product product = mock(Product.class);
         Entitlement entitlement = mock(Entitlement.class);
@@ -506,4 +519,22 @@ public class EntitlementCertificateServiceTest {
             .isNotNull();
     }
 
+    @Test
+    public void testTranslatesCryptoFailureAndLogsItsCause() throws Exception {
+        CryptoCapabilitiesException failure = new CryptoCapabilitiesException("no compatible scheme");
+        when(this.mockEntCertAdapter.generateEntitlementCerts(any(), anyMap(), anyMap(), anyMap(), anyBoolean()))
+            .thenThrow(failure);
+        try (TestLogCapture logs = new TestLogCapture(EntitlementCertificateService.class)) {
+            Consumer consumer = new Consumer();
+            ConflictException result = assertThrows(ConflictException.class,
+                () -> this.ecService.generateEntitlementCertificates(consumer, Map.of(), Map.of(),
+                    Map.of(), true));
+            assertThat(result.getCause()).isSameAs(failure);
+            assertThat(result.getMessage()).isEqualTo(
+                "Unable to generate a usable certificate from Entitlement Certificate Service");
+            assertThat(logs.getEvents()).singleElement().returns(Level.ERROR, ILoggingEvent::getLevel);
+            ThrowableProxy proxy = (ThrowableProxy) logs.getEvents().getFirst().getThrowableProxy();
+            assertThat(proxy.getThrowable()).isSameAs(failure);
+        }
+    }
 }

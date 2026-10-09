@@ -14,6 +14,7 @@
  */
 package org.candlepin.service.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -31,6 +32,7 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.certs.EntitlementCertificateGenerator;
+import org.candlepin.test.TestLogCapture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -92,8 +94,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .when(this.entitlementCertificateGenerator)
             .generate(any(Consumer.class), any(Map.class), any(Map.class), any(Map.class), eq(true));
 
-        assertThrows(org.candlepin.service.exception.entitlementcert.CryptoCapabilitiesException.class, () ->
-            this.certServiceAdapter.generateEntitlementCert(entitlement, product));
+        try (TestLogCapture logs = new TestLogCapture(DefaultEntitlementCertServiceAdapter.class)) {
+            assertThrows(org.candlepin.service.exception.entitlementcert.CryptoCapabilitiesException.class, () ->
+                this.certServiceAdapter.generateEntitlementCert(entitlement, product));
+            assertThat(logs.getEvents()).isEmpty();
+        }
     }
 
     @Test
@@ -118,9 +123,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .when(this.entitlementCertificateGenerator)
             .generate(consumer, poolQuantities, entitlements, products, save);
 
-        assertThrows(org.candlepin.service.exception.entitlementcert.CryptoCapabilitiesException.class, () ->
-            this.certServiceAdapter.generateEntitlementCerts(consumer, poolQuantities, entitlements, products,
-                save));
+        try (TestLogCapture logs = new TestLogCapture(DefaultEntitlementCertServiceAdapter.class)) {
+            assertThrows(org.candlepin.service.exception.entitlementcert.CryptoCapabilitiesException.class, () ->
+                this.certServiceAdapter.generateEntitlementCerts(consumer, poolQuantities, entitlements, products,
+                    save));
+            assertThat(logs.getEvents()).isEmpty();
+        }
     }
 
 }

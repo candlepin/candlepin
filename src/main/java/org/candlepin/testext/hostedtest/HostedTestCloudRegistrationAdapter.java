@@ -15,6 +15,7 @@
 package org.candlepin.testext.hostedtest;
 
 import org.candlepin.service.CloudRegistrationAdapter;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationAuthorizationException;
 import org.candlepin.service.exception.cloudregistration.CloudRegistrationMalformedDataException;
 import org.candlepin.service.exception.cloudregistration.CloudRegistrationNotSupportedForOfferingException;
 import org.candlepin.service.exception.cloudregistration.CouldNotAcquireCloudAccountLockException;
@@ -91,7 +92,10 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
         // We don't care about the type or signature, just attempt to resolve the metadata to an
         // owner key
         OwnerInfo owner = this.datastore.getOwner(cloudRegInfo.getMetadata());
-        return owner != null ? owner.getKey() : null;
+        if (owner == null) {
+            throw new CloudRegistrationAuthorizationException();
+        }
+        return owner.getKey();
     }
 
     /**

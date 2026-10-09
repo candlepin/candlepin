@@ -38,6 +38,7 @@ import org.candlepin.pki.PemEncoder;
 import org.candlepin.pki.Scheme;
 import org.candlepin.pki.X509Extension;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.exception.product.ProductServiceException;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
@@ -50,6 +51,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;
 import java.security.KeyException;
@@ -70,8 +72,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
-
 
 /**
  * The class responsible for creation of anonymous content access certificates.
@@ -117,6 +119,7 @@ public class AnonymousCertificateGenerator {
     private final ProductServiceAdapter prodAdapter;
     private final PemEncoder pemEncoder;
     private final CryptoManager cryptoManager;
+    private final Provider<I18n> i18nProvider;
 
     private final int certDuration;
     private final boolean standalone;
@@ -134,7 +137,7 @@ public class AnonymousCertificateGenerator {
         AnonymousContentAccessCertificateCurator anonContentAccessCertCurator,
         ProductServiceAdapter prodAdapter,
         PemEncoder pemEncoder,
-        CryptoManager cryptoManager) {
+        CryptoManager cryptoManager, Provider<I18n> i18nProvider) {
 
         // TODO: reorder these
         this.serialCurator = Objects.requireNonNull(serialCurator);
@@ -146,6 +149,7 @@ public class AnonymousCertificateGenerator {
         this.pemEncoder = Objects.requireNonNull(pemEncoder);
         this.config = Objects.requireNonNull(config);
         this.cryptoManager = Objects.requireNonNull(cryptoManager);
+        this.i18nProvider = Objects.requireNonNull(i18nProvider);
 
         try {
             this.certDuration = this.config.getInt(ConfigProperties.ANON_CERT_DURATION);
@@ -297,7 +301,16 @@ public class AnonymousCertificateGenerator {
         CheckedFunction<CacheKey, AnonymousCertContent, CertificateException> payloadBuilder = key -> {
             log.debug("Retrieving anonymous content access certificate content from product adapter");
 
-            List<ProductInfo> products = this.prodAdapter.getChildrenByProductIds(key.productIds());
+            List<ProductInfo> products;
+            try {
+                products = this.prodAdapter.getChildrenByProductIds(key.productIds());
+            }
+            catch (ProductServiceException e) {
+                String message = this.i18nProvider.get().tr("Unable to retrieve product \"{0}\" from ProductService",
+                    e.getProductId());
+                log.error(message, e);
+                throw new CertificateException(message, e);
+            }
             if (products == null || products.isEmpty()) {
                 log.error("Unable to retrieve products for anonymous consumer: {}", consumer.getUuid());
                 throw new CertificateException("Unable to retrieve products for anonymous consumer: " +

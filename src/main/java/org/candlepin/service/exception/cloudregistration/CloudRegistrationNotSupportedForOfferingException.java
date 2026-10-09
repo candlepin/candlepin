@@ -18,7 +18,7 @@ package org.candlepin.service.exception.cloudregistration;
  * The CloudRegistrationNotSupportedForOfferingException is used to reject a registration attempt for a
  * cloud system when that system is using a type of offering that is not supported (e.g. 1P offerings).
  */
-public class CloudRegistrationNotSupportedForOfferingException extends RuntimeException {
+public class CloudRegistrationNotSupportedForOfferingException extends CloudRegistrationServiceException {
 
     /**
      * Constructs a new exception with null as its detail message. The cause is not initialized, and may

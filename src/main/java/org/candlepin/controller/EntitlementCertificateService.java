@@ -16,6 +16,7 @@ package org.candlepin.controller;
 
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.exceptions.ConflictException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
@@ -29,6 +30,7 @@ import org.candlepin.model.PoolQualifier;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.service.EntitlementCertServiceAdapter;
+import org.candlepin.service.exception.entitlementcert.CryptoCapabilitiesException;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.version.CertVersionConflictException;
 
@@ -36,6 +38,7 @@ import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -73,13 +76,14 @@ public class EntitlementCertificateService {
     private final PoolCurator poolCurator;
     private final EventSink eventSink;
     private final EventFactory eventFactory;
+    private final I18n i18n;
 
 
     @Inject
     public EntitlementCertificateService(EntitlementCertificateCurator entitlementCertificateCurator,
         EntitlementCertServiceAdapter entCertServiceAdapter, EntitlementCurator entitlementCurator,
         PoolCurator poolCurator, EventSink eventSink, EventFactory eventFactory,
-        ContentAccessManager contentAccessManager, OwnerCurator ownerCurator) {
+        ContentAccessManager contentAccessManager, OwnerCurator ownerCurator, I18n i18n) {
 
         this.entitlementCertificateCurator = entitlementCertificateCurator;
         this.entCertServiceAdapter = entCertServiceAdapter;
@@ -90,6 +94,7 @@ public class EntitlementCertificateService {
 
         this.eventSink = eventSink;
         this.eventFactory = eventFactory;
+        this.i18n = i18n;
     }
 
     /**
@@ -116,6 +121,12 @@ public class EntitlementCertificateService {
         try {
             return this.entCertServiceAdapter.generateEntitlementCerts(consumer, poolQuantities,
                 entitlements, products, save);
+        }
+        catch (CryptoCapabilitiesException e) {
+            String message = this.i18n.tr(
+                "Unable to generate a usable certificate from Entitlement Certificate Service");
+            log.error(message, e);
+            throw new ConflictException(message, e);
         }
         catch (CertVersionConflictException | CertificateSizeException cvce) {
             throw cvce;
