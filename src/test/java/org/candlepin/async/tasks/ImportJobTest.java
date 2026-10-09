@@ -19,11 +19,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -49,9 +51,13 @@ import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.test.TestUtil;
 
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.LockAcquisitionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -275,8 +281,139 @@ public class ImportJobTest {
         Exception e = assertThrows(JobExecutionException.class, () -> job.execute(context));
         assertEquals(expectedMessage, e.getMessage());
         verify(manifestManager).recordImportFailure(eq(owner), eq(e.getCause()), eq(uploadedFileName));
+        assertTrue(((JobExecutionException) e).isTerminal());
+        verify(manifestManager).deleteStoredManifest(archiveFilePath);
     }
 
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(classes = {ConstraintViolationException.class, LockAcquisitionException.class})
+    public void testJobFailureIsNonTerminalWhenCausedByTransientRace(
+        Class<? extends Exception> exceptionClass) throws Exception {
+
+        Owner owner = this.createTestOwner("my-test-owner", "info");
+        doReturn(owner).when(ownerCurator).getByKey("my-test-owner");
+
+        String archiveFilePath = "/path/to/some/file.zip";
+        ConflictOverrides co = new ConflictOverrides(Importer.Conflict.SIGNATURE_CONFLICT);
+        String uploadedFileName = "test.zip";
+        String expectedMessage = "Expected Exception Message";
+
+        JobConfig jobConfig = ImportJob.createJobConfig()
+            .setOwner(owner)
+            .setUploadedFileName(uploadedFileName)
+            .setStoredFileId(archiveFilePath)
+            .setConflictOverrides(co);
+
+        ImportJob job = this.buildImportJob();
+
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = spy(new JobExecutionContext(status));
+        doReturn(jobConfig.getJobArguments()).when(status).getJobArguments();
+
+        doReturn(1).when(status).getAttempts();
+        doReturn(4).when(status).getMaxAttempts();
+
+        Exception cause;
+        if (exceptionClass == ConstraintViolationException.class) {
+            cause = new ConstraintViolationException(expectedMessage, null, null);
+        }
+        else {
+            cause = new LockAcquisitionException(expectedMessage, null);
+        }
+
+        when(manifestManager.importStoredManifest(eq(owner), eq(archiveFilePath),
+            any(ConflictOverrides.class), eq(uploadedFileName)))
+            .thenThrow(new ImporterException(expectedMessage, cause));
+
+        JobExecutionException e = assertThrows(JobExecutionException.class, () -> job.execute(context));
+        assertFalse(e.isTerminal());
+
+        verify(manifestManager, never()).deleteStoredManifest(any());
+    }
+
+    @Test
+    public void testJobConfigHasRetryCountForTransientRaceRetries() {
+        JobConfig jobConfig = ImportJob.createJobConfig();
+        assertTrue(jobConfig.getRetryCount() > 0);
+    }
+
+    @Test
+    public void testGenericExceptionIsTerminal() throws Exception {
+        Owner owner = this.createTestOwner("my-test-owner", "info");
+        doReturn(owner).when(ownerCurator).getByKey("my-test-owner");
+
+        String archiveFilePath = "/path/to/some/file.zip";
+        ConflictOverrides co = new ConflictOverrides(Importer.Conflict.SIGNATURE_CONFLICT);
+        String uploadedFileName = "test.zip";
+        String expectedMessage = "Something unexpected happened";
+
+        JobConfig jobConfig = ImportJob.createJobConfig()
+            .setOwner(owner)
+            .setUploadedFileName(uploadedFileName)
+            .setStoredFileId(archiveFilePath)
+            .setConflictOverrides(co);
+
+        ImportJob job = this.buildImportJob();
+
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = spy(new JobExecutionContext(status));
+        doReturn(jobConfig.getJobArguments()).when(status).getJobArguments();
+
+        when(manifestManager.importStoredManifest(eq(owner), eq(archiveFilePath),
+            any(ConflictOverrides.class), eq(uploadedFileName)))
+            .thenThrow(new RuntimeException(expectedMessage));
+
+        JobExecutionException e = assertThrows(JobExecutionException.class, () -> job.execute(context));
+        assertEquals(expectedMessage, e.getMessage());
+        assertTrue(e.isTerminal());
+        verify(manifestManager).deleteStoredManifest(archiveFilePath);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(classes = {ConstraintViolationException.class, LockAcquisitionException.class})
+    public void testGenericExceptionIsNonTerminalWhenCausedByTransientRace(
+        Class<? extends Exception> exceptionClass) throws Exception {
+
+        Owner owner = this.createTestOwner("my-test-owner", "info");
+        doReturn(owner).when(ownerCurator).getByKey("my-test-owner");
+
+        String archiveFilePath = "/path/to/some/file.zip";
+        ConflictOverrides co = new ConflictOverrides(Importer.Conflict.SIGNATURE_CONFLICT);
+        String uploadedFileName = "test.zip";
+        String expectedMessage = "Expected Exception Message";
+
+        JobConfig jobConfig = ImportJob.createJobConfig()
+            .setOwner(owner)
+            .setUploadedFileName(uploadedFileName)
+            .setStoredFileId(archiveFilePath)
+            .setConflictOverrides(co);
+
+        ImportJob job = this.buildImportJob();
+
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = spy(new JobExecutionContext(status));
+        doReturn(jobConfig.getJobArguments()).when(status).getJobArguments();
+
+        doReturn(1).when(status).getAttempts();
+        doReturn(4).when(status).getMaxAttempts();
+
+        Exception cause;
+        if (exceptionClass == ConstraintViolationException.class) {
+            cause = new ConstraintViolationException(expectedMessage, null, null);
+        }
+        else {
+            cause = new LockAcquisitionException(expectedMessage, null);
+        }
+
+        when(manifestManager.importStoredManifest(eq(owner), eq(archiveFilePath),
+            any(ConflictOverrides.class), eq(uploadedFileName)))
+            .thenThrow(new RuntimeException(expectedMessage, cause));
+
+        JobExecutionException e = assertThrows(JobExecutionException.class, () -> job.execute(context));
+        assertFalse(e.isTerminal());
+
+        verify(manifestManager, never()).deleteStoredManifest(any());
+    }
 
     @Test
     public void ensureJobExceptionThrownIfOwnerNotFound() {
