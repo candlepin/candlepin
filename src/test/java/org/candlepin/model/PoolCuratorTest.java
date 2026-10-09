@@ -3910,6 +3910,9 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Entitlement entitlement4 = this.createEntitlement(owner, consumer1, pool2)
             .setCreated(Date.from(now.minus(3L, ChronoUnit.HOURS)));
 
+        // Need to flush first because retrieveOrderedEntitlementIdsOf is using commit flush mode
+        this.poolCurator.flush();
+
         List<String> entitlementIds = this.poolCurator.retrieveOrderedEntitlementIdsOf(List.of(pool1, pool2));
 
         assertThat(entitlementIds)

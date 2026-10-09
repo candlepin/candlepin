@@ -213,6 +213,8 @@ public class PoolManagerTest {
     private OwnerCurator ownerCurator;
     @Mock
     private PoolOpProcessor poolOpProcessor;
+    @Mock
+    private ProductManager mockProductManager;
 
     private PoolConverter poolConverter;
     private PoolManager manager;
@@ -268,7 +270,7 @@ public class PoolManagerTest {
             poolCurator, mockEventSink, eventFactory, config, enforcer, poolRules, entitlementCurator,
             consumerCuratorMock, consumerTypeCurator, mockecService, complianceRules, autobindRules,
             activationKeyRules, mockOwnerCurator, i18n, poolService, mockBindChainFactory,
-            refreshWorkerProvider, poolOpProcessor, poolConverter));
+            refreshWorkerProvider, poolOpProcessor, poolConverter, mockProductManager));
 
         this.refresherFactory = new RefresherFactory(ownerCurator, manager, poolCurator, poolConverter);
 
@@ -496,6 +498,46 @@ public class PoolManagerTest {
         verify(this.manager).updateFloatingPools(eq(expectedFloating), eq(true), anyMap());
     }
 
+    @Test
+    public void testRefreshPoolsMarksPoolsDirtyAndUpdatesLastContentUpdateForOwners() {
+        Owner owner = this.getOwner();
+        Product product = TestUtil.createProduct()
+            .setUuid(TestUtil.randomString("uuid-"));
+        Content content = TestUtil.createContent()
+            .setUuid(TestUtil.randomString("uuid-"));
+
+        Subscription sub = TestUtil.createSubscription(owner, product);
+        sub.setId(TestUtil.randomString("sub-"));
+
+        // Setup pool
+        List<Pool> pools = new ArrayList<>();
+        Pool pool = TestUtil.createPool(product);
+        pool.setSourceSubscription(new SourceSubscription(sub.getId(), PRIMARY_POOL_SUB_KEY));
+        pool.setOwner(owner);
+        pools.add(pool);
+
+        this.mockSubscriptions(owner, List.of(sub));
+        mockPoolsList(pools);
+        when(mockOwnerCurator.getByKey(owner.getKey())).thenReturn(owner);
+        this.mockProducts(null, product);
+        this.mockRefresh(owner, List.of(product), List.of(content), EntityState.UPDATED);
+
+        Set<String> productGraph = Set.of(
+            TestUtil.randomString("prod-uuid-"),
+            TestUtil.randomString("prod-uuid-"),
+            TestUtil.randomString("prod-uuid-"),
+            TestUtil.randomString("prod-uuid-")
+        );
+
+        doReturn(productGraph).when(this.mockProductManager)
+            .getFullParentProductGraph(Set.of(product.getUuid()), Set.of(content.getUuid()));
+
+        this.refresherFactory.getRefresher(mockSubAdapter).add(owner).run();
+
+        verify(this.poolCurator).markPoolsDirtyReferencingProducts(productGraph);
+        verify(this.mockOwnerCurator).setLastContentUpdateForOwnersWithProducts(productGraph);
+    }
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testRefreshPoolsOnlyRegeneratesWhenNecessary() {
@@ -596,6 +638,12 @@ public class PoolManagerTest {
     }
 
     private void mockRefresh(Owner owner, Collection<Product> products, Collection<Content> contents) {
+        this.mockRefresh(owner, products, contents, EntityState.CREATED);
+    }
+
+    private void mockRefresh(Owner owner, Collection<Product> products, Collection<Content> contents,
+        EntityState state) {
+
         doAnswer(new Answer<RefreshResult>() {
             @Override
             public RefreshResult answer(InvocationOnMock iom) {
@@ -603,13 +651,13 @@ public class PoolManagerTest {
 
                 if (products != null) {
                     for (Product product : products) {
-                        output.addEntity(Product.class, product, EntityState.CREATED);
+                        output.addEntity(Product.class, product, state);
                     }
                 }
 
                 if (contents != null) {
                     for (Content content : contents) {
-                        output.addEntity(Content.class, content, EntityState.CREATED);
+                        output.addEntity(Content.class, content, state);
                     }
                 }
 
