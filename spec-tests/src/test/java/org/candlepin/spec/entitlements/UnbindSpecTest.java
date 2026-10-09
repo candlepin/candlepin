@@ -15,6 +15,8 @@
 package org.candlepin.spec.entitlements;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 
 import org.candlepin.dto.api.client.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
@@ -163,5 +165,71 @@ public class UnbindSpecTest {
         assertThat(client.crl().getCurrentCrl())
             .contains(certSerial2.getSerial())
             .doesNotContain(certSerial1.getSerial());
+    }
+
+    @Test
+    public void shouldNotAllowUnbindingEntitlementOfAnotherConsumerInAnotherOrg() {
+        OwnerDTO owner1 = ownerApi.createOwner(Owners.random());
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner1));
+        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner1));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        OwnerDTO owner2 = ownerApi.createOwner(Owners.random());
+        ApiClient userClient2 = ApiClients.basic(UserUtil.createUser(client, owner2));
+        ConsumerDTO consumer2 = userClient2.consumers().createConsumer(Consumers.random(owner2));
+        ApiClient consumerClient2 = ApiClients.ssl(consumer2);
+
+        ProductDTO prod2 = ownerProductApi.createProduct(owner2.getKey(), Products.random());
+        PoolDTO pool2 = ownerApi.createPool(owner2.getKey(), Pools.random(prod2));
+
+        EntitlementDTO ent2 = ApiClient.MAPPER.convertValue(
+                consumerClient2.consumers().bindPool(consumer2.getUuid(), pool2.getId(), 1).get(0),
+                EntitlementDTO.class);
+
+        assertForbidden(() -> consumerClient.consumers().unbindByEntitlementId(consumer.getUuid(), ent2.getId()));
+    }
+
+    @Test
+    public void shouldNotAllowUnbindingEntitlementOfAnotherConsumerInTheSameOrg() {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(client, owner));
+        ConsumerDTO consumerA = userClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumerB = userClient.consumers().createConsumer(Consumers.random(owner));
+
+        ProductDTO prod = ownerProductApi.createProduct(owner.getKey(), Products.random());
+        PoolDTO pool = ownerApi.createPool(owner.getKey(), Pools.random(prod));
+
+        EntitlementDTO ent = ApiClient.MAPPER.convertValue(
+            ApiClients.ssl(consumerB).consumers().bindPool(consumerB.getUuid(), pool.getId(), 1).get(0),
+            EntitlementDTO.class);
+
+        // The entitlement belongs to consumer B, so it must not be revocable through consumer A's URL,
+        // regardless of the caller holding org-wide permissions over both units.
+        assertNotFound(() -> userClient.consumers()
+            .unbindByEntitlementId(consumerA.getUuid(), ent.getId()));
+    }
+
+    @Test
+    public void shouldNotAllowUnbindingAnotherConsumersEntitlementInAnotherOrgBySerial() {
+        OwnerDTO owner1 = ownerApi.createOwner(Owners.random());
+        ApiClient userClient1 = ApiClients.basic(UserUtil.createUser(client, owner1));
+        ConsumerDTO consumer1 = userClient1.consumers().createConsumer(Consumers.random(owner1));
+
+        OwnerDTO owner2 = ownerApi.createOwner(Owners.random());
+        ApiClient userClient2 = ApiClients.basic(UserUtil.createUser(client, owner2));
+        ConsumerDTO consumer2 = userClient2.consumers().createConsumer(Consumers.random(owner2));
+
+        ProductDTO prod = ownerProductApi.createProduct(owner2.getKey(), Products.random());
+        PoolDTO pool = ownerApi.createPool(owner2.getKey(), Pools.random(prod));
+
+        EntitlementDTO ent = ApiClient.MAPPER.convertValue(
+            ApiClients.ssl(consumer2).consumers().bindPool(consumer2.getUuid(), pool.getId(), 1).get(0),
+            EntitlementDTO.class);
+        CertificateSerialDTO certSerial = ent.getCertificates().iterator().next().getSerial();
+
+        // The serial identifies an entitlement in another org entirely; consumer 1 must not be able to
+        // revoke it by quoting the serial against its own URL.
+        assertNotFound(() -> ApiClients.ssl(consumer1).consumers()
+            .unbindBySerial(consumer1.getUuid(), certSerial.getSerial()));
     }
 }

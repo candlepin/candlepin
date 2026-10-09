@@ -2980,9 +2980,9 @@ public class ConsumerResource implements ConsumerApi {
     @Transactional
     public void unbindByEntitlementId(@Verify(Consumer.class) String consumerUuid,
         @Verify(Entitlement.class) String dbid) {
-        consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Entitlement toDelete = entitlementCurator.get(dbid);
-        if (toDelete != null) {
+        if (toDelete != null && toDelete.getConsumer().getId().equals(consumer.getId())) {
             this.poolService.revokeEntitlement(toDelete);
             return;
         }
@@ -2994,11 +2994,11 @@ public class ConsumerResource implements ConsumerApi {
     @Override
     @Transactional
     public void unbindBySerial(@Verify(Consumer.class) String consumerUuid, Long serial) {
-        consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Entitlement toDelete = entitlementCurator
             .findByCertificateSerial(serial);
 
-        if (toDelete != null) {
+        if (toDelete != null && toDelete.getConsumer().getId().equals(consumer.getId())) {
             this.poolService.revokeEntitlement(toDelete);
             return;
         }
