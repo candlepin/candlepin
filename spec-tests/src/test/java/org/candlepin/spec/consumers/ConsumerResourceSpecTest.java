@@ -426,6 +426,70 @@ public class ConsumerResourceSpecTest {
     }
 
     @Test
+    public void shouldNotLeakForeignConsumerComplianceStatusToConsumerPrincipal() {
+        OwnerDTO otherOwner = adminClient.owners().createOwner(Owners.random());
+        ConsumerDTO foreign = adminClient.consumers().createConsumer(Consumers.random(otherOwner));
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        // Impl note: the compliance endpoint verifies every UUID through a single @Verify annotation, and
+        // the order in which those UUIDs are resolved into entities is not guaranteed to match the order
+        // they were provided in. Both orderings are exercised here to keep the test deterministic.
+        assertComplianceStatusNotLeaked(consumerClient, List.of(consumer.getUuid(), foreign.getUuid()),
+            foreign.getUuid());
+        assertComplianceStatusNotLeaked(consumerClient, List.of(foreign.getUuid(), consumer.getUuid()),
+            foreign.getUuid());
+    }
+
+    @Test
+    public void shouldNotLeakForeignConsumerComplianceStatusToOrgScopedUser() {
+        OwnerDTO otherOwner = adminClient.owners().createOwner(Owners.random());
+        ConsumerDTO foreign = adminClient.consumers().createConsumer(Consumers.random(otherOwner));
+
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+
+        // Impl note: the compliance endpoint verifies every UUID through a single @Verify annotation, and
+        // the order in which those UUIDs are resolved into entities is not guaranteed to match the order
+        // they were provided in. Both orderings are exercised here to keep the test deterministic.
+        assertComplianceStatusNotLeaked(userClient, List.of(consumer.getUuid(), foreign.getUuid()),
+            foreign.getUuid());
+        assertComplianceStatusNotLeaked(userClient, List.of(foreign.getUuid(), consumer.getUuid()),
+            foreign.getUuid());
+    }
+
+    /**
+     * Asserts the compliance status endpoint does not disclose the status of a consumer the caller is not
+     * permitted to access. Either rejecting the entire request, or omitting the inaccessible consumer from
+     * the output, is considered secure behaviour.
+     *
+     * @param client
+     *  the client performing the request
+     *
+     * @param uuids
+     *  the consumer UUIDs to request the compliance status of, in request order
+     *
+     * @param inaccessibleUuid
+     *  the UUID of the consumer the caller must not receive a compliance status for
+     */
+    private void assertComplianceStatusNotLeaked(ApiClient client, List<String> uuids,
+         String inaccessibleUuid) {
+
+        Response response = Request.from(client)
+            .setPath("/consumers/compliance")
+            .addQueryParam("uuid", uuids)
+            .execute();
+
+        assertThat(response.getCode()).isIn(200, 403);
+
+        if (response.getCode() == 200) {
+            assertThat(response.deserialize(new TypeReference<Map<String, ComplianceStatusDTO>>() {}))
+                .doesNotContainKey(inaccessibleUuid);
+        }
+    }
+
+    @Test
     public void shouldReturnGoneStatusCodeForDeletedConsumers() {
         UserDTO user = createUserTypeAllAccess(adminClient, owner);
         ApiClient userClient = ApiClients.basic(user);
