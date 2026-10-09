@@ -1,27 +1,51 @@
 ---
 - name: "Disable SELinux"
   become: true
-  ansible.posix.selinux:
-    state: disabled
   tags:
     - system
     - candlepin
+  block:
+    - name: "Check current SELinux mode"
+      ansible.builtin.command:
+        cmd: getenforce
+      register: cp_selinux_status
+      changed_when: false
 
-- name: "Update system packages"
+    - name: "Disable SELinux for the current boot"
+      ansible.builtin.command:
+        cmd: setenforce 0
+      when: cp_selinux_status.stdout == "Enforcing"
+
+    - name: "Disable SELinux permanently"
+      ansible.builtin.lineinfile:
+        path: /etc/selinux/config
+        regexp: "^SELINUX="
+        line: SELINUX=disabled
+
+- name: "Update system packages" # noqa: command-instead-of-module
   become: true
-  ansible.builtin.dnf:
-    name: "*"
-    state: latest
-    allowerasing: true
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - update
+      - -y
+      - --allowerasing
+  environment:
+    LC_ALL: C
+  register: cp_system_package_update
+  changed_when: "'Nothing to do.' not in cp_system_package_update.stdout"
   tags:
     - system
     - system_update
     - candlepin
 
-- name: "Install Candlepin requirements"
+- name: "Install Candlepin requirements" # noqa: command-instead-of-module
   become: true
-  ansible.builtin.package:
-    name:
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - install
+      - -y
       - git
       - gcc
       - make
@@ -40,7 +64,10 @@
       - createrepo_c
       - rpm-build
       - rpm-sign
-    state: present
+  environment:
+    LC_ALL: C
+  register: cp_candlepin_requirements_install
+  changed_when: "'Nothing to do.' not in cp_candlepin_requirements_install.stdout"
   tags:
     - base_deps
     - candlepin
@@ -80,21 +107,86 @@
     - base_deps
     - candlepin
 
-- name: "Enable necessary ports in firewalld"
+- name: "Check permanent ports in firewalld" # noqa: command-instead-of-module
   become: true
-  ansible.posix.firewalld:
-    port: "{{ item }}/tcp"
-    state: enabled
-    permanent: true
-    offline: false
-  with_items:
+  ansible.builtin.command:
+    argv:
+      - firewall-cmd
+      - --permanent
+      - "--query-port={{ item }}/tcp"
+  register: cp_firewalld_port_status
+  changed_when: false
+  failed_when: cp_firewalld_port_status.rc not in [0, 1]
+  loop:
     - 22
     - 443
-    - 8080    # Candlepin Tomcat server
-    - 8443    # ^
+    - 8080
+    - 8443
   when:
     - "'services' in ansible_facts"
     - "'firewalld.service' in ansible_facts.services"
+    - "ansible_facts.services['firewalld.service'].state == 'running'"
+  tags:
+    - system
+    - candlepin
+
+- name: "Enable permanent ports in firewalld" # noqa: command-instead-of-module
+  become: true
+  ansible.builtin.command:
+    argv:
+      - firewall-cmd
+      - --permanent
+      - "--add-port={{ item.item }}/tcp"
+  changed_when: true
+  loop: "{{ cp_firewalld_port_status.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item }}/tcp"
+  when:
+    - "'services' in ansible_facts"
+    - "'firewalld.service' in ansible_facts.services"
+    - "ansible_facts.services['firewalld.service'].state == 'running'"
+    - item.rc == 1
+  tags:
+    - system
+    - candlepin
+
+- name: "Check permanent ports offline" # noqa: command-instead-of-module
+  become: true
+  ansible.builtin.command:
+    argv:
+      - firewall-offline-cmd
+      - "--query-port={{ item }}/tcp"
+  register: cp_firewalld_offline_port_status
+  changed_when: false
+  failed_when: cp_firewalld_offline_port_status.rc not in [0, 1]
+  loop:
+    - 22
+    - 443
+    - 8080
+    - 8443
+  when:
+    - "'services' in ansible_facts"
+    - "'firewalld.service' in ansible_facts.services"
+    - "ansible_facts.services['firewalld.service'].state != 'running'"
+  tags:
+    - system
+    - candlepin
+
+- name: "Enable permanent ports offline" # noqa: command-instead-of-module
+  become: true
+  ansible.builtin.command:
+    argv:
+      - firewall-offline-cmd
+      - "--add-port={{ item.item }}/tcp"
+  changed_when: true
+  loop: "{{ cp_firewalld_offline_port_status.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item }}/tcp"
+  when:
+    - "'services' in ansible_facts"
+    - "'firewalld.service' in ansible_facts.services"
+    - "ansible_facts.services['firewalld.service'].state != 'running'"
+    - item.rc == 1
   tags:
     - system
     - candlepin
