@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.map;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -41,6 +42,7 @@ import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
+import org.candlepin.spec.bootstrap.data.builder.Permissions;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
@@ -221,6 +223,38 @@ public class ConsumerResourceEntitlementSpecTest {
         ConsumerDTO consumer2 = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient2 = ApiClients.ssl(consumer2);
         assertNotFound(() -> consumerClient2.consumers().bindPool(consumer.getUuid(), pool.getId(), 1));
+    }
+
+    @Test
+    public void shouldBlockConsumersFromBindingToAPoolInAnotherOrg() {
+        OwnerDTO otherOwner = adminClient.owners().createOwner(Owners.random());
+        ProductDTO otherProduct = adminClient.ownerProducts()
+            .createProduct(otherOwner.getKey(), Products.random());
+        PoolDTO otherPool = adminClient.owners()
+            .createPool(otherOwner.getKey(), Pools.random(otherProduct));
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        assertNotFound(() -> consumerClient.consumers().bindPool(consumer.getUuid(), otherPool.getId(), 1));
+    }
+
+    @Test
+    public void shouldBlockUsersFromBindingTheirConsumerToAPoolInAnotherOrg() {
+        OwnerDTO otherOwner = adminClient.owners().createOwner(Owners.random());
+        ProductDTO otherProduct = adminClient.ownerProducts()
+            .createProduct(otherOwner.getKey(), Products.random());
+        PoolDTO otherPool = adminClient.owners()
+            .createPool(otherOwner.getKey(), Pools.random(otherProduct));
+
+        // This user fully manages one org, but may only read the other. The foreign pool therefore
+        // resolves for this principal, while attaching to it must still be denied.
+        ApiClient userClient = ApiClients.basic(UserUtil.createWith(adminClient,
+            Permissions.OWNER.all(owner),
+            Permissions.OWNER.readOnly(otherOwner)));
+        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
+
+        assertForbidden(() -> userClient.consumers().bindPool(consumer.getUuid(), otherPool.getId(), 1));
     }
 
     @Test

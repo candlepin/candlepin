@@ -1299,6 +1299,48 @@ public class ActivationKeySpecTest {
     }
 
     @Test
+    public void shouldNotAllowAddingPoolsOwnedByAnotherOrgToActivationKeys() {
+        ApiClient adminClient = ApiClients.admin();
+
+        OwnerDTO owner = createOwner(adminClient);
+        ActivationKeyDTO activationKey = createActivationKey(adminClient, owner);
+
+        OwnerDTO anotherOwner = createOwner(adminClient);
+        ProductDTO foreignProduct = createProduct(adminClient, anotherOwner);
+        PoolDTO foreignPool = createPool(adminClient, anotherOwner, foreignProduct);
+
+        // This user may fully manage the activation keys of "owner", but has no access at all to
+        // "anotherOwner" or the pools belonging to it.
+        ApiClient userClient = createUserClient(owner, Permissions.MANAGE_ACTIVATION_KEYS, "ALL");
+
+        assertForbidden(() -> userClient.activationKeys()
+            .addPoolToKey(activationKey.getId(), foreignPool.getId(), 1L));
+    }
+
+    @Test
+    public void shouldNotAllowRemovingPoolsOwnedByAnotherOrgFromActivationKeys() {
+        ApiClient adminClient = ApiClients.admin();
+
+        OwnerDTO owner = createOwner(adminClient);
+        ActivationKeyDTO activationKey = createActivationKey(adminClient, owner);
+        ProductDTO product = createProduct(adminClient, owner);
+        PoolDTO pool = createPool(adminClient, owner, product);
+
+        OwnerDTO anotherOwner = createOwner(adminClient);
+        ProductDTO foreignProduct = createProduct(adminClient, anotherOwner);
+        PoolDTO foreignPool = createPool(adminClient, anotherOwner, foreignProduct);
+
+        adminClient.activationKeys().addPoolToKey(activationKey.getId(), pool.getId(), 1L);
+
+        // This user may fully manage the activation keys of "owner", but has no access at all to
+        // "anotherOwner" or the pools belonging to it.
+        ApiClient userClient = createUserClient(owner, Permissions.MANAGE_ACTIVATION_KEYS, "ALL");
+
+        assertForbidden(() -> userClient.activationKeys()
+            .removePoolFromKey(activationKey.getId(), foreignPool.getId()));
+    }
+
+    @Test
     public void shouldAllowProductIdsToBeAddedToAndRemovedFromActivationKeys() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = createOwner(adminClient);
