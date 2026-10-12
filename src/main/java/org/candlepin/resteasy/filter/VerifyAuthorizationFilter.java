@@ -188,8 +188,25 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
         return argMap;
     }
 
+    /**
+     * Determines if the provided principal is allowed to access the resource method, based on whether
+     * the principal has the correct permissions to access all the entities present in all {@code @Verify}
+     * annotations.
+     * <p><b>
+     * IMPORTANT: If the principal is forbidden access to AT LEAST ONE entity, then this method fails closed
+     * immediately, and the principal is denied access.
+     * </b></p>
+     * There is also a special case of this method returning false when no entities were specified in the
+     * request and the {@code @Verify} annotation(s) were marked as nullable.
+     *
+     * @param argMap the resource method's argument map
+     * @param principal the principal making the request
+     * @param defaultAccess the default access mode for this resource method (e.g. read only, create, all).
+     *      This can be overridden by the resource method itself
+     * @return true if the principal is allowed to access the resource, or false otherwise
+     */
     protected boolean hasAccess(Map<Verify, Object> argMap, Principal principal, Access defaultAccess) {
-        boolean hasAccess = false;
+        boolean anyEntityVerified = false;
         Owner owner = null;
 
         for (Map.Entry<Verify, Object> entry : argMap.entrySet()) {
@@ -210,13 +227,14 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
             SubResource subResource = verify.subResource();
             for (Persisted entity : accessedObjects) {
                 if (!principal.canAccess(entity, subResource, requiredAccess)) {
-                    break;
+                    // Stop all further checking with any authorization failure
+                    return false;
                 }
 
-                hasAccess = true;
+                anyEntityVerified = true;
 
                 if (!storeFactory.canValidate(entity.getClass())) {
-                    break;
+                    continue;
                 }
 
                 Owner entityOwner = ((EntityStore) storeFactory.getFor(entity.getClass())).getOwner(entity);
@@ -229,14 +247,9 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
                     owner = entityOwner;
                 }
             }
-
-            // Stop all further checking with any authorization failure
-            if (!hasAccess) {
-                break;
-            }
         }
 
-        if (hasAccess && owner != null) {
+        if (owner != null) {
             MDC.put(LoggingUtil.MDC_OWNER_KEY, owner.getKey());
 
             if (owner.getLogLevel() != null) {
@@ -244,7 +257,9 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
             }
         }
 
-        return hasAccess;
+        // At this point, if this returns false, no @Verify parameter resolved to an entity (all were
+        // nullable and absent), so there is nothing to authorize against.
+        return anyEntityVerified;
     }
 
     @SuppressWarnings("unchecked")

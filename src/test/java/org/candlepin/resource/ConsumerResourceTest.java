@@ -32,6 +32,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -1060,6 +1061,84 @@ public class ConsumerResourceTest {
         when(entitlementCurator.get(any(Serializable.class))).thenReturn(null);
 
         assertThrows(NotFoundException.class, () -> consumerResource.unbindBySerial("fake uuid", 1234L));
+    }
+
+    @Test
+    public void unbindByEntitlementIdShouldRevokeEntitlementBelongingToTheConsumer() {
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner)
+            .setId("test-consumer-id");
+
+        Entitlement entitlement = new Entitlement()
+            .setId("test-entitlement-id")
+            .setOwner(owner)
+            .setConsumer(consumer);
+
+        doReturn(entitlement).when(this.entitlementCurator).get(entitlement.getId());
+
+        this.consumerResource.unbindByEntitlementId(consumer.getUuid(), entitlement.getId());
+
+        verify(this.poolService).revokeEntitlement(entitlement);
+    }
+
+    @Test
+    public void unbindByEntitlementIdShouldNotRevokeEntitlementBelongingToAnotherConsumer() {
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner)
+            .setId("test-consumer-id");
+        Consumer otherConsumer = this.createConsumer(owner)
+            .setId("other-consumer-id");
+
+        Entitlement entitlement = new Entitlement()
+            .setId("test-entitlement-id")
+            .setOwner(owner)
+            .setConsumer(otherConsumer);
+
+        doReturn(entitlement).when(this.entitlementCurator).get(entitlement.getId());
+
+        assertThrows(NotFoundException.class,
+            () -> this.consumerResource.unbindByEntitlementId(consumer.getUuid(), entitlement.getId()));
+
+        verify(this.poolService, never()).revokeEntitlement(any(Entitlement.class));
+    }
+
+    @Test
+    public void unbindBySerialShouldRevokeEntitlementBelongingToTheConsumer() {
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner)
+            .setId("test-consumer-id");
+
+        Entitlement entitlement = new Entitlement()
+            .setId("test-entitlement-id")
+            .setOwner(owner)
+            .setConsumer(consumer);
+
+        doReturn(entitlement).when(this.entitlementCurator).findByCertificateSerial(1234L);
+
+        this.consumerResource.unbindBySerial(consumer.getUuid(), 1234L);
+
+        verify(this.poolService).revokeEntitlement(entitlement);
+    }
+
+    @Test
+    public void unbindBySerialShouldNotRevokeEntitlementBelongingToAnotherConsumer() {
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner)
+            .setId("test-consumer-id");
+        Consumer otherConsumer = this.createConsumer(owner)
+            .setId("other-consumer-id");
+
+        Entitlement entitlement = new Entitlement()
+            .setId("test-entitlement-id")
+            .setOwner(owner)
+            .setConsumer(otherConsumer);
+
+        doReturn(entitlement).when(this.entitlementCurator).findByCertificateSerial(1234L);
+
+        assertThrows(NotFoundException.class,
+            () -> this.consumerResource.unbindBySerial(consumer.getUuid(), 1234L));
+
+        verify(this.poolService, never()).revokeEntitlement(any(Entitlement.class));
     }
 
     /**
