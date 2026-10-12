@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.7.6
+Version: 4.7.7
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,11 @@ fi
 
 #raw
 %changelog
+* Mon Oct 12 2026 candlepin-bot 4.7.7-1
+- Updated two pool curator methods to not flush (jalbrech@redhat.com)
+- CANDLEPIN-1291: Updated RefreshPoolsJob logic for dirtying pools
+  (jalbrech@redhat.com)
+
 * Fri Oct 09 2026 candlepin-bot 4.7.6-1
 - Add new translations using Weblate (hosted@weblate.org)
 - CANDLEPIN-1195: Added catch for EntityNotFoundException (jalbrech@redhat.com)
