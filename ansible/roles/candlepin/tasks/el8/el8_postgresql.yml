@@ -8,15 +8,31 @@
     - postgresql
     - candlepin
 
-- name: "Install PostgreSQL packages"
+- name: "Install PostgreSQL packages" # noqa: command-instead-of-module
   become: true
-  ansible.builtin.package:
-    name:
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - install
+      - -y
       - postgresql-server
       - postgresql
       - postgresql-jdbc
       - python3-psycopg2
-    state: present
+      - python39-pip
+  environment:
+    LC_ALL: C
+  register: cp_postgresql_package_install
+  changed_when: "'Nothing to do.' not in cp_postgresql_package_install.stdout"
+  tags:
+    - postgresql
+    - candlepin
+
+- name: "Install PostgreSQL driver for Ansible Python"
+  become: true
+  ansible.builtin.pip:
+    name: psycopg2-binary
+    executable: pip3.9
   tags:
     - postgresql
     - candlepin

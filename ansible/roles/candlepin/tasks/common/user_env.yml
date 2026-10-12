@@ -34,6 +34,13 @@
     - user_env
 
 - name: "Standardize location of Candlepin repo"
+  vars:
+    cp_vagrant_mapping: "/vagrant"
+  when:
+    - candlepin_home != candlepin_user_home + "/devel/candlepin"
+  tags:
+    - candlepin
+    - user_env
   block:
     - name: "Check for Vagrant Candlepin repo mapping"
       ansible.builtin.stat:
@@ -55,10 +62,3 @@
         state: link
       when:
         - cp_vagrant_mapping_file.stat.exists
-  vars:
-    cp_vagrant_mapping: "/vagrant"
-  when:
-    - candlepin_home != candlepin_user_home + "/devel/candlepin"
-  tags:
-    - candlepin
-    - user_env

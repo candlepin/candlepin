@@ -1,8 +1,10 @@
 ---
-roles:
+roles: []
 
 collections:
   - name: ansible.posix
   - name: community.general
-  - name: community.mysql
+  - name: ansible.mysql
+    # MariaDB support is removed in ansible.mysql 6.0.0.
+    version: ">=4.2.1,<6.0.0"
   - name: community.postgresql
