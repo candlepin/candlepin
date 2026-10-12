@@ -1,0 +1,80 @@
+---
+- name: "Check permanent firewalld ports" # noqa: command-instead-of-module
+  become: true
+  ansible.builtin.command:
+    argv:
+      - firewall-cmd
+      - --permanent
+      - "--query-port={{ item }}/tcp"
+  register: cp_debugging_firewalld_online_status
+  changed_when: false
+  failed_when: cp_debugging_firewalld_online_status.rc not in [0, 1]
+  loop: "{{ cp_firewalld_ports }}"
+  when:
+    - "'services' in ansible_facts"
+    - "'firewalld.service' in ansible_facts.services"
+    - "ansible_facts.services['firewalld.service'].state == 'running'"
+  tags:
+    - system
+    - candlepin
+    - debugging
+
+- name: "Enable missing permanent firewalld ports" # noqa: command-instead-of-module
+  become: true
+  ansible.builtin.command:
+    argv:
+      - firewall-cmd
+      - --permanent
+      - "--add-port={{ item.item }}/tcp"
+  changed_when: true
+  loop: "{{ cp_debugging_firewalld_online_status.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item }}/tcp"
+  when:
+    - "'services' in ansible_facts"
+    - "'firewalld.service' in ansible_facts.services"
+    - "ansible_facts.services['firewalld.service'].state == 'running'"
+    - item.rc == 1
+  tags:
+    - system
+    - candlepin
+    - debugging
+
+- name: "Check permanent firewalld ports offline" # noqa: command-instead-of-module
+  become: true
+  ansible.builtin.command:
+    argv:
+      - firewall-offline-cmd
+      - "--query-port={{ item }}/tcp"
+  register: cp_debugging_firewalld_offline_status
+  changed_when: false
+  failed_when: cp_debugging_firewalld_offline_status.rc not in [0, 1]
+  loop: "{{ cp_firewalld_ports }}"
+  when:
+    - "'services' in ansible_facts"
+    - "'firewalld.service' in ansible_facts.services"
+    - "ansible_facts.services['firewalld.service'].state != 'running'"
+  tags:
+    - system
+    - candlepin
+    - debugging
+
+- name: "Enable missing permanent firewalld ports offline" # noqa: command-instead-of-module
+  become: true
+  ansible.builtin.command:
+    argv:
+      - firewall-offline-cmd
+      - "--add-port={{ item.item }}/tcp"
+  changed_when: true
+  loop: "{{ cp_debugging_firewalld_offline_status.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item }}/tcp"
+  when:
+    - "'services' in ansible_facts"
+    - "'firewalld.service' in ansible_facts.services"
+    - "ansible_facts.services['firewalld.service'].state != 'running'"
+    - item.rc == 1
+  tags:
+    - system
+    - candlepin
+    - debugging

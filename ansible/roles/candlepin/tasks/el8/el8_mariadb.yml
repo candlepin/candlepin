@@ -8,15 +8,31 @@
     - candlepin
     - mariadb
 
-- name: "Install MariaDB packages"
+- name: "Install MariaDB packages" # noqa: command-instead-of-module
   become: true
-  ansible.builtin.package:
-    name:
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - install
+      - -y
       - mariadb
       - mariadb-java-client
       - mariadb-server
       - python3-PyMySQL
-    state: present
+      - python39-pip
+  environment:
+    LC_ALL: C
+  register: cp_mariadb_package_install
+  changed_when: "'Nothing to do.' not in cp_mariadb_package_install.stdout"
+  tags:
+    - candlepin
+    - mariadb
+
+- name: "Install MariaDB driver for Ansible Python"
+  become: true
+  ansible.builtin.pip:
+    name: PyMySQL
+    executable: pip3.9
   tags:
     - candlepin
     - mariadb
@@ -84,7 +100,7 @@
 
 - name: "Create the 'candlepin' MariaDB user"
   become: true
-  community.mysql.mysql_user:
+  ansible.mysql.mysql_user:
     name: candlepin
     priv: "candlepin.*:ALL,GRANT"
     state: present
@@ -93,7 +109,7 @@
     - mariadb
 
 - name: "Create the 'candlepin' MariaDB database"
-  community.mysql.mysql_db:
+  ansible.mysql.mysql_db:
     login_user: candlepin
     name: candlepin
     state: present
