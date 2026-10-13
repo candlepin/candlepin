@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.8.4
+Version: 4.8.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,17 @@ fi
 
 #raw
 %changelog
+* Tue Oct 13 2026 candlepin-bot 4.8.5-1
+- Updated two pool curator methods to not flush (jalbrech@redhat.com)
+- CANDLEPIN-1291: Updated RefreshPoolsJob logic for dirtying pools
+  (jalbrech@redhat.com)
+- Fixed multi-Verify hasAccess authz (nmoumoul@redhat.com)
+- CANDLEPIN-1252: Fix Ansible linter violations (jasmid@redhat.com)
+- Update centos cloud image url for vagrant (nmoumoul@redhat.com)
+- Fixed ML-DSA client TLS handshake failures in spec test (sbakaj@redhat.com)
+- Stop using unverified gh action for docker log collection
+  (nmoumoul@redhat.com)
+
 * Thu Jul 30 2026 candlepin-bot 4.8.4-1
 - CANDLEPIN-1253: Fixed bugs with legacy manifest import under PQC
   (crog@redhat.com)
