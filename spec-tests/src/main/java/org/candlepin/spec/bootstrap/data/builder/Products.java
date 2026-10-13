@@ -67,10 +67,10 @@ public final class Products {
 
     /**
      * Creates a product DTO with a randomly generated ID and name following the expected ID format
-     * for SKU (base/marketing) products
+     * for engineering (provided) products
      *
      * @return
-     *  a product DTO with a randomly generated SKU ID and name
+     *  a product DTO with a randomly generated engineering ID and name
      */
     public static ProductDTO randomEng() {
         // prefix is needed because this id is used in a OID. BC does not allow leading zeros in a segment
@@ -83,10 +83,10 @@ public final class Products {
 
     /**
      * Creates a product DTO with a randomly generated ID and name following the expected ID format
-     * for engineering (provided) products
+     * for SKU (base/marketing) products
      *
      * @return
-     *  a product DTO with a randomly generated engineering ID and name
+     *  a product DTO with a randomly generated SKU ID and name
      */
     public static ProductDTO randomSKU() {
         String id = StringUtil.random("test_product-", 8, StringUtil.CHARSET_NUMERIC_HEX);
