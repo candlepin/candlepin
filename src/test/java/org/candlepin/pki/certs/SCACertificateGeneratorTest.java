@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2025 Red Hat, Inc.
+ * Copyright (c) 2009 - 2026 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -40,6 +40,7 @@ import org.candlepin.model.ProductContent;
 import org.candlepin.model.SCACertificate;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.OID;
+import org.candlepin.pki.certs.SCACertificateGenerator.SCACertificateComponents;
 import org.candlepin.pki.huffman.Huffman;
 import org.candlepin.pki.util.ConsumerKeyPairGenerator;
 import org.candlepin.test.CryptoUtil;
@@ -651,6 +652,60 @@ public class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .isNotNull()
             .extracting(CertificateSerial::getSerial)
             .isNotEqualTo(initialSerial);
+    }
+
+    @Test
+    public void testGetSCACertificateComponentsWithNullConsumer() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            this.getNewGenerator().getSCACertificateComponents(null);
+        });
+    }
+
+    @Test
+    public void testGetSCACertificateComponentsWithNullOwner() throws Exception {
+        Consumer consumer = new Consumer();
+
+        SCACertificateComponents actual = this.getNewGenerator().getSCACertificateComponents(consumer);
+
+        assertNull(actual);
+    }
+
+    @Test
+    public void testGetSCACertificateComponentsWithNonSCAOwner() throws Exception {
+        Owner owner = this.createNonSCAOwner(TestUtil.randomString("key-"));
+        Consumer consumer = this.createConsumer(owner);
+
+        SCACertificateComponents actual = this.getNewGenerator().getSCACertificateComponents(consumer);
+
+        assertNull(actual);
+    }
+
+    @Test
+    public void testGetSCACertificateComponentsWithConsumerIncompatibleWithV3Certs() throws Exception {
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner);
+        consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, "2.1");
+
+        SCACertificateComponents actual = this.getNewGenerator().getSCACertificateComponents(consumer);
+
+        assertNull(actual);
+    }
+
+    @Test
+    public void testGetSCACertificateComponents() throws Exception {
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner);
+
+        doReturn(true).when(this.v3CapabilityCheck).isCertV3Capable(consumer);
+        SCACertificate expectedCert = this.generator.getX509Certificate(consumer);
+        ContentAccessPayload expectedPayload = this.generator.getContentPayload(consumer);
+
+        SCACertificateComponents actual = this.generator.getSCACertificateComponents(consumer);
+
+        assertThat(actual)
+            .isNotNull()
+            .returns(expectedCert, SCACertificateComponents::certificate)
+            .returns(expectedPayload, SCACertificateComponents::payload);
     }
 
     @Test
