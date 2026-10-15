@@ -32,6 +32,7 @@ import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.TransactionExecutionException;
 
 import com.google.inject.Inject;
 
@@ -168,7 +169,16 @@ public class RefresherTest extends DatabaseTestFixture {
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(classes = {ConstraintViolationException.class, LockAcquisitionException.class})
-    public void testRunShouldRetryTransactionForCertainException(Class<? extends Throwable> exception) {
+    public void testRunShouldNotRetryTransactionInPlaceForCertainException(
+        Class<? extends Throwable> exception) {
+
+        // Impl note:
+        // Refresher.run() used to retry here, but this method already runs inside an existing
+        // transaction. After a constraint violation or deadlock, that transaction is aborted,
+        // so retrying here would just fail again.
+        //
+        // Let the exception propagate so the caller can retry the whole operation with a fresh
+        // transaction.
         PoolManager mockPoolManager = Mockito.mock(PoolManager.class);
         refresher = new Refresher(mockPoolManager, this.subAdapter, this.ownerCurator, this.poolCurator,
             this.poolConverter);
@@ -192,23 +202,14 @@ public class RefresherTest extends DatabaseTestFixture {
         this.refresher.add(owner)
             .add(product);
 
-        // The transaction should be retried when the exception is thrown.
-        // So, throw the exception on the first invocation, but then succeed on the second invocation.
         doThrow(exception)
-            .doNothing()
             .when(mockPoolManager)
             .refreshPoolsWithRegeneration(any(SubscriptionServiceAdapter.class), any(Owner.class),
                 any(boolean.class));
 
-        this.refresher.run();
+        assertThrows(TransactionExecutionException.class, () -> this.refresher.run());
 
-        List<Pool> pools = this.poolCurator.listByOwner(owner);
-        assertThat(pools)
-            .isNotNull()
-            .singleElement()
-            .returns(product.getUuid(), Pool::getProductUuid);
-
-        verify(mockPoolManager, times(2))
+        verify(mockPoolManager, times(1))
             .refreshPoolsWithRegeneration(any(SubscriptionServiceAdapter.class), any(Owner.class),
                 any(boolean.class));
     }
