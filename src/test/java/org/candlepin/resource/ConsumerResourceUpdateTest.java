@@ -14,7 +14,9 @@
  */
 package org.candlepin.resource;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -34,7 +36,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -105,11 +106,14 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.compliance.hash.ComplianceFacts;
 import org.candlepin.policy.js.consumer.ConsumerRules;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.resource.util.AWSProviderFactParser;
+import org.candlepin.resource.util.AzureProviderFactParser;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerCloudDataBuilder;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
+import org.candlepin.resource.util.GCPProviderFactParser;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.CloudRegistrationAdapter;
@@ -130,6 +134,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
@@ -149,8 +156,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 
 /**
@@ -245,13 +252,10 @@ public class ConsumerResourceUpdateTest {
     private SCACertificateGenerator scaCertificateGenerator;
     @Mock
     private AnonymousCertificateGenerator anonymousCertificateGenerator;
-    @Mock
+
     private ConsumerCloudDataBuilder cloudDataBuilder;
-
     private ModelTranslator translator;
-
     private I18n i18n;
-
     private ConsumerResource resource;
     private GuestMigration testMigration;
     private Configuration config;
@@ -311,7 +315,8 @@ public class ConsumerResourceUpdateTest {
             this.ownerService,
             this.scaCertificateGenerator,
             this.anonymousCertificateGenerator,
-            this.cloudDataBuilder
+            new ConsumerCloudDataBuilder(i18n,
+                Set.of(new AWSProviderFactParser(), new AzureProviderFactParser(), new GCPProviderFactParser()))
         );
 
         when(this.complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),
@@ -1551,60 +1556,241 @@ public class ConsumerResourceUpdateTest {
         assertEquals(existing.getEnvironmentIds().get(4), env111.getId());
     }
 
-    @Test
-    void testUpdateConsumerExistingCloudDataUpdateFromCalled() {
+    public static Stream<Arguments> cloudFactsSource() {
+        List<String> awsFacts = List.of("aws_instance_id", "aws_account_id", "aws_billing_products",
+            "aws_marketplace_product_codes");
+        List<String> azureFacts = List.of("azure_instance_id", "azure_subscription_id", "azure_offer");
+        List<String> gcpFacts = List.of("gcp_instance_id", "gcp_project_id", "gcp_license_codes");
+
+        return Stream.of(
+            Arguments.of(awsFacts),
+            Arguments.of(azureFacts),
+            Arguments.of(gcpFacts));
+    }
+
+    @ParameterizedTest
+    @MethodSource("cloudFactsSource")
+    public void shouldSetCloudDataWhenCloudFactIsAdded(List<String> facts) {
         String uuid = "uuid-123";
-        ConsumerDTO dto = new ConsumerDTO();
-        dto.setFacts(Map.of("aws_account_id", "123"));
-        ConsumerCloudData existingCloudData = mock(ConsumerCloudData.class);
-        ConsumerCloudData changedCloudData = mock(ConsumerCloudData.class);
-        Consumer toUpdate = spy(new Consumer());
+        Consumer toUpdate = new Consumer();
+        toUpdate.setUuid(uuid);
 
-        when(toUpdate.checkForCloudIdentifierFacts(dto.getFacts())).thenReturn(true);
-        when(toUpdate.getConsumerCloudData()).thenReturn(existingCloudData);
+        ConsumerDTO dto = new ConsumerDTO();
+        dto.setUuid(uuid);
+        facts.forEach(fact -> dto.putFactsItem(fact, "updated-value"));
+
         when(consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(toUpdate);
-        when(cloudDataBuilder.build(dto)).thenReturn(Optional.of(changedCloudData));
 
         resource.updateConsumer(uuid, dto);
 
-        verify(existingCloudData).updateFrom(changedCloudData);
-        verify(toUpdate, never()).setConsumerCloudData(any());
+        assertThat(toUpdate.getConsumerCloudData())
+            .isNotNull()
+            .returns("updated-value", ConsumerCloudData::getCloudAccountId)
+            .returns("updated-value", ConsumerCloudData::getCloudInstanceId)
+            .extracting(ConsumerCloudData::getCloudOfferingIds, as(collection(String.class)))
+            .contains("updated-value");
+    }
+
+    @ParameterizedTest
+    @MethodSource("cloudFactsSource")
+    public void shouldUpdateExistingCloudDataWhenCloudFactIsUpdated(List<String> facts) {
+        String uuid = "uuid-123";
+        Consumer toUpdate = new Consumer();
+        toUpdate.setUuid(uuid);
+        facts.forEach(fact -> toUpdate.setFact(fact, "initial-value"));
+        ConsumerCloudData cloudData = new ConsumerCloudData()
+            .setCloudAccountId("initial-value")
+            .setCloudInstanceId("initial-value")
+            .setCloudOfferingIds("initial-value");
+        toUpdate.setConsumerCloudData(cloudData);
+
+        ConsumerDTO dto = new ConsumerDTO();
+        dto.setUuid(uuid);
+        facts.forEach(fact -> dto.putFactsItem(fact, "updated-value"));
+
+        when(consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(toUpdate);
+
+        resource.updateConsumer(uuid, dto);
+
+        assertThat(toUpdate.getConsumerCloudData())
+            .isNotNull()
+            .returns("updated-value", ConsumerCloudData::getCloudAccountId)
+            .returns("updated-value", ConsumerCloudData::getCloudInstanceId)
+            .extracting(ConsumerCloudData::getCloudOfferingIds, as(collection(String.class)))
+            .contains("updated-value");
+    }
+
+    @ParameterizedTest
+    @MethodSource("cloudFactsSource")
+    public void shouldRemoveAllCloudDataWhenAllCloudFactsAreRemoved(List<String> facts) {
+        String uuid = "uuid-123";
+        Consumer toUpdate = new Consumer();
+        toUpdate.setUuid(uuid);
+        facts.forEach(fact -> toUpdate.setFact(fact, "initial-value"));
+        ConsumerCloudData cloudData = new ConsumerCloudData()
+            .setCloudAccountId("initial-value")
+            .setCloudInstanceId("initial-value")
+            .setCloudOfferingIds("initial-value");
+        toUpdate.setConsumerCloudData(cloudData);
+
+        ConsumerDTO dto = new ConsumerDTO();
+        dto.setUuid(uuid);
+        dto.setFacts(Map.of());
+
+        when(consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(toUpdate);
+
+        resource.updateConsumer(uuid, dto);
+
+        assertNull(toUpdate.getConsumerCloudData());
+    }
+
+    @ParameterizedTest
+    @MethodSource("cloudFactsSource")
+    public void shouldNotUpdateCloudDataWhenCloudFactIsUnchanged(List<String> facts) {
+        String uuid = "uuid-123";
+        Consumer toUpdate = new Consumer();
+        toUpdate.setUuid(uuid);
+        facts.forEach(fact -> toUpdate.setFact(fact, "initial-value"));
+        ConsumerCloudData cloudData = new ConsumerCloudData()
+            .setCloudAccountId("initial-value")
+            .setCloudInstanceId("initial-value")
+            .setCloudOfferingIds("initial-value");
+        toUpdate.setConsumerCloudData(cloudData);
+
+        ConsumerDTO dto = new ConsumerDTO();
+        dto.setUuid(uuid);
+        facts.forEach(fact -> dto.putFactsItem(fact, "initial-value"));
+
+        when(consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(toUpdate);
+
+        resource.updateConsumer(uuid, dto);
+
+        assertThat(toUpdate.getConsumerCloudData())
+            .isNotNull()
+            .returns("initial-value", ConsumerCloudData::getCloudAccountId)
+            .returns("initial-value", ConsumerCloudData::getCloudInstanceId)
+            .extracting(ConsumerCloudData::getCloudOfferingIds, as(collection(String.class)))
+            .contains("initial-value");
     }
 
     @Test
-    void testUpdateConsumerNoExistingCloudDataSetConsumerCloudDataCalled() {
-        String uuid = "uuid-456";
-        ConsumerDTO dto = new ConsumerDTO();
-        dto.setFacts(Map.of("aws_account_id", "123"));
-        Consumer toUpdate = spy(new Consumer());
-        ConsumerCloudData newCloudData = mock(ConsumerCloudData.class);
+    public void shouldRemovePartialCloudDataWhenSomeCloudFactsAreRemoved() {
+        String uuid = "uuid-123";
+        Consumer toUpdate = new Consumer();
+        toUpdate.setUuid(uuid);
 
-        when(toUpdate.checkForCloudIdentifierFacts(dto.getFacts())).thenReturn(true);
-        when(toUpdate.getConsumerCloudData()).thenReturn(null);
+        List<String> initialFacts = new ArrayList<>();
+        initialFacts.add("aws_account_id");
+        initialFacts.add("aws_instance_id");
+        initialFacts.add("aws_marketplace_product_codes");
+        initialFacts.forEach(fact -> toUpdate.setFact(fact, "initial-value"));
+        ConsumerCloudData cloudData = new ConsumerCloudData()
+            .setCloudAccountId("initial-value")
+            .setCloudInstanceId("initial-value")
+            .setCloudOfferingIds("initial-value");
+        toUpdate.setConsumerCloudData(cloudData);
+
+        ConsumerDTO dto = new ConsumerDTO();
+        dto.setUuid(uuid);
+        // The existing fact values stay the same. We're only removing one fact
+        initialFacts.remove("aws_instance_id");
+        initialFacts.forEach(fact -> dto.putFactsItem(fact, "initial-value"));
+
         when(consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(toUpdate);
-        when(cloudDataBuilder.build(dto)).thenReturn(Optional.of(newCloudData));
 
         resource.updateConsumer(uuid, dto);
 
-        verify(toUpdate).setConsumerCloudData(newCloudData);
+        assertThat(toUpdate.getConsumerCloudData())
+            .isNotNull()
+            .returns("initial-value", ConsumerCloudData::getCloudAccountId)
+            .returns(null, ConsumerCloudData::getCloudInstanceId)
+            .extracting(ConsumerCloudData::getCloudOfferingIds, as(collection(String.class)))
+            .contains("initial-value");
     }
 
     @Test
-    void testUpdateConsumerEmptyChangedCloudData() {
-        String uuid = "uuid-789";
-        ConsumerDTO dto = new ConsumerDTO();
-        dto.setFacts(Map.of("aws_account_id", "123"));
-        Consumer toUpdate = spy(new Consumer());
-        ConsumerCloudData existingCloudData = mock(ConsumerCloudData.class);
+    public void shouldAddToExistingCloudDataWhenCloudFactIsAdded() {
+        String uuid = "uuid-123";
+        Consumer toUpdate = new Consumer();
+        toUpdate.setUuid(uuid);
 
-        when(toUpdate.checkForCloudIdentifierFacts(dto.getFacts())).thenReturn(true);
-        when(toUpdate.getConsumerCloudData()).thenReturn(existingCloudData);
+        // Remove of the original facts before persisting these on the consumer
+        List<String> reducedFacts = new ArrayList<>();
+        reducedFacts.add("aws_account_id");
+        reducedFacts.add("aws_instance_id");
+        // missing: aws_marketplace_product_codes
+        reducedFacts.forEach(fact -> toUpdate.setFact(fact, "initial-value"));
+        ConsumerCloudData cloudData = new ConsumerCloudData()
+            .setCloudAccountId("initial-value")
+            .setCloudInstanceId("initial-value");
+        toUpdate.setConsumerCloudData(cloudData);
+
+        ConsumerDTO dto = new ConsumerDTO();
+        dto.setUuid(uuid);
+        // The existing fact values stay the same. We're only adding a new fact
+        reducedFacts.add("aws_marketplace_product_codes");
+        reducedFacts.forEach(fact -> dto.putFactsItem(fact, "initial-value"));
+
         when(consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(toUpdate);
-        when(cloudDataBuilder.build(dto)).thenReturn(Optional.empty());
 
         resource.updateConsumer(uuid, dto);
 
-        verify(existingCloudData, never()).updateFrom(any());
-        verify(toUpdate, never()).setConsumerCloudData(any());
+        assertThat(toUpdate.getConsumerCloudData())
+            .isNotNull()
+            .returns("initial-value", ConsumerCloudData::getCloudAccountId)
+            .returns("initial-value", ConsumerCloudData::getCloudInstanceId)
+            .extracting(ConsumerCloudData::getCloudOfferingIds, as(collection(String.class)))
+            .contains("initial-value");
+    }
+
+    @ParameterizedTest
+    @MethodSource("cloudFactsSource")
+    public void shouldNotUpdateCloudDataWhenNonCloudFactIsUpdated(List<String> facts) {
+        String uuid = "uuid-123";
+        Consumer toUpdate = new Consumer();
+        toUpdate.setUuid(uuid);
+        facts.forEach(fact -> toUpdate.setFact(fact, "initial-value"));
+        // Add a non-cloud fact
+        toUpdate.setFact("unrelated-key", "unrelated-value");
+
+        // Setup the existing cloud data
+        ConsumerCloudData cloudData = new ConsumerCloudData()
+            .setCloudAccountId("initial-value")
+            .setCloudInstanceId("initial-value")
+            .setCloudOfferingIds("initial-value");
+
+        if (facts.getFirst().startsWith("aws")) {
+            cloudData.setCloudProviderShortName("AWS");
+
+            // AWS has two offering IDs
+            cloudData.setCloudOfferingIds("initial-value,initial-value");
+        }
+        else if (facts.getFirst().startsWith("azure")) {
+            cloudData.setCloudProviderShortName("AZURE");
+        }
+        else {
+            cloudData.setCloudProviderShortName("GCP");
+        }
+
+        toUpdate.setConsumerCloudData(cloudData);
+
+        ConsumerDTO dto = new ConsumerDTO();
+        dto.setUuid(uuid);
+        // Do not set the non-cloud fact during update
+        facts.forEach(fact -> dto.putFactsItem(fact, "initial-value"));
+
+        when(consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(toUpdate);
+
+        resource.updateConsumer(uuid, dto);
+
+        assertThat(toUpdate.getConsumerCloudData())
+            .isNotNull()
+            .returns("initial-value", ConsumerCloudData::getCloudAccountId)
+            .returns("initial-value", ConsumerCloudData::getCloudInstanceId)
+            .extracting(ConsumerCloudData::getCloudOfferingIds, as(collection(String.class)))
+            .contains("initial-value");
+
+        // make sure we don't unnecessarily update the same cp_consumer_cloud_data row when nothing changed
+        assertThat(toUpdate.getConsumerCloudData()).isSameAs(cloudData);
     }
 }

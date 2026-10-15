@@ -16,6 +16,8 @@ package org.candlepin.model;
 
 import org.candlepin.util.Util;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -333,8 +335,31 @@ public class ConsumerCloudData extends AbstractHibernateObject<ConsumerCloudData
     }
 
     /**
-     * {@inheritDoc}
+     * Used for equality comparison only when it comes to core cloud data (account id, instance id, offering ids, short
+     * provider name), so that partially-built objects (that may not have id, Consumer reference or cloud provider short name)
+     * can be compared.
+     *
+     * @param other another ConsumerCloudData object that may be in any hibernate lifecycle state, or even partially populated
+     * @return It returns true when account id, instance id and cloud offering ids are all equal between this and the other
+     *   object, or when both this and the other object are null. It returns false otherwise. Also returns false if 'other' is
+     *   null.
      */
+    public boolean hasSameCloudIdentifiers(ConsumerCloudData other) {
+        if (this == other) {
+            return true;
+        }
+        if (other == null) {
+            return false;
+        }
+
+        return new EqualsBuilder()
+            .append(this.getCloudAccountId(), other.getCloudAccountId())
+            .append(this.getCloudInstanceId(), other.getCloudInstanceId())
+            .append(this.getCloudOfferingIds(), other.getCloudOfferingIds())
+            .append(this.getCloudProviderShortName(), other.getCloudProviderShortName())
+            .isEquals();
+    }
+
     @Override
     public String toString() {
         return String.format("ConsumerCloudData [consumerUuid: %s, cloudProviderShortName: %s, " +

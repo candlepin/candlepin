@@ -192,7 +192,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -1671,18 +1670,6 @@ public class ConsumerResource implements ConsumerApi {
         guestMigration.buildMigrationManifest(dto, toUpdate);
 
         if (performConsumerUpdates(dto, toUpdate, guestMigration)) {
-            if (toUpdate.checkForCloudIdentifierFacts(dto.getFacts())) {
-                log.warn("Detected change in cloud identifier fact for consumer: {}", toUpdate.getUuid());
-                Optional<ConsumerCloudData> changed = consumerCloudDataBuilder.build(dto);
-                ConsumerCloudData cloudData = toUpdate.getConsumerCloudData();
-                if (cloudData != null) {
-                    changed.ifPresent(cloudData::updateFrom);
-                }
-                else {
-                    changed.ifPresent(toUpdate::setConsumerCloudData);
-                }
-            }
-
             try {
                 if (guestMigration.isMigrationPending()) {
                     guestMigration.migrate();
@@ -1732,8 +1719,9 @@ public class ConsumerResource implements ConsumerApi {
         boolean complianceChangesMade = complianceFactsChanged ||
             installedProductsChanged || guestMigrationChanged;
         changesMade |= this.updateConsumerCryptoCapabilities(updated, toUpdate);
-        changesMade = checkForFactsUpdate(toUpdate, updated) || changesMade;
-        changesMade = checkForHypervisorIdUpdate(toUpdate, updated) || changesMade;
+        changesMade |= this.updateCloudIdentifierData(updated, toUpdate);
+        changesMade |= this.checkForHypervisorIdUpdate(toUpdate, updated);
+        changesMade |= this.checkForFactsUpdate(toUpdate, updated);
 
         if (updated.getContentTags() != null && !updated.getContentTags().equals(toUpdate.getContentTags())) {
             log.info("   Updating content tags.");
@@ -1836,6 +1824,34 @@ public class ConsumerResource implements ConsumerApi {
         }
 
         return changesMade;
+    }
+
+    /**
+     * Updates the Consumer's cloud identifier data and returns true if any cloud fact
+     * updates/removals/additions happened. It performs no updates and returns false otherwise.
+     *
+     * @param updated The DTO to update the cloud data from
+     * @param toUpdate The existing consumer to be updated
+     * @return true if any cloud facts were updated/added/removed, false otherwise
+     */
+    private boolean updateCloudIdentifierData(ConsumerDTO updated, Consumer toUpdate) {
+        Map<String, String> incomingFacts = updated.getFacts();
+        if (incomingFacts == null || incomingFacts.equals(toUpdate.getFacts())) {
+            return false;
+        }
+
+        ConsumerCloudData incomingCloudData = this.consumerCloudDataBuilder.build(updated).orElse(null);
+        ConsumerCloudData existingCloudData = toUpdate.getConsumerCloudData();
+
+        boolean sameCloudData = existingCloudData == null ?
+            incomingCloudData == null :
+            existingCloudData.hasSameCloudIdentifiers(incomingCloudData);
+
+        if (sameCloudData) {
+            return false;
+        }
+        toUpdate.setConsumerCloudData(incomingCloudData);
+        return true;
     }
 
     private boolean complianceFactsChanged(ConsumerDTO updated, Consumer toUpdate) {
