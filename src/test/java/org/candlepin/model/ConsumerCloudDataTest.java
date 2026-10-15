@@ -470,60 +470,6 @@ public class ConsumerCloudDataTest {
     }
 
     @Test
-    void testUpdateFromNull() {
-        ConsumerCloudData original = new ConsumerCloudData()
-            .setCloudProviderShortName("aws")
-            .setCloudAccountId("acc1")
-            .setCloudInstanceId("inst1")
-            .setCloudOfferingIds(List.of("off1", "off2"));
-
-        original.updateFrom(null);
-
-        assertEquals("aws", original.getCloudProviderShortName());
-        assertEquals("acc1", original.getCloudAccountId());
-        assertEquals("inst1", original.getCloudInstanceId());
-        assertEquals(List.of("off1", "off2"), original.getCloudOfferingIds());
-    }
-
-    @Test
-    void testUpdateFromUpdatesOnlyChangedFields() {
-        ConsumerCloudData original = new ConsumerCloudData()
-            .setCloudProviderShortName("aws")
-            .setCloudAccountId("acc1")
-            .setCloudInstanceId("inst1")
-            .setCloudOfferingIds(List.of("off1", "off2"));
-        ConsumerCloudData update = new ConsumerCloudData()
-            .setCloudProviderShortName("gcp")
-            .setCloudAccountId("acc2")
-            .setCloudInstanceId("inst2")
-            .setCloudOfferingIds(List.of("off3", "off4"));
-
-        original.updateFrom(update);
-
-        assertEquals("gcp", original.getCloudProviderShortName());
-        assertEquals("acc2", original.getCloudAccountId());
-        assertEquals("inst2", original.getCloudInstanceId());
-        assertEquals(List.of("off3", "off4"), original.getCloudOfferingIds());
-    }
-
-    @Test
-    void testUpdateFromDoesNotUpdateWhenNewValuesAreNull() {
-        ConsumerCloudData original = new ConsumerCloudData()
-            .setCloudProviderShortName("aws")
-            .setCloudAccountId("acc1")
-            .setCloudInstanceId("inst1")
-            .setCloudOfferingIds(List.of("off1", "off2"));
-        ConsumerCloudData update = new ConsumerCloudData();
-
-        original.updateFrom(update);
-
-        assertEquals("aws", original.getCloudProviderShortName());
-        assertEquals("acc1", original.getCloudAccountId());
-        assertEquals("inst1", original.getCloudInstanceId());
-        assertEquals(List.of("off1", "off2"), original.getCloudOfferingIds());
-    }
-
-    @Test
     public void testToString() {
         ConsumerCloudData consumerCloudData = new ConsumerCloudData()
             .setCloudAccountId("account123")

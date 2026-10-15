@@ -29,7 +29,6 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Type;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -1436,26 +1435,6 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
 
     public ConsumerCloudData getConsumerCloudData() {
         return this.consumerCloudData;
-    }
-
-    public boolean checkForCloudIdentifierFacts(Map<String, String> incomingFacts) {
-        if (incomingFacts == null) {
-            return false;
-        }
-
-        Map<String, String> existingFacts = this.getFacts();
-        if (existingFacts != null && existingFacts.equals(incomingFacts)) {
-            return false;
-        }
-
-        return Arrays.stream(CloudIdentifierFacts.values())
-            .filter(profileFact -> incomingFacts.containsKey(profileFact.getValue()))
-            .anyMatch(profileFact -> {
-                String key = profileFact.getValue();
-                String incomingValue = incomingFacts.get(key);
-                String existingValue = existingFacts == null ? null : existingFacts.get(key);
-                return !Objects.equals(incomingValue, existingValue);
-            });
     }
 
     /**
