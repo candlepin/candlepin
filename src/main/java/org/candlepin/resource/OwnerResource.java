@@ -1073,7 +1073,7 @@ public class OwnerResource implements OwnerApi {
         @Verify(value = Owner.class, subResource = SubResource.ACTIVATION_KEYS) String ownerKey,
         String keyName) {
 
-        Owner owner = findOwnerByKey(ownerKey);
+        Owner owner = this.findOwnerByKey(ownerKey);
 
         List<ActivationKey> keys = this.activationKeyCurator.listByOwner(owner, keyName);
         return keys.stream()
