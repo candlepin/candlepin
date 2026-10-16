@@ -248,6 +248,102 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
+     * Fetches products and their recursive descendants with the relationships needed for V2 exports
+     * <p>
+     * A recursive native query identifies the UUIDs of the starting products and all products reachable
+     * through derived and provided product links. When namespace filtering is enabled, only global products are included
+     * at every level, and traversal stops at non-global products. Otherwise all namespaces are included.
+     * Unknown starting product IDs are ignored.
+     * <p>
+     * A fetch query loads the identified products with branding, product-content links, and linked content
+     * entities initialized. A separate fetch query initializes their derived and provided product links,
+     * including empty collections. All query stages partition large inputs.
+     * <p>
+     * The returned products and their references use the same managed entity instances within the current
+     * persistence context. Relationship collections retain their complete database contents, including links
+     * to products in other namespaces. When filtering is enabled, non-global products are not added to the
+     * result list, and their own relationships are not recursively initialized by this method.
+     * <p>
+     * This fetch strategy is specific to V2 exports and should not be used as a general product lookup.
+     *
+     * @param filterNamespaces
+     *     true to include only global products, false to include products from all namespaces
+     * @param productIds
+     *     the IDs of the starting products; null or empty returns no products
+     * @return
+     *     a list of matching products and descendants with the export relationships initialized, without
+     *     duplicates or defined order, or an empty list if no starting products match
+     */
+    public List<Product> getProductsByIdsRecursiveForExportV2(boolean filterNamespaces, Collection<String> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String sql =
+            """
+            WITH RECURSIVE product_links (parent_uuid, child_uuid) AS (
+                SELECT uuid, derived_product_uuid FROM cp_products WHERE derived_product_uuid IS NOT NULL
+                UNION
+                SELECT product_uuid, provided_product_uuid FROM cp_product_provided_products
+            ),
+            product_graph (uuid) AS (
+                SELECT uuid FROM cp_products
+                    WHERE (:filter_namespaces = 0 OR namespace = '') AND product_id IN (:product_ids)
+                UNION
+                SELECT child.uuid FROM product_graph graph
+                    JOIN product_links links ON links.parent_uuid = graph.uuid
+                    JOIN cp_products child ON child.uuid = links.child_uuid
+                    WHERE (:filter_namespaces = 0 OR child.namespace = '')
+            )
+            SELECT uuid FROM product_graph
+            """;
+
+        Query query = this.getEntityManager()
+            .createNativeQuery(sql, String.class)
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(Product.class)
+            .addSynchronizedQuerySpace("cp_product_provided_products")
+            .setParameter("filter_namespaces", filterNamespaces ? 1 : 0);
+
+        Set<String> productUuids = new HashSet<>();
+        int blockSize = Math.min(this.getQueryParameterLimit() - 2, this.getInBlockSize());
+        for (List<String> block : this.partition(productIds, blockSize)) {
+            List<String> uuids = query.setParameter("product_ids", block).getResultList();
+            productUuids.addAll(uuids);
+        }
+
+        String jpqlBrandingAndContent =
+            """
+            SELECT product FROM Product product
+                LEFT JOIN FETCH product.branding
+                LEFT JOIN FETCH product.productContent productContent
+                LEFT JOIN FETCH productContent.content
+                WHERE product.uuid IN (:product_uuids)
+            """;
+
+        TypedQuery<Product> fetchQuery = this.getEntityManager().createQuery(jpqlBrandingAndContent, Product.class);
+        List<Product> output = new ArrayList<>();
+        for (List<String> block : this.partition(productUuids)) {
+            output.addAll(fetchQuery.setParameter("product_uuids", block).getResultList());
+        }
+
+        String jpqlDerivedAndProvidedProduct =
+            """
+            SELECT product FROM Product product
+                LEFT JOIN FETCH product.providedProducts
+                WHERE product.uuid IN (:product_uuids)
+            """;
+
+        TypedQuery<Product> relationshipsQuery = this.getEntityManager()
+            .createQuery(jpqlDerivedAndProvidedProduct, Product.class);
+        for (List<String> block : this.partition(productUuids)) {
+            relationshipsQuery.setParameter("product_uuids", block).getResultList();
+        }
+
+        return output;
+    }
+
+    /**
      * Fetches all products in the given namespace. If the namespace does not exist or does not have
      * any products, this method returns an empty list.
      *

@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.auth.Principal;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.guice.PrincipalProvider;
@@ -83,7 +84,8 @@ public class EventFactoryTest {
         this.mockOwnerCurator = mock(OwnerCurator.class);
 
         this.modelTranslator = new StandardTranslator(this.mockConsumerTypeCurator,
-            this.mockEnvironmentCurator, this.mockOwnerCurator);
+            this.mockEnvironmentCurator, this.mockOwnerCurator,
+            TestConfig.defaults());
 
         eventFactory = new EventFactory(principalProvider, this.modelTranslator);
     }

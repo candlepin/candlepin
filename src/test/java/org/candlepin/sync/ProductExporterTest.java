@@ -45,7 +45,8 @@ public class ProductExporterTest {
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         ProductExporter exporter = new ProductExporter(
-            new StandardTranslator(new ConsumerTypeCurator(), new EnvironmentCurator(), new OwnerCurator()));
+            new StandardTranslator(new ConsumerTypeCurator(), new EnvironmentCurator(), new OwnerCurator(),
+                TestConfig.defaults()));
 
         StringWriter writer = new StringWriter();
 

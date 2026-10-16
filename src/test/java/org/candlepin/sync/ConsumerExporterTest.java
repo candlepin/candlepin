@@ -60,7 +60,8 @@ public class ConsumerExporterTest {
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         ModelTranslator translator = new StandardTranslator(
-            mockConsumerTypeCurator, mockEnvironmentCurator, ownerCurator);
+            mockConsumerTypeCurator, mockEnvironmentCurator, ownerCurator,
+            TestConfig.defaults());
         ConsumerExporter exporter = new ConsumerExporter(translator);
         ConsumerType ctype = new ConsumerType("candlepin");
         ctype.setId("8888");

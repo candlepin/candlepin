@@ -264,7 +264,8 @@ public class ConsumerResourceUpdateTest {
         this.testMigration = new GuestMigration(this.consumerCurator);
 
         this.translator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
-            this.ownerCurator);
+            this.ownerCurator,
+            TestConfig.defaults());
 
         this.resource = new ConsumerResource(
             this.consumerCurator,

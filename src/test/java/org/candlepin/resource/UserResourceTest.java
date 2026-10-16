@@ -28,6 +28,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
@@ -80,7 +81,8 @@ public class UserResourceTest {
         this.mockOwnerCurator = mock(OwnerCurator.class);
         this.mockI18n = mock(I18n.class);
         this.modelTranslator = new StandardTranslator(mockConsumerTypeCurator, mockEnvironmentCurator,
-            mockOwnerCurator);
+            mockOwnerCurator,
+            TestConfig.defaults());
 
         this.userResource = new UserResource(this.mockUserServiceAdapter, this.mockI18n,
             this.mockOwnerCurator, this.modelTranslator);
