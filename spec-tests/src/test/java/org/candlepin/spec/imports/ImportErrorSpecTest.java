@@ -38,6 +38,9 @@ import org.candlepin.spec.bootstrap.data.util.ExportUtil;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -67,6 +70,8 @@ import java.util.zip.ZipOutputStream;
 
 @SpecTest
 @OnlyInStandalone
+@Isolated("Manifest imports update global distributor versions and rules")
+@Execution(ExecutionMode.SAME_THREAD)
 public class ImportErrorSpecTest {
     private static Stream<Arguments> capabilitiesSource() {
         return CryptoCapabilities.getSupportedCapabilities()
@@ -262,9 +267,6 @@ public class ImportErrorSpecTest {
             .contains("DISTRIBUTOR_CONFLICT");
     }
 
-    /**
-     * Test is run sequentially to avoid conflicts with other tests during forced reimport.
-     */
     @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
     @MethodSource("capabilitiesSource")
     public void shouldAllowForcingManifestFromDifferentSubscriptionManagementApplication(
@@ -293,6 +295,10 @@ public class ImportErrorSpecTest {
 
         String upstreamConsumerUuid1 = ownerRefresh1.getUpstreamConsumer()
             .getUuid();
+
+        // The importer compares creation times at whole-second precision. Keep the manifests apart
+        // so forcing the distributor conflict does not also require overriding MANIFEST_SAME.
+        Thread.sleep(1000);
 
         // Impl note: we want the manifest to come from different upstream sources, so we can't
         // reuse the generator
