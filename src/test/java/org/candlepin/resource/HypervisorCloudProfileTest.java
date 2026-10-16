@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.server.v1.GuestIdDTO;
 import org.candlepin.model.Consumer;
@@ -64,7 +65,8 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
         injector.getInstance(HypervisorResource.class);
 
         this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
-            this.ownerCurator);
+            this.ownerCurator,
+            TestConfig.defaults());
 
         this.owner = this.createOwner("test-owner");
         someuser = userCurator.create(new User(USER_NAME, "dontcare"));

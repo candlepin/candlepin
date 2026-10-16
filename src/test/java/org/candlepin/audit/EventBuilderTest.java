@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessMode;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
@@ -63,7 +64,8 @@ public class EventBuilderTest {
         this.mockOwnerCurator = mock(OwnerCurator.class);
 
         this.modelTranslator = new StandardTranslator(this.mockConsumerTypeCurator,
-            this.mockEnvironmentCurator, this.mockOwnerCurator);
+            this.mockEnvironmentCurator, this.mockOwnerCurator,
+            TestConfig.defaults());
 
         principalProvider = mock(PrincipalProvider.class);
         Principal principal = mock(Principal.class);

@@ -35,6 +35,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -842,6 +843,33 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         Set<Content> output = this.contentCurator.getChildrenContentOfProductsByUuids(input);
         assertNotNull(output);
         assertTrue(output.isEmpty());
+    }
+
+    @Test
+    public void testExportV2IncludesFutureGlobalContentAndExcludesExpiredAndLocalContent() {
+        Owner owner = this.createOwner();
+        Content future = this.createContent();
+        Content local = this.createContent().setNamespace(owner.getKey());
+        this.contentCurator.merge(local);
+        Content expired = this.createContent();
+        Product futureProduct = this.createProductWithContent(owner, future, local);
+        Product expiredProduct = this.createProductWithContent(owner, expired);
+        Date tomorrow = new Date(System.currentTimeMillis() + 86400000L);
+        Date yesterday = new Date(System.currentTimeMillis() - 86400000L);
+        this.createPool(owner, futureProduct, 1L, tomorrow, TestUtil.createDate(2100, 1, 1));
+        this.createPool(owner, expiredProduct, 1L, TestUtil.createDate(2000, 1, 1), yesterday);
+        this.contentCurator.flush();
+        this.contentCurator.clear();
+
+        assertThat(this.contentCurator.getExportV2ContentByOwner(owner.getId()))
+            .extracting(ProductContent::getContent)
+            .containsExactly(future);
+        assertThat(this.contentCurator.getActiveContentByOwner(owner.getId())).isEmpty();
+        assertThat(this.contentCurator.getExportV2ContentByOwner("unknown")).isEmpty();
+        assertThat(this.contentCurator.getExportV2ContentByOwner(null)).isEmpty();
+        assertThat(this.contentCurator.hasPoolsExpiredSince(owner.getId(),
+            new Date(yesterday.getTime() - 86400000L))).isTrue();
+        assertThat(this.contentCurator.hasPoolsExpiredSince(owner.getId(), new Date())).isFalse();
     }
 
     @Test

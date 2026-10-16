@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.BrandingDTO;
@@ -103,7 +104,8 @@ public class EntitlementImporterTest {
 
         this.translator = new StandardTranslator(mockConsumerTypeCurator,
             mockEnvironmentCurator,
-            ownerCurator);
+            ownerCurator,
+            TestConfig.defaults());
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
