@@ -25,6 +25,7 @@ import org.candlepin.async.tasks.EntitleByProductsJob;
 import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.async.tasks.ExpiredPoolsCleanupJob;
 import org.candlepin.async.tasks.ExportJob;
+import org.candlepin.async.tasks.ExportJobV2;
 import org.candlepin.async.tasks.HealEntireOrgJob;
 import org.candlepin.async.tasks.HypervisorHeartbeatUpdateJob;
 import org.candlepin.async.tasks.HypervisorUpdateJob;
@@ -474,6 +475,7 @@ public class CandlepinModule extends AbstractModule {
         JobManager.registerJob(EntitleByProductsJob.JOB_KEY, EntitleByProductsJob.class);
         JobManager.registerJob(ExpiredPoolsCleanupJob.JOB_KEY, ExpiredPoolsCleanupJob.class);
         JobManager.registerJob(ExportJob.JOB_KEY, ExportJob.class);
+        JobManager.registerJob(ExportJobV2.JOB_KEY, ExportJobV2.class);
         JobManager.registerJob(HealEntireOrgJob.JOB_KEY, HealEntireOrgJob.class);
         JobManager.registerJob(HypervisorHeartbeatUpdateJob.JOB_KEY, HypervisorHeartbeatUpdateJob.class);
         JobManager.registerJob(HypervisorUpdateJob.JOB_KEY, HypervisorUpdateJob.class);

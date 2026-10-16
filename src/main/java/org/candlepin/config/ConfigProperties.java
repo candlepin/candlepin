@@ -255,6 +255,9 @@ public class ConfigProperties {
     public static final String CRYPTO_DEFAULT_SCHEME = "candlepin.crypto.default_scheme";
     public static final String CRYPTO_UPSTREAM_CERT_REPO = "candlepin.crypto.upstream_certificate_repo";
 
+    // manifest V2 export filtering options
+    public static final String EXPORT_FILTER_NON_GLOBAL_NAMESPACE = "candlepin.manifest.content_filter.non_global_namespace";
+
     public static final String CRYPTO_SCHEME_PREFIX = "candlepin.crypto.scheme.";
     public static final String CRYPTO_SCHEME_CERT = "cert";
     public static final String CRYPTO_SCHEME_KEY = "key";
@@ -588,6 +591,8 @@ public class ConfigProperties {
             this.put(ASYNC_JOBS_DISPATCH_ADDRESS, "job");
             this.put(ASYNC_JOBS_RECEIVE_ADDRESS, "jobs");
             this.put(ASYNC_JOBS_RECEIVE_FILTER, "");
+
+            this.put(EXPORT_FILTER_NON_GLOBAL_NAMESPACE, "true");
 
             // ActiveEntitlementJob
             this.put(jobConfig(ActiveEntitlementJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),

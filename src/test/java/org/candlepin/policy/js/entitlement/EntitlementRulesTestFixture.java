@@ -119,7 +119,8 @@ public class EntitlementRulesTestFixture {
 
         poolService = mock(PoolService.class);
 
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator,
+            TestConfig.defaults());
         enforcer = new EntitlementRules(
             new DateSourceImpl(),
             jsRules,

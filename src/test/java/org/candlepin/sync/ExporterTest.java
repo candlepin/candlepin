@@ -73,6 +73,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -91,6 +92,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Path;
 import java.security.KeyException;
 import java.security.KeyPair;
 import java.security.cert.CertificateEncodingException;
@@ -150,6 +152,9 @@ public class ExporterTest {
     @Mock
     private SCACertificateGenerator scaCertificateGenerator;
 
+    @TempDir
+    private Path workDirectory;
+
     private DevConfig config;
     private CryptoManager cryptoManager;
     private ObjectMapper mapper;
@@ -173,7 +178,8 @@ public class ExporterTest {
         this.mapper = ObjectMapperFactory.getSyncObjectMapper(this.config);
 
         metaExporter = new MetaExporter();
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator,
+            TestConfig.defaults());
         consumerExporter = new ConsumerExporter(translator);
         consumerTypeExporter = new ConsumerTypeExporter(translator);
         rulesExporter = new RulesExporter(rulesCurator);
@@ -227,7 +233,7 @@ public class ExporterTest {
 
     @Test
     public void exportProducts() throws Exception {
-        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.workDirectory.toString());
         Entitlement ent = mock(Entitlement.class);
 
         Rules mrules = mock(Rules.class);
@@ -309,14 +315,14 @@ public class ExporterTest {
         verifySignatureFile(export, null);
 
         FileUtils.deleteDirectory(export.getParentFile());
-        assertTrue(new File("/tmp/consumer_export.zip").delete());
-        assertTrue(new File("/tmp/12345.json").delete());
-        assertTrue(new File("/tmp/332211.json").delete());
+        assertTrue(ExporterTest.this.workDirectory.resolve("consumer_export.zip").toFile().delete());
+        assertTrue(ExporterTest.this.workDirectory.resolve("12345.json").toFile().delete());
+        assertTrue(ExporterTest.this.workDirectory.resolve("332211.json").toFile().delete());
     }
 
     @Test
     public void doNotExportDirtyEntitlements() throws Exception {
-        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.workDirectory.toString());
         Entitlement ent = mock(Entitlement.class);
         Principal principal = mock(Principal.class);
         IdentityCertificate idcert = new IdentityCertificate();
@@ -346,7 +352,7 @@ public class ExporterTest {
 
     @Test
     public void exportMetadata() throws Exception {
-        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.workDirectory.toString());
         Instant start = Instant.now().minusSeconds(1L);
         Rules mrules = mock(Rules.class);
         Principal principal = mock(Principal.class);
@@ -385,13 +391,13 @@ public class ExporterTest {
 
         // cleanup the mess
         FileUtils.deleteDirectory(export.getParentFile());
-        assertTrue(new File("/tmp/consumer_export.zip").delete());
-        assertTrue(new File("/tmp/meta.json").delete());
+        assertTrue(ExporterTest.this.workDirectory.resolve("consumer_export.zip").toFile().delete());
+        assertTrue(ExporterTest.this.workDirectory.resolve("meta.json").toFile().delete());
     }
 
     @Test
     public void exportIdentityCertificate() throws Exception {
-        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.workDirectory.toString());
         Rules mrules = mock(Rules.class);
         Principal principal = mock(Principal.class);
 
@@ -431,7 +437,7 @@ public class ExporterTest {
 
     @Test
     public void exportConsumer() throws Exception {
-        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.workDirectory.toString());
         config.setProperty(ConfigProperties.PREFIX_WEBURL, "localhost:8443/weburl");
         config.setProperty(ConfigProperties.PREFIX_APIURL, "localhost:8443/apiurl");
         Rules mrules = mock(Rules.class);
@@ -479,7 +485,7 @@ public class ExporterTest {
 
     @Test
     public void exportDistributorVersions() throws Exception {
-        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.workDirectory.toString());
         config.setProperty(ConfigProperties.PREFIX_WEBURL, "localhost:8443/weburl");
         config.setProperty(ConfigProperties.PREFIX_APIURL, "localhost:8443/apiurl");
         Rules mrules = mock(Rules.class);
@@ -540,7 +546,7 @@ public class ExporterTest {
 
     @Test
     public void testGetEntitlementExport() throws Exception {
-        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.workDirectory.toString());
 
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
@@ -598,7 +604,7 @@ public class ExporterTest {
 
     @Test
     public void testGetEntitlementExportWithUnknownSerialId() throws Exception {
-        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.workDirectory.toString());
 
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
@@ -657,7 +663,7 @@ public class ExporterTest {
 
     @Test
     public void testGetEntitlementExportWithValidEntitlementCertSerial() throws Exception {
-        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.workDirectory.toString());
 
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
@@ -717,7 +723,7 @@ public class ExporterTest {
 
     @Test
     public void testGetEntitlementExportWithValidContentAccessCertSerial() throws Exception {
-        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.workDirectory.toString());
 
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
@@ -777,7 +783,7 @@ public class ExporterTest {
 
     @Test
     public void testGetFullExportWithUnknownScheme() throws KeyException {
-        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.workDirectory.toString());
 
         IdentityCertificate idcert = new IdentityCertificate();
         idcert.setSerial(new CertificateSerial(10L, new Date()));
@@ -809,7 +815,7 @@ public class ExporterTest {
     @ParameterizedTest
     @MethodSource("schemeSource")
     public void testGetFullExportWithSupportedSchemes(Scheme scheme) throws Exception {
-        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.workDirectory.toString());
 
         IdentityCertificate idcert = new IdentityCertificate();
         idcert.setSerial(new CertificateSerial(10L, new Date()));
@@ -843,7 +849,7 @@ public class ExporterTest {
 
     @Test
     public void testGetEntitlementExportWithUnknownScheme() throws KeyException {
-        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.workDirectory.toString());
 
         Consumer consumer = CryptoUtil.configureConsumerWithNoSelectableScheme(new Consumer()
             .setUuid("consumer")
@@ -863,7 +869,7 @@ public class ExporterTest {
     @ParameterizedTest
     @MethodSource("schemeSource")
     public void testGetEntitlementExportWithSupportedSchemes(Scheme scheme) throws Exception {
-        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.workDirectory.toString());
 
         Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer()
             .setUuid("consumer")
@@ -899,7 +905,8 @@ public class ExporterTest {
                 byte[] buf = new byte[1024];
 
                 if (entry.getName().equals("consumer_export.zip")) {
-                    OutputStream os = new FileOutputStream("/tmp/consumer_export.zip");
+                    OutputStream os = new FileOutputStream(
+                        ExporterTest.this.workDirectory.resolve("consumer_export.zip").toFile());
 
                     int n;
                     while ((n = zis.read(buf, 0, 1024)) > -1) {
@@ -907,7 +914,7 @@ public class ExporterTest {
                     }
                     os.flush();
                     os.close();
-                    File exportdata = new File("/tmp/consumer_export.zip");
+                    File exportdata = ExporterTest.this.workDirectory.resolve("consumer_export.zip").toFile();
                     // open up the zip and look for the metadata
                     found = verifyHasEntry(exportdata, name);
                 }
@@ -946,7 +953,8 @@ public class ExporterTest {
                 byte[] buf = new byte[1024];
 
                 if (entry.getName().equals("consumer_export.zip")) {
-                    OutputStream os = new FileOutputStream("/tmp/consumer_export.zip");
+                    OutputStream os = new FileOutputStream(
+                        ExporterTest.this.workDirectory.resolve("consumer_export.zip").toFile());
 
                     int n;
                     while ((n = zis.read(buf, 0, 1024)) > -1) {
@@ -954,7 +962,7 @@ public class ExporterTest {
                     }
                     os.flush();
                     os.close();
-                    File exportdata = new File("/tmp/consumer_export.zip");
+                    File exportdata = ExporterTest.this.workDirectory.resolve("consumer_export.zip").toFile();
                     // open up the zip and look for the metadata
                     verifyContent(exportdata, name, v);
                 }
@@ -1025,7 +1033,7 @@ public class ExporterTest {
         void verify(ZipInputStream zis, byte[] buf) throws IOException;
     }
 
-    public static class VerifyMetadata implements Verify {
+    public class VerifyMetadata implements Verify {
         private final Date start;
 
         public VerifyMetadata(Date start) {
@@ -1033,7 +1041,7 @@ public class ExporterTest {
         }
 
         public void verify(ZipInputStream zis, byte[] buf) throws IOException {
-            OutputStream os = new FileOutputStream("/tmp/meta.json");
+            OutputStream os = new FileOutputStream(ExporterTest.this.workDirectory.resolve("meta.json").toFile());
             int n;
             while ((n = zis.read(buf, 0, 1024)) > -1) {
                 os.write(buf, 0, n);
@@ -1046,7 +1054,8 @@ public class ExporterTest {
 
             ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
-            Meta m = mapper.readValue(new FileInputStream("/tmp/meta.json"), Meta.class);
+            Meta m = mapper.readValue(
+                new FileInputStream(ExporterTest.this.workDirectory.resolve("meta.json").toFile()), Meta.class);
 
             Map<String, String> vmap = VersionUtil.getVersionMap();
 
@@ -1056,7 +1065,7 @@ public class ExporterTest {
         }
     }
 
-    public static class VerifyProduct implements Verify {
+    public class VerifyProduct implements Verify {
         private final String filename;
         private final Product originalProduct;
 
@@ -1066,7 +1075,7 @@ public class ExporterTest {
         }
 
         public void verify(ZipInputStream zis, byte[] buf) throws IOException {
-            OutputStream os = new FileOutputStream("/tmp/" + filename);
+            OutputStream os = new FileOutputStream(ExporterTest.this.workDirectory.resolve(filename).toFile());
             int n;
             while ((n = zis.read(buf, 0, 1024)) > -1) {
                 os.write(buf, 0, n);
@@ -1079,7 +1088,8 @@ public class ExporterTest {
 
             ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
-            ProductDTO prod = mapper.readValue(new FileInputStream("/tmp/" + filename), ProductDTO.class);
+            ProductDTO prod = mapper.readValue(
+                new FileInputStream(ExporterTest.this.workDirectory.resolve(filename).toFile()), ProductDTO.class);
 
             assertEquals(originalProduct.getId(), prod.getId());
             assertEquals(originalProduct.getName(), prod.getName());
@@ -1089,7 +1099,7 @@ public class ExporterTest {
         }
     }
 
-    public static class VerifyIdentityCert implements Verify {
+    public class VerifyIdentityCert implements Verify {
         private final String filename;
 
         public VerifyIdentityCert(String filename) {
@@ -1097,7 +1107,7 @@ public class ExporterTest {
         }
 
         public void verify(ZipInputStream zis, byte[] buf) throws IOException {
-            OutputStream os = new FileOutputStream("/tmp/" + filename);
+            OutputStream os = new FileOutputStream(ExporterTest.this.workDirectory.resolve(filename).toFile());
             int n;
             while ((n = zis.read(buf, 0, 1024)) > -1) {
                 os.write(buf, 0, n);
@@ -1105,13 +1115,13 @@ public class ExporterTest {
             os.flush();
             os.close();
 
-            BufferedReader br = new BufferedReader(new FileReader("/tmp/" + filename));
+            BufferedReader br = new BufferedReader(new FileReader(ExporterTest.this.workDirectory.resolve(filename).toFile()));
             assertEquals("hpj-08ha-w4gpoknpon*)&^%#euh0876puhapodifbvj094", br.readLine());
             br.close();
         }
     }
 
-    public static class VerifyConsumer implements Verify {
+    public class VerifyConsumer implements Verify {
         private final String filename;
 
         public VerifyConsumer(String filename) {
@@ -1119,7 +1129,7 @@ public class ExporterTest {
         }
 
         public void verify(ZipInputStream zis, byte[] buf) throws IOException {
-            OutputStream os = new FileOutputStream("/tmp/" + filename);
+            OutputStream os = new FileOutputStream(ExporterTest.this.workDirectory.resolve(filename).toFile());
             int n;
             while ((n = zis.read(buf, 0, 1024)) > -1) {
                 os.write(buf, 0, n);
@@ -1132,7 +1142,8 @@ public class ExporterTest {
 
             ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
-            ConsumerDTO c = mapper.readValue(new FileInputStream("/tmp/" + filename), ConsumerDTO.class);
+            ConsumerDTO c = mapper.readValue(
+                new FileInputStream(ExporterTest.this.workDirectory.resolve(filename).toFile()), ConsumerDTO.class);
 
             assertEquals("localhost:8443/apiurl", c.getUrlApi());
             assertEquals("localhost:8443/weburl", c.getUrlWeb());
@@ -1146,7 +1157,7 @@ public class ExporterTest {
         }
     }
 
-    public static class VerifyDistributorVersion implements Verify {
+    public class VerifyDistributorVersion implements Verify {
         private final String filename;
 
         public VerifyDistributorVersion(String filename) {
@@ -1154,7 +1165,7 @@ public class ExporterTest {
         }
 
         public void verify(ZipInputStream zis, byte[] buf) throws IOException {
-            OutputStream os = new FileOutputStream("/tmp/" + filename);
+            OutputStream os = new FileOutputStream(ExporterTest.this.workDirectory.resolve(filename).toFile());
             int n;
             while ((n = zis.read(buf, 0, 1024)) > -1) {
                 os.write(buf, 0, n);
@@ -1168,7 +1179,7 @@ public class ExporterTest {
             ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
             DistributorVersion dv = mapper.readValue(
-                new FileInputStream("/tmp/" + filename),
+                new FileInputStream(ExporterTest.this.workDirectory.resolve(filename).toFile()),
                 DistributorVersion.class);
             assertNotNull(dv);
             assertEquals("test-dist-ver", dv.getName());

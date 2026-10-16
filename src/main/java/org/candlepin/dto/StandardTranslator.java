@@ -14,6 +14,7 @@
  */
 package org.candlepin.dto;
 
+import org.candlepin.config.Configuration;
 import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.server.v1.BrandingDTO;
@@ -146,7 +147,7 @@ public class StandardTranslator extends SimpleModelTranslator {
 
     @Inject
     public StandardTranslator(ConsumerTypeCurator consumerTypeCurator, EnvironmentCurator environmentCurator,
-        OwnerCurator ownerCurator) {
+        OwnerCurator ownerCurator, Configuration configuration) {
 
         // API translators
         /////////////////////////////////////////////
@@ -296,6 +297,28 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new org.candlepin.dto.manifest.v1.UpstreamConsumerTranslator(),
             UpstreamConsumer.class, org.candlepin.dto.manifest.v1.UpstreamConsumerDTO.class);
+        // V2 Export DTO translators
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v2.ConsumerTranslator(consumerTypeCurator),
+            Consumer.class, org.candlepin.dto.manifest.v2.ConsumerDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v2.BrandingTranslator(),
+            Branding.class, org.candlepin.dto.manifest.v2.BrandingDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v2.ConsumerTypeTranslator(),
+            ConsumerType.class, org.candlepin.dto.manifest.v2.ConsumerTypeDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v2.ContentTranslator(),
+            Content.class, org.candlepin.dto.manifest.v2.ContentDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v2.ProductTranslator(configuration),
+            Product.class, org.candlepin.dto.manifest.v2.ProductDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v2.SubscriptionTranslator(),
+            Pool.class, org.candlepin.dto.manifest.v2.SubscriptionDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v2.MetaTranslator(),
+            org.candlepin.sync.Meta.class, org.candlepin.dto.manifest.v2.MetaDTO.class);
 
         // Shims
         /////////////////////////////////////////////
