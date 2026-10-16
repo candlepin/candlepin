@@ -27,6 +27,8 @@ import org.candlepin.model.ProductContent;
 import org.candlepin.resource.util.AttachedFile;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.service.UniqueIdGenerator;
+import org.candlepin.service.exception.product.ProductServiceException;
+import org.candlepin.service.exception.subscription.SubscriptionServiceException;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.ProductContentInfo;
@@ -109,6 +111,30 @@ public class HostedTestResource {
     @Produces(MediaType.TEXT_PLAIN)
     public Boolean isAlive() {
         return true;
+    }
+
+    /**
+     * Simulates an uncaught product service failure from a hosted adapter endpoint
+     *
+     * @param productId
+     *     the product ID to include in the service failure
+     */
+    @GET
+    @Path("/service-exceptions/products/{product_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public void simulateProductServiceFailure(@PathParam("product_id") String productId) {
+        throw new ProductServiceException(productId,
+            new IllegalStateException("simulated product backend failure"));
+    }
+
+    /**
+     * Simulates an uncaught subscription service failure from a hosted adapter endpoint
+     */
+    @GET
+    @Path("/service-exceptions/subscriptions")
+    @Produces(MediaType.APPLICATION_JSON)
+    public void simulateSubscriptionServiceFailure() {
+        throw new SubscriptionServiceException("simulated subscription backend failure");
     }
 
     /**
