@@ -17,10 +17,12 @@ package org.candlepin.spec.auth;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertUnauthorized;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.catchApiException;
 
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
+import org.candlepin.invoker.client.ApiException;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -30,6 +32,10 @@ import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import org.junit.jupiter.api.Test;
 
+import tools.jackson.databind.ObjectMapper;
+
+import java.util.List;
+
 @SpecTest
 class BasicAuthSpecTest {
 
@@ -38,6 +44,25 @@ class BasicAuthSpecTest {
         ApiClient client = ApiClients.basic("random", "not valid");
 
         assertUnauthorized(client.consumerTypes()::getConsumerTypes);
+    }
+
+    @Test
+    void shouldHideWhetherUserExists() {
+        ApiClient admin = ApiClients.admin();
+        OwnerDTO owner = admin.owners().createOwner(Owners.random());
+        UserDTO user = UserUtil.createUser(admin, owner);
+        ObjectMapper mapper = new ObjectMapper();
+
+        for (String username : List.of(user.getUsername(), user.getUsername() + "-missing")) {
+            ApiClient client = ApiClients.basic(username, "wrong-password");
+            ApiException failure = catchApiException(client.consumerTypes()::getConsumerTypes);
+
+            assertThat(failure.getCode()).isEqualTo(401);
+            String message = mapper.readTree(failure.getResponseBody())
+                .get("displayMessage").asString();
+            assertThat(message).isEqualTo("Invalid Credentials");
+            assertThat(failure.getResponseHeaders().get("www-authenticate")).contains("Basic Realm=candlepin");
+        }
     }
 
     @Test

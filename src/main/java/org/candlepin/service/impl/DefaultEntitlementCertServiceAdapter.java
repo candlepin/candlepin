@@ -25,9 +25,6 @@ import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.certs.EntitlementCertificateGenerator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,8 +36,6 @@ import jakarta.inject.Inject;
  * DefaultEntitlementCertServiceAdapter
  */
 public class DefaultEntitlementCertServiceAdapter implements EntitlementCertServiceAdapter {
-    private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementCertServiceAdapter.class);
-
     private final EntitlementCertificateCurator entCertCurator;
     private final CertificateSerialCurator serialCurator;
     private final EntitlementCertificateGenerator entitlementCertificateGenerator;
@@ -81,7 +76,6 @@ public class DefaultEntitlementCertServiceAdapter implements EntitlementCertServ
         }
         catch (CryptoCapabilitiesException e) {
             String msg = "Unable to generate entitlement certificate";
-            log.error(msg, e);
             throw new org.candlepin.service.exception.entitlementcert.CryptoCapabilitiesException(msg, e);
         }
     }
@@ -98,7 +92,6 @@ public class DefaultEntitlementCertServiceAdapter implements EntitlementCertServ
         }
         catch (CryptoCapabilitiesException e) {
             String msg = "Unable to generate entitlement certificate";
-            log.error(msg, e);
             throw new org.candlepin.service.exception.entitlementcert.CryptoCapabilitiesException(msg, e);
         }
     }

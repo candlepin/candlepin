@@ -16,20 +16,24 @@ package org.candlepin.auth;
 
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.resource.util.UserServiceExceptionTranslator;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.user.UserServiceException;
 import org.candlepin.service.model.UserInfo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
-
-
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * UserAuth
  */
 public abstract class UserAuth implements AuthProvider {
+    private static final Logger log = LoggerFactory.getLogger(UserAuth.class);
 
     protected UserServiceAdapter userServiceAdapter;
     protected Provider<I18n> i18nProvider;
@@ -45,12 +49,36 @@ public abstract class UserAuth implements AuthProvider {
     }
 
     /**
-     * Creates a user principal for a given username
+     * Creates a user principal for a given username, returning unauthorized for unexpected user service failures
      *
-     * @return the principal for the given user
+     * @param username
+     *  the user to look up
+     *
+     * @return the user's principal
      */
     protected Principal createPrincipal(String username) {
-        UserInfo user = this.userServiceAdapter.findByLogin(username);
+        return this.createPrincipal(username, Status.UNAUTHORIZED);
+    }
+
+    /**
+     * Creates a user principal using the caller's response status for unexpected user service failures
+     *
+     * @param username
+     *  the user to look up
+     * @param unexpectedFailureStatus
+     *  the response status for unexpected user service failures
+     *
+     * @return the user's principal
+     */
+    protected Principal createPrincipal(String username, Status unexpectedFailureStatus) {
+        UserInfo user;
+        try {
+            user = this.userServiceAdapter.findByLogin(username);
+        }
+        catch (UserServiceException e) {
+            throw UserServiceExceptionTranslator.translate(e, this.i18nProvider.get(), log,
+                unexpectedFailureStatus);
+        }
 
         if (user == null) {
             throw new BadRequestException(this.i18nProvider.get().tr("User not found: {0}", username));

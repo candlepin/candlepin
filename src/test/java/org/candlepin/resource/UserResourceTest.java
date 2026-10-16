@@ -36,6 +36,7 @@ import org.candlepin.dto.api.server.v1.UserDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.ConflictException;
+import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EnvironmentCurator;
@@ -47,6 +48,7 @@ import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.exception.user.UserDisabledException;
 import org.candlepin.service.exception.user.UserInvalidException;
+import org.candlepin.service.exception.user.UserServiceException;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -58,6 +60,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * UserResourceTest
@@ -266,12 +269,27 @@ public class UserResourceTest {
     }
 
     @Test
+    public void testUnexpectedUserLookupFailureReturnsUnauthorized() {
+        UserServiceException failure = new UserServiceException("unavailable");
+        when(this.mockUserServiceAdapter.findByLogin("test_user")).thenThrow(failure);
+        when(this.mockI18n.tr("Error contacting user service")).thenReturn("Error contacting user service");
+
+        CandlepinException result = assertThrows(CandlepinException.class,
+            () -> this.userResource.getUserInfo("test_user"));
+
+        assertThat(result)
+            .returns(Status.UNAUTHORIZED, CandlepinException::httpReturnCode)
+            .returns("Error contacting user service", CandlepinException::getMessage);
+        assertThat(result.getCause()).isSameAs(failure);
+    }
+
+    @Test
     public void testFetchByUsernameUserServiceException() {
         UserServiceAdapter adapter = mock(UserServiceAdapter.class);
         UserResource resource = new UserResource(adapter, this.mockI18n, this.mockOwnerCurator,
             this.modelTranslator);
         doThrow(new UserInvalidException("test_user")).when(adapter).findByLogin("test_user");
-        assertThrows(UserInvalidException.class, () -> resource.getUserInfo("test_user"));
+        assertThrows(NotAuthorizedException.class, () -> resource.getUserInfo("test_user"));
     }
 
     @Test
@@ -280,7 +298,7 @@ public class UserResourceTest {
         UserResource resource = new UserResource(adapter, this.mockI18n, this.mockOwnerCurator,
             this.modelTranslator);
         doThrow(new UserDisabledException("test_user")).when(adapter).findByLogin("test_user");
-        assertThrows(UserDisabledException.class, () -> resource.getUserInfo("test_user"));
+        assertThrows(NotAuthorizedException.class, () -> resource.getUserInfo("test_user"));
     }
 
     @Test
