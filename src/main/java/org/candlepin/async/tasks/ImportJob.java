@@ -35,6 +35,8 @@ import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.file.ManifestFileService;
 
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.LockAcquisitionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +61,8 @@ public class ImportJob implements AsyncJob {
     protected static final String CONFLICT_OVERRIDES_KEY = "conflict_overrides";
     protected static final String UPLOADED_FILE_NAME_KEY = "uploaded_file_name";
 
+    private static final int IMPORT_RETRY_COUNT = 4;
+
     /**
      * Job configuration object for the import job
      */
@@ -66,7 +70,8 @@ public class ImportJob implements AsyncJob {
         public ImportJobConfig() {
             this.setJobKey(JOB_KEY)
                 .setJobName(JOB_NAME)
-                .addConstraint(JobConstraints.uniqueByArguments(OWNER_KEY));
+                .addConstraint(JobConstraints.uniqueByArguments(OWNER_KEY))
+                .setRetryCount(IMPORT_RETRY_COUNT);
         }
 
         /**
@@ -248,22 +253,54 @@ public class ImportJob implements AsyncJob {
             caught = e;
         }
         catch (ImporterException e) {
-            toThrow = new JobExecutionException(e.getMessage(), e, true);
+            // A constraint violation or deadlock nested inside the import's transaction (two orgs
+            // racing to create the same shared product/content during a concurrent refresh)
+            // poisons that transaction outright; retrying inside it can't work. The whole import
+            // needs to be retried from scratch with a fresh transaction, so treat this specific
+            // cause as non-terminal instead of the usual (terminal) importer failure.
+            boolean transientRace = isCausedByTransientRace(e);
+            toThrow = new JobExecutionException(e.getMessage(), e, !transientRace);
             caught = e;
         }
         catch (Exception e) {
-            toThrow = new JobExecutionException(e.getMessage(), e, false);
+            boolean transientRace = isCausedByTransientRace(e);
+            toThrow = new JobExecutionException(e.getMessage(), e, !transientRace);
             caught = e;
         }
 
         manifestManager.recordImportFailure(targetOwner, caught, uploadedFileName);
 
-        // If an exception was thrown, the importer's transaction was rolled
-        // back. We want to make sure that the file gets deleted so that it
-        // doesn't take up disk space. It may be possible that the file was
-        // already deleted, but we attempt it anyway.
-        manifestManager.deleteStoredManifest(storedFileId);
+        // If this failure is terminal, or if the job has exhausted all retry attempts, the stored
+        // manifest file must be deleted so that it doesn't take up disk space. If the failure is
+        // non-terminal and retries remain, the job will be retried and needs the file to still be
+        // there.
+        if (toThrow.isTerminal() || context.isLastAttempt()) {
+            manifestManager.deleteStoredManifest(storedFileId);
+        }
+
         throw toThrow;
+    }
+
+    /**
+     * Checks whether the given exception's cause chain contains a transient constraint violation
+     * or deadlock, indicating the import failed only because it collided with another concurrent
+     * refresh of shared product or content data, rather than a genuine problem with the manifest.
+     *
+     * @param exception
+     *  the exception to inspect
+     *
+     * @return
+     *  true if the exception was caused by a transient constraint violation or deadlock; false
+     *  otherwise
+     */
+    private static boolean isCausedByTransientRace(Throwable exception) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof ConstraintViolationException || cause instanceof LockAcquisitionException) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
