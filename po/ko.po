@@ -11,7 +11,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-10-18 07:03+0000\n"
-"PO-Revision-Date: 2026-10-03 23:17+0000\n"
+"PO-Revision-Date: 2026-10-19 12:18+0000\n"
 "Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ko/>\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 2026.10\n"
+"X-Generator: Weblate 2026.10.1\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -888,10 +888,8 @@ msgstr "클라우드 등록 서비스에서 예상치 못한 오류: {0}"
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:222
-#, fuzzy
-#| msgid "Error contacting user service"
 msgid "Error contacting cloud registration service"
-msgstr "사용자 서비스 문의 중 오류 발생"
+msgstr "클라우드 등록 서비스 문의 중 오류 발생"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:236
 msgid "Cloud account ID is null or empty"
@@ -2120,10 +2118,8 @@ msgstr "구독 서비스에서 예상치 못한 오류: {0}"
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/util/SubscriptionServiceExceptionTranslator.java:72
-#, fuzzy
-#| msgid "Error contacting user service"
 msgid "Error contacting subscription service"
-msgstr "사용자 서비스 문의 중 오류 발생"
+msgstr "구독 서비스 문의 중 오류 발생"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
