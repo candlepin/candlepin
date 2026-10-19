@@ -9,7 +9,7 @@ RUN microdnf -y update && \
 USER root
 
 # Prepare Tomcat
-ARG TOMCAT_VERSION=9.0.110
+ARG TOMCAT_VERSION=9.0.120
 RUN wget https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz; \
     tar xzf apache-tomcat-${TOMCAT_VERSION}.tar.gz; \
     mkdir /opt/tomcat; \
@@ -48,7 +48,7 @@ USER root
 # Update and install dependencies
 RUN microdnf -y update && \
     microdnf -y update ca-certificates && \
-    microdnf install -y java-25-openjdk-headless initscripts && \
+    microdnf install -y java-25-openjdk-headless openssl openssl-devel initscripts && \
     microdnf clean all
 
 ENV JAVA_HOME=/usr/lib/jvm/jre-25-openjdk

@@ -207,7 +207,7 @@ class LegacySSLContextEditor(AbstractBaseEditor):
             ("keystoreType", "PKCS12"),
             ("compression", "on"),
             ("compressionMinSize", "11"),
-            ("compressableMimeType", "application/json,text/html,text/xml"),
+            ("compressibleMimeType", "application/json,text/html,text/xml"),
         ])
 
         # Return our top-level node
@@ -244,7 +244,7 @@ class CandlepinConnectorEditorV3(AbstractBaseEditor):
             ('SSLEnabled', 'true'),
             ('maxThreads', '150'),
             ("compression", "on"),
-            ("compressableMimeType", "application/json,text/html,text/xml")
+            ("compressibleMimeType", "application/json,text/html,text/xml")
         ]
 
     def _build_node(self):
@@ -368,7 +368,7 @@ class CandlepinConnectorAPR(AbstractBaseEditor):
             ('SSLEnabled', 'true'),
             ('maxThreads', '150'),
             ('compression', 'on'),
-            ("compressableMimeType", "application/json,text/html,text/xml")
+            ("compressibleMimeType", "application/json,text/html,text/xml")
         ]
 
     def _build_node(self):
@@ -378,7 +378,7 @@ class CandlepinConnectorAPR(AbstractBaseEditor):
         #     SSLEnabled="true"
         #     maxThreads="150"
         #     compression="on"
-        #     compressableMimeType="application/json,text/html,text/xml">
+        #     compressibleMimeType="application/json,text/html,text/xml">
         #
         #     <SSLHostConfig certificateVerification="optional"
         #         protocols="+TLSv1.2,+TLSv1.3"
@@ -425,6 +425,79 @@ class CandlepinConnectorAPR(AbstractBaseEditor):
         ])
 
         # Put it all together - ML-DSA first, then RSA
+        connector.addChild(libxml2.newText("\n  "))
+        connector.addChild(ssl_host_config)
+        connector.addChild(libxml2.newText("\n"))
+        ssl_host_config.addChild(libxml2.newText("\n    "))
+        ssl_host_config.addChild(certificate_mldsa)
+        ssl_host_config.addChild(libxml2.newText("\n    "))
+        ssl_host_config.addChild(certificate_rsa)
+        ssl_host_config.addChild(libxml2.newText("\n  "))
+
+        return connector
+
+
+class CandlepinConnectorOpenSSL(AbstractBaseEditor):
+    """NIO connector using Tomcat's OpenSSL FFM integration.
+
+    Supports multiple certificates (RSA + ML-DSA) for hybrid deployment.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(CandlepinConnectorOpenSSL, self).__init__(*args, **kwargs)
+        self.port = "8443"
+        self._node = self._build_node()
+
+    @property
+    def parent_xpath(self):
+        return "/Server/Service"
+
+    @property
+    def search_xpath(self):
+        return './Connector[@port="{port}"]'.format(port=self.port)
+
+    @property
+    def new_node(self):
+        return self._node
+
+    @property
+    def attributes(self):
+        return [
+            ('port', self.port),
+            ('protocol', 'org.apache.coyote.http11.Http11NioProtocol'),
+            ('scheme', 'https'),
+            ('secure', 'true'),
+            ('SSLEnabled', 'true'),
+            ('maxThreads', '150'),
+            ('compression', 'on'),
+            ("compressibleMimeType", "application/json,text/html,text/xml")
+        ]
+
+    def _build_node(self):
+        connector = libxml2.newNode("Connector")
+        self._add_attributes(connector, self.attributes)
+
+        ssl_host_config = libxml2.newNode("SSLHostConfig")
+        self._add_attributes(ssl_host_config, [
+            ("certificateVerification", "optional"),
+            ("protocols", "+TLSv1.2,+TLSv1.3"),
+            ("caCertificateFile", "/etc/candlepin/certs/candlepin-ca-bundle.crt"),
+        ])
+
+        certificate_mldsa = libxml2.newNode("Certificate")
+        self._add_attributes(certificate_mldsa, [
+            ('certificateFile', '/etc/candlepin/certs/candlepin-mldsa-65-ca.crt'),
+            ('certificateKeyFile', '/etc/candlepin/certs/candlepin-mldsa-65-ca.key'),
+            ('type', 'MLDSA')
+        ])
+
+        certificate_rsa = libxml2.newNode("Certificate")
+        self._add_attributes(certificate_rsa, [
+            ('certificateFile', '/etc/candlepin/certs/candlepin-rsa-ca.crt'),
+            ('certificateKeyFile', '/etc/candlepin/certs/candlepin-rsa-ca.key'),
+            ('type', 'RSA')
+        ])
+
         connector.addChild(libxml2.newText("\n  "))
         connector.addChild(ssl_host_config)
         connector.addChild(libxml2.newText("\n"))
@@ -496,6 +569,56 @@ class AprListenerDeleter(AbstractBaseEditor):
         raise NotImplementedError
 
 
+class OpenSSLListenerAdder(AbstractBaseEditor):
+    """Adds Tomcat's OpenSSL FFM lifecycle listener."""
+
+    def __init__(self, *args, **kwargs):
+        super(OpenSSLListenerAdder, self).__init__(*args, **kwargs)
+        self.listener_class = "org.apache.catalina.core.OpenSSLLifecycleListener"
+        self._element = libxml2.newNode("Listener")
+        self._add_attributes(self._element, self.attributes)
+
+    @property
+    def parent_xpath(self):
+        return "/Server"
+
+    @property
+    def search_xpath(self):
+        return "./Listener[@className='%s']" % self.listener_class
+
+    @property
+    def new_node(self):
+        return self._element
+
+    @property
+    def attributes(self):
+        return [("className", self.listener_class)]
+
+
+class OpenSSLListenerDeleter(AbstractBaseEditor):
+    """Removes Tomcat's OpenSSL FFM lifecycle listener."""
+
+    def __init__(self, *args, **kwargs):
+        super(OpenSSLListenerDeleter, self).__init__(*args, **kwargs)
+        self.listener_class = "org.apache.catalina.core.OpenSSLLifecycleListener"
+
+    @property
+    def parent_xpath(self):
+        return "/Server"
+
+    @property
+    def search_xpath(self):
+        return "./Listener[@className='%s']" % self.listener_class
+
+    @property
+    def new_node(self):
+        raise NotImplementedError
+
+    @property
+    def attributes(self):
+        raise NotImplementedError
+
+
 def parse_options():
     usage = "usage: %prog TOMCAT_CONF_DIRECTORY"
     parser = OptionParser(usage=usage)
@@ -507,10 +630,18 @@ def parse_options():
             help="specify a Tomcat version to target")
     parser.add_option("--use-apr", action="store_true", default=False,
             help="use APR connector with OpenSSL and dual RSA/ML-DSA certificates")
+    parser.add_option("--use-ffm-openssl", action="store_true", default=False,
+            help="use Tomcat's OpenSSL FFM integration with dual RSA/ML-DSA certificates")
 
     (options, args) = parser.parse_args()
     if len(args) != 1:
         parser.error("You must provide a Tomcat configuration directory")
+    if options.use_apr and options.use_ffm_openssl:
+        parser.error("--use-apr and --use-ffm-openssl cannot be used together")
+    if options.use_ffm_openssl and not supports_ffm_openssl(options.tc_version):
+        parser.error(
+            "--use-ffm-openssl requires Tomcat 9.0.111+ or 10.1.48+; "
+            "received {version}".format(version=options.tc_version or "unknown"))
 
     return (options, args)
 
@@ -522,6 +653,20 @@ def parse_tc_version(version):
         return [int(vchunk) for vchunk in version.split(".")]
     except ValueError:
         return None
+
+
+def supports_ffm_openssl(version):
+    version = parse_tc_version(version)
+    if version is None or len(version) < 3:
+        return False
+
+    version = tuple(version[:3])
+    if version[0] == 9:
+        return version >= (9, 0, 111)
+    if version[0] == 10 and version[1] == 1:
+        return version >= (10, 1, 48)
+
+    return False
 
 def make_backup_config(conf_dir):
     logger.info("Backing up current server.xml")
@@ -541,7 +686,12 @@ def main():
     make_backup_config(conf_dir)
 
     # Determine which connector to use...
-    if options.use_apr:
+    use_ffm_openssl = options.use_ffm_openssl
+    if use_ffm_openssl:
+        logger.info("Using Tomcat's OpenSSL FFM integration with dual RSA/ML-DSA certificate support")
+        ssl_editor_target = CandlepinConnectorOpenSSL
+        use_apr = False
+    elif options.use_apr:
         logger.info("Using APR connector and dual RSA/ML-DSA certificate support")
         ssl_editor_target = CandlepinConnectorAPR
         use_apr = True
@@ -564,9 +714,14 @@ def main():
         if use_apr:
             # Add APR listener (required for APR connector)
             AprListenerAdder(doc).insert()
-        else:
-            # Remove APR listener (causes issues with JSSE connector)
+            OpenSSLListenerDeleter(doc).remove()
+        elif use_ffm_openssl:
+            OpenSSLListenerAdder(doc).insert()
             AprListenerDeleter(doc).remove()
+        else:
+            # Remove native listeners when using the JSSE connector.
+            AprListenerDeleter(doc).remove()
+            OpenSSLListenerDeleter(doc).remove()
 
         if options.stdout:
             print(doc.serialize())

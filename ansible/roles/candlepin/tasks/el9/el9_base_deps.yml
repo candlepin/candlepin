@@ -38,6 +38,7 @@
       - java-25-openjdk-devel
       - make
       - openssl
+      - openssl-devel
       - tomcat
       - tomcat-native
       - platform-python
