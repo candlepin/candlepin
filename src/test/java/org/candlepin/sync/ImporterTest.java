@@ -96,6 +96,7 @@ import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.X509V3ExtensionUtil;
 
 import org.hamcrest.core.StringContains;
+import org.hibernate.Hibernate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -104,7 +105,10 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Answers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -1752,6 +1756,56 @@ public class ImporterTest extends DatabaseTestFixture {
 
         verify(this.mockImportRecordCurator).create(record);
         verify(this.mockEventSink, never()).emitSubscriptionExpired(subscription);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = "test.zip")
+    public void testRecordImportFailureAfterRollback(String filename) {
+        Owner owner = this.createOwner();
+        ConsumerType type = this.createConsumerType(true);
+        String upstreamUuid = TestUtil.randomString();
+        owner.setUpstreamConsumer(new UpstreamConsumer("upstream", owner, type, upstreamUuid));
+        this.ownerCurator.merge(owner);
+        this.commitTransaction();
+        this.getEntityManager().clear();
+
+        this.beginTransaction();
+        Owner detachedOwner = this.ownerCurator.get(owner.getId());
+        assertFalse(Hibernate.isInitialized(detachedOwner.getUpstreamConsumer()));
+        this.rollbackTransaction();
+        this.getEntityManager().clear();
+
+        Importer importer = this.injector.getInstance(Importer.class);
+        ImporterException error = new ImporterException("Original import failure");
+        importer.recordImportFailure(detachedOwner, error, filename);
+
+        assertFalse(this.getEntityManager().getTransaction().isActive());
+        this.beginTransaction();
+        List<ImportRecord> records = this.importRecordCurator.findRecords(owner);
+        // EmptyStringInterceptor normalizes empty strings to null when the record is persisted.
+        String expectedFilename = "".equals(filename) ? null : filename;
+        org.assertj.core.api.Assertions.assertThat(records)
+            .singleElement()
+            .returns(Status.FAILURE, ImportRecord::getStatus)
+            .returns(error.getMessage(), ImportRecord::getStatusMessage)
+            .returns(expectedFilename, ImportRecord::getFileName)
+            .extracting(ImportRecord::getUpstreamConsumer)
+            .returns(upstreamUuid, ImportUpstreamConsumer::getUuid);
+    }
+
+    @Test
+    public void testRecordImportFailureWithoutOwner() {
+        ImporterException error = new ImporterException("Owner was not found");
+        this.buildImporter().recordImportFailure(null, error, "test.zip");
+
+        ArgumentCaptor<ImportRecord> captor = ArgumentCaptor.forClass(ImportRecord.class);
+        verify(this.mockImportRecordCurator).create(captor.capture());
+        ImportRecord importRecord = captor.getValue();
+        assertNull(importRecord.getOwner());
+        assertNull(importRecord.getUpstreamConsumer());
+        assertEquals(Status.FAILURE, importRecord.getStatus());
+        assertEquals(error.getMessage(), importRecord.getStatusMessage());
     }
 
     @Test
