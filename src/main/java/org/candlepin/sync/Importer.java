@@ -317,7 +317,14 @@ public class Importer {
         return record;
     }
 
+    @Transactional
     public void recordImportFailure(Owner owner, Throwable error, String filename) {
+        // A failed import may have rolled back and detached the owner's lazy upstream consumer.
+        // Reload the owner in this transaction before copying its upstream consumer into the record.
+        if (owner != null) {
+            owner = this.ownerCurator.get(owner.getId());
+        }
+
         ImportRecord record = new ImportRecord(owner);
         log.error("Recording import failure", error);
 
