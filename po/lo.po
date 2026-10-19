@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-09 08:08+0000\n"
+"POT-Creation-Date: 2026-10-18 07:03+0000\n"
 "PO-Revision-Date: 2026-05-07 11:59+0000\n"
 "Last-Translator: Bone NI <bounkirdni@gmail.com>\n"
 "Language-Team: Lao <https://translate.fedoraproject.org/projects/candlepin/"
@@ -196,7 +196,7 @@ msgid "Compliance recalculated for consumer {1}"
 msgstr "ໄດ້ຄິດໄລ່ຄວາມສອດຄ່ອງໃໝ່ສຳລັບຜູ້ບໍລິໂພກ {1}"
 
 #: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:70
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1543
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1550
 #, java-format
 msgid "Organization {0} does not exist."
 msgstr "ອົງກອນ {0} ບໍ່ມີຢູ່."
@@ -206,22 +206,24 @@ msgid "None of the activation keys specified exist for this org."
 msgstr "ບໍ່ມີຄີການເປີດນຳໃຊ້ໃດທີ່ລະບຸໄວ້ມີຢູ່ໃນອົງກອນນີ້."
 
 #: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:93
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1291
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1295
 msgid "Org required to register with activation keys."
 msgstr "ຕ້ອງມີອົງກອນເພື່ອລົງທະບຽນດ້ວຍຄີການເປີດນຳໃຊ້."
 
 #: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:97
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1295
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1299
 msgid "Cannot specify username with activation keys."
 msgstr "ບໍ່ສາມາດລະບຸຊື່ຜູ້ໃຊ້ຮ່ວມກັບຄີການເປີດນຳໃຊ້ໄດ້."
 
-#: src/main/java/org/candlepin/auth/BasicAuth.java:74
-#: src/main/java/org/candlepin/resource/GuestIdResource.java:225
-#: src/main/java/org/candlepin/resteasy/filter/AuthenticationFilter.java:176
+#: src/main/java/org/candlepin/auth/BasicAuth.java:77
+#: src/main/java/org/candlepin/auth/BasicAuth.java:103
+#: src/main/java/org/candlepin/resource/GuestIdResource.java:222
+#: src/main/java/org/candlepin/resteasy/filter/AuthenticationFilter.java:170
 msgid "Invalid Credentials"
 msgstr "ຂໍ້ມູນປະຈຳຕົວບໍ່ຖືກຕ້ອງ"
 
-#: src/main/java/org/candlepin/auth/BasicAuth.java:88
+#: src/main/java/org/candlepin/auth/BasicAuth.java:95
+#: src/main/java/org/candlepin/resource/util/UserServiceExceptionTranslator.java:102
 msgid "Error contacting user service"
 msgstr "ເກີດຂໍ້ຜິດພາດໃນການຕິດຕໍ່ບໍລິການຜູ້ໃຊ້"
 
@@ -254,10 +256,10 @@ msgstr "ເກີດຂໍ້ຜິດພາດໃນການຮັບຄີໜ
 msgid "Invalid Certificate Type"
 msgstr "ປະເພດໃບຢັ້ງຢືນບໍ່ຖືກຕ້ອງ"
 
-#: src/main/java/org/candlepin/auth/UserAuth.java:56
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1468
-#: src/main/java/org/candlepin/resource/RoleResource.java:115
-#: src/main/java/org/candlepin/resource/UserResource.java:92
+#: src/main/java/org/candlepin/auth/UserAuth.java:84
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1475
+#: src/main/java/org/candlepin/resource/RoleResource.java:121
+#: src/main/java/org/candlepin/resource/UserResource.java:96
 #, java-format
 msgid "User not found: {0}"
 msgstr "ບໍ່ພົບຜູ້ໃຊ້: {0}"
@@ -276,6 +278,11 @@ msgstr "ບໍ່ສາມາດຍ້າຍຂໍ້ມູນຜູ້ບໍລ
 msgid "Unable to create revoke entitlements job"
 msgstr "ບໍ່ສາມາດສ້າງວຽກຖອນສິດທິໄດ້"
 
+#: src/main/java/org/candlepin/controller/EntitlementCertificateService.java:127
+msgid ""
+"Unable to generate a usable certificate from Entitlement Certificate Service"
+msgstr "ບໍ່ສາມາດສ້າງໃບຢັ້ງຢືນທີ່ໃຊ້ງານໄດ້ຈາກບໍລິການໃບຢັ້ງຢືນສິດທິ"
+
 #: src/main/java/org/candlepin/controller/Entitler.java:219
 #, java-format
 msgid "Auto-attach is disabled for hypervisors of owner {0}"
@@ -292,8 +299,9 @@ msgid "Unable to find specified manifest by id: {0}"
 msgstr "ບໍ່ສາມາດຊອກຫາແມນິເຟສທີ່ລະບຸດ້ວຍໄອດີ: {0}"
 
 #: src/main/java/org/candlepin/controller/ManifestManager.java:318
-#, java-format
-msgid "Could not validate export against specifed consumer: {0}"
+#, fuzzy, java-format
+#| msgid "Could not validate export against specifed consumer: {0}"
+msgid "Could not validate export against specified consumer: {0}"
 msgstr "ບໍ່ສາມາດກວດສອບການສົ່ງອອກທຽບກັບຜູ້ບໍລິໂພກທີ່ລະບຸ: {0}"
 
 #: src/main/java/org/candlepin/controller/ManifestManager.java:343
@@ -313,16 +321,16 @@ msgstr "ໜ່ວຍ {0} ບໍ່ສາມາດສົ່ງອອກໄດ້.
 msgid "A CDN with label {0} does not exist on this system."
 msgstr "CDN ທີ່ມີປ້າຍຊື່ {0} ບໍ່ມີຢູ່ໃນລະບົບນີ້."
 
-#: src/main/java/org/candlepin/controller/PoolManager.java:328
+#: src/main/java/org/candlepin/controller/PoolManager.java:341
 msgid "No owner specified, or owner lacks identifying information"
 msgstr "ບໍ່ໄດ້ລະບຸເຈົ້າຂອງ ຫຼື ເຈົ້າຂອງຂາດຂໍ້ມູນລະບຸຕົວຕົນ"
 
-#: src/main/java/org/candlepin/controller/PoolManager.java:337
+#: src/main/java/org/candlepin/controller/PoolManager.java:350
 #, java-format
 msgid "Unable to find an owner with the key \"{0}\""
 msgstr "ບໍ່ສາມາດຊອກຫາເຈົ້າຂອງດ້ວຍຄີ \"{0}\""
 
-#: src/main/java/org/candlepin/controller/PoolManager.java:345
+#: src/main/java/org/candlepin/controller/PoolManager.java:358
 #, java-format
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr "ບໍ່ສາມາດຊອກຫາເຈົ້າຂອງດ້ວຍໄອດີ \"{0}\""
@@ -346,99 +354,12 @@ msgstr "ຂໍ້ຜິດພາດຂະນະເຮັດວຽກ {0} ຢູ�
 msgid "Runtime Error {0}"
 msgstr "ຂໍ້ຜິດພາດຂະນະເຮັດວຽກ {0}"
 
-#: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:59
-#, java-format
-msgid "No subscription was able to be activated with Dell service tag \"{0}\"."
-msgstr "ບໍ່ມີການສະໝັກໃຊ້ໃດທີ່ສາມາດເປີດນຳໃຊ້ໄດ້ດ້ວຍແທັກບໍລິການ Dell \"{0}\"."
-
-#: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:65
-#, java-format
-msgid ""
-"The Dell service tag \"{0}\" has already been used to redeem a subscription."
-msgstr "ແທັກບໍລິການ Dell \"{0}\" ຖືກໃຊ້ເພື່ອແລກການສະໝັກໃຊ້ໄປແລ້ວ."
-
-#: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:71
-#, java-format
-msgid "The Dell service tag \"{0}\" is expired."
-msgstr "ແທັກບໍລິການ Dell \"{0}\" ໝົດອາຍຸແລ້ວ."
-
-#: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:77
-#, java-format
-msgid ""
-"The Dell service tag \"{0}\" could not be used to retrieve a subscription."
-msgstr "ບໍ່ສາມາດໃຊ້ແທັກບໍລິການ Dell \"{0}\" ເພື່ອດຶງຂໍ້ມູນການສະໝັກໃຊ້ໄດ້."
-
-#: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:83
-#, java-format
-msgid "Unexpected error from Subscription Service: {0}"
-msgstr "ຂໍ້ຜິດພາດທີ່ບໍ່ຄາດຄິດຈາກບໍລິການການສະໝັກໃຊ້: {0}"
-
-#: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:88
-msgid ""
-"Cloud provider or account details could not be resolved to an organization"
-msgstr "ບໍ່ສາມາດລະບຸຜູ້ໃຫ້ບໍລິການຄລາວ ຫຼື ລາຍລະອຽດບັນຊີໃຫ້ເປັນອົງກອນໄດ້"
-
-#: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:94
-msgid "Unable to complete Cloud Registration with provided data"
-msgstr "ບໍ່ສາມາດສຳເລັດການລົງທະບຽນຄລາວດ້ວຍຂໍ້ມູນທີ່ໃຫ້ມາ"
-
-#: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:99
-#, java-format
-msgid "Unexpected error from Cloud Registration Service: {0}"
-msgstr "ຂໍ້ຜິດພາດທີ່ບໍ່ຄາດຄິດຈາກບໍລິການລົງທະບຽນຄລາວ: {0}"
-
-#: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:104
-msgid ""
-"Unable to generate a usable certificate from Entitlement Certificate Service"
-msgstr "ບໍ່ສາມາດສ້າງໃບຢັ້ງຢືນທີ່ໃຊ້ງານໄດ້ຈາກບໍລິການໃບຢັ້ງຢືນສິດທິ"
-
-#: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:108
-#, java-format
-msgid "User \"{0}\" is not valid."
-msgstr "ຜູ້ໃຊ້ \"{0}\" ບໍ່ຖືກຕ້ອງ."
-
-#: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:112
-#, java-format
-msgid ""
-"You must first accept Red Hat''s Terms and conditions. Please visit {0} . "
-"You may have to log out of and back into the  Customer Portal in order to "
-"see the terms."
-msgstr ""
-"ທ່ານຕ້ອງຍອມຮັບຂໍ້ກຳນົດ ແລະ ເງື່ອນໄຂຂອງ Red Hat ກ່ອນ. ກະລຸນາເຂົ້າໄປທີ່ {0}. "
-"ທ່ານອາດຈະຕ້ອງອອກຈາກລະບົບ ແລະ ເຂົ້າສູ່ລະບົບ Customer Portal ຄືນໃໝ່ເພື່ອເບິ່ງຂໍ້ກຳນົດ."
-
-#: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:119
-#, java-format
-msgid ""
-"The user \"{0}\" has been disabled, if this is a mistake, please contact "
-"customer service."
-msgstr "ຜູ້ໃຊ້ \"{0}\" ຖືກປິດການໃຊ້ງານແລ້ວ, ຖ້ານີ້ແມ່ນຄວາມຜິດພາດ ກະລຸນາຕິດຕໍ່ບໍລິການລູກຄ້າ."
-
-#: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:124
-#, java-format
-msgid "Invalid username or password. To create a login, please visit {0}"
-msgstr "ຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ. ເພື່ອສ້າງບັນຊີເຂົ້າໃຊ້ ກະລຸນາເຂົ້າໄປທີ່ {0}"
-
-#: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:129
-#, java-format
-msgid "Unexpected error from User Service: {0}"
-msgstr "ຂໍ້ຜິດພາດທີ່ບໍ່ຄາດຄິດຈາກບໍລິການຜູ້ໃຊ້: {0}"
-
-#: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:133
-#, java-format
-msgid "Unable to retrieve product \"{0}\" from ProductService"
-msgstr "ບໍ່ສາມາດດຶງຂໍ້ມູນຜະລິດຕະພັນ \"{0}\" ຈາກ ProductService ໄດ້"
-
-#: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:138
-msgid "Unknown service exception"
-msgstr "ຂໍ້ຍົກເວັ້ນການບໍລິການທີ່ບໍ່ຮູ້ຈັກ"
-
 #: src/main/java/org/candlepin/exceptions/util/JaxRsExceptionResponseBuilder.java:126
 #, java-format
 msgid "{0} is not a valid value for {1}"
 msgstr "{0} ບໍ່ແມ່ນຄ່າທີ່ຖືກຕ້ອງສຳລັບ {1}"
 
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:824
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:823
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "ຄຳຮ້ອງຂໍບໍ່ສຳເລັດເນື່ອງຈາກມີການແກ້ໄຂພ້ອມກັນ, ກະລຸນາລອງໃໝ່."
 
@@ -447,34 +368,34 @@ msgstr "ຄຳຮ້ອງຂໍບໍ່ສຳເລັດເນື່ອງຈ
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr "ລະບົບທີ່ມີ UUID {0} ເປັນແຂກສະເໝືອນ (virtual guest). ມັນບໍ່ມີແຂກຊ້ອນຢູ່."
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1360
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1370
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1393
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1403
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:166
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."
 msgstr "ບໍ່ພົບໜ່ວຍທີ່ມີໄອດີ \"{0}\"."
 
-#: src/main/java/org/candlepin/model/Pool.java:161
+#: src/main/java/org/candlepin/model/Pool.java:158
 msgid "Other"
 msgstr "ອື່ນໆ"
 
-#: src/main/java/org/candlepin/model/Pool.java:162
+#: src/main/java/org/candlepin/model/Pool.java:159
 msgid "Standard"
 msgstr "ມາດຕະຖານ"
 
-#: src/main/java/org/candlepin/model/Pool.java:163
+#: src/main/java/org/candlepin/model/Pool.java:160
 msgid "Instance Based"
 msgstr "ອີງຕາມອິນສະແຕນຊ໌ (Instance Based)"
 
-#: src/main/java/org/candlepin/model/Pool.java:164
+#: src/main/java/org/candlepin/model/Pool.java:161
 msgid "Stackable"
 msgstr "ສາມາດວາງຊ້ອນກັນໄດ້ (Stackable)"
 
-#: src/main/java/org/candlepin/model/Pool.java:165
+#: src/main/java/org/candlepin/model/Pool.java:162
 msgid "Stackable only with other subscriptions"
 msgstr "ສາມາດວາງຊ້ອນກັນໄດ້ກັບການສະໝັກໃຊ້ອື່ນໆເທົ່ານັ້ນ"
 
-#: src/main/java/org/candlepin/model/Pool.java:166
+#: src/main/java/org/candlepin/model/Pool.java:163
 msgid "Multi-Entitleable"
 msgstr "ສາມາດໃຊ້ສິດທິໄດ້ຫຼາຍຢ່າງ"
 
@@ -500,6 +421,11 @@ msgstr "ຟີລ໌ຈັດລຽງ (sort-by) ບໍ່ຖືກຕ້ອງ 
 #: src/main/java/org/candlepin/paging/PagingUtil.java:134
 msgid "Paging requested, but no sort-by field provided"
 msgstr "ມີການຮ້ອງຂໍແບ່ງໜ້າ ແຕ່ບໍ່ໄດ້ລະບຸຟີລ໌ຈັດລຽງ"
+
+#: src/main/java/org/candlepin/pki/certs/AnonymousCertificateGenerator.java:310
+#, java-format
+msgid "Unable to retrieve product \"{0}\" from ProductService"
+msgstr "ບໍ່ສາມາດດຶງຂໍ້ມູນຜະລິດຕະພັນ \"{0}\" ຈາກ ProductService ໄດ້"
 
 #: src/main/java/org/candlepin/pki/certs/EntitlementCertificateGenerator.java:448
 #, java-format
@@ -601,17 +527,17 @@ msgstr "ຮອງຮັບພຽງແຕ່ {1}TB ຈາກ {2}TB ຂອງພ�
 msgid "{0} COVERAGE PROBLEM.  Supports {1} of {2}"
 msgstr "{0} ບັນຫາການຄອບຄຸມ. ຮອງຮັບ {1} ຈາກ {2}"
 
-#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:251
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:247
 #, java-format
 msgid "Subscriptions for {0} expired on: {1}"
 msgstr "ການສະໝັກໃຊ້ສຳລັບ {0} ໝົດອາຍຸເມື່ອ: {1}"
 
-#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:334
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:330
 #, java-format
 msgid "\"{0}\" Should contain name, priority and at least one attribute"
 msgstr "\"{0}\" ຄວນປະກອບມີຊື່, ລຳດັບຄວາມສຳຄັນ ແລະ ຢ່າງໜ້ອຍໜຶ່ງຄຸນລັກສະນະ"
 
-#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:348
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:344
 msgid "second parameter should be the priority number."
 msgstr "ພາຣາມິເຕີທີສອງຄວນເປັນຕົວເລກລຳດັບຄວາມສຳຄັນ."
 
@@ -819,102 +745,122 @@ msgstr "ໃບຢັ້ງຢືນ CDN ມີຄີ ຫຼື ໃບຢັ້�
 msgid "No such content delivery network: {0}"
 msgstr "ບໍ່ມີເຄືອຂ່າຍການສົ່ງເນື້ອຫາຊີດີເອັນດັ່ງກ່າວ: {0}"
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:118
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:121
 msgid "No cloud registration information provided"
 msgstr "ບໍ່ມີຂໍ້ມູນການລົງທະບຽນຄລາວໃຫ້ມາ"
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:123
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:126
 msgid "Request is missing cloud provider type (e.g. amazon, gcp, azure)"
 msgstr "ຄຳຮ້ອງຂໍຂາດປະເພດຜູ້ໃຫ້ບໍລິການຄລາວ (ເຊັ່ນ: amazon, gcp, azure)"
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:142
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:145
 msgid ""
 "Unable to process authorization request: cryptographic capabilities exceed "
 "data storage capabilities"
 msgstr ""
 "ບໍ່ສາມາດປະມວນຜົນຄຳຮ້ອງຂໍການອະນຸຍາດ: ຄວາມສາມາດໃນການເຂົ້າລະຫັດເກີນຄວາມສາມາດໃນການເກັບຂໍ້ມູນ"
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:159
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:162
 msgid ""
 "cloud provider or account details could not be resolved to an organization"
 msgstr "ບໍ່ສາມາດລະບຸຜູ້ໃຫ້ບໍລິການຄລາວ ຫຼື ລາຍລະອຽດບັນຊີໃຫ້ເປັນອົງກອນໄດ້"
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:188
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:191
 msgid "unknown cloud authorization version"
 msgstr "ເວີຊັນການອະນຸຍາດຄລາວທີ່ບໍ່ຮູ້ຈັກ"
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:193
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:196
 msgid "Cloud registration is not supported by this Candlepin instance"
 msgstr "ອິນສະແຕນຊ໌ Candlepin ນີ້ບໍ່ຮອງຮັບການລົງທະບຽນຄລາວ"
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:197
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:372
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:200
+msgid ""
+"Cloud provider or account details could not be resolved to an organization"
+msgstr "ບໍ່ສາມາດລະບຸຜູ້ໃຫ້ບໍລິການຄລາວ ຫຼື ລາຍລະອຽດບັນຊີໃຫ້ເປັນອົງກອນໄດ້"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:205
+msgid "Unable to complete Cloud Registration with provided data"
+msgstr "ບໍ່ສາມາດສຳເລັດການລົງທະບຽນຄລາວດ້ວຍຂໍ້ມູນທີ່ໃຫ້ມາ"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:214
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:395
 msgid ""
 "Cloud registration is not supported for the type of offering the client is "
 "using"
 msgstr "ບໍ່ຮອງຮັບການລົງທະບຽນຄລາວສຳລັບປະເພດຂໍ້ສະເໜີທີ່ໄຄເອັນທ໌ກຳລັງໃຊ້ຢູ່"
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:213
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:220
+#, java-format
+msgid "Unexpected error from Cloud Registration Service: {0}"
+msgstr "ຂໍ້ຜິດພາດທີ່ບໍ່ຄາດຄິດຈາກບໍລິການລົງທະບຽນຄລາວ: {0}"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:222
+#, fuzzy
+#| msgid "Error contacting user service"
+msgid "Error contacting cloud registration service"
+msgstr "ເກີດຂໍ້ຜິດພາດໃນການຕິດຕໍ່ບໍລິການຜູ້ໃຊ້"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:236
 msgid "Cloud account ID is null or empty"
 msgstr "ໄອດີບັນຊີຄລາວເປັນຄ່າຫວ່າງ"
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:287
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2774
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3134
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:310
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2799
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3155
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:682
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:127
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:157
 #: src/main/java/org/candlepin/resource/JobResource.java:365
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:732
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:731
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1968
 #, java-format
 msgid "An unexpected exception occurred while scheduling job \"{0}\""
 msgstr "ເກີດຂໍ້ຍົກເວັ້ນທີ່ບໍ່ຄາດຄິດຂະນະກຳນົດເວລາວຽກ \"{0}\""
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:383
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:406
 msgid "cloud account ID could not be resolved"
 msgstr "ບໍ່ສາມາດລະບຸໄອດີບັນຊີຄລາວໄດ້"
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:390
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:413
 msgid "cloud instance ID could not be resolved"
 msgstr "ບໍ່ສາມາດລະບຸໄອດີອິນສະແຕນຊ໌ຄລາວໄດ້"
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:397
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:420
 msgid "cloud provider could not be resolved"
 msgstr "ບໍ່ສາມາດລະບຸຜູ້ໃຫ້ບໍລິການຄລາວໄດ້"
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:404
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:427
 msgid "offer ID could not be resolved"
 msgstr "ບໍ່ສາມາດລະບຸໄອດີຂໍ້ສະເໜີໄດ້"
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:411
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:434
 msgid "product IDs could not be resolved"
 msgstr "ບໍ່ສາມາດລະບຸໄອດີຜະລິດຕະພັນໄດ້"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:394
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:397
 #, java-format
 msgid "Organization {0} does not exist"
 msgstr "ອົງກອນ {0} ບໍ່ມີຢູ່"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:425
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:428
 msgid "Consumer package profile uploads are not implemented"
 msgstr "ຍັງບໍ່ທັນມີການຮອງຮັບການອັບໂຫຼດໂປຣໄຟລ໌ແພັກເກັດຜູ້ບໍລິໂພກ"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:534
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:537
 msgid "Insufficient permissions"
 msgstr "ສິດທິບໍ່ພຽງພໍ"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:666
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:669
 msgid ""
 "The 'environmentId' query parameter cannot be used without also specifying "
 "the 'owner' query parameter."
 msgstr "ພາຣາມິເຕີຄຳຖາມ 'environmentId' ບໍ່ສາມາດໃຊ້ໄດ້ໂດຍບໍ່ມີການລະບຸພາຣາມິເຕີ 'owner'."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:679
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:682
 msgid "Must specify at least one search criteria."
 msgstr "ຕ້ອງລະບຸຢ່າງໜ້ອຍໜຶ່ງເງື່ອນໄຂການຄົ້ນຫາ."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:725
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:728
 #: src/main/java/org/candlepin/resource/DeletedConsumerResource.java:89
 #: src/main/java/org/candlepin/resource/JobResource.java:200
 #: src/main/java/org/candlepin/resource/OwnerResource.java:827
@@ -926,239 +872,246 @@ msgid ""
 "please use paging."
 msgstr "ຈຸດເຊື່ອມຕໍ່ນີ້ບໍ່ຮອງຮັບການສົ່ງຄືນຜົນລັດຫຼາຍກວ່າ {0} ລາຍການໃນຄັ້ງດຽວ, ກະລຸນາໃຊ້ການແບ່ງໜ້າ."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:744
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:747
 #, java-format
 msgid "Consumer with id {0} could not be found."
 msgstr "ບໍ່ພົບຜູ້ບໍລິໂພກທີ່ມີໄອດີ {0}."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:764
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:767
 msgid "No UUIDs provided."
 msgstr "ບໍ່ມີການໃຫ້ UUIDs ມາ."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1044
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1026
+msgid "Consumer UUID must be in UUID format."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1050
 msgid "Unit type must be specified."
 msgstr "ຕ້ອງລະບຸປະເພດໜ່ວຍ."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1049
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1055
 #, java-format
 msgid "Invalid unit type: {0}"
 msgstr "ປະເພດໜ່ວຍບໍ່ຖືກຕ້ອງ: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1129
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1964
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1133
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1987
 msgid ""
 "Unable to persist consumer: cryptographic capabilities exceed data storage "
 "capabilities"
 msgstr "ບໍ່ສາມາດບັນທຶກຜູ້ບໍລິໂພກ: ຄວາມສາມາດໃນການເຂົ້າລະຫັດເກີນຄວາມສາມາດໃນການເກັບຂໍ້ມູນ"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1193
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1197
 #, java-format
 msgid "Problem creating unit {0}"
 msgstr "ມີບັນຫາໃນການສ້າງໜ່ວຍ {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1274
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1278
 msgid "The consumer cannot use the supplied content access mode."
 msgstr "ຜູ້ບໍລິໂພກບໍ່ສາມາດໃຊ້ໂໝດການເຂົ້າເຖິງເນື້ອຫາທີ່ລະບຸໄດ້."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1283
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1287
 msgid "The consumer cannot be assigned a content access mode."
 msgstr "ຜູ້ບໍລິໂພກບໍ່ສາມາດຖືກກຳນົດໂໝດການເຂົ້າເຖິງເນື້ອຫາໄດ້."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1305
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1309
 msgid "A unit type of \"person\" cannot be used with activation keys"
 msgstr "ໜ່ວຍປະເພດ \"person\" ບໍ່ສາມາດໃຊ້ຮ່ວມກັບຄີການເປີດນຳໃຊ້ໄດ້"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1317
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1321
 msgid "You may not create a manifest consumer via Subscription Manager."
 msgstr "ທ່ານບໍ່ສາມາດສ້າງຜູ້ບໍລິໂພກແບບແມນິເຟສຜ່ານ Subscription Manager ໄດ້."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1418
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1422
 msgid "System name cannot begin with # character"
 msgstr "ຊື່ລະບົບບໍ່ສາມາດເລີ່ມຕົ້ນດ້ວຍຕົວອັກສອນ #"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1423
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1427
 #, java-format
 msgid "Name of the consumer should be shorter than {0} characters."
 msgstr "ຊື່ຂອງຜູ້ບໍລິໂພກຄວນສັ້ນກວ່າ {0} ຕົວອັກສອນ."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1430
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1434
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1438
 msgid "System name cannot contain most special characters."
 msgstr "ຊື່ລະບົບບໍ່ສາມາດປະກອບມີຕົວອັກສອນພິເສດສ່ວນໃຫຍ່ໄດ້."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1474
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1481
 #, java-format
 msgid "User \"{0}\" has no roles for organization \"{1}\""
 msgstr "ຜູ້ໃຊ້ \"{0}\" ບໍ່ມີບົດບາດສຳລັບອົງກອນ \"{1}\""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1487
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1494
 #, java-format
 msgid "User \"{0}\" has already registered a personal consumer"
 msgstr "ຜູ້ໃຊ້ \"{0}\" ໄດ້ລົງທະບຽນຜູ້ບໍລິໂພກສ່ວນຕົວແລ້ວ"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1517
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1524
 msgid "You must specify an organization for new units."
 msgstr "ທ່ານຕ້ອງລະບຸອົງກອນສຳລັບໜ່ວຍໃໝ່."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1534
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1541
 msgid "Client is not authorized to register with any organization"
 msgstr "ໄຄເອັນທ໌ບໍ່ໄດ້ຮັບອະນຸຍາດໃຫ້ລົງທະບຽນກັບອົງກອນໃດໆ"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1564
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1571
 #, java-format
 msgid "{0} is not authorized to register with organization {1}"
 msgstr "{0} ບໍ່ໄດ້ຮັບອະນຸຍາດໃຫ້ລົງທະບຽນກັບອົງກອນ {1}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1568
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1575
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:171
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1438
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "ບໍ່ພົບເຈົ້າຂອງດ້ວຍຄີ: {0}."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1649
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1656
 #, java-format
 msgid "Error occurred while queueing job: {0}"
 msgstr "ເກີດຂໍ້ຜິດພາດຂະນະນຳວຽກເຂົ້າຄິວ: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1700
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1694
 #, java-format
 msgid "Problem updating unit {0}"
 msgstr "ມີບັນຫາໃນການອັບເດດໜ່ວຍ {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1789
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1784
 msgid "This consumer cannot be assigned a content access mode"
 msgstr "ຜູ້ບໍລິໂພກນີ້ບໍ່ສາມາດຖືກກຳນົດໂໝດການເຂົ້າເຖິງເນື້ອຫາໄດ້"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1795
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1790
 #, java-format
 msgid "This consumer cannot use the supplied content access mode: {0}"
 msgstr "ຜູ້ບໍລິໂພກນີ້ບໍ່ສາມາດໃຊ້ໂໝດການເຂົ້າເຖິງເນື້ອຫາທີ່ລະບຸໄດ້: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1884
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1907
 #, java-format
 msgid "Environment with ID \"{0}\" could not be found."
 msgstr "ບໍ່ພົບສະພາບແວດລ້ອມທີ່ມີໄອດີ \"{0}\"."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1893
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1916
 #, java-format
 msgid "Environment with name \"{0}\" could not be found."
 msgstr "ບໍ່ພົບສະພາບແວດລ້ອມທີ່ມີຊື່ \"{0}\"."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1897
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1920
 msgid "Environment could not be found using provided details."
 msgstr "ບໍ່ພົບສະພາບແວດລ້ອມໂດຍໃຊ້ລາຍລະອຽດທີ່ໃຫ້ມາ."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1902
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1925
 #, java-format
 msgid "Environment \"{0}\" specified more than once."
 msgstr "ມີການລະບຸສະພາບແວດລ້ອມ \"{0}\" ຫຼາຍກວ່າໜຶ່ງຄັ້ງ."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2034
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2057
 #, java-format
 msgid "Problem updating unit {0}. Hypervisor id: {1} is already used."
 msgstr "ມີບັນຫາໃນການອັບເດດໜ່ວຍ {0}. ໄອດີໄຮເປີໄວເຊີ: {1} ຖືກໃຊ້ໄປແລ້ວ."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2246
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2259
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2268
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2281
 #, java-format
 msgid "Consumer with UUID {0} was already deleted."
 msgstr "ຜູ້ບໍລິໂພກທີ່ມີ UUID {0} ຖືກລຶບໄປແລ້ວ."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2276
-#: src/main/java/org/candlepin/resource/GuestIdResource.java:224
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2298
+#: src/main/java/org/candlepin/resource/GuestIdResource.java:221
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
 msgstr "ບໍ່ສາມາດຍົກເລີກການລົງທະບຽນ {0} {1} ເນື່ອງຈາກ: {2}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2313
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2335
 msgid ""
 "Invalid certificate serial; serials may only contain numeric characters: {}"
 msgstr "ເລກລຳດັບໃບຢັ້ງຢືນບໍ່ຖືກຕ້ອງ; ເລກລຳດັບຕ້ອງປະກອບມີສະເພາະຕົວເລກເທົ່ານັ້ນ: {}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2362
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2384
 msgid "Content access mode does not allow this request."
 msgstr "ໂໝດການເຂົ້າເຖິງເນື້ອຫາບໍ່ອະນຸຍາດໃຫ້ເຮັດຄຳຮ້ອງຂໍນີ້."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2371
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2393
 #, java-format
 msgid "Cannot retrieve content access certificate for consumer: {0}"
 msgstr "ບໍ່ສາມາດດຶງເອົາໃບຢັ້ງຢືນການເຂົ້າເຖິງເນື້ອຫາສຳລັບຜູ້ບໍລິໂພກ: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2408
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2430
 #, java-format
 msgid "Unable to generate usable content access payload for consumer: {0}"
 msgstr "ບໍ່ສາມາດສ້າງເພໂຫຼດ (payload) ການເຂົ້າເຖິງເນື້ອຫາທີ່ໃຊ້ງານໄດ້ສຳລັບຜູ້ບໍລິໂພກ: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2420
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2603
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2442
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2625
 msgid "Unable to create content access payload"
 msgstr "ບໍ່ສາມາດສ້າງເພໂຫຼດການເຂົ້າເຖິງເນື້ອຫາໄດ້"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2472
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2494
 msgid ""
 "Unable to retrieve or create anonymous content access certificate for "
 "consumer"
 msgstr "ບໍ່ສາມາດດຶງຂໍ້ມູນ ຫຼື ສ້າງໃບຢັ້ງຢືນການເຂົ້າເຖິງເນື້ອຫາແບບບໍ່ລະບຸຕົວຕົນສຳລັບຜູ້ບໍລິໂພກໄດ້"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2504
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2644
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2526
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2666
 #, java-format
 msgid "Unable to generate usable certificates for consumer: {0}"
 msgstr "ບໍ່ສາມາດສ້າງໃບຢັ້ງຢືນທີ່ໃຊ້ງານໄດ້ສຳລັບຜູ້ບໍລິໂພກ: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2536
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2558
 msgid "Cannot create export for anonymous cloud consumer"
 msgstr "ບໍ່ສາມາດສ້າງການສົ່ງອອກສຳລັບຜູ້ບໍລິໂພກຄລາວແບບບໍ່ລະບຸຕົວຕົນໄດ້"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2553
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2575
 msgid "Unable to create entitlement certificate archive"
 msgstr "ບໍ່ສາມາດສ້າງໄຟລ໌ເກັບມ້ຽນໃບຢັ້ງຢືນສິດທິໄດ້"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2556
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2578
 #, java-format
 msgid "Unable to generate usable export for consumer: {0}"
 msgstr "ບໍ່ສາມາດສ້າງການສົ່ງອອກທີ່ໃຊ້ງານໄດ້ສຳລັບຜູ້ບໍລິໂພກ: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2664
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2686
 msgid "Cannot bind by multiple parameters."
 msgstr "ບໍ່ສາມາດຜູກມັດດ້ວຍຫຼາຍພາຣາມິເຕີໄດ້."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2668
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2690
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "ບໍ່ສາມາດລະບຸຈຳນວນເມື່ອໃຊ້ການຜູກມັດອັດຕະໂນມັດ."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2704
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2726
 msgid ""
 "Attach operations are ignored in organizations using simple content access"
 msgstr "ການດຳເນີນການຕິດຄັດຈະຖືກລະເລີຍໃນອົງກອນທີ່ໃຊ້ການເຂົ້າເຖິງເນື້ອຫາແບບງ່າຍດາຍ"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2724
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2746
 #, java-format
 msgid "You must first accept Red Hat''s Terms and conditions. Please visit {0}"
 msgstr "ທ່ານຕ້ອງຍອມຮັບຂໍ້ກຳນົດ ແລະ ເງື່ອນໄຂຂອງ Red Hat ກ່ອນ. ກະລຸນາເຂົ້າໄປທີ່ {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2813
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2838
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr "ກຳລັງລະເລີຍຄຳຮ້ອງຂໍການຕິດຄັດອັດຕະໂນມັດ. ມັນຖືກປິດການໃຊ້ງານສຳລັບອົງກອນ \"{0}\"."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2818
-#, java-format
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2843
+#, fuzzy, java-format
+#| msgid ""
+#| "Ignoring request to auto-attach. It is disabled for org \"{0}\" because "
+#| "of the hypervisor autobind setting."
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
-"the hypervisor autobind setting."
+"the hypervisor auto-attach setting."
 msgstr ""
 "ກຳລັງລະເລີຍຄຳຮ້ອງຂໍການຕິດຄັດອັດຕະໂນມັດ. ມັນຖືກປິດການໃຊ້ງານສຳລັບອົງກອນ \"{0}\" "
 "ເນື່ອງຈາກການຕັ້ງຄ່າ autobind ຂອງໄຮເປີໄວເຊີ."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2860
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2885
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr "ອົງກອນ \"{0}\" ໄດ້ປິດການຕິດຄັດອັດຕະໂນມັດໄວ້."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2993
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3032
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3017
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3056
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:191
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:209
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:239
@@ -1168,44 +1121,44 @@ msgstr "ອົງກອນ \"{0}\" ໄດ້ປິດການຕິດຄັດ
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr "ບໍ່ພົບສິດທິທີ່ມີໄອດີ \"{0}\"."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3008
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3032
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr "ບໍ່ພົບໃບຢັ້ງຢືນສິດທິທີ່ມີເລກລຳດັບ \"{0}\"."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3025
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3049
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr "ບໍ່ມີສິດທິສຳລັບຜູ້ບໍລິໂພກ \"{0}\" ດ້ວຍໄອດີພູລ \"{1}\""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3096
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3119
 msgid "Unable to create export archive"
 msgstr "ບໍ່ສາມາດສ້າງໄຟລ໌ເກັບມ້ຽນການສົ່ງອອກໄດ້"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3099
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3122
 #: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:261
 #, java-format
 msgid "Unable to determine the signature scheme for consumer: {0}"
 msgstr "ບໍ່ສາມາດກຳນົດຮູບແບບລາຍເຊັນສຳລັບຜູ້ບໍລິໂພກ: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3252
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3257
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3271
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3276
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "ມີບັນຫາໃນການສ້າງໃບຢັ້ງຢືນໄອດີໃໝ່ສຳລັບໜ່ວຍ {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3260
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3279
 #: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:208
 #, java-format
 msgid "Unable to generate ID certificate for consumer: {0}"
 msgstr "ບໍ່ສາມາດສ້າງໃບຢັ້ງຢືນໄອດີສຳລັບຜູ້ບໍລິໂພກ: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3297
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3315
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "ລະບົບທີ່ມີ UUID {0} ບໍ່ແມ່ນແຂກສະເໝືອນ."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3387
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3404
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "ບໍ່ພົບຂໍ້ມູນການລຶບສຳລັບໄຮເປີໄວເຊີ \"{0}\"."
@@ -1231,24 +1184,24 @@ msgid "Unit type with id {0} could not be found."
 msgstr "ບໍ່ພົບປະເພດໜ່ວຍທີ່ມີໄອດີ {0}."
 
 #: src/main/java/org/candlepin/resource/ContentResource.java:95
-#: src/main/java/org/candlepin/resource/OwnerContentResource.java:433
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:758
+#: src/main/java/org/candlepin/resource/OwnerContentResource.java:432
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:757
 #: src/main/java/org/candlepin/resource/ProductResource.java:132
 #, java-format
 msgid "Owner with key \"{0}\" was not found."
 msgstr "ບໍ່ພົບເຈົ້າຂອງດ້ວຍຄີ \"{0}\"."
 
 #: src/main/java/org/candlepin/resource/ContentResource.java:190
-#: src/main/java/org/candlepin/resource/OwnerContentResource.java:364
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:566
+#: src/main/java/org/candlepin/resource/OwnerContentResource.java:363
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:565
 #: src/main/java/org/candlepin/resource/ProductResource.java:150
 #, java-format
 msgid "Invalid active inclusion type: {0}"
 msgstr "ປະເພດການລວມເອົາແບບໃຊ້ງານ (active inclusion type) ບໍ່ຖືກຕ້ອງ: {0}"
 
 #: src/main/java/org/candlepin/resource/ContentResource.java:193
-#: src/main/java/org/candlepin/resource/OwnerContentResource.java:367
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:570
+#: src/main/java/org/candlepin/resource/OwnerContentResource.java:366
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:569
 #: src/main/java/org/candlepin/resource/ProductResource.java:154
 #, java-format
 msgid "Invalid custom inclusion type: {0}"
@@ -1378,16 +1331,16 @@ msgstr "ບໍ່ໄດ້ລະບຸໄອດີເນື້ອຫາ"
 msgid "Unable to find a content with the ID \"{0}\""
 msgstr "ບໍ່ສາມາດຊອກຫາເນື້ອຫາທີ່ມີໄອດີ \"{0}\""
 
-#: src/main/java/org/candlepin/resource/GuestIdResource.java:106
+#: src/main/java/org/candlepin/resource/GuestIdResource.java:105
 msgid "Please supply a valid guest id"
 msgstr "ກະລຸນາລະບຸໄອດີແຂກທີ່ຖືກຕ້ອງ"
 
-#: src/main/java/org/candlepin/resource/GuestIdResource.java:122
+#: src/main/java/org/candlepin/resource/GuestIdResource.java:121
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
 msgstr "ໄອດີແຂກໃນ json \"{0}\" ບໍ່ກົງກັບໄອດີແຂກໃນເສັ້ນທາງ \"{1}\""
 
-#: src/main/java/org/candlepin/resource/GuestIdResource.java:208
+#: src/main/java/org/candlepin/resource/GuestIdResource.java:205
 #, java-format
 msgid "Guest with UUID {0} could not be found."
 msgstr "ບໍ່ພົບແຂກທີ່ມີ UUID {0}."
@@ -1469,12 +1422,12 @@ msgstr "ບໍ່ສາມາດແກ້ໄຂ ຫຼື ເອົາເນື�
 msgid "Unable to find a content with the ID \"{0}\" for owner \"{1}\""
 msgstr "ບໍ່ສາມາດຊອກຫາເນື້ອຫາທີ່ມີໄອດີ \"{0}\" ສຳລັບເຈົ້າຂອງ \"{1}\""
 
-#: src/main/java/org/candlepin/resource/OwnerContentResource.java:327
+#: src/main/java/org/candlepin/resource/OwnerContentResource.java:326
 #, java-format
 msgid "One or more contents are already defined in the global namespace: {0}"
 msgstr "ມີເນື້ອຫາໜຶ່ງ ຫຼື ຫຼາຍກວ່ານັ້ນທີ່ຖືກກຳນົດໄວ້ໃນ global namespace ແລ້ວ: {0}"
 
-#: src/main/java/org/candlepin/resource/OwnerContentResource.java:407
+#: src/main/java/org/candlepin/resource/OwnerContentResource.java:406
 #, java-format
 msgid ""
 "Content \"{0}\" cannot be deleted while referenced by one or more products"
@@ -1532,51 +1485,51 @@ msgid ""
 "Cannot attach product defined outside of the organization''s namespace: {0}"
 msgstr "ບໍ່ສາມາດຕິດຄັດຜະລິດຕະພັນທີ່ກຳນົດໄວ້ນອກ namespace ຂອງອົງກອນໄດ້: {0}"
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:449
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:448
 msgid "product contents contains one or more null elements"
 msgstr "ເນື້ອຫາຜະລິດຕະພັນມີອົງປະກອບທີ່ເປັນຄ່າຫວ່າງ"
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:455
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:454
 msgid "product content contains one or more malformed content references"
 msgstr "ເນື້ອຫາຜະລິດຕະພັນມີການອ້າງອີງເນື້ອຫາທີ່ຜິດຮູບແບບ"
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:461
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:460
 msgid "one or more content references lacks a valid ID"
 msgstr "ການອ້າງອີງເນື້ອຫາໜຶ່ງ ຫຼື ຫຼາຍລາຍການຂາດໄອດີທີ່ຖືກຕ້ອງ"
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:505
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:504
 msgid "product has a null or invalid ID"
 msgstr "ຜະລິດຕະພັນມີໄອດີທີ່ເປັນຄ່າຫວ່າງ ຫຼື ບໍ່ຖືກຕ້ອງ"
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:509
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:508
 msgid "product has a null or invalid name"
 msgstr "ຜະລິດຕະພັນມີຊື່ທີ່ເປັນຄ່າຫວ່າງ ຫຼື ບໍ່ຖືກຕ້ອງ"
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:515
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:514
 #, java-format
 msgid "A product with ID \"{0}\" is already defined"
 msgstr "ຜະລິດຕະພັນທີ່ມີໄອດີ \"{0}\" ຖືກກຳນົດໄວ້ແລ້ວ"
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:546
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:545
 msgid "Only numeric product IDs are allowed."
 msgstr "ອະນຸຍາດໃຫ້ໃຊ້ສະເພາະໄອດີຜະລິດຕະພັນທີ່ເປັນຕົວເລກເທົ່ານັ້ນ."
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:611
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:610
 msgid "No content IDs provided"
 msgstr "ບໍ່ມີການໃຫ້ໄອດີເນື້ອຫາ"
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:663
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:662
 msgid "No content IDs provided, or provided content ID list contains null IDs"
 msgstr "ບໍ່ມີການໃຫ້ໄອດີເນື້ອຫາ ຫຼື ລາຍການໄອດີເນື້ອຫາທີ່ໃຫ້ມາມີໄອດີທີ່ເປັນຄ່າຫວ່າງ"
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:700
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:699
 #, java-format
 msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more "
 "subscriptions"
 msgstr "ຜະລິດຕະພັນ \"{0}\" ບໍ່ສາມາດລຶບໄດ້ໃນຂະນະທີ່ຖືກອ້າງອີງໂດຍການສະໝັກໃຊ້ໜຶ່ງ ຫຼື ຫຼາຍກວ່ານັ້ນ"
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:706
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:705
 #, java-format
 msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more products"
@@ -1620,7 +1573,6 @@ msgid "Consumer id is null or empty."
 msgstr "ໄອດີຜູ້ບໍລິໂພກເປັນຄ່າຫວ່າງ."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:427
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:111
 #, java-format
 msgid "No such unit: {0}"
 msgstr "ບໍ່ມີໜ່ວຍດັ່ງກ່າວ: {0}"
@@ -1731,14 +1683,19 @@ msgstr ""
 "ເກີດຂໍ້ຜິດພາດໃນການເກັບຮັກສາໄຟລ໌ເກັບມ້ຽນທີ່ອັບໂຫຼດສຳລັບການປະມວນຜົນແບບບໍ່ພ້ອມກັນ (asynchronous)"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1771
+#, fuzzy
+#| msgid ""
+#| "Unable to generate an ueber certificate compatible with the provided "
+#| "cryptographic capabilities"
 msgid ""
-"Unable to generate an ueber certificate compatible with the provided "
+"Unable to generate an uber certificate compatible with the provided "
 "cryptographic capabilities"
 msgstr "ບໍ່ສາມາດສ້າງໃບຢັ້ງຢືນ ueber ທີ່ເຂົ້າກັນໄດ້ກັບຄວາມສາມາດໃນການເຂົ້າລະຫັດທີ່ໃຫ້ມາ"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1813
-#, java-format
-msgid "Problem generating ueber cert for owner {0}"
+#, fuzzy, java-format
+#| msgid "Problem generating ueber cert for owner {0}"
+msgid "Problem generating uber cert for owner {0}"
 msgstr "ມີບັນຫາໃນການສ້າງໃບຢັ້ງຢືນ ueber ສຳລັບເຈົ້າຂອງ {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1825
@@ -1888,34 +1845,34 @@ msgstr "ບໍ່ພົບຜະລິດຕະພັນທີ່ມີ UUID \"{
 msgid "No product IDs specified"
 msgstr "ບໍ່ໄດ້ລະບຸໄອດີຜະລິດຕະພັນ"
 
-#: src/main/java/org/candlepin/resource/RoleResource.java:81
+#: src/main/java/org/candlepin/resource/RoleResource.java:87
 msgid "role name is null or empty"
 msgstr "ຊື່ບົດບາດເປັນຄ່າຫວ່າງ"
 
-#: src/main/java/org/candlepin/resource/RoleResource.java:86
+#: src/main/java/org/candlepin/resource/RoleResource.java:92
 #, java-format
 msgid "Role not found: {0}"
 msgstr "ບໍ່ພົບບົດບາດ: {0}"
 
-#: src/main/java/org/candlepin/resource/RoleResource.java:110
-#: src/main/java/org/candlepin/resource/UserResource.java:87
+#: src/main/java/org/candlepin/resource/RoleResource.java:116
+#: src/main/java/org/candlepin/resource/UserResource.java:91
 msgid "username is null or empty"
 msgstr "ຊື່ຜູ້ໃຊ້ເປັນຄ່າຫວ່າງ"
 
-#: src/main/java/org/candlepin/resource/RoleResource.java:128
+#: src/main/java/org/candlepin/resource/RoleResource.java:134
 msgid "role data is null or empty"
 msgstr "ຂໍ້ມູນບົດບາດເປັນຄ່າຫວ່າງ"
 
-#: src/main/java/org/candlepin/resource/RoleResource.java:132
+#: src/main/java/org/candlepin/resource/RoleResource.java:138
 msgid "role name not specified"
 msgstr "ບໍ່ໄດ້ລະບຸຊື່ບົດບາດ"
 
-#: src/main/java/org/candlepin/resource/RoleResource.java:136
+#: src/main/java/org/candlepin/resource/RoleResource.java:142
 #, java-format
 msgid "Role already exists: {0}"
 msgstr "ບົດບາດມີຢູ່ແລ້ວ: {0}"
 
-#: src/main/java/org/candlepin/resource/RoleResource.java:174
+#: src/main/java/org/candlepin/resource/RoleResource.java:181
 msgid "Access type NONE not supported."
 msgstr "ບໍ່ຮອງຮັບປະເພດການເຂົ້າເຖິງແບບ NONE."
 
@@ -1923,43 +1880,27 @@ msgstr "ບໍ່ຮອງຮັບປະເພດການເຂົ້າເຖ
 msgid "couldn''t read rules file"
 msgstr "ບໍ່ສາມາດອ່ານໄຟລ໌ກົດລະບຽບໄດ້"
 
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:98
-msgid "Standalone candlepin does not support redeeming a subscription."
-msgstr "Standalone Candlepin ບໍ່ຮອງຮັບການແລກການສະໝັກໃຊ້."
-
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:102
-msgid "email is required for notification"
-msgstr "ຕ້ອງມີອີເມລສຳລັບການແຈ້ງເຕືອນ"
-
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:106
-msgid "email locale is required for notification"
-msgstr "ຕ້ອງມີພາສາອີເມລ (email locale) ສຳລັບການແຈ້ງເຕືອນ"
-
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:116
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:92
 msgid ""
-"Your subscription redemption is being processed and should be available "
-"soon. You will be notified via email once it is available. If you have any "
-"questions, additional information can be found here: https://"
-"access.redhat.com/kb/docs/DOC-53864."
+"Subscription activation through 'subscription-manager redeem' is no longer "
+"supported, please visit https://access.redhat.com/subscriptions/activate/"
+"dell to redeem your service tag."
 msgstr ""
-"ການແລກການສະໝັກໃຊ້ຂອງທ່ານກຳລັງຖືກປະມວນຜົນ ແລະ ຈະພ້ອມໃຊ້ງານໃນໄວໆນີ້. "
-"ທ່ານຈະໄດ້ຮັບການແຈ້ງເຕືອນຜ່ານອີເມລເມື່ອມັນພ້ອມໃຊ້ງານ. ຫາກມີຄຳຖາມ, ສາມາດເບິ່ງຂໍ້ມູນເພີ່ມເຕີມໄດ້ທີ່ນີ້: "
-"https://access.redhat.com/kb/docs/DOC-53864."
 
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:117
 #, java-format
 msgid "A subscription with the ID \"{0}\" could not be found."
 msgstr "ບໍ່ພົບການສະໝັກໃຊ້ທີ່ມີໄອດີ \"{0}\"."
 
-#: src/main/java/org/candlepin/resource/UserResource.java:142
+#: src/main/java/org/candlepin/resource/UserResource.java:146
 msgid "user data is null or empty"
 msgstr "ຂໍ້ມູນຜູ້ໃຊ້ເປັນຄ່າຫວ່າງ"
 
-#: src/main/java/org/candlepin/resource/UserResource.java:146
+#: src/main/java/org/candlepin/resource/UserResource.java:150
 msgid "Username not specified"
 msgstr "ບໍ່ໄດ້ລະບຸຊື່ຜູ້ໃຊ້"
 
-#: src/main/java/org/candlepin/resource/UserResource.java:150
+#: src/main/java/org/candlepin/resource/UserResource.java:154
 #, java-format
 msgid "User already exists: {0}"
 msgstr "ຜູ້ໃຊ້ມີຢູ່ແລ້ວ: {0}"
@@ -1993,6 +1934,71 @@ msgstr "ບໍ່ມີປະເພດໜ່ວຍດັ່ງກ່າວ: {0}"
 msgid "Failed to parse parameter \"{0}\"; expected format: key:value"
 msgstr "ບໍ່ສາມາດແປງພາຣາມິເຕີ \"{0}\"; ຮູບແບບທີ່ຄາດໄວ້ແມ່ນ: key:value"
 
+#: src/main/java/org/candlepin/resource/util/SubscriptionServiceExceptionTranslator.java:58
+#, java-format
+msgid "No subscription was able to be activated with Dell service tag \"{0}\"."
+msgstr "ບໍ່ມີການສະໝັກໃຊ້ໃດທີ່ສາມາດເປີດນຳໃຊ້ໄດ້ດ້ວຍແທັກບໍລິການ Dell \"{0}\"."
+
+#: src/main/java/org/candlepin/resource/util/SubscriptionServiceExceptionTranslator.java:61
+#, java-format
+msgid ""
+"The Dell service tag \"{0}\" has already been used to redeem a subscription."
+msgstr "ແທັກບໍລິການ Dell \"{0}\" ຖືກໃຊ້ເພື່ອແລກການສະໝັກໃຊ້ໄປແລ້ວ."
+
+#: src/main/java/org/candlepin/resource/util/SubscriptionServiceExceptionTranslator.java:64
+#, java-format
+msgid "The Dell service tag \"{0}\" is expired."
+msgstr "ແທັກບໍລິການ Dell \"{0}\" ໝົດອາຍຸແລ້ວ."
+
+#: src/main/java/org/candlepin/resource/util/SubscriptionServiceExceptionTranslator.java:66
+#, java-format
+msgid ""
+"The Dell service tag \"{0}\" could not be used to retrieve a subscription."
+msgstr "ບໍ່ສາມາດໃຊ້ແທັກບໍລິການ Dell \"{0}\" ເພື່ອດຶງຂໍ້ມູນການສະໝັກໃຊ້ໄດ້."
+
+#: src/main/java/org/candlepin/resource/util/SubscriptionServiceExceptionTranslator.java:69
+#, java-format
+msgid "Unexpected error from Subscription Service: {0}"
+msgstr "ຂໍ້ຜິດພາດທີ່ບໍ່ຄາດຄິດຈາກບໍລິການການສະໝັກໃຊ້: {0}"
+
+#: src/main/java/org/candlepin/resource/util/SubscriptionServiceExceptionTranslator.java:72
+#, fuzzy
+#| msgid "Error contacting user service"
+msgid "Error contacting subscription service"
+msgstr "ເກີດຂໍ້ຜິດພາດໃນການຕິດຕໍ່ບໍລິການຜູ້ໃຊ້"
+
+#: src/main/java/org/candlepin/resource/util/UserServiceExceptionTranslator.java:87
+#, java-format
+msgid "User \"{0}\" is not valid."
+msgstr "ຜູ້ໃຊ້ \"{0}\" ບໍ່ຖືກຕ້ອງ."
+
+#: src/main/java/org/candlepin/resource/util/UserServiceExceptionTranslator.java:89
+#, java-format
+msgid ""
+"You must first accept Red Hat''s Terms and conditions. Please visit {0} . "
+"You may have to log out of and back into the  Customer Portal in order to "
+"see the terms."
+msgstr ""
+"ທ່ານຕ້ອງຍອມຮັບຂໍ້ກຳນົດ ແລະ ເງື່ອນໄຂຂອງ Red Hat ກ່ອນ. ກະລຸນາເຂົ້າໄປທີ່ {0}. "
+"ທ່ານອາດຈະຕ້ອງອອກຈາກລະບົບ ແລະ ເຂົ້າສູ່ລະບົບ Customer Portal ຄືນໃໝ່ເພື່ອເບິ່ງຂໍ້ກຳນົດ."
+
+#: src/main/java/org/candlepin/resource/util/UserServiceExceptionTranslator.java:93
+#, java-format
+msgid ""
+"The user \"{0}\" has been disabled, if this is a mistake, please contact "
+"customer service."
+msgstr "ຜູ້ໃຊ້ \"{0}\" ຖືກປິດການໃຊ້ງານແລ້ວ, ຖ້ານີ້ແມ່ນຄວາມຜິດພາດ ກະລຸນາຕິດຕໍ່ບໍລິການລູກຄ້າ."
+
+#: src/main/java/org/candlepin/resource/util/UserServiceExceptionTranslator.java:96
+#, java-format
+msgid "Invalid username or password. To create a login, please visit {0}"
+msgstr "ຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ. ເພື່ອສ້າງບັນຊີເຂົ້າໃຊ້ ກະລຸນາເຂົ້າໄປທີ່ {0}"
+
+#: src/main/java/org/candlepin/resource/util/UserServiceExceptionTranslator.java:99
+#, java-format
+msgid "Unexpected error from User Service: {0}"
+msgstr "ຂໍ້ຜິດພາດທີ່ບໍ່ຄາດຄິດຈາກບໍລິການຜູ້ໃຊ້: {0}"
+
 #: src/main/java/org/candlepin/resource/validation/DTOValidator.java:91
 msgid "collection contains null elements"
 msgstr "ຄໍເລັກຊັນມີອົງປະກອບທີ່ເປັນຄ່າຫວ່າງ"
@@ -2005,7 +2011,7 @@ msgstr "ແມັບ (map) ມີອົງປະກອບທີ່ເປັນ�
 msgid "Unable to parse date parameter"
 msgstr "ບໍ່ສາມາດແປງພາຣາມິເຕີວັນທີໄດ້"
 
-#: src/main/java/org/candlepin/resteasy/filter/AuthenticationFilter.java:173
+#: src/main/java/org/candlepin/resteasy/filter/AuthenticationFilter.java:167
 msgid "Please use SSL when accessing protected resources"
 msgstr "ກະລຸນາໃຊ້ SSL ເມື່ອເຂົ້າເຖິງຊັບພະຍາກອນທີ່ຖືກປ້ອງກັນ"
 
@@ -2047,11 +2053,11 @@ msgstr "ເຈົ້າຂອງແບບບໍ່ລະບຸຕົວຕົນ
 msgid "Anonymous owner not yet entitled upstream of candlepin"
 msgstr "ເຈົ້າຂອງແບບບໍ່ລະບຸຕົວຕົນຍັງບໍ່ໄດ້ຮັບສິດທິໃນຕົ້ນທາງ (upstream) ຂອງ Candlepin"
 
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:266
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:297
 msgid "Organization"
 msgstr "ອົງກອນ"
 
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:287
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:318
 #, java-format
 msgid "{0} with ID(s) {1} could not be found."
 msgstr "ບໍ່ພົບ {0} ດ້ວຍໄອດີ {1}."
@@ -2082,101 +2088,102 @@ msgstr "ເຈົ້າຂອງໄດ້ນຳເຂົ້າຈາກແອັ
 msgid "Unable to find product with ID: {0}"
 msgstr "ບໍ່ສາມາດຊອກຫາຜະລິດຕະພັນທີ່ມີໄອດີ: {0}"
 
-#: src/main/java/org/candlepin/sync/Importer.java:222
+#: src/main/java/org/candlepin/sync/Importer.java:227
 msgid "Uploaded manifest file does not exist."
 msgstr "ໄຟລ໌ແມນິເຟສທີ່ອັບໂຫຼດບໍ່ມີຢູ່."
 
-#: src/main/java/org/candlepin/sync/Importer.java:292
+#: src/main/java/org/candlepin/sync/Importer.java:297
 #, java-format
 msgid "{0} file imported successfully."
 msgstr "ນຳເຂົ້າໄຟລ໌ {0} ສຳເລັດແລ້ວ."
 
-#: src/main/java/org/candlepin/sync/Importer.java:294
+#: src/main/java/org/candlepin/sync/Importer.java:299
 #, java-format
 msgid "{0} file imported forcibly."
 msgstr "ນຳເຂົ້າໄຟລ໌ {0} ແບບບັງຄັບສຳເລັດແລ້ວ."
 
-#: src/main/java/org/candlepin/sync/Importer.java:299
+#: src/main/java/org/candlepin/sync/Importer.java:304
 msgid "No active subscriptions found in the file."
 msgstr "ບໍ່ພົບການສະໝັກໃຊ້ທີ່ກຳລັງໃຊ້ງານຢູ່ໃນໄຟລ໌."
 
-#: src/main/java/org/candlepin/sync/Importer.java:304
+#: src/main/java/org/candlepin/sync/Importer.java:309
 msgid "One or more inactive subscriptions found in the file."
 msgstr "ພົບການສະໝັກໃຊ້ທີ່ບໍ່ໄດ້ໃຊ້ງານໜຶ່ງລາຍການ ຫຼື ຫຼາຍກວ່ານັ້ນໃນໄຟລ໌."
 
-#: src/main/java/org/candlepin/sync/Importer.java:367
+#: src/main/java/org/candlepin/sync/Importer.java:372
 msgid "Wrong metadata type"
 msgstr "ປະເພດ metadata ບໍ່ຖືກຕ້ອງ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:376
+#: src/main/java/org/candlepin/sync/Importer.java:381
 msgid "Invalid owner"
 msgstr "ເຈົ້າຂອງບໍ່ຖືກຕ້ອງ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:389
+#: src/main/java/org/candlepin/sync/Importer.java:394
 msgid "Import is older than existing data"
 msgstr "ຂໍ້ມູນທີ່ນຳເຂົ້າເກົ່າກວ່າຂໍ້ມູນທີ່ມີຢູ່"
 
-#: src/main/java/org/candlepin/sync/Importer.java:408
+#: src/main/java/org/candlepin/sync/Importer.java:413
 msgid "Import is the same as existing data"
 msgstr "ຂໍ້ມູນທີ່ນຳເຂົ້າຄືກັນກັບຂໍ້ມູນທີ່ມີຢູ່"
 
-#: src/main/java/org/candlepin/sync/Importer.java:442
+#: src/main/java/org/candlepin/sync/Importer.java:453
 msgid "The provided manifest has no content in the exported consumer archive"
 msgstr "ແມນິເຟສທີ່ໃຫ້ມາບໍ່ມີເນື້ອຫາໃນໄຟລ໌ເກັບມ້ຽນຜູ້ບໍລິໂພກທີ່ສົ່ງອອກ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:467
+#: src/main/java/org/candlepin/sync/Importer.java:478
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "ໄຟລ໌ເກັບມ້ຽນບໍ່ມີໄຟລ໌ consumer_export.zip ທີ່ຈຳເປັນ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:472
+#: src/main/java/org/candlepin/sync/Importer.java:483
 msgid "Unable to read certificates to validate manifest"
 msgstr "ບໍ່ສາມາດອ່ານໃບຢັ້ງຢືນເພື່ອທຳການກວດສອບແມນິເຟສໄດ້"
 
-#: src/main/java/org/candlepin/sync/Importer.java:477
-#: src/main/java/org/candlepin/sync/Importer.java:481
+#: src/main/java/org/candlepin/sync/Importer.java:488
+#: src/main/java/org/candlepin/sync/Importer.java:492
 msgid "Failed to import archive"
 msgstr "ບໍ່ສາມາດນຳເຂົ້າໄຟລ໌ເກັບມ້ຽນໄດ້"
 
-#: src/main/java/org/candlepin/sync/Importer.java:485
-#: src/main/java/org/candlepin/sync/Importer.java:942
+#: src/main/java/org/candlepin/sync/Importer.java:496
+#: src/main/java/org/candlepin/sync/Importer.java:985
 msgid "Unable to extract export archive"
 msgstr "ບໍ່ສາມາດແຕກໄຟລ໌ເກັບມ້ຽນການສົ່ງອອກໄດ້"
 
-#: src/main/java/org/candlepin/sync/Importer.java:532
-#: src/main/java/org/candlepin/sync/Importer.java:857
+#: src/main/java/org/candlepin/sync/Importer.java:543
+#: src/main/java/org/candlepin/sync/Importer.java:900
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "ໄຟລ໌ເກັບມ້ຽນ {0} ບໍ່ແມ່ນໄຟລ໌ທີ່ຖືກບີບອັດຢ່າງຖືກຕ້ອງ ຫຼື ເປັນໄຟລ໌ຫວ່າງ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:542
+#: src/main/java/org/candlepin/sync/Importer.java:555
 msgid "Archive signed by an untrusted certificate"
 msgstr "ໄຟລ໌ເກັບມ້ຽນຖືກເຊັນໂດຍໃບຢັ້ງຢືນທີ່ບໍ່ໄດ້ຮັບຄວາມເຊື່ອຖື"
 
-#: src/main/java/org/candlepin/sync/Importer.java:573
+#: src/main/java/org/candlepin/sync/Importer.java:579
+#: src/main/java/org/candlepin/sync/Importer.java:617
 msgid "Archive failed signature check"
 msgstr "ໄຟລ໌ເກັບມ້ຽນບໍ່ຜ່ານການກວດສອບລາຍເຊັນ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:587
+#: src/main/java/org/candlepin/sync/Importer.java:630
 msgid "The archive does not contain the required signature file"
 msgstr "ໄຟລ໌ເກັບມ້ຽນບໍ່ມີໄຟລ໌ລາຍເຊັນທີ່ຈຳເປັນ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:616
+#: src/main/java/org/candlepin/sync/Importer.java:659
 msgid "The archive does not contain the required meta.json file"
 msgstr "ໄຟລ໌ເກັບມ້ຽນບໍ່ມີໄຟລ໌ meta.json ທີ່ຈຳເປັນ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:621
+#: src/main/java/org/candlepin/sync/Importer.java:664
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "ໄຟລ໌ເກັບມ້ຽນບໍ່ມີໄດເຣັກທໍຣີ consumer_types ທີ່ຈຳເປັນ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:626
+#: src/main/java/org/candlepin/sync/Importer.java:669
 msgid "The archive does not contain the required consumer.json file"
 msgstr "ໄຟລ໌ເກັບມ້ຽນບໍ່ມີໄຟລ໌ consumer.json ທີ່ຈຳເປັນ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:632
+#: src/main/java/org/candlepin/sync/Importer.java:675
 msgid "The archive does not contain the required entitlements directory"
 msgstr "ໄຟລ໌ເກັບມ້ຽນບໍ່ມີໄດເຣັກທໍຣີ entitlements ທີ່ຈຳເປັນ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:870
+#: src/main/java/org/candlepin/sync/Importer.java:913
 #, java-format
 msgid "Entry is outside of the target directory: {0}"
 msgstr "ລາຍການຢູ່ພາຍນອກໄດເຣັກທໍຣີເປົ້າໝາຍ: {0}"
@@ -2326,3 +2333,25 @@ msgstr "ນິພົດສະຄຣິບ \"{0}\" ບໍ່ໃຫ້ຜົນລ
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
 msgid "must be a valid URL"
 msgstr "ຕ້ອງເປັນ URL ທີ່ຖືກຕ້ອງ"
+
+#~ msgid "Unknown service exception"
+#~ msgstr "ຂໍ້ຍົກເວັ້ນການບໍລິການທີ່ບໍ່ຮູ້ຈັກ"
+
+#~ msgid "Standalone candlepin does not support redeeming a subscription."
+#~ msgstr "Standalone Candlepin ບໍ່ຮອງຮັບການແລກການສະໝັກໃຊ້."
+
+#~ msgid "email is required for notification"
+#~ msgstr "ຕ້ອງມີອີເມລສຳລັບການແຈ້ງເຕືອນ"
+
+#~ msgid "email locale is required for notification"
+#~ msgstr "ຕ້ອງມີພາສາອີເມລ (email locale) ສຳລັບການແຈ້ງເຕືອນ"
+
+#~ msgid ""
+#~ "Your subscription redemption is being processed and should be available "
+#~ "soon. You will be notified via email once it is available. If you have "
+#~ "any questions, additional information can be found here: https://"
+#~ "access.redhat.com/kb/docs/DOC-53864."
+#~ msgstr ""
+#~ "ການແລກການສະໝັກໃຊ້ຂອງທ່ານກຳລັງຖືກປະມວນຜົນ ແລະ ຈະພ້ອມໃຊ້ງານໃນໄວໆນີ້. "
+#~ "ທ່ານຈະໄດ້ຮັບການແຈ້ງເຕືອນຜ່ານອີເມລເມື່ອມັນພ້ອມໃຊ້ງານ. ຫາກມີຄຳຖາມ, "
+#~ "ສາມາດເບິ່ງຂໍ້ມູນເພີ່ມເຕີມໄດ້ທີ່ນີ້: https://access.redhat.com/kb/docs/DOC-53864."
