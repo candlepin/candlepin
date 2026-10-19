@@ -59,21 +59,26 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
+import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.InflaterInputStream;
 
 @SpecTest
 @OnlyInHosted
@@ -81,6 +86,7 @@ public class ExportV2SpecTest {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Test
+    @SuppressWarnings("checkstyle:methodlength")
     public void shouldCreateExportAsync() throws ApiException, IOException {
 
         ApiClient adminClient = ApiClients.admin();
@@ -102,6 +108,8 @@ public class ExportV2SpecTest {
                 .contractNumber("active-contract")
                 .accountNumber("active-account"));
         ProductDTO futureProduct = this.createProductGraph(adminClient);
+        ContentDTO futureContent = adminClient.hosted().createContent(Contents.random().arches("aarch64"));
+        adminClient.hosted().addContentToProduct(futureProduct.getId(), futureContent.getId(), false);
         ProductDTO expiredProduct = this.createProductGraph(adminClient);
         // future subscription
         OffsetDateTime futureStart = OffsetDateTime.now()
@@ -112,8 +120,7 @@ public class ExportV2SpecTest {
                 .accountNumber("future-account")
                 .startDate(futureStart)
                 .endDate(futureStart.plusYears(1)));
-        OffsetDateTime expiredEnd = OffsetDateTime.now()
-            .minusYears(1);
+        OffsetDateTime expiredEnd = OffsetDateTime.now().minusYears(1);
         SubscriptionDTO expiredSubscription = adminClient.hosted()
             .createSubscription(Subscriptions.random(owner, expiredProduct)
                 .contractNumber("expired-contract")
@@ -186,6 +193,53 @@ public class ExportV2SpecTest {
             this.assertSubscription(archive, pool);
         }
 
+        Path certificateDirectory = archive.getPath("content_access_certificates");
+        try (java.util.stream.Stream<Path> certificates = Files.list(certificateDirectory)) {
+            Path certificatePath = certificates.findFirst().orElseThrow();
+            String certificate = Files.readString(certificatePath);
+            assertTrue(certificate.contains("-----BEGIN CERTIFICATE-----"));
+            assertTrue(certificate.contains("-----BEGIN PRIVATE KEY-----"));
+            String start = "-----BEGIN ENTITLEMENT DATA-----";
+            String encoded = certificate.substring(certificate.indexOf(start) + start.length(),
+                certificate.indexOf("-----END ENTITLEMENT DATA-----"));
+            byte[] compressed = Base64.getMimeDecoder().decode(encoded);
+            try (InflaterInputStream data = new InflaterInputStream(new ByteArrayInputStream(compressed))) {
+                JsonNode payload = this.mapper.readTree(new String(data.readAllBytes(), StandardCharsets.UTF_8));
+                this.assertCertificateContent(payload, expectedProduct, expectedFutureProduct);
+            }
+        }
+    }
+
+    private void assertCertificateContent(JsonNode payload, ProductDTO... products) {
+        Map<String, Boolean> expected = new HashMap<>();
+        for (ProductDTO product : products) {
+            this.collectCertificateContent(product, expected);
+        }
+
+        JsonNode repositories = payload.get("products").get(0).get("content");
+        assertEquals(expected.size(), repositories.size());
+        Map<String, Boolean> actual = new HashMap<>();
+        for (JsonNode repository : repositories) {
+            // Enabled content omits the flag; disabled content explicitly sets it to false.
+            JsonNode enabled = repository.get("enabled");
+            if (enabled != null) {
+                assertTrue(enabled.isBoolean());
+            }
+            actual.put(repository.get("id").asString(), enabled == null || enabled.asBoolean());
+        }
+        assertEquals(expected, actual);
+    }
+
+    private void collectCertificateContent(ProductDTO product, Map<String, Boolean> content) {
+        for (ProductContentDTO entry : product.getProductContent()) {
+            content.merge(entry.getContent().getId(), entry.getEnabled(), Boolean::logicalOr);
+        }
+        if (product.getDerivedProduct() != null) {
+            this.collectCertificateContent(product.getDerivedProduct(), content);
+        }
+        for (ProductDTO provided : product.getProvidedProducts()) {
+            this.collectCertificateContent(provided, content);
+        }
     }
 
     private ProductDTO createActiveProductGraph(ApiClient adminClient) {
@@ -295,10 +349,8 @@ public class ExportV2SpecTest {
             .isBlank());
         Date created = this.mapper.convertValue(actual.get("created"), Date.class);
         assertNotNull(created);
-        assertTrue(created.getTime() >= start.toInstant()
-            .toEpochMilli());
-        assertTrue(created.getTime() <= end.toInstant()
-            .toEpochMilli());
+        assertTrue(created.getTime() >= start.toInstant().toEpochMilli());
+        assertTrue(created.getTime() <= end.toInstant().toEpochMilli());
     }
 
     private Set<String> assertProductFiles(FileSystem archive, ProductDTO expected) throws IOException {
@@ -316,8 +368,7 @@ public class ExportV2SpecTest {
 
     private void assertDirectoryFiles(FileSystem archive, String directory, Set<String> expected) throws IOException {
         try (Stream<Path> entries = Files.list(archive.getPath(directory))) {
-            Set<String> actual = entries.map(path -> path.getFileName()
-                    .toString())
+            Set<String> actual = entries.map(path -> path.getFileName().toString())
                 .collect(Collectors.toSet());
             assertEquals(expected, actual, directory);
         }
@@ -328,50 +379,41 @@ public class ExportV2SpecTest {
         this.assertTimestampValues(actual, expected.getCreated(), expected.getUpdated());
         this.assertField(actual, "id", expected.getId());
         this.assertField(actual, "name", expected.getName());
-        this.assertField(actual, "attributes", expected.getAttributes()
-            .stream()
+        this.assertField(actual, "attributes", expected.getAttributes().stream()
             .collect(Collectors.toMap(attribute -> attribute.getName(), attribute -> attribute.getValue())));
 
         this.assertField(actual, "derivedProduct",
-            expected.getDerivedProduct() == null ? null : expected.getDerivedProduct()
-                .getId());
+            expected.getDerivedProduct() == null ? null : expected.getDerivedProduct().getId());
         JsonNode providedProducts = actual.get("providedProducts");
         assertNotNull(providedProducts);
         assertTrue(providedProducts.isArray());
-        assertEquals(expected.getProvidedProducts()
-            .size(), providedProducts.size());
+        assertEquals(expected.getProvidedProducts().size(), providedProducts.size());
         Set<String> actualProvided = new HashSet<>();
         for (JsonNode provided : providedProducts) {
             assertTrue(provided.isString());
             actualProvided.add(provided.asString());
         }
-        Set<String> expectedProvided = expected.getProvidedProducts()
-            .stream()
+        Set<String> expectedProvided = expected.getProvidedProducts().stream()
             .map(ProductDTO::getId)
             .collect(Collectors.toSet());
         assertEquals(expectedProvided, actualProvided);
 
         JsonNode content = actual.get("productContent");
         assertNotNull(content);
-        assertEquals(expected.getProductContent()
-            .size(), content.size());
+        assertEquals(expected.getProductContent().size(), content.size());
         for (ProductContentDTO entry : expected.getProductContent()) {
-            JsonNode actualContent = content.get(entry.getContent()
-                .getId());
+            JsonNode actualContent = content.get(entry.getContent().getId());
             this.assertContent(actualContent, entry.getContent());
             this.assertField(actualContent, "enabled", entry.getEnabled());
         }
 
         JsonNode brandings = actual.get("brandings");
         assertNotNull(brandings);
-        assertEquals(expected.getBranding()
-            .size(), brandings.size());
-        Map<String, BrandingDTO> expectedBranding = expected.getBranding()
-            .stream()
+        assertEquals(expected.getBranding().size(), brandings.size());
+        Map<String, BrandingDTO> expectedBranding = expected.getBranding().stream()
             .collect(Collectors.toMap(BrandingDTO::getProductId, branding -> branding));
         for (JsonNode branding : brandings) {
-            BrandingDTO expectedBrand = expectedBranding.get(branding.get("productId")
-                .asString());
+            BrandingDTO expectedBrand = expectedBranding.get(branding.get("productId").asString());
             assertNotNull(expectedBrand);
             assertTrue(branding.hasNonNull("id"));
             assertFalse(branding.get("id")
@@ -403,8 +445,7 @@ public class ExportV2SpecTest {
         this.assertTimestampValues(actual, expected.getCreated(), expected.getUpdated());
         this.assertField(actual, "uuid", expected.getUuid());
         this.assertField(actual, "name", expected.getName());
-        this.assertField(actual, "ownerId", expected.getOwner()
-            .getId());
+        this.assertField(actual, "ownerId", expected.getOwner().getId());
         this.assertField(actual, "urlWeb", webAppPrefix.asString());
         assertTrue(actual.hasNonNull("urlApi"));
         assertFalse(actual.get("urlApi")
@@ -412,14 +453,10 @@ public class ExportV2SpecTest {
             .isBlank());
         JsonNode type = actual.get("type");
         assertNotNull(type);
-        this.assertField(type, "id", expected.getType()
-            .getId());
-        this.assertField(type, "name", expected.getType()
-            .getLabel());
+        this.assertField(type, "id", expected.getType().getId());
+        this.assertField(type, "name", expected.getType().getLabel());
         // Built-in consumer types may not have source timestamps.
-        this.assertTimestampValues(type, expected.getType()
-            .getCreated(), expected.getType()
-            .getUpdated());
+        this.assertTimestampValues(type, expected.getType().getCreated(), expected.getType().getUpdated());
     }
 
     private void assertTimestampValues(JsonNode actual, OffsetDateTime created, OffsetDateTime updated) {
@@ -437,8 +474,7 @@ public class ExportV2SpecTest {
             Date date = this.mapper.convertValue(actual, Date.class);
             assertNotNull(date);
             // The REST API exposes seconds, while manifest timestamps retain milliseconds.
-            assertEquals(expected.toEpochSecond(), date.toInstant()
-                .getEpochSecond());
+            assertEquals(expected.toEpochSecond(), date.toInstant().getEpochSecond());
         }
     }
 

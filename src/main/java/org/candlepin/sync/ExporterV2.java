@@ -23,6 +23,11 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.SCACertificate;
+import org.candlepin.pki.CryptoCapabilitiesException;
+import org.candlepin.pki.certs.CertificateCreationException;
+import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
+import org.candlepin.pki.certs.SCACertificateGenerator;
 
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -52,9 +57,11 @@ public class ExporterV2 {
     public static final String META_JSON = "meta.json";
     public static final String UPSTREAM_CONSUMER = "upstream_consumer";
     public static final String CONSUMER_JSON = "consumer.json";
-    public static final String SUBSCRIPTIONS = "subscriptions";
-    public static final String PRODUCTS = "products";
+    public static final String SUBSCRIPTIONS_DIRECTORY = "subscriptions";
+    public static final String PRODUCTS_DIRECTORY = "products";
     public static final String ID_JSON = "%s.json";
+    public static final String ID_PEM = "%s.pem";
+    public static final String CERTIFICATES_DIRECTORY = "content_access_certificates";
 
     private final ObjectMapper mapper;
     private final Configuration config;
@@ -62,10 +69,12 @@ public class ExporterV2 {
     private final ProductCurator productCurator;
     private final PrincipalProvider principalProvider;
     private final ModelTranslator translator;
+    private final SCACertificateGenerator scaCertificateGenerator;
 
     @Inject
     public ExporterV2(@Named("ExportObjectMapper") ObjectMapper mapper, Configuration config, PoolCurator poolCurator,
-        ProductCurator productCurator, PrincipalProvider principalProvider, ModelTranslator translator) {
+        ProductCurator productCurator, PrincipalProvider principalProvider, ModelTranslator translator,
+        SCACertificateGenerator scaCertificateGenerator) {
         this.poolCurator = Objects.requireNonNull(poolCurator);
         this.productCurator = Objects.requireNonNull(productCurator);
         this.mapper = Objects.requireNonNull(mapper);
@@ -78,23 +87,38 @@ public class ExporterV2 {
         ExportData data = new ExportData(consumer, translator, config, poolCurator, productCurator, principalProvider);
         Path archivePath = createArchiveFile(data);
         try {
+            SCACertificate certificate = this.scaCertificateGenerator.generateScaCertificate(consumer);
             try (FileSystem archive = createArchive(archivePath)) {
+                writeFile(
+                    pathBasedOnId(
+                        archive,
+                        CERTIFICATES_DIRECTORY,
+                        ID_PEM,
+                        certificate.getSerial()
+                            .getId()
+                            .toString()),
+                    writer -> writer.write(certificate.getCert() + certificate.getKey()));
                 writeFile(archive.getPath(META_JSON), data.getMetaDTO());
                 writeFile(archive.getPath(UPSTREAM_CONSUMER, CONSUMER_JSON), data.getConsumerDTO());
-                for (SubscriptionDTO entry : data.getSubscriptions().values()) {
+                for (SubscriptionDTO entry : data.getSubscriptions()
+                    .values()) {
                     writeFile(
-                        pathBasedOnId(archive, SUBSCRIPTIONS, ID_JSON, entry.getSubscriptionId()),
+                        pathBasedOnId(archive, SUBSCRIPTIONS_DIRECTORY, ID_JSON, entry.getSubscriptionId()),
                         entry);
                 }
-                for (ProductDTO entry : data.getProducts().values()) {
+                for (ProductDTO entry : data.getProducts()
+                    .values()) {
                     writeFile(
-                        pathBasedOnId(archive, PRODUCTS, ID_JSON, entry.getId()),
+                        pathBasedOnId(archive, PRODUCTS_DIRECTORY, ID_JSON, entry.getId()),
                         entry);
                 }
             }
             return archivePath;
         }
-        catch (IOException e) {
+        catch (IOException |
+               CertificateCreationException |
+               CryptoCapabilitiesException |
+               ConcurrentContentPayloadCreationException e) {
             // clean-up archive, there was an error generating the export
             deleteArchive(archivePath);
             log.error("Error generating manifest export V2", e);
@@ -102,14 +126,23 @@ public class ExporterV2 {
         }
     }
 
-    private void writeFile(Path filePath, Object dto) throws IOException {
+    @FunctionalInterface
+    interface ContentWriter {
+        void write(Writer writer) throws IOException;
+    }
+
+    private void writeFile(Path filePath, ContentWriter contentWriter) throws IOException {
         Path parent = filePath.getParent();
         if (parent != null) {
             Files.createDirectories(parent);
         }
         try (Writer output = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE_NEW)) {
-            mapper.writeValue(output, dto);
+            contentWriter.write(output);
         }
+    }
+
+    private void writeFile(Path filePath, Object dto) throws IOException {
+        writeFile(filePath, writer -> mapper.writeValue(writer, dto));
     }
 
     private Path pathBasedOnId(FileSystem fs, String directory, String namePattern, String id) {
