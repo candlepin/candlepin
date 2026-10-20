@@ -98,7 +98,7 @@ public class PoolResource implements PoolsApi {
     @Override
     @Transactional
     @Deprecated
-    @SecurityHole
+    @SecurityHole(consumer = true)
     public List<PoolDTO> listPools(
         String ownerId,
         String consumerUuid,

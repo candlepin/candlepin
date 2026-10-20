@@ -17,6 +17,7 @@ package org.candlepin.spec;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotImplemented;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertThatStatus;
@@ -117,6 +118,53 @@ class CloudRegistrationSpecTest {
 
         assertTokenType(ApiClient.MAPPER, token, STANDARD_TOKEN_TYPE);
         assertNotNull(consumer);
+    }
+
+    @Test
+    public void cloudRegistrationTokenShouldNotRegisterConsumerWithDifferentOwner() {
+        ApiClient adminClient = ApiClients.admin();
+        HostedTestApi upstreamClient = adminClient.hosted();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        OwnerDTO otherOwner = adminClient.owners().createOwner(Owners.random());
+        upstreamClient.createOwner(owner);
+        String token = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorize(owner.getKey(), "test-type", "test_signature");
+        assertTokenType(ApiClient.MAPPER, token, STANDARD_TOKEN_TYPE);
+
+        assertForbidden(() -> ApiClients.bearerToken(token).consumers()
+            .createConsumer(Consumers.random(otherOwner)));
+    }
+
+    @Test
+    public void anonymousCloudRegistrationTokenShouldNotRegisterConsumerWithDifferentOwner() {
+        ApiClient adminClient = ApiClients.admin();
+        HostedTestApi upstreamClient = adminClient.hosted();
+        OwnerDTO owner = Owners.randomSca().anonymous(true);
+        OwnerDTO otherOwner = adminClient.owners().createOwner(Owners.random());
+        ProductDTO product = Products.random();
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        upstreamClient.createProduct(product);
+        upstreamClient.associateProductIdsToCloudOffer(offerId, List.of(product.getId()));
+        upstreamClient.createOwner(owner);
+
+        // Autoregistration v2 before the owner is associated with a cloud account, will result
+        // in a response that includes an anonymous token, and has a null owner (since one may not
+        // even exist yet).
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+        assertTokenType(ApiClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+
+        upstreamClient.associateOwnerToCloudAccount(accountId, owner.getKey());
+        upstreamClient.createSubscription(Subscriptions.random(owner, product));
+        adminClient.owners().createOwner(owner);
+        adminClient.ownerProducts().createProduct(owner.getKey(), product);
+        adminClient.owners().createPool(owner.getKey(), Pools.random(product));
+
+        assertForbidden(() -> ApiClients.bearerToken(result.getToken()).consumers()
+            .createConsumer(Consumers.random(otherOwner)));
     }
 
     @ParameterizedTest

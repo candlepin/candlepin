@@ -36,6 +36,7 @@ import org.candlepin.controller.PoolService;
 import org.candlepin.controller.RefresherFactory;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
@@ -387,7 +388,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             .name("override_name")
             .value("override_value");
 
-        assertThrows(BadRequestException.class,
+        assertThrows(NotFoundException.class,
             () -> this.resource.addConsumerContentOverrides(null, List.of(dto)));
     }
 
