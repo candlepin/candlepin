@@ -81,6 +81,7 @@ public class ExporterV2 {
         this.config = Objects.requireNonNull(config);
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.translator = Objects.requireNonNull(translator);
+        this.scaCertificateGenerator = Objects.requireNonNull(scaCertificateGenerator);
     }
 
     public Path getFullExport(Consumer consumer) throws ExportCreationException {
