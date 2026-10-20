@@ -17,7 +17,6 @@ package org.candlepin.resource;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.RefreshPoolsJob;
-import org.candlepin.auth.SecurityHole;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.dto.ModelTranslator;
@@ -167,7 +166,6 @@ public class ProductResource implements ProductsApi {
 
     @Override
     @Transactional
-    @SecurityHole
     public ProductDTO getProductByUuid(String productUuid) {
         Product product = this.fetchProduct(productUuid);
         return this.translator.translate(product, ProductDTO.class);
