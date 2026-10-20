@@ -19,6 +19,7 @@ import org.candlepin.model.ContentAccessPayload;
 import org.candlepin.model.ContentAccessPayloadCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
+import org.candlepin.model.ProductContent;
 import org.candlepin.pki.Scheme;
 import org.candlepin.util.Util;
 
@@ -28,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HexFormat;
 import java.util.List;
@@ -61,7 +63,7 @@ public class ContentAccessPayloadBuilder {
     private Consumer consumer;
     private List<Environment> environments;
     private Scheme scheme;
-    private ScaContentStrategy strategy = new ExportScaContentStrategy();
+    private List<ProductContent> exportContent;
 
     public ContentAccessPayloadBuilder(ScaContentDataProvider dataProvider, ScaPayloadEncoder encoder,
         ContentAccessPayloadCurator contentAccessPayloadCurator) {
@@ -72,12 +74,14 @@ public class ContentAccessPayloadBuilder {
     }
 
     /**
-     * Selects global, non-expired repositories for an ExportV2 payload
+     * Selects the supplied content for an uncached Export V2 payload
      *
+     * @param content
+     *     the content links selected for the product export; cannot be null
      * @return this builder
      */
-    public ContentAccessPayloadBuilder forExportV2() {
-        this.strategy = new ExportV2ScaContentStrategy();
+    public ContentAccessPayloadBuilder forExportV2(Collection<ProductContent> content) {
+        this.exportContent = List.copyOf(content);
         return this;
     }
 
@@ -116,11 +120,11 @@ public class ContentAccessPayloadBuilder {
      */
     private String generatePayloadKey() {
         String input = new StringBuilder("strategy:")
-            .append(this.strategy.cacheId())
+            .append("export:1")
             .append("-arches:")
-            .append(this.strategy.usesConsumerContext() ? this.getNormalizedArchitectures() : "")
+            .append(this.getNormalizedArchitectures())
             .append("-environments:")
-            .append(this.strategy.usesConsumerContext() ? this.getNormalizedEnvironmentIds() : "")
+            .append(this.getNormalizedEnvironmentIds())
             .append("-signatureAlgorithm:")
             .append(this.scheme.signatureAlgorithm())
             .toString();
@@ -144,7 +148,7 @@ public class ContentAccessPayloadBuilder {
         Date payloadTimestamp = payload.getTimestamp();
 
         Stream<Date> ownerContentUpdate = Stream.of(this.owner.getLastContentUpdate());
-        Stream<Date> envContentUpdates = this.strategy.environments(Optional.ofNullable(this.environments).orElseGet(List::of))
+        Stream<Date> envContentUpdates = Optional.ofNullable(this.environments).orElseGet(List::of)
             .stream()
             .map(Environment::getLastContentUpdate);
 
@@ -240,7 +244,8 @@ public class ContentAccessPayloadBuilder {
      * or consumer have not yet been set, this method throws an exception.
      * <p>
      * This method may be called multiple times, and will generate the same payload if the state of the
-     * organization, consumer, and environments does not change between invocations.
+     * organization, consumer, and environments does not change between invocations. Export V2 payloads
+     * always use their supplied content and are neither read from nor written to the cache.
      *
      * @throws IllegalStateException
      *  if the crypto scheme, owner, or consumer has not yet been set
@@ -265,22 +270,28 @@ public class ContentAccessPayloadBuilder {
             throw new IllegalStateException("consumer has not been set");
         }
 
+        if (this.exportContent != null) {
+            Date timestamp = new Date();
+            ScaPayloadData data = this.dataProvider.prepareForExport(this.owner, this.consumer,
+                timestamp.toInstant(), this.exportContent);
+            return new ContentAccessPayload()
+                .setOwner(this.owner)
+                .setTimestamp(timestamp)
+                .setPayload(this.encoder.encode(data, this.scheme));
+        }
+
         String payloadKey = this.generatePayloadKey();
 
         ContentAccessPayload payload = this.contentAccessPayloadCurator
             .getContentAccessPayload(this.owner.getId(), payloadKey);
 
-        if (payload == null || this.hasPayloadExpired(payload) ||
-            !this.strategy.usesConsumerContext() &&
-                this.dataProvider.hasExpiredPoolsSince(this.owner, payload.getTimestamp())) {
+        if (payload == null || this.hasPayloadExpired(payload)) {
             log.info("Building content access payload for: {}, {}", owner.getKey(), payloadKey);
 
             Date timestamp = new Date();
             List<Environment> selectedEnvironments = Optional.ofNullable(this.environments).orElseGet(List::of);
-            ScaPayloadData data = !this.strategy.usesConsumerContext() ?
-                this.dataProvider.gather(this.owner, this.consumer, selectedEnvironments, timestamp.toInstant(),
-                    this.strategy) :
-                this.dataProvider.gather(this.owner, this.consumer, selectedEnvironments, timestamp.toInstant());
+            ScaPayloadData data = this.dataProvider.gather(this.owner, this.consumer, selectedEnvironments,
+                timestamp.toInstant());
             String payloadData = this.encoder.encode(data, this.scheme);
 
             if (payload == null) {

@@ -19,6 +19,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ContentAccessPayload;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
+import org.candlepin.model.ProductContent;
 import org.candlepin.model.SCACertificate;
 import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
@@ -28,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.KeyException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -221,20 +223,23 @@ public class SCACertificateGenerator {
     }
 
     /**
-     * Generates an organization-level ExportV2 certificate with global content from non-expired pools
+     * Generates an organization-level Export V2 certificate from the selected product content
      *
      * @param consumer
      *     consumer supplying the organization and signing scheme
-     * @return separate export artifact, or null when SCA or v3 certificates are unavailable
-     *
+     * @param content
+     *     the content links selected for the product export; cannot be null
+     * @throws IllegalArgumentException
+     *     if the consumer or content is null
      * @throws CertificateCreationException
      *     if the consumer doesn't support SCA or v3 certificates
+     * @return a separate export artifact containing the supplied content
      */
-    public SCACertificate generateScaCertificate(Consumer consumer)
+    public SCACertificate generateScaCertificate(Consumer consumer, Collection<ProductContent> content)
         throws ConcurrentContentPayloadCreationException, CryptoCapabilitiesException {
 
-        if (consumer == null) {
-            throw new IllegalArgumentException("consumer is null");
+        if (consumer == null || content == null) {
+            throw new IllegalArgumentException("consumer and content must not be null");
         }
         Owner owner = consumer.getOwner();
         if (owner == null || !owner.isUsingSimpleContentAccess() ||
@@ -244,7 +249,7 @@ public class SCACertificateGenerator {
 
         Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
         ContentAccessPayload payload = this.caPayloadBuilderProvider.get()
-            .forExportV2()
+            .forExportV2(content)
             .setCryptoScheme(scheme)
             .setOwner(owner)
             .setConsumer(consumer)

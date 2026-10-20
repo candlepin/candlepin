@@ -14,6 +14,7 @@
  */
 package org.candlepin.pki.certs;
 
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.util.ContentPathBuilder;
 import org.candlepin.controller.util.PromotedContent;
@@ -30,7 +31,6 @@ import org.candlepin.util.X509V3ExtensionUtil;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -73,24 +73,8 @@ public class ScaContentDataProvider {
         Objects.requireNonNull(environments);
         Objects.requireNonNull(timestamp);
 
-        return this.gather(owner, consumer, environments, timestamp, new ExportScaContentStrategy());
-    }
-
-    /**
-     * Gathers repositories using the selected policy
-     *
-     * @return detached payload data
-     */
-    /* pkg-private */ ScaPayloadData gather(Owner owner, Consumer consumer, List<Environment> environments,
-        Instant timestamp, ScaContentStrategy strategy) {
-
-        Objects.requireNonNull(owner);
-        Objects.requireNonNull(consumer);
-        Objects.requireNonNull(environments);
-        Objects.requireNonNull(timestamp);
-        Objects.requireNonNull(strategy);
         return this.prepare(owner, consumer, environments, timestamp,
-            strategy.gather(this.contentCurator, Objects.requireNonNull(owner).getId()), strategy);
+            this.contentCurator.getActiveContentByOwner(owner.getId()));
     }
 
     /**
@@ -101,55 +85,58 @@ public class ScaContentDataProvider {
     /* pkg-private */ ScaPayloadData prepare(Owner owner, Consumer consumer, List<Environment> environments,
         Instant timestamp, Collection<ProductContent> content) {
 
-        return this.prepare(owner, consumer, environments, timestamp, content, new ExportScaContentStrategy());
-    }
-
-    /**
-     * Applies a selection policy before merging and mapping repositories
-     *
-     * @return detached payload data
-     */
-    /* pkg-private */ ScaPayloadData prepare(Owner owner, Consumer consumer, List<Environment> environments,
-        Instant timestamp, Collection<ProductContent> content, ScaContentStrategy strategy) {
-
         Objects.requireNonNull(owner);
         Objects.requireNonNull(consumer);
         Objects.requireNonNull(environments);
         Objects.requireNonNull(timestamp);
         Objects.requireNonNull(content);
 
-        Objects.requireNonNull(strategy);
-        environments = strategy.environments(environments);
         PromotedContent promotedContent = new PromotedContent(ContentPathBuilder.from(owner, environments))
             .withAll(environments);
-        Map<String, ProductContent> merged = content.stream()
-            .filter(strategy::includes)
-            .collect(Collectors.toMap(pc -> pc.getContent().getId(), Function.identity(),
-                (first, second) -> new ProductContent(second.getContent(), first.isEnabled() || second.isEnabled())));
-
         Product product = new Product()
             .setId("content_access")
             .setName(" Content Access")
-            .setProductContent(merged.values());
-        boolean filterEnvironments = strategy.filtersEnvironments(this.configuration);
-        Set<ProductContent> filtered = strategy.filter(product, consumer, promotedContent,
-            this.configuration, this.extensionUtil);
+            .setProductContent(this.mergeContent(content));
+        boolean filterEnvironments = this.configuration.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
+        Set<ProductContent> filtered = this.extensionUtil.filterProductContent(product, consumer, promotedContent,
+            filterEnvironments, Set.of("content-access"), owner.isUsingSimpleContentAccess());
+        filtered = this.extensionUtil.filterContentByContentArch(filtered, consumer, product);
+        return this.mapContent(consumer, timestamp, filtered, promotedContent, filterEnvironments);
+    }
+
+    /**
+     * Merges and maps preselected export content without querying or applying consumer filters
+     *
+     * @return immutable payload data detached from the supplied entities
+     */
+    /* pkg-private */ ScaPayloadData prepareForExport(Owner owner, Consumer consumer, Instant timestamp,
+        Collection<ProductContent> content) {
+
+        Objects.requireNonNull(owner);
+        Objects.requireNonNull(consumer);
+        Objects.requireNonNull(timestamp);
+        Objects.requireNonNull(content);
+
+        PromotedContent promotedContent = new PromotedContent(ContentPathBuilder.from(owner, List.of()));
+        return this.mapContent(consumer, timestamp, this.mergeContent(content), promotedContent, false);
+    }
+
+    private Collection<ProductContent> mergeContent(Collection<ProductContent> content) {
+        Map<String, ProductContent> merged = content.stream()
+            .collect(Collectors.toMap(pc -> pc.getContent().getId(), Function.identity(),
+                (first, second) -> new ProductContent(second.getContent(), first.isEnabled() || second.isEnabled())));
+        return merged.values();
+    }
+
+    private ScaPayloadData mapContent(Consumer consumer, Instant timestamp, Collection<ProductContent> content,
+        PromotedContent promotedContent, boolean filterEnvironments) {
 
         List<ScaContentData> repositories = new ArrayList<>();
-        for (ProductContent pc : filtered) {
+        for (ProductContent pc : content) {
             repositories.add(this.mapContent(pc, promotedContent, consumer, filterEnvironments));
         }
 
         return new ScaPayloadData(consumer.getUuid(), timestamp, repositories);
-    }
-
-    /**
-     * Checks whether a cached ExportV2 payload may contain repositories from expired pools
-     *
-     * @return whether a pool ended after the payload was prepared
-     */
-    /* pkg-private */ boolean hasExpiredPoolsSince(Owner owner, Date timestamp) {
-        return this.contentCurator.hasPoolsExpiredSince(owner.getId(), timestamp);
     }
 
     private ScaContentData mapContent(ProductContent pc, PromotedContent promotedContent, Consumer consumer,

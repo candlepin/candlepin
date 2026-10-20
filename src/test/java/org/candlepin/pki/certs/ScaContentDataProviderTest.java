@@ -148,7 +148,7 @@ class ScaContentDataProviderTest {
     }
 
     @Test
-    void exportV2IgnoresConsumerFiltersAndRejectsLocalContentBeforeMerging() {
+    void exportV2PreservesSelectedNamespacesAndIgnoresConsumerFilters() {
         DevConfig config = TestConfig.defaults();
         config.setProperty(ConfigProperties.ENV_CONTENT_FILTERING, "true");
         Owner owner = this.createOwner().setContentPrefix("/owner");
@@ -156,18 +156,17 @@ class ScaContentDataProviderTest {
             .setFact(Consumer.Facts.ARCHITECTURE, "x86_64")
             .setEnvironmentIds(List.of("environment"));
         Content global = this.createContent("repo").setArches("aarch64").setRequiredTags("tag");
-        Content local = this.createContent("repo").setNamespace(owner.getKey()).setName("Local");
+        Content local = this.createContent("local").setNamespace(owner.getKey()).setName("Local");
         Environment environment = new Environment().setId("environment").setName("env")
             .setContentPrefix("/environment");
         environment.addEnvironmentContent(new EnvironmentContent().setEnvironment(environment)
             .setContent(global).setEnabled(true));
 
-        ScaPayloadData data = this.createProvider(config, mock(ContentCurator.class)).prepare(owner, consumer,
-            List.of(environment), Instant.EPOCH, List.of(new ProductContent(global, false),
-                new ProductContent(local, true), new ProductContent(this.createContent("unpromoted"), true)),
-            new ExportV2ScaContentStrategy());
+        ScaPayloadData data = this.createProvider(config, mock(ContentCurator.class)).prepareForExport(owner, consumer,
+            Instant.EPOCH, List.of(new ProductContent(global, false),
+                new ProductContent(local, true), new ProductContent(this.createContent("unpromoted"), true)));
 
-        assertThat(data.content()).hasSize(2);
+        assertThat(data.content()).extracting(ScaContentData::id).containsExactlyInAnyOrder("repo", "local", "unpromoted");
         ScaContentData repository = data.content().stream().filter(entry -> entry.id().equals("repo"))
             .findFirst().orElseThrow();
         assertThat(repository.name()).isEqualTo("Repository");
@@ -178,17 +177,18 @@ class ScaContentDataProviderTest {
     }
 
     @Test
-    void exportV2GathersFutureGlobalContentThroughCurator() {
+    void exportV2UsesSelectedContentWithoutQueryingCurator() {
         ContentCurator curator = mock(ContentCurator.class);
         Owner owner = this.createOwner();
         Consumer consumer = new Consumer().setUuid("consumer").setOwner(owner);
-        when(curator.getExportV2ContentByOwner(owner.getId())).thenReturn(List.of());
+        ProductContent selected = new ProductContent(this.createContent("selected").setNamespace("local"), false);
 
         ScaPayloadData data = this.createProvider(TestConfig.defaults(), curator)
-            .gather(owner, consumer, List.of(), Instant.EPOCH, new ExportV2ScaContentStrategy());
+            .prepareForExport(owner, consumer, Instant.EPOCH, List.of(selected));
 
-        assertThat(data.content()).isEmpty();
-        verify(curator).getExportV2ContentByOwner(owner.getId());
+        assertThat(data.content()).extracting(ScaContentData::id).containsExactly("selected");
+        assertThat(data.content().getFirst().enabled()).isFalse();
+        verifyNoInteractions(curator);
     }
 
     @Test
@@ -202,6 +202,14 @@ class ScaContentDataProviderTest {
         assertThrows(NullPointerException.class, () -> provider.prepare(owner, consumer, null, Instant.EPOCH, List.of()));
         assertThrows(NullPointerException.class, () -> provider.prepare(owner, consumer, List.of(), null, List.of()));
         assertThrows(NullPointerException.class, () -> provider.prepare(owner, consumer, List.of(), Instant.EPOCH, null));
+        assertThrows(NullPointerException.class,
+            () -> provider.prepareForExport(null, consumer, Instant.EPOCH, List.of()));
+        assertThrows(NullPointerException.class,
+            () -> provider.prepareForExport(owner, null, Instant.EPOCH, List.of()));
+        assertThrows(NullPointerException.class,
+            () -> provider.prepareForExport(owner, consumer, null, List.of()));
+        assertThrows(NullPointerException.class,
+            () -> provider.prepareForExport(owner, consumer, Instant.EPOCH, null));
         Content invalid = this.createContent("invalid").setContentUrl("");
         assertThrows(IllegalArgumentException.class, () -> provider.prepare(owner, consumer, List.of(),
             Instant.EPOCH, List.of(new ProductContent(invalid, true))));

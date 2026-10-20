@@ -22,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -185,6 +188,9 @@ class ExporterV2Test {
         subNamespacedProduct.setNamespace("namespaced");
         subNamespacedProduct.setAttributes(Collections.emptyMap());
 
+        Content sharedContent = new Content("shared-content");
+        mktProd.addContent(sharedContent, true);
+        mktSubProd.addContent(sharedContent, false);
         mktProd.addProvidedProduct(prod12345);
         mktProd.addProvidedProduct(subNamespacedProduct);
         mktProd.addProvidedProduct(subProvidedProduct332211);
@@ -210,6 +216,11 @@ class ExporterV2Test {
         ExporterV2 exporter = this.createExporter();
         Path export = exporter.getFullExport(consumer);
 
+        verify(this.scaCertificateGenerator).generateScaCertificate(eq(consumer), argThat(content ->
+            content.size() == 2 &&
+                content.stream().allMatch(link -> link.getContent() == sharedContent) &&
+                content.stream().anyMatch(ProductContent::isEnabled) &&
+                content.stream().anyMatch(link -> !link.isEnabled())));
         assertNotNull(export);
         assertTrue(Files.exists(export));
         assertTrue(Files.isRegularFile(export));
@@ -254,7 +265,7 @@ class ExporterV2Test {
             "-----BEGIN ENTITLEMENT DATA-----\npayload\n-----END ENTITLEMENT DATA-----\n" +
             "-----BEGIN SIGNATURE-----\nsignature\n-----END SIGNATURE-----\n");
         certificate.setKey("-----BEGIN PRIVATE KEY-----\nkey\n-----END PRIVATE KEY-----\n");
-        when(this.scaCertificateGenerator.generateScaCertificate(consumer)).thenReturn(certificate);
+        when(this.scaCertificateGenerator.generateScaCertificate(eq(consumer), anyList())).thenReturn(certificate);
         return certificate;
     }
 
@@ -273,7 +284,7 @@ class ExporterV2Test {
             "-----BEGIN ENTITLEMENT DATA-----\npayload\n-----END ENTITLEMENT DATA-----\n" +
             "-----BEGIN SIGNATURE-----\nsignature\n-----END SIGNATURE-----\n");
         certificate.setKey("-----BEGIN PRIVATE KEY-----\nkey\n-----END PRIVATE KEY-----\n");
-        when(this.scaCertificateGenerator.generateScaCertificate(consumer)).thenReturn(certificate);
+        when(this.scaCertificateGenerator.generateScaCertificate(eq(consumer), anyList())).thenReturn(certificate);
 
         Path export = this.createExporter()
             .getFullExport(consumer);
@@ -289,7 +300,7 @@ class ExporterV2Test {
             assertTrue(Files.exists(archive.getPath(ExporterV2.META_JSON)));
             assertTrue(Files.exists(archive.getPath(ExporterV2.UPSTREAM_CONSUMER, ExporterV2.CONSUMER_JSON)));
         }
-        verify(this.scaCertificateGenerator).generateScaCertificate(consumer);
+        verify(this.scaCertificateGenerator).generateScaCertificate(eq(consumer), anyList());
         assertSame(storedCertificate, consumer.getContentAccessCert());
         assertEquals("stored consumer certificate", storedCertificate.getCert());
     }
@@ -298,7 +309,8 @@ class ExporterV2Test {
     void omitsCertificateDirectoryWhenGeneratorReturnsNull() throws Exception {
         Owner owner = TestUtil.createOwner("Example-Corporation");
         Consumer consumer = this.createCertificateConsumer(owner);
-        when(this.scaCertificateGenerator.generateScaCertificate(consumer)).thenThrow(CertificateCreationException.class);
+        when(this.scaCertificateGenerator.generateScaCertificate(eq(consumer), anyList()))
+            .thenThrow(CertificateCreationException.class);
 
         assertThrows(ExportCreationException.class,
             () -> {
@@ -317,7 +329,7 @@ class ExporterV2Test {
     void removesArchiveWhenCertificateGenerationFails(Exception failure) throws Exception {
         Owner owner = TestUtil.createOwner("Example-Corporation");
         Consumer consumer = this.createCertificateConsumer(owner);
-        when(this.scaCertificateGenerator.generateScaCertificate(consumer)).thenThrow(failure);
+        when(this.scaCertificateGenerator.generateScaCertificate(eq(consumer), anyList())).thenThrow(failure);
 
         ExportCreationException actual = assertThrows(ExportCreationException.class,
             () -> this.createExporter()
@@ -325,7 +337,7 @@ class ExporterV2Test {
 
         assertSame(failure, actual.getCause());
         assertEquals("Unable to create export archive", actual.getMessage());
-        verify(this.scaCertificateGenerator).generateScaCertificate(consumer);
+        verify(this.scaCertificateGenerator).generateScaCertificate(eq(consumer), anyList());
         try (Stream<Path> files = Files.list(this.workDirectory)) {
             assertFalse(files.findAny()
                 .isPresent());

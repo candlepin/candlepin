@@ -24,9 +24,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SCACertificate;
-import org.candlepin.pki.CryptoCapabilitiesException;
-import org.candlepin.pki.certs.CertificateCreationException;
-import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
 import org.candlepin.pki.certs.SCACertificateGenerator;
 
 import org.jspecify.annotations.NonNull;
@@ -85,10 +82,11 @@ public class ExporterV2 {
     }
 
     public Path getFullExport(Consumer consumer) throws ExportCreationException {
-        ExportData data = new ExportData(consumer, translator, config, poolCurator, productCurator, principalProvider);
+        ExportData data = new ExportData(consumer, translator, config, poolCurator, productCurator, principalProvider,
+            this.scaCertificateGenerator);
         Path archivePath = createArchiveFile(data);
         try {
-            SCACertificate certificate = this.scaCertificateGenerator.generateScaCertificate(consumer);
+            SCACertificate certificate = data.getScaCertificate();
             try (FileSystem archive = createArchive(archivePath)) {
                 writeFile(
                     pathBasedOnId(
@@ -116,10 +114,7 @@ public class ExporterV2 {
             }
             return archivePath;
         }
-        catch (IOException |
-               CertificateCreationException |
-               CryptoCapabilitiesException |
-               ConcurrentContentPayloadCreationException e) {
+        catch (IOException e) {
             // clean-up archive, there was an error generating the export
             deleteArchive(archivePath);
             log.error("Error generating manifest export V2", e);

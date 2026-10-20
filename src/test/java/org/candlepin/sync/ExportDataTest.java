@@ -18,7 +18,10 @@ package org.candlepin.sync;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -38,7 +41,10 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.SCACertificate;
+import org.candlepin.pki.certs.SCACertificateGenerator;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -48,18 +54,23 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 class ExportDataTest {
+    private List<ProductContent> certificateContent;
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void testExportsOwnerPoolsAndProductGraph(boolean filterNamespaces) {
+    void testExportsOwnerPoolsAndProductGraph(boolean filterNamespaces) throws Exception {
         Product shared = new Product("shared", "Shared");
-        shared.addContent(new Content("global-content"), true);
+        Content globalContent = new Content("global-content");
+        shared.addContent(globalContent, true);
         shared.addContent(new Content("private-content").setNamespace("private"), true);
         Product provided = new Product("provided", "Provided");
         provided.addProvidedProduct(shared);
+        provided.addContent(globalContent, false);
         Product privateProduct = new Product("private-product", "Private").setNamespace("private");
+        privateProduct.addContent(new Content("private-product-content"), false);
         provided.addProvidedProduct(privateProduct);
         Product derived = new Product("derived", "Derived");
         derived.addProvidedProduct(shared);
@@ -91,6 +102,15 @@ class ExportDataTest {
             data.getProducts().get("provided").getProvidedProducts());
         assertEquals(filterNamespaces ? Set.of("global-content") : Set.of("global-content", "private-content"),
             data.getProducts().get("shared").getProductContent().keySet());
+        Set<String> selectedIds = this.certificateContent.stream()
+            .map(link -> link.getContent().getId())
+            .collect(Collectors.toSet());
+        assertEquals(filterNamespaces ? Set.of("global-content") :
+            Set.of("global-content", "private-content", "private-product-content"), selectedIds);
+        assertEquals(Set.of(true, false), this.certificateContent.stream()
+            .filter(link -> link.getContent().getId().equals(globalContent.getId()))
+            .map(ProductContent::isEnabled)
+            .collect(Collectors.toSet()));
         assertEquals(Set.of("subscription-1", "subscription-2"), data.getSubscriptions().keySet());
         assertEquals(firstPool.getStartDate(), data.getSubscriptions().get("subscription-1").getStartDate());
         assertEquals(firstPool.getEndDate(), data.getSubscriptions().get("subscription-1").getEndDate());
@@ -100,15 +120,16 @@ class ExportDataTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void testEmptyOwnerPoolsProduceEmptyExport(boolean filterNamespaces) {
+    void testEmptyOwnerPoolsProduceEmptyExport(boolean filterNamespaces) throws Exception {
         ExportData data = this.createExportData(List.of(), List.of(), filterNamespaces);
 
         assertTrue(data.getProducts().isEmpty());
         assertTrue(data.getSubscriptions().isEmpty());
+        assertTrue(this.certificateContent.isEmpty());
     }
 
     @Test
-    void testPoolWithoutProductIdDoesNotSupplyNullProductId() {
+    void testPoolWithoutProductIdDoesNotSupplyNullProductId() throws Exception {
         Pool pool = new Pool().setSubscriptionId("subscription");
 
         ExportData data = this.createExportData(List.of(pool), List.of(), true);
@@ -118,7 +139,7 @@ class ExportDataTest {
         assertNull(data.getSubscriptions().get("subscription").getProductId());
     }
 
-    private ExportData createExportData(List<Pool> pools, List<Product> products, boolean filterNamespaces) {
+    private ExportData createExportData(List<Pool> pools, List<Product> products, boolean filterNamespaces) throws Exception {
         DevConfig configuration = TestConfig.defaults();
         configuration.setProperty(ConfigProperties.EXPORT_FILTER_NON_GLOBAL_NAMESPACE, Boolean.toString(filterNamespaces));
         StandardTranslator translator = new StandardTranslator(mock(ConsumerTypeCurator.class),
@@ -140,7 +161,17 @@ class ExportDataTest {
         when(poolCurator.listByOwnerForExportV2("owner-id", filterNamespaces, Pool.PoolType.NORMAL)).thenReturn(pools);
         when(productCurator.getProductsByIdsRecursiveForExportV2(filterNamespaces, productIds)).thenReturn(products);
 
-        ExportData data = new ExportData(consumer, translator, configuration, poolCurator, productCurator, principalProvider);
+        SCACertificateGenerator generator = mock(SCACertificateGenerator.class);
+        SCACertificate certificate = new SCACertificate();
+        when(generator.generateScaCertificate(eq(consumer), anyList())).thenAnswer(invocation -> {
+            this.certificateContent = List.copyOf(invocation.getArgument(1));
+            return certificate;
+        });
+        ExportData data = new ExportData(consumer, translator, configuration, poolCurator, productCurator,
+            principalProvider, generator);
+
+        assertSame(certificate, data.getScaCertificate());
+        verify(generator).generateScaCertificate(eq(consumer), anyList());
 
         verify(poolCurator).listByOwnerForExportV2("owner-id", filterNamespaces, Pool.PoolType.NORMAL);
         verify(productCurator).getProductsByIdsRecursiveForExportV2(filterNamespaces, productIds);
