@@ -16,6 +16,7 @@ package org.candlepin.spec.consumers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertUnauthorized;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -212,6 +213,17 @@ public class ConsumerResourceActivationKeySpecTest {
         assertThat(consumer.getUuid()).isNotNull();
         assertThat(client.pools().getPool(pool1.getId(), consumer.getUuid(), null))
             .returns(3L, PoolDTO::getConsumed);
+    }
+
+    @Test
+    public void activationKeyShouldNotRegisterConsumerWithDifferentOwner() {
+        OwnerDTO owner = ownerClient.createOwner(Owners.random());
+        OwnerDTO otherOwner = ownerClient.createOwner(Owners.random());
+        ActivationKeyDTO activationKey = ownerClient.createActivationKey(owner.getKey(),
+            ActivationKeys.random(owner));
+
+        assertUnauthorized(() -> ApiClients.noAuth().consumers().createConsumer(Consumers.random(otherOwner),
+            null, otherOwner.getKey(), activationKey.getName(), true));
     }
 
     @Test
