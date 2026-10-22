@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.PoolService;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.Consumer;
@@ -117,7 +118,8 @@ public class EnforcerTest extends DatabaseTestFixture {
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
 
         modelTranslator = new StandardTranslator(consumerTypeCurator, mockEnvironmentCurator,
-            mockOwnerCurator);
+            mockOwnerCurator,
+            TestConfig.defaults());
 
         enforcer = new EntitlementRules(
             new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator,

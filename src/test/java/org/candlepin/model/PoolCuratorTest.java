@@ -39,6 +39,7 @@ import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.PoolService;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.paging.Page;
@@ -138,6 +139,70 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         consumer = this.createMockConsumer(owner, false);
         consumer.setFact("cpu_cores", "4");
         consumer = consumerCurator.merge(consumer);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void testListByOwnerForExportV2(boolean filterNamespaces) {
+        Owner owner = this.createOwner();
+        Owner otherOwner = this.createOwner();
+        Product product = this.createProduct(TestUtil.createProduct().setNamespace(""));
+        Product otherProduct = this.createProduct(TestUtil.createProduct().setNamespace("other-namespace"));
+        Pool normalPool = this.createPool(owner, product);
+        Pool bonusPool = this.createPool(owner, product);
+        bonusPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+        this.poolCurator.merge(bonusPool);
+        this.createPool(otherOwner, product);
+        Pool namespacedPool = this.createPool(owner, otherProduct);
+        this.poolCurator.flush();
+        this.poolCurator.clear();
+
+        assertThat(this.poolCurator.listByOwnerForExportV2(owner.getId(), filterNamespaces,
+            PoolType.NORMAL, PoolType.BONUS))
+            .extracting(Pool::getId)
+            .containsExactlyInAnyOrderElementsOf(filterNamespaces ?
+                List.of(normalPool.getId(), bonusPool.getId()) :
+                List.of(normalPool.getId(), bonusPool.getId(), namespacedPool.getId()));
+        assertThat(this.poolCurator.listByOwnerForExportV2(owner.getId(), filterNamespaces, PoolType.NORMAL))
+            .extracting(Pool::getId)
+            .containsExactlyInAnyOrderElementsOf(filterNamespaces ?
+                List.of(normalPool.getId()) : List.of(normalPool.getId(), namespacedPool.getId()));
+        assertThat(this.poolCurator.listByOwnerForExportV2(owner.getId(), filterNamespaces,
+            PoolType.STACK_DERIVED)).isEmpty();
+        assertThat(this.poolCurator.listByOwnerForExportV2(owner.getId(), filterNamespaces)).isEmpty();
+        assertThat(this.poolCurator.listByOwnerForExportV2(owner.getId(), filterNamespaces,
+            (PoolType[]) null)).isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void testListByOwnerForExportV2ExcludesExpiredPoolsAndIncludesFuturePools(boolean filterNamespaces) {
+        Owner owner = this.createOwner();
+        Product product = this.createProduct(TestUtil.createProduct().setNamespace(""));
+        Instant now = Instant.now();
+        Pool active = this.createPool(owner, product, 1L, Date.from(now.minus(1, ChronoUnit.DAYS)),
+            Date.from(now.plus(1, ChronoUnit.DAYS)));
+        Pool future = this.createPool(owner, product, 1L, Date.from(now.plus(1, ChronoUnit.DAYS)),
+            Date.from(now.plus(2, ChronoUnit.DAYS)));
+        this.createPool(owner, product, 1L, Date.from(now.minus(2, ChronoUnit.DAYS)),
+            Date.from(now.minus(1, ChronoUnit.MINUTES)));
+        Product namespaced = this.createProduct(TestUtil.createProduct().setNamespace("private"));
+        this.createPool(owner, namespaced, 1L, Date.from(now.minus(2, ChronoUnit.DAYS)),
+            Date.from(now.minus(1, ChronoUnit.MINUTES)));
+        this.poolCurator.flush();
+        this.poolCurator.clear();
+
+        assertThat(this.poolCurator.listByOwnerForExportV2(owner.getId(), filterNamespaces, PoolType.NORMAL))
+            .extracting(Pool::getId)
+            .containsExactlyInAnyOrder(active.getId(), future.getId());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { "unknown-owner" })
+    public void testListByOwnerForExportV2WithInvalidOwner(String ownerId) {
+        assertThat(this.poolCurator.listByOwnerForExportV2(ownerId, true, PoolType.NORMAL)).isEmpty();
+        assertThat(this.poolCurator.listByOwnerForExportV2(ownerId, false, PoolType.NORMAL)).isEmpty();
     }
 
     public static Stream<Arguments> schemeSource() {

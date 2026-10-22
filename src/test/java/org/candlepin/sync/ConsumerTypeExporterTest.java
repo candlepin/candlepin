@@ -58,7 +58,8 @@ public class ConsumerTypeExporterTest {
 
         ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
-        translator = new StandardTranslator(mockConsumerTypeCurator, mockEnvironmentCurator, ownerCurator);
+        translator = new StandardTranslator(mockConsumerTypeCurator, mockEnvironmentCurator, ownerCurator,
+            TestConfig.defaults());
         ConsumerTypeExporter consumerType = new ConsumerTypeExporter(translator);
 
         StringWriter writer = new StringWriter();

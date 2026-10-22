@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -97,6 +98,209 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             .setNamespace(namespace);
 
         return this.createProduct(product);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void testGetProductsByIdsRecursive(boolean filterNamespaces) {
+        String namespace = filterNamespaces ? "" : "namespace-1";
+        Product leaf = this.createNamespacedProduct("leaf", namespace);
+        Product derived = this.createNamespacedProduct("derived", namespace);
+        derived.addProvidedProduct(leaf);
+        this.productCurator.merge(derived);
+        Product provided = this.createNamespacedProduct("provided", namespace);
+        provided.setDerivedProduct(derived);
+        this.productCurator.merge(provided);
+        Product root = this.createNamespacedProduct("root", namespace);
+        root.addProvidedProduct(provided);
+        root.setDerivedProduct(derived);
+        this.productCurator.merge(root);
+        Product secondRoot = this.createNamespacedProduct("second-root", namespace);
+        secondRoot.addProvidedProduct(leaf);
+        this.productCurator.merge(secondRoot);
+        this.createNamespacedProduct("unrelated", namespace);
+        this.productCurator.flush();
+        this.productCurator.clear();
+
+        assertThat(this.productCurator.getProductsByIdsRecursiveForExportV2(filterNamespaces,
+            List.of(root.getId(), secondRoot.getId(), root.getId(), "unknown")))
+            .extracting(Product::getUuid)
+            .containsExactlyInAnyOrder(root.getUuid(), secondRoot.getUuid(), provided.getUuid(),
+                derived.getUuid(), leaf.getUuid());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void testGetProductsByIdsRecursiveRestrictsEveryLevelToNamespace(boolean filterNamespaces) {
+        String namespace = filterNamespaces ? "" : "namespace-1";
+        Product unreachable = this.createNamespacedProduct("unreachable", namespace);
+        Product foreignProvided = this.createNamespacedProduct("foreign-provided", "other-namespace");
+        foreignProvided.setDerivedProduct(unreachable);
+        this.productCurator.merge(foreignProvided);
+        Product foreignDerived = this.createNamespacedProduct("foreign-derived", "other-namespace");
+        foreignDerived.addProvidedProduct(unreachable);
+        this.productCurator.merge(foreignDerived);
+        Product child = this.createNamespacedProduct("child", namespace);
+        child.setDerivedProduct(foreignDerived);
+        child.addProvidedProduct(foreignProvided);
+        this.productCurator.merge(child);
+        Product root = this.createNamespacedProduct("root", namespace);
+        root.addProvidedProduct(child);
+        root.addProvidedProduct(foreignProvided);
+        root.setDerivedProduct(foreignDerived);
+        this.productCurator.merge(root);
+        this.productCurator.flush();
+        this.productCurator.clear();
+
+        assertThat(this.productCurator.getProductsByIdsRecursiveForExportV2(filterNamespaces, List.of(root.getId())))
+            .extracting(Product::getUuid)
+            .containsExactlyInAnyOrderElementsOf(filterNamespaces ?
+                List.of(root.getUuid(), child.getUuid()) :
+                List.of(root.getUuid(), child.getUuid(), foreignProvided.getUuid(),
+                    foreignDerived.getUuid(), unreachable.getUuid()));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testGetProductsByIdsRecursiveWithNoIds(Collection<String> productIds) {
+        assertThat(this.productCurator.getProductsByIdsRecursiveForExportV2(true, productIds)).isEmpty();
+    }
+
+    @Test
+    public void testGetProductsByIdsRecursiveWithUnknownInputs() {
+        Product root = this.createNamespacedProduct("root", "namespace-1");
+
+        assertThat(this.productCurator.getProductsByIdsRecursiveForExportV2(true, List.of(root.getId()))).isEmpty();
+        assertThat(this.productCurator.getProductsByIdsRecursiveForExportV2(false, List.of("unknown"))).isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void testGetProductsByIdsRecursiveWithSameIdAcrossNamespaces(boolean filterNamespaces) {
+        Product global = this.createNamespacedProduct("root", "");
+        Product namespaced = this.createNamespacedProduct("root", "private");
+
+        assertThat(this.productCurator.getProductsByIdsRecursiveForExportV2(filterNamespaces, List.of("root")))
+            .extracting(Product::getUuid)
+            .containsExactlyInAnyOrderElementsOf(filterNamespaces ?
+                List.of(global.getUuid()) : List.of(global.getUuid(), namespaced.getUuid()));
+    }
+
+    @Test
+    public void testGetProductsByIdsRecursiveWithLeafRoot() {
+        Product root = this.createNamespacedProduct("root", "namespace-1");
+
+        assertThat(this.productCurator.getProductsByIdsRecursiveForExportV2(false, List.of(root.getId())))
+            .extracting(Product::getUuid)
+            .containsExactly(root.getUuid());
+    }
+
+    @Test
+    public void testGetProductsByIdsRecursiveDeduplicatesAcrossInputBlocks() {
+        Product child = this.createNamespacedProduct("child", "namespace-1");
+        Product root = this.createNamespacedProduct("root", "namespace-1");
+        root.addProvidedProduct(child);
+        this.productCurator.merge(root);
+        int blockSize = Math.min(this.productCurator.getQueryParameterLimit() - 2,
+            this.productCurator.getInBlockSize());
+        List<String> productIds = new ArrayList<>(Collections.nCopies(blockSize, root.getId()));
+        productIds.add(child.getId());
+
+        assertThat(this.productCurator.getProductsByIdsRecursiveForExportV2(false, productIds))
+            .extracting(Product::getUuid)
+            .containsExactlyInAnyOrder(root.getUuid(), child.getUuid());
+    }
+
+    @Test
+    public void testGetProductsByIdsRecursiveIncludesPendingRelationshipChanges() {
+        Product derived = this.createNamespacedProduct("derived", "namespace-1");
+        Product provided = this.createNamespacedProduct("provided", "namespace-1");
+        Product root = this.createNamespacedProduct("root", "namespace-1");
+        this.productCurator.flush();
+        root.setDerivedProduct(derived);
+        root.addProvidedProduct(provided);
+        this.productCurator.merge(root);
+
+        assertThat(this.productCurator.getProductsByIdsRecursiveForExportV2(false, List.of(root.getId())))
+            .extracting(Product::getUuid)
+            .containsExactlyInAnyOrder(root.getUuid(), derived.getUuid(), provided.getUuid());
+    }
+
+    @Test
+    public void testGetProductsByIdsRecursiveInitializesForeignReferencesWithoutReturningThem() {
+        Product foreignDerived = this.createNamespacedProduct("foreign-derived", "other-namespace");
+        Product foreignProvided = this.createNamespacedProduct("foreign-provided", "other-namespace");
+        Product root = this.createNamespacedProduct("root", "");
+        root.setDerivedProduct(foreignDerived);
+        root.addProvidedProduct(foreignProvided);
+        this.productCurator.merge(root);
+        this.productCurator.flush();
+        this.productCurator.clear();
+
+        List<Product> products = this.productCurator.getProductsByIdsRecursiveForExportV2(true,
+            List.of(root.getId()));
+        this.productCurator.clear();
+
+        assertThat(products).extracting(Product::getId).containsExactly(root.getId());
+        assertEquals(foreignDerived.getName(), products.getFirst().getDerivedProduct().getName());
+        assertThat(products.getFirst().getProvidedProducts())
+            .extracting(Product::getName)
+            .containsExactly(foreignProvided.getName());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void testGetProductsByIdsRecursiveFetchesBrandingAndContent(boolean filterNamespaces) {
+        String namespace = filterNamespaces ? "" : "namespace-1";
+        Content content1 = this.createContent("content-1");
+        Content content2 = this.createContent("content-2");
+        Product empty = this.createNamespacedProduct("empty", namespace);
+        Product child = this.createNamespacedProduct("child", namespace);
+        child.addContent(content1, false);
+        child.addBranding(new Branding(child, "child-brand", "Child Brand", "OS"));
+        this.productCurator.merge(child);
+        Product root = this.createNamespacedProduct("root", namespace);
+        root.addProvidedProduct(child);
+        root.setDerivedProduct(empty);
+        root.addContent(content1, true);
+        root.addContent(content2, false);
+        root.addBranding(new Branding(root, "brand-1", "Brand One", "OS"));
+        root.addBranding(new Branding(root, "brand-2", "Brand Two", "OS"));
+        this.productCurator.merge(root);
+        this.productCurator.flush();
+        this.productCurator.clear();
+
+        Map<String, Product> products = this.productCurator.getProductsByIdsRecursiveForExportV2(filterNamespaces,
+            List.of(root.getId()))
+            .stream()
+            .collect(Collectors.toMap(Product::getId, Function.identity()));
+        this.productCurator.clear();
+
+        assertThat(products).containsOnlyKeys(root.getId(), child.getId(), empty.getId());
+        assertSame(products.get(empty.getId()), products.get(root.getId()).getDerivedProduct());
+        assertThat(products.get(root.getId()).getProvidedProducts()).hasSize(1);
+        assertSame(products.get(child.getId()), products.get(root.getId()).getProvidedProducts().iterator().next());
+        assertNull(products.get(child.getId()).getDerivedProduct());
+        assertThat(products.get(child.getId()).getProvidedProducts()).isEmpty();
+        assertNull(products.get(empty.getId()).getDerivedProduct());
+        assertThat(products.get(empty.getId()).getProvidedProducts()).isEmpty();
+        assertThat(products.get(root.getId()).getBranding())
+            .extracting(Branding::getName)
+            .containsExactlyInAnyOrder("Brand One", "Brand Two");
+        assertThat(products.get(root.getId()).getProductContent())
+            .extracting(productContent -> productContent.getContent().getName())
+            .containsExactlyInAnyOrder(content1.getName(), content2.getName());
+        assertThat(products.get(root.getId()).getProductContent())
+            .extracting(ProductContent::isEnabled)
+            .containsExactlyInAnyOrder(true, false);
+        assertThat(products.get(child.getId()).getBranding())
+            .extracting(Branding::getName)
+            .containsExactly("Child Brand");
+        assertThat(products.get(child.getId()).getProductContent())
+            .extracting(productContent -> productContent.getContent().getName())
+            .containsExactly(content1.getName());
+        assertThat(products.get(empty.getId()).getBranding()).isEmpty();
+        assertThat(products.get(empty.getId()).getProductContent()).isEmpty();
     }
 
     private static Stream<Arguments> lockModeTypeSource() {

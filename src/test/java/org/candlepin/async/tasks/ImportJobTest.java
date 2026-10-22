@@ -34,6 +34,7 @@ import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
@@ -69,7 +70,8 @@ public class ImportJobTest {
     @BeforeEach
     public void init() {
         this.translator = new StandardTranslator(this.mockConsumerTypeCurator,
-            this.mockEnvironmentCurator, this.ownerCurator);
+            this.mockEnvironmentCurator, this.ownerCurator,
+            TestConfig.defaults());
     }
 
     private ImportJob buildImportJob() {

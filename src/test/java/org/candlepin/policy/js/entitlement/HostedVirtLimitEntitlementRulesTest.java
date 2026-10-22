@@ -163,7 +163,8 @@ public class HostedVirtLimitEntitlementRulesTest {
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
 
         ModelTranslator translator = new StandardTranslator(
-            consumerTypeCurator, environmentCurator, ownerCurator);
+            consumerTypeCurator, environmentCurator, ownerCurator,
+            TestConfig.defaults());
         poolService = spy(new PoolService(poolCurator, sink, eventFactory, poolRules, entitlementCurator,
             consumerCurator, consumerTypeCurator, entitlementCertCurator, complianceRules,
             systemPurposeComplianceRules, config, i18n));

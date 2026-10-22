@@ -41,6 +41,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
@@ -119,7 +120,8 @@ public class HypervisorUpdateJobTest {
         when(principal.getUsername()).thenReturn("joe user");
 
         EnvironmentCurator environmentCurator = mock(EnvironmentCurator.class);
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator,
+            TestConfig.defaults());
 
         hypervisorJson = "{\"hypervisors\":" +
             "[{" +

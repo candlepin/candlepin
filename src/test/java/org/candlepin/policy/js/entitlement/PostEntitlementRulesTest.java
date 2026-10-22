@@ -118,7 +118,8 @@ public class PostEntitlementRulesTest {
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
 
         ModelTranslator translator = new StandardTranslator(
-            consumerTypeCurator, environmentCurator, ownerCurator);
+            consumerTypeCurator, environmentCurator, ownerCurator,
+            TestConfig.defaults());
         enforcer = new EntitlementRules(
             new DateSourceImpl(),
             jsRules,

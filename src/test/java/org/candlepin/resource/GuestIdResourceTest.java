@@ -112,7 +112,8 @@ public class GuestIdResourceTest {
         this.testMigration = spy(new GuestMigration(consumerCurator));
 
         this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
-            this.ownerCurator);
+            this.ownerCurator,
+            TestConfig.defaults());
         this.pagingUtilFactory = new PagingUtilFactory(this.config, i18nProvider);
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);

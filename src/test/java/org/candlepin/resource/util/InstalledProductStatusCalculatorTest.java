@@ -24,6 +24,7 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.server.v1.DateRange;
@@ -123,7 +124,8 @@ public class InstalledProductStatusCalculatorTest {
     public void setUp() {
         translator = new StandardTranslator(this.consumerTypeCurator,
             this.environmentCurator,
-            this.ownerCurator);
+            this.ownerCurator,
+            TestConfig.defaults());
 
         // Load the default production rules:
         InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
