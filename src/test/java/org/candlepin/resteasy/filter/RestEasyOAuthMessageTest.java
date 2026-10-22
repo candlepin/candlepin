@@ -21,9 +21,11 @@ import org.candlepin.test.TestUtil;
 import net.oauth.OAuth.Parameter;
 
 import org.jboss.resteasy.mock.MockHttpRequest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -36,7 +38,7 @@ public class RestEasyOAuthMessageTest {
     private static final String URL = "http://localhost/candlepin/status";
 
     private static Set<String> httpMethods() {
-        return Set.of("DELETE", "GET", "HEAD", "PATCH", "POST", "PUT");
+        return Set.of("DELETE", "GET", "HEAD", "PATCH", "POST", "PUT", "OPTIONS", "TRACE", "CONNECT");
     }
 
     @ParameterizedTest
@@ -135,5 +137,43 @@ public class RestEasyOAuthMessageTest {
             .contains(new Parameter("oauth_version", "1.0"));
     }
 
-}
+    @ParameterizedTest
+    @MethodSource("httpMethods")
+    public void testDecodesRawFormParameters(String method) throws Exception {
+        MockHttpRequest request = MockHttpRequest.create(method, URL);
+        request.contentType("application/x-www-form-urlencoded; charset=UTF-8");
+        request.content("name=hello+world&name=a%2Bb&empty=&symbols=%26%3D%25&unicode=%C4%8D"
+            .getBytes(StandardCharsets.UTF_8));
 
+        assertThat(RestEasyOAuthMessage.getParameters(request)).containsExactlyInAnyOrder(
+            new Parameter("name", "hello world"), new Parameter("name", "a+b"),
+            new Parameter("empty", ""), new Parameter("symbols", "&=%"), new Parameter("unicode", "č"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("httpMethods")
+    public void testCollectsQueryParametersExactlyOnce(String method) throws Exception {
+        MockHttpRequest request = MockHttpRequest.create(method,
+            URL + "?oauth_consumer_key=test&name=hello+world&name=a%2Bb&empty=");
+        RestEasyOAuthMessage message = new RestEasyOAuthMessage(request);
+
+        assertThat(message.URL).isEqualTo(URL);
+        assertThat(message.getConsumerKey()).isEqualTo("test");
+        assertThat(message.getParameters()).containsExactlyInAnyOrder(
+            new Parameter("oauth_consumer_key", "test"), new Parameter("name", "hello world"),
+            new Parameter("name", "a+b"), new Parameter("empty", ""));
+    }
+
+    @Test
+    public void testPreservesMethodAndRepeatedHeaders() throws Exception {
+        MockHttpRequest request = MockHttpRequest.create("PATCH", URL);
+        request.header("X-Test", "first");
+        request.header("X-Test", "second");
+        RestEasyOAuthMessage message = new RestEasyOAuthMessage(request);
+
+        assertThat(message.method).isEqualTo("PATCH");
+        assertThat(message.getHeaders()).containsExactlyInAnyOrder(
+            new Parameter("X-Test", "first"), new Parameter("X-Test", "second"));
+    }
+
+}
