@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import jakarta.inject.Singleton;
@@ -31,10 +32,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 
 
 @Singleton
@@ -45,23 +42,49 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
         super(ActivationKey.class);
     }
 
+    /**
+     * Retrieves the activation keys for the owner. If the provided key name is non-null and non-blank, then
+     * activation keys will be filtered based on that key name. If the provided {@link Owner} is null, then an
+     * empty list is returned. This method does not return null.
+     *
+     * @param owner
+     *  the owner of the activation keys that should be returned
+     *
+     * @param keyName
+     *  an optional parameter that will filter the activation keys based on the name
+     *
+     * @return the activation keys for the owner
+     */
     public List<ActivationKey> listByOwner(Owner owner, String keyName) {
-        EntityManager em = this.getEntityManager();
-        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
-        CriteriaQuery<ActivationKey> criteriaQuery = criteriaBuilder.createQuery(ActivationKey.class);
-        Root<ActivationKey> key = criteriaQuery.from(ActivationKey.class);
-        criteriaQuery.select(key);
-
-        List<Predicate> predicates = new ArrayList<>();
-        predicates.add(criteriaBuilder.equal(key.get(ActivationKey_.OWNER), owner));
-        if (keyName != null) {
-            predicates.add(criteriaBuilder.equal(key.get(ActivationKey_.NAME), keyName));
+        if (owner == null) {
+            return Collections.emptyList();
         }
-        Predicate[] predicateArray = new Predicate[predicates.size()];
-        criteriaQuery.where(predicates.toArray(predicateArray));
 
-        return em.createQuery(criteriaQuery)
-            .getResultList();
+        boolean hasKeyName = keyName != null && !keyName.isBlank();
+        String nameCondition = "";
+        if (hasKeyName) {
+            nameCondition = " AND a.name = :name";
+        }
+
+        // Eagerly fetch collections to avoid an N + 1 problem during DTO translation
+
+        String jpql = "SELECT DISTINCT a " +
+            "FROM ActivationKey a " +
+            "LEFT JOIN FETCH a.productIds " +
+            "LEFT JOIN FETCH a.contentOverrides " +
+            "LEFT JOIN FETCH a.pools " +
+            "LEFT JOIN FETCH a.addOns " +
+            "WHERE a.owner = :owner" + nameCondition;
+
+        TypedQuery<ActivationKey> query = this.getEntityManager()
+            .createQuery(jpql, ActivationKey.class)
+            .setParameter("owner", owner);
+
+        if (hasKeyName) {
+            query.setParameter("name", keyName);
+        }
+
+        return query.getResultList();
     }
 
     public List<ActivationKey> listByOwner(Owner owner) {
