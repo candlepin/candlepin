@@ -27,6 +27,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.Consumer;
@@ -121,7 +122,8 @@ public class ComplianceRulesTest {
 
     @BeforeEach
     public void setUp() {
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator,
+            TestConfig.defaults());
 
         Locale locale = new Locale("en_US");
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale, I18nFactory.FALLBACK);

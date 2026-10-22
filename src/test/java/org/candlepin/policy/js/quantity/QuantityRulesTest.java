@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
@@ -106,7 +107,8 @@ public class QuantityRulesTest {
         when(cacheProvider.get()).thenReturn(cache);
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
 
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCuratorMock);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCuratorMock,
+            TestConfig.defaults());
         quantityRules = new QuantityRules(provider.get(), ObjectMapperFactory.getRulesObjectMapper(),
             translator);
 

@@ -71,7 +71,9 @@ import jakarta.persistence.criteria.Subquery;
 @Singleton
 public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
-    /** The recommended number of expired pools to fetch in a single call to listExpiredPools */
+    /**
+     * The recommended number of expired pools to fetch in a single call to listExpiredPools
+     */
     public static final int EXPIRED_POOL_BLOCK_SIZE = 1000;
 
     private static final Logger log = LoggerFactory.getLogger(PoolCurator.class);
@@ -87,6 +89,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     /**
      * Returns list of pools owned by the given Owner.
+     *
      * @param owner Owner to filter
      * @return pools owned by the given Owner.
      */
@@ -96,12 +99,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     /**
      * Returns list of pools owned by the given Owner.
-     * @param owner Owner to filter
+     *
+     * @param owner    Owner to filter
      * @param activeOn only include pools active on the given date.
      * @return pools owned by the given Owner.
      */
     public List<Pool> listByOwner(Owner owner, Date activeOn) {
-        CriteriaBuilder cb = this.getEntityManager().getCriteriaBuilder();
+        CriteriaBuilder cb = this.getEntityManager()
+            .getCriteriaBuilder();
         CriteriaQuery<Pool> query = cb.createQuery(this.entityType());
         Root<Pool> root = query.from(this.entityType());
         query.select(root);
@@ -126,14 +131,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Fetches all pools for the given owner of the specified pool types. If no pools match the
      * given inputs, this method returns an empty list.
      *
-     * @param ownerId
-     *  the ID of the owner to use to match pools
-     *
-     * @param types
-     *  a collection of pool types to use to match pools
-     *
-     * @return
-     *  a list of pools matching the given owner and pool types
+     * @param ownerId the ID of the owner to use to match pools
+     * @param types   a collection of pool types to use to match pools
+     * @return a list of pools matching the given owner and pool types
      */
     public List<Pool> listByOwnerAndTypes(String ownerId, PoolType... types) {
         if (types != null && types.length > 0) {
@@ -147,6 +147,33 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
 
         return new ArrayList<>();
+    }
+
+    /**
+     * Fetches unexpired pools for V2 exports matching an owner and any of the specified types
+     * <p>
+     * Future pools are included. This fetch strategy is specific to V2 exports and should not be used as a general
+     * product lookup.
+     *
+     * @param ownerId          the ID of the owner whose pools to fetch
+     * @param filterNamespaces true to include only pools with global products, false to include all product namespaces
+     * @param types            the pool types to match; null or empty matches no pools
+     * @return the matching pools, or an empty list if no pools match
+     */
+    public List<Pool> listByOwnerForExportV2(String ownerId, boolean filterNamespaces, PoolType... types) {
+        if (types == null || types.length == 0) {
+            return new ArrayList<>();
+        }
+
+        String jpql = "SELECT p FROM Pool p WHERE p.owner.id = :owner_id AND p.type IN (:pool_types) AND " +
+            "p.endDate > CURRENT_TIMESTAMP AND (:filter_namespaces = false OR p.product.namespace = '')";
+
+        return this.getEntityManager()
+            .createQuery(jpql, Pool.class)
+            .setParameter("owner_id", ownerId)
+            .setParameter("pool_types", Arrays.asList(types))
+            .setParameter("filter_namespaces", filterNamespaces)
+            .getResultList();
     }
 
     /**
@@ -172,7 +199,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             cq.where(entitlementPredicate);
         }
 
-        return em.createQuery(cq).getResultList();
+        return em.createQuery(cq)
+            .getResultList();
     }
 
     /**
@@ -181,11 +209,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * of the pools.
      * This method finds all the pools that have been created as direct consequence of creating
      * some of ents. So for example bonus pools created as consequence of creating ents.
+     *
      * @param ents Entitlements for which we search the pools
      * @return Pools created as a result of creation of one of the ents.
      */
     public Set<Pool> listBySourceEntitlements(Iterable<Entitlement> ents) {
-        if (ents == null || !ents.iterator().hasNext()) {
+        if (ents == null || !ents.iterator()
+            .hasNext()) {
             return new HashSet<>();
         }
 
@@ -200,7 +230,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         CriteriaQuery<Pool> cq = cb.createQuery(Pool.class);
         Root<Pool> pool = cq.from(Pool.class);
 
-        Predicate entitlementPredicate = pool.get(Pool_.SOURCE_ENTITLEMENT).in(entitlementsParam);
+        Predicate entitlementPredicate = pool.get(Pool_.SOURCE_ENTITLEMENT)
+            .in(entitlementsParam);
         Predicate securityPredicate = this.getSecurityPredicate(Pool.class, cb, pool);
 
         if (securityPredicate != null) {
@@ -250,11 +281,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * fetch all expired pools in blocks, the calling method must ensure that the pools are deleted
      * between calls to this method.
      *
-     * @param blockSize
-     *  The maximum number of pools to fetch; if block size is less than 1, no limit will be applied
-     *
-     * @return
-     *  a list of non-derived, expired pools no larger than the specified block size
+     * @param blockSize The maximum number of pools to fetch; if block size is less than 1, no limit will be applied
+     * @return a list of non-derived, expired pools no larger than the specified block size
      */
     public List<Pool> listExpiredPools(int blockSize) {
         EntityManager em = this.getEntityManager();
@@ -287,7 +315,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             predicates.add(securityPredicate);
         }
 
-        cq.select(tgtPool).where(cb.and(predicates.toArray(new Predicate[0])));
+        cq.select(tgtPool)
+            .where(cb.and(predicates.toArray(new Predicate[0])));
 
         TypedQuery<Pool> query = em.createQuery(cq);
         if (blockSize > 0) {
@@ -302,9 +331,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Retrieves the UUIDs for all the {@Link Consumer}s that have an entitlement for the pool that
      * corresponds to the provided pool ID.
      *
-     * @param poolId
-     *  the ID to the pool to retrieve entitled Consumer UUIDs for
-     *
+     * @param poolId the ID to the pool to retrieve entitled Consumer UUIDs for
      * @return all the UUIDs for {@Link Consumer}s that are entitled to the provided pool ID
      */
     public List<String> listEntitledConsumerUuids(String poolId) {
@@ -312,7 +339,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             return new ArrayList<>();
         }
 
-        CriteriaBuilder builder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaBuilder builder = this.getEntityManager()
+            .getCriteriaBuilder();
         CriteriaQuery<String> query = builder.createQuery(String.class);
         Root<Consumer> root = query.from(Consumer.class);
 
@@ -340,11 +368,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Retrieves a paged list of {@Pool}s that fulffill the restrictions dictated by the provided
      * {@link PoolQualifier}.
      *
-     * @param qualifier
-     *  an object that dictates criteria that a pool must meet
-     *
+     * @param qualifier an object that dictates criteria that a pool must meet
      * @return a paged list of all the pools that fulfill the requirements provided by the
-     *  {@link PoolQualifier}
+     * {@link PoolQualifier}
      */
     public Page<List<Pool>> listAvailableEntitlementPools(PoolQualifier qualifier) {
         if (qualifier == null) {
@@ -363,7 +389,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             return emptyPage();
         }
 
-        CriteriaBuilder builder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaBuilder builder = this.getEntityManager()
+            .getCriteriaBuilder();
         CriteriaQuery<Pool> query = builder.createQuery(Pool.class);
         Root<Pool> root = query.from(Pool.class);
 
@@ -381,7 +408,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .ifPresent(predicates::add);
 
         if (ownerId != null) {
-            predicates.add(builder.equal(root.get(Pool_.owner).get(Owner_.id), ownerId));
+            predicates.add(builder.equal(root.get(Pool_.owner)
+                .get(Owner_.id), ownerId));
         }
 
         getQualifierPredicates(query, root, builder, qualifier)
@@ -525,7 +553,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             if (sanitized == null || sanitized.isEmpty()) {
                 supportLevelPredicate = buildPoolAttributePredicate(builder, query, root,
                     Product.Attributes.SUPPORT_LEVEL, attr ->
-                    builder.or(builder.isNull(attr), builder.equal(attr, "")));
+                        builder.or(builder.isNull(attr), builder.equal(attr, "")));
             }
             else {
                 supportLevelPredicate = buildPoolAttributePredicate(builder, query, root,
@@ -590,7 +618,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 }
 
                 if (!exclusionPredicates.isEmpty()) {
-                    predicates.add(builder.or(exclusionPredicates.toArray(new Predicate[0])).not());
+                    predicates.add(builder.or(exclusionPredicates.toArray(new Predicate[0]))
+                        .not());
                 }
             }
         }
@@ -618,7 +647,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             subQuery.select(subQueryRoot.get(Pool_.id))
                 .where(idPredicate, attributePredicate);
 
-            return Optional.of(builder.exists(subQuery).not());
+            return Optional.of(builder.exists(subQuery)
+                .not());
         }
         else if (!consumer.isGuest()) {
             return Optional.of(buildPoolAttributePredicate(builder, query, root, Pool.Attributes.VIRT_ONLY,
@@ -652,11 +682,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             Predicate attributeKeyPredicate = builder
                 .equal(attributes.key(), Pool.Attributes.REQUIRES_HOST);
             Predicate attributeValuePredicate = builder
-                .notEqual(builder.lower(attributes.value()), host.getUuid().toLowerCase());
+                .notEqual(builder.lower(attributes.value()), host.getUuid()
+                    .toLowerCase());
 
             subQuery.where(idPredicate, attributeKeyPredicate, attributeValuePredicate);
 
-            return Optional.of(builder.exists(subQuery).not());
+            return Optional.of(builder.exists(subQuery)
+                .not());
         }
 
         return Optional.empty();
@@ -672,25 +704,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * check is performed using a standard equality operation which uses the underlying character
      * collation to determine case-sensitivity.
      *
-     * @param builder
-     *  the criteria builder to use for building various JPA criteria objects
-     *
-     * @param query
-     *  the base query which needs to check for attribute equality
-     *
-     * @param root
-     *  the query root which will be correlated to the subqueries built by this subquery; must be
-     *  a pool root
-     *
-     * @param attribute
-     *  the name of the attribute to match
-     *
-     * @param valuePredicateFunc
-     *  a function which receives an expression representing the value for the attribute for each
-     *  matching pool, and returns a predicate for determining if the value matches
-     *
-     * @return
-     *  a predicate for performing attribute equality checks for pools
+     * @param builder            the criteria builder to use for building various JPA criteria objects
+     * @param query              the base query which needs to check for attribute equality
+     * @param root               the query root which will be correlated to the subqueries built by this subquery; must be
+     *                           a pool root
+     * @param attribute          the name of the attribute to match
+     * @param valuePredicateFunc a function which receives an expression representing the value for the attribute for each
+     *                           matching pool, and returns a predicate for determining if the value matches
+     * @return a predicate for performing attribute equality checks for pools
      */
     private Predicate buildPoolAttributePredicate(CriteriaBuilder builder, CriteriaQuery<?> query,
         Root<Pool> root, String attribute, Function<Expression<String>, Predicate> valuePredicateFunc) {
@@ -735,7 +756,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 case '!':
                 case '_':
                 case '%':
-                    output.append('!').append(c);
+                    output.append('!')
+                        .append(c);
                     break;
 
                 case '\\':
@@ -766,8 +788,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Determine if owner has at least one active pool
      *
      * @param ownerId Owner whose subscriptions should be inspected.
-     * @param date The date to test the active state.
-     *        Set to null for current.
+     * @param date    The date to test the active state.
+     *                Set to null for current.
      * @return boolean is active on test date.
      */
     public boolean hasActiveEntitlementPools(String ownerId, Date date) {
@@ -790,7 +812,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             predicates.add(securityPredicate);
         }
 
-        predicates.add(builder.equal(root.get(Pool_.owner).get(Owner_.id), ownerId));
+        predicates.add(builder.equal(root.get(Pool_.owner)
+            .get(Owner_.id), ownerId));
         predicates.add(builder.lessThanOrEqualTo(root.get(Pool_.startDate), date));
         predicates.add(builder.greaterThanOrEqualTo(root.get(Pool_.endDate), date));
 
@@ -811,17 +834,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     /**
      * Determines if the owner has pools for all of the products that are provided
      *
-     * @param ownerKey
-     *  the key to the owner who owns the pools
-     *
-     * @param productIds
-     *   the IDs of the products to check for existing pools
-     *
-     * @throws IllegalArgumentException
-     *  if the owner key is null or blank or if the product IDs are null or empty
-     *
+     * @param ownerKey   the key to the owner who owns the pools
+     * @param productIds the IDs of the products to check for existing pools
      * @return true if the owner has pools for all of the products,
-     *  or false if there is a missing pool for any of the products
+     * or false if there is a missing pool for any of the products
+     * @throws IllegalArgumentException if the owner key is null or blank or if the product IDs are null or empty
      */
     public boolean hasPoolsForProducts(String ownerKey, Collection<String> productIds) {
         if (ownerKey == null || ownerKey.isBlank()) {
@@ -861,9 +878,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * <p></p>
      * This method <b>does not</b> use automatic flushing.
      *
-     * @param pools
-     *  the pools to retrieve entitlement IDs for
-     *
+     * @param pools the pools to retrieve entitlement IDs for
      * @return a list of entitlement IDs for the provided pools
      */
     public List<String> retrieveOrderedEntitlementIdsOf(Collection<Pool> pools) {
@@ -923,12 +938,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     /**
      * Query pools by the subscription that generated them.
      *
-     * @param owner
-     *  the owner of the subscriptions to query
-     *
-     * @param subId
-     *  subscription to look up pools by
-     *
+     * @param owner the owner of the subscriptions to query
+     * @param subId subscription to look up pools by
      * @return pools from the given subscription, sorted by pool.id to avoid deadlocks
      */
     public List<Pool> getBySubscriptionId(Owner owner, String subId) {
@@ -963,10 +974,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     /**
      * Query pools by the subscriptions that generated them.
      *
-     * @param owner The owner of the subscriptions to query
+     * @param owner  The owner of the subscriptions to query
      * @param subIds Subscriptions to look up pools by
      * @return pools from the given subscriptions, sorted by pool.id to avoid
-     *         deadlocks
+     * deadlocks
      */
     public List<Pool> getBySubscriptionIds(Owner owner, Collection<String> subIds) {
         return this.getBySubscriptionIds(owner.getId(), subIds);
@@ -975,14 +986,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     /**
      * Query pools by the subscriptions that generated them.
      *
-     * @param ownerId
-     *  the owner of the subscriptions to query
-     *
-     * @param subIds
-     *  subscriptions to look up pools by
-     *
+     * @param ownerId the owner of the subscriptions to query
+     * @param subIds  subscriptions to look up pools by
      * @return pools from the given subscriptions, sorted by pool.id to avoid
-     *  deadlocks
+     * deadlocks
      */
     public List<Pool> getBySubscriptionIds(String ownerId, Collection<String> subIds) {
         if (ownerId == null || ownerId.isBlank() || subIds == null || subIds.isEmpty()) {
@@ -1002,12 +1009,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             predicates.add(securityPredicate);
         }
 
-        predicates.add(builder.equal(root.get(Pool_.owner).get(Owner_.id), ownerId));
+        predicates.add(builder.equal(root.get(Pool_.owner)
+            .get(Owner_.id), ownerId));
 
         List<Pool> pools = new ArrayList<>();
         for (List<String> block : this.partition(subIds)) {
             ParameterExpression<Collection> inArgs = builder.parameter(Collection.class, "subIds");
-            predicates.add(subJoin.get(SourceSubscription_.subscriptionId).in(inArgs));
+            predicates.add(subJoin.get(SourceSubscription_.subscriptionId)
+                .in(inArgs));
 
             query.select(root)
                 .where(predicates.toArray(new Predicate[0]))
@@ -1034,10 +1043,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * with virt_bonus on-site subscriptions where one pool is created per
      * physical entitlement.
      *
-     * @param ownerId Owner - The owner of the entitlements being passed in. Scoping
-     *        this to a single owner prevents performance problems in large datasets.
+     * @param ownerId  Owner - The owner of the entitlements being passed in. Scoping
+     *                 this to a single owner prevents performance problems in large datasets.
      * @param subIdMap Map where key is Subscription ID of the pool, and value
-     *        is the Entitlement just created or modified.
+     *                 is the Entitlement just created or modified.
      * @return Pools with too many entitlements for their new quantity.
      */
     public List<Pool> getOversubscribedBySubscriptionIds(String ownerId, Map<String, Entitlement> subIdMap) {
@@ -1083,14 +1092,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     /**
      * Method to compile service/support level lists. One is the available levels for
-     *  consumers for this owner. The second is the level names that are exempt. Exempt
-     *  means that a product pool with this level can be used with a consumer of any
-     *  service level.
+     * consumers for this owner. The second is the level names that are exempt. Exempt
+     * means that a product pool with this level can be used with a consumer of any
+     * service level.
      *
      * @param ownerId The owner that has the list of available service levels for
-     *              its consumers
-     * @param exempt boolean to show if the desired list is the levels that are
-     *               explicitly marked with the support_level_exempt attribute.
+     *                its consumers
+     * @param exempt  boolean to show if the desired list is the levels that are
+     *                explicitly marked with the support_level_exempt attribute.
      * @return Set of levels based on exempt flag.
      */
     @SuppressWarnings("unchecked")
@@ -1107,7 +1116,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             ORDER BY key(Attribute) DESC"""; // Needs to be ordered, because the code below assumes exempt
         // levels are first
 
-        Query query = getEntityManager().createQuery(jpql).setParameter("owner_id", ownerId)
+        Query query = getEntityManager().createQuery(jpql)
+            .setParameter("owner_id", ownerId)
             .setParameter("sl_attr", Product.Attributes.SUPPORT_LEVEL)
             .setParameter("sle_attr", Product.Attributes.SUPPORT_LEVEL_EXEMPT);
 
@@ -1131,7 +1141,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 exemptProductIds.add(productId);
             }
             else if (Product.Attributes.SUPPORT_LEVEL.equalsIgnoreCase(name) &&
-                (value != null && !value.trim().isEmpty()) &&
+                (value != null && !value.trim()
+                    .isEmpty()) &&
                 exemptProductIds.contains(productId)) {
 
                 exemptSlaSet.add(value);
@@ -1169,7 +1180,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             // TODO: Maybe move this to the places where we actually use the attributes after
             // deletion? Not sure how much it'll actually save vs the time wasted by future devs
             // trying to figure out what the random NPE in Hibernate's internals means.
-            entity.getAttributes().size();
+            entity.getAttributes()
+                .size();
 
             // Perform the actual deletion...
             // The entity must be managed to be removed, merge it to ensure it is managed
@@ -1191,17 +1203,18 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .getPersistenceUnitUtil();
 
             if (unitUtil.isLoaded(entity, "entitlements")) {
-                entity.getEntitlements().clear();
+                entity.getEntitlements()
+                    .clear();
             }
         }
     }
 
     /**
      * There is an issue with attributes in the database. Duplicate attribute
-     *  name/value pairs were showing up from outside the Candlepin code.
-     *  Only one was getting pulled into the HashSet and the other ignored.
-     *  Uses explicit lookup and deletion instead of the Hibernate cascade which
-     *  relies on the data structure in memory.
+     * name/value pairs were showing up from outside the Candlepin code.
+     * Only one was getting pulled into the HashSet and the other ignored.
+     * Uses explicit lookup and deletion instead of the Hibernate cascade which
+     * relies on the data structure in memory.
      *
      * @param entity pool to be deleted.
      */
@@ -1222,7 +1235,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Batch deletes a collection of pools. If the given collection is null, this method silently returns.
      * Null elements in the collection will be ignored.
      *
-     * @param pools pools to delete
+     * @param pools               pools to delete
      * @param alreadyDeletedPools pools to skip, they have already been deleted.
      */
     public void batchDelete(Collection<Pool> pools, Collection<String> alreadyDeletedPools) {
@@ -1256,15 +1269,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Fetches the pools associated with the given consumer with the provided stack IDs. If no
      * consumer is provided or no stack IDs are provided, this method returns an empty list.
      *
-     * @param consumer
-     *  the consumer for which to find stacked pools
-     *
-     * @param stackIds
-     *  a collection of stack IDs representing the stacks of pools to fetch
-     *
-     * @return
-     *  a list containing all of the stacked pools with the given stack IDs owned by the specified
-     *  consumer
+     * @param consumer the consumer for which to find stacked pools
+     * @param stackIds a collection of stack IDs representing the stacks of pools to fetch
+     * @return a list containing all of the stacked pools with the given stack IDs owned by the specified
+     * consumer
      */
     public List<Pool> getSubPoolsForStackIds(Consumer consumer, Collection<String> stackIds) {
         return consumer != null ?
@@ -1276,15 +1284,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Fetches the pools associated with the given consumers with the provided stack IDs. If no
      * consumers are provided or no stack IDs are provided, this method returns an empty list.
      *
-     * @param consumers
-     *  a collection of consumers for which to find stacked pools
-     *
-     * @param stackIds
-     *  a collection of stack IDs representing the stacks of pools to fetch
-     *
-     * @return
-     *  a list containing all of the stacked pools with the given stack IDs owned by any of the
-     *  specified consumer
+     * @param consumers a collection of consumers for which to find stacked pools
+     * @param stackIds  a collection of stack IDs representing the stacks of pools to fetch
+     * @return a list containing all of the stacked pools with the given stack IDs owned by any of the
+     * specified consumer
      */
     public List<Pool> getSubPoolsForStackIds(Collection<Consumer> consumers, Collection<String> stackIds) {
         List<Pool> output = new ArrayList<>();
@@ -1323,14 +1326,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Retrieves pools that have a {@SourceSubscription} that has a source stack ID equal to the provided
      * stack ID.
      *
-     * @param owner
-     *  the owner of the pools to retrieve
-     *
-     * @param stackId
-     *  the ID of the stack for the source subscriptions to retrieve pools for
-     *
+     * @param owner   the owner of the pools to retrieve
+     * @param stackId the ID of the stack for the source subscriptions to retrieve pools for
      * @return the pools that have a source subscription with a source stack ID equal to the provided
-     *  stack ID.
+     * stack ID.
      */
     public List<Pool> getOwnerSubPoolsForStackId(Owner owner, String stackId) {
         if (owner == null || stackId == null || stackId.isBlank()) {
@@ -1379,7 +1378,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         if (!expectedSubIds.isEmpty()) {
             Join<Pool, SourceSubscription> sourceSub = pool.join("sourceSubscription");
             predicates.add(cb.and(
-                cb.not(sourceSub.get("subscriptionId").in(expectedSubIds)),
+                cb.not(sourceSub.get("subscriptionId")
+                    .in(expectedSubIds)),
                 cb.isNotNull(sourceSub.get("subscriptionId"))
             ));
         }
@@ -1388,24 +1388,23 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .where(predicates.toArray(new Predicate[0]))
             .orderBy(cb.asc(pool.get("id")));
 
-        return getEntityManager().createQuery(cq).getResultList();
+        return getEntityManager().createQuery(cq)
+            .getResultList();
     }
 
     /**
      * Fetches the IDs of the derived pools for the given pool IDs. If the provided pool IDs do not
      * have any derived pools, this method returns an empty collection.
      *
-     * @param poolIds
-     *  A collection of pool IDs for which to retrieve derived pool IDs
-     *
-     * @return
-     *  A collection of pool IDs for pools derived from the given pool IDs
+     * @param poolIds A collection of pool IDs for which to retrieve derived pool IDs
+     * @return A collection of pool IDs for pools derived from the given pool IDs
      */
     @SuppressWarnings("unchecked")
     public Set<String> getDerivedPoolIdsForPools(Iterable<String> poolIds) {
         Set<String> output = new HashSet<>();
 
-        if (poolIds != null && poolIds.iterator().hasNext()) {
+        if (poolIds != null && poolIds.iterator()
+            .hasNext()) {
             // TODO: Update this method to use the pool hierarchy columns when they're available
             String sql = "SELECT DISTINCT ss2.pool_id " +
                 "FROM cp2_pool_source_sub ss1 " +
@@ -1432,11 +1431,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Fetches the entitlement IDs for the pools specified by the given pool IDs. If there are no
      * entitlements linked to the given pool IDs, this method returns an empty collection.
      *
-     * @param poolIds
-     *  A collection of pool IDs for which to retrieve entitlement IDs
-     *
-     * @return
-     *  A collection of entitlement IDs for the pools specified for the given pool IDs
+     * @param poolIds A collection of pool IDs for which to retrieve entitlement IDs
+     * @return A collection of entitlement IDs for the pools specified for the given pool IDs
      */
     public Collection<String> getEntitlementIdsForPools(Collection<String> poolIds) {
         Set<String> entitlementIds = new HashSet<>();
@@ -1464,11 +1460,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * provided entitlement IDs. If there are no pools derived from the given entitlements, this
      * method returns an empty collection.
      *
-     * @param entIds
-     *  A collection of entitlement IDs for which to fetch derived pools
-     *
-     * @return
-     *  A collection of pool IDs for pools derived from the given entitlement IDs
+     * @param entIds A collection of entitlement IDs for which to fetch derived pools
+     * @return A collection of pool IDs for pools derived from the given entitlement IDs
      */
     public Collection<String> getPoolIdsForSourceEntitlements(Collection<String> entIds) {
         Set<String> poolIds = new HashSet<>();
@@ -1494,11 +1487,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     /**
      * Fetches the IDs of the pools to which these entitlements provide access.
      *
-     * @param entIds
-     *  A collection of entitlement IDs for which to fetch pool IDs
-     *
-     * @return
-     *  A collection of IDs of the pools for the given entitlement IDs
+     * @param entIds A collection of entitlement IDs for which to fetch pool IDs
+     * @return A collection of IDs of the pools for the given entitlement IDs
      */
     public Collection<String> getPoolIdsForEntitlements(Collection<String> entIds) {
         Set<String> poolIds = new HashSet<>();
@@ -1527,11 +1517,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * IDs to a list of pools for that subscription. If no pools exist for the given subscription
      * IDs, this method returns an empty map
      *
-     * @param subscriptionIds
-     *  a collection of subscription IDs to use for fetching pools
-     *
-     * @return
-     *  a map containing subscription IDs mapped to lists of associated pools
+     * @param subscriptionIds a collection of subscription IDs to use for fetching pools
+     * @return a map containing subscription IDs mapped to lists of associated pools
      */
     public Map<String, List<Pool>> mapPoolsBySubscriptionIds(Collection<String> subscriptionIds) {
         Map<String, List<Pool>> output = new HashMap<>();
@@ -1580,14 +1567,16 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         // Common predicates
         List<Predicate> predicates = new ArrayList<>();
-        predicates.add(sourceSubscription.get(SourceSubscription_.SUBSCRIPTION_ID).in(subIdsParam));
+        predicates.add(sourceSubscription.get(SourceSubscription_.SUBSCRIPTION_ID)
+            .in(subIdsParam));
 
         Predicate securityPredicate = this.getSecurityPredicate(Pool.class, cb, poolJoin);
         if (securityPredicate != null) {
             predicates.add(securityPredicate);
         }
 
-        cq.select(poolJoin).distinct(true)
+        cq.select(poolJoin)
+            .distinct(true)
             .where(cb.and(predicates.toArray(new Predicate[0])))
             .orderBy(cb.asc(poolJoin.get(Pool_.ID)));
 
@@ -1619,8 +1608,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     /**
      * Retrieves all known primary pools (subscriptions) for all owners.
      *
-     * @return
-     *  A query to fetch all known primary pools
+     * @return A query to fetch all known primary pools
      */
     public List<Pool> getPrimaryPools() {
         String jpql = "SELECT p FROM Pool p WHERE p.sourceSubscription.subscriptionSubKey = 'master'";
@@ -1631,15 +1619,17 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     /**
-    * Uses a database query to check if the pool is still
-    * in the database.
-    * @param pool pool to be searched in the database
-    * @return true if and only if the pool is still in the database
-    */
+     * Uses a database query to check if the pool is still
+     * in the database.
+     *
+     * @param pool pool to be searched in the database
+     * @return true if and only if the pool is still in the database
+     */
     public boolean exists(Pool pool) {
         return getEntityManager()
             .createQuery("SELECT COUNT(p) FROM Pool p WHERE p=:pool", Long.class)
-            .setParameter("pool", pool).getSingleResult() > 0;
+            .setParameter("pool", pool)
+            .getSingleResult() > 0;
     }
 
     public void calculateConsumedForOwnersPools(Owner owner) {
@@ -1718,11 +1708,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * the given pool. The returned map will only contain mappings for pools specified in the given
      * collection of pool IDs.
      *
-     * @param pools
-     *  A collection of pools for which to fetch provided product IDs
-     *
-     * @return
-     *  A mapping of pool IDs to provided product IDs
+     * @param pools A collection of pools for which to fetch provided product IDs
+     * @return A mapping of pool IDs to provided product IDs
      */
     public Map<String, Set<String>> getProvidedProductIdsByPools(Collection<Pool> pools) {
         Set<String> poolIds = new HashSet<>();
@@ -1743,11 +1730,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * the given pool. The returned map will only contain mappings for pools specified in the given
      * collection of pool IDs.
      *
-     * @param poolIds
-     *  A collection of pool IDs for which to fetch provided product IDs
-     *
-     * @return
-     *  A mapping of pool IDs to provided product IDs
+     * @param poolIds A collection of pool IDs for which to fetch provided product IDs
+     * @return A mapping of pool IDs to provided product IDs
      */
     public Map<String, Set<String>> getProvidedProductIdsByPoolIds(Collection<String> poolIds) {
         Map<String, Set<String>> ppMap = new HashMap<>();
@@ -1784,11 +1768,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * the given pool. The returned map will only contain mappings for pools specified in the given
      * collection of pool IDs.
      *
-     * @param pools
-     *  A collection of pools for which to fetch provided product IDs
-     *
-     * @return
-     *  A mapping of pool IDs to provided product IDs
+     * @param pools A collection of pools for which to fetch provided product IDs
+     * @return A mapping of pool IDs to provided product IDs
      */
     public Map<String, Set<String>> getDerivedProvidedProductIdsByPools(Collection<Pool> pools) {
         if (pools == null || pools.isEmpty()) {
@@ -1808,11 +1789,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * the given pool. The returned map will only contain mappings for pools specified in the given
      * collection of pool IDs.
      *
-     * @param poolIds
-     *  A collection of pool IDs for which to fetch provided product IDs
-     *
-     * @return
-     *  A mapping of pool IDs to provided product IDs
+     * @param poolIds A collection of pool IDs for which to fetch provided product IDs
+     * @return A mapping of pool IDs to provided product IDs
      */
     public Map<String, Set<String>> getDerivedProvidedProductIdsByPoolIds(Collection<String> poolIds) {
         Map<String, Set<String>> dppMap = new HashMap<>();
@@ -1869,11 +1847,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Note that this operation does not update any fetched or cached Pool objects, and will be
      * reverted should a pool's state be persisted after this method has returned.
      *
-     * @param poolIds
-     *  A collection of pool IDs for which to clear source entitlement references
+     * @param poolIds A collection of pool IDs for which to clear source entitlement references
      */
     public void clearPoolSourceEntitlementRefs(Iterable<String> poolIds) {
-        if (poolIds != null && poolIds.iterator().hasNext()) {
+        if (poolIds != null && poolIds.iterator()
+            .hasNext()) {
 
             String jpql = """
                 UPDATE Pool
@@ -1895,16 +1873,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * <p></p>
      * This method <b>does not</b> use automatic flushing.
      *
-     * @param poolIds
-     *  A collection of pool IDs to use to fetch existing pool IDs
-     *
-     * @return
-     *  a set of pool IDs representing existing pools in the given collection of pool IDs
+     * @param poolIds A collection of pool IDs to use to fetch existing pool IDs
+     * @return a set of pool IDs representing existing pools in the given collection of pool IDs
      */
     public Set<String> getExistingPoolIdsByIds(Iterable<String> poolIds) {
         Set<String> existing = new HashSet<>();
 
-        if (poolIds != null && poolIds.iterator().hasNext()) {
+        if (poolIds != null && poolIds.iterator()
+            .hasNext()) {
             String jpql = "SELECT DISTINCT p.id FROM Pool p WHERE p.id IN (:pids)";
             TypedQuery<String> query = this.getEntityManager()
                 .createQuery(jpql, String.class)
@@ -1923,21 +1899,20 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Fetches a map of consumer IDs to pool IDs of stack derived pools for the given stack IDs. If
      * no such pools can be found, an empty map is returned.
      *
-     * @param stackIds
-     *  A collection of stack IDs to use to fetch consumer pool IDs
-     *
-     * @return
-     *  a map of consumer IDs to pool IDs of stack derived pools fro the given stack IDs
+     * @param stackIds A collection of stack IDs to use to fetch consumer pool IDs
+     * @return a map of consumer IDs to pool IDs of stack derived pools fro the given stack IDs
      */
     public Map<String, Set<String>> getConsumerStackDerivedPoolIdMap(Iterable<String> stackIds) {
         Map<String, Set<String>> consumerPoolMap = new HashMap<>();
 
-        if (stackIds != null && stackIds.iterator().hasNext()) {
+        if (stackIds != null && stackIds.iterator()
+            .hasNext()) {
             // We do this in native SQL to avoid some unnecessary joins
             String jpql = "SELECT DISTINCT ss.sourceConsumer.id, ss.derivedPool.id FROM SourceStack ss " +
                 "WHERE ss.sourceStackId IN (:stackids)";
 
-            TypedQuery<Object[]> query = this.getEntityManager().createQuery(jpql, Object[].class);
+            TypedQuery<Object[]> query = this.getEntityManager()
+                .createQuery(jpql, Object[].class);
 
             for (List<String> block : this.partition(stackIds)) {
                 query.setParameter("stackids", block);
@@ -1968,12 +1943,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * either by consumer or stack ID, such that the partitions are smaller than the IN operator
      * limit returned by getInBlockSize().
      *
-     * @param entitlementIds
-     *  A collection of entitlement IDs for entitlements that are being deleted
-     *
-     * @return
-     *  a collection of pool IDs representing unentitled stack derived pools with the deletion of
-     *  the specified entitlements
+     * @param entitlementIds A collection of entitlement IDs for entitlements that are being deleted
+     * @return a collection of pool IDs representing unentitled stack derived pools with the deletion of
+     * the specified entitlements
      */
     public Set<String> getUnentitledStackDerivedPoolIds(Iterable<String> entitlementIds) {
         Set<String> output = new HashSet<>();
@@ -1989,7 +1961,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             "        AND p.sourceentitlement_id IS NULL " +
             "        AND ppa.name = :stackid_attrib_name ";
 
-        if (entitlementIds != null && entitlementIds.iterator().hasNext()) {
+        if (entitlementIds != null && entitlementIds.iterator()
+            .hasNext()) {
             // Impl note:
             // We do this in raw SQL as HQL/JPQL does not allow joining on a query/temp table, and
             // it allows us to skip a few joins to get directly to the data we need.
@@ -2046,11 +2019,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Builds a query for fetching the system purpose attributes mapped to the given owner's
      * products. Will only return attributes for products that are related to unexpired pools.
      *
-     * @param ownerId
-     *  The owner ID for which to fetch system purpose attributes
-     *
-     * @return
-     *  a map of attributes belonging to the given owner
+     * @param ownerId The owner ID for which to fetch system purpose attributes
+     * @return a map of attributes belonging to the given owner
      */
     public Map<String, Set<String>> getSyspurposeAttributesByOwner(String ownerId) {
         Map<String, Set<String>> output = this.getBaseSyspurposeMap();
@@ -2088,7 +2058,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .addSynchronizedEntityClass(Product.class)
             .addSynchronizedQuerySpace("cp_product_attributes")
             .getResultList())
-            .forEach(pair -> output.get((String) pair[0]).addAll(Util.toList((String) pair[1])));
+            .forEach(pair -> output.get((String) pair[0])
+                .addAll(Util.toList((String) pair[1])));
 
         return output;
     }
@@ -2097,11 +2068,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Builds a query for fetching the system purpose attributes mapped to the given owner's
      * products. Will only return attributes for products that are related to unexpired pools.
      *
-     * @param owner
-     *  The owner for which to fetch system purpose attributes
-     *
-     * @return
-     *  a map of attributes belonging to the given owner
+     * @param owner The owner for which to fetch system purpose attributes
+     * @return a map of attributes belonging to the given owner
      */
     public Map<String, Set<String>> getSyspurposeAttributesByOwner(Owner owner) {
         if (owner == null) {
@@ -2116,11 +2084,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * That is, a product not in the global namespace or the namespace of the pool's owner. If the
      * org has no pools with invalid product references, this method returns an empty list.
      *
-     * @param ownerId
-     *  the ID of the owner for which to fetch pools
-     *
-     * @return
-     *  a list of IDs of pools referencing invalid products
+     * @param ownerId the ID of the owner for which to fetch pools
+     * @return a list of IDs of pools referencing invalid products
      */
     public List<Pool> getPoolsReferencingInvalidProducts(String ownerId) {
         String jpql = "SELECT pool FROM Pool pool " +
@@ -2138,12 +2103,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Sets the "dirtyProduct" flag for any pool referencing a product in the given list of product
      * uuids.
      *
-     * @param productUuids
-     *  a collection of product UUIDs to use for flagging pools
-     *
-     * @return
-     *  the number of pools flagged by this method, which may include pools which were already
-     *  flagged
+     * @param productUuids a collection of product UUIDs to use for flagging pools
+     * @return the number of pools flagged by this method, which may include pools which were already
+     * flagged
      */
     public int markPoolsDirtyReferencingProducts(Collection<String> productUuids) {
         if (productUuids == null || productUuids.isEmpty()) {

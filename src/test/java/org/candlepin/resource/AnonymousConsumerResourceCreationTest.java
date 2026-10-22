@@ -216,7 +216,8 @@ public class AnonymousConsumerResourceCreationTest {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
-            this.ownerCurator);
+            this.ownerCurator,
+            TestConfig.defaults());
 
         this.config = initConfig();
         this.resource = new ConsumerResource(this.consumerCurator, this.consumerTypeCurator,

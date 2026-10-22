@@ -230,7 +230,8 @@ public class ImporterTest extends DatabaseTestFixture {
 
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
         this.modelTranslator = new StandardTranslator(this.mockConsumerTypeCurator,
-            this.mockEnvironmentCurator, this.mockOwnerCurator);
+            this.mockEnvironmentCurator, this.mockOwnerCurator,
+            TestConfig.defaults());
 
         this.mapper = ObjectMapperFactory.getSyncObjectMapper(config);
         this.syncUtils = new SyncUtils(this.config);
@@ -1576,7 +1577,8 @@ public class ImporterTest extends DatabaseTestFixture {
     private Exporter createExporter() {
         CryptoManager cryptoManager = CryptoUtil.getCryptoManager(this.config);
         StandardTranslator translator =
-            new StandardTranslator(this.consumerTypeCurator, this.environmentCurator, this.ownerCurator);
+            new StandardTranslator(this.consumerTypeCurator, this.environmentCurator, this.ownerCurator,
+                TestConfig.defaults());
 
         return new Exporter(
             this.consumerTypeCurator,

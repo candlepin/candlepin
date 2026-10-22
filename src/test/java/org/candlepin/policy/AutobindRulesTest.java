@@ -137,7 +137,8 @@ public class AutobindRulesTest {
         jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
         mapper = ObjectMapperFactory.getRulesObjectMapper();
 
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator,
+            TestConfig.defaults());
         autobindRules = new AutobindRules(jsRules, mockOwnerCurator,
             mapper, translator, v3CapabilityCheck);
 

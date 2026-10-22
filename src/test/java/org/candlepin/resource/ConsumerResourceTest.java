@@ -334,7 +334,8 @@ public class ConsumerResourceTest {
         this.config = TestConfig.defaults();
         this.translator = new StandardTranslator(consumerTypeCurator,
             environmentCurator,
-            ownerCurator);
+            ownerCurator,
+            TestConfig.defaults());
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         when(eventBuilder.setEventData(any(Consumer.class))).thenReturn(eventBuilder);
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);
@@ -1470,6 +1471,18 @@ public class ConsumerResourceTest {
             "prefix", cdn.getUrl());
         verify(manifestManager).generateManifestAsync(consumer.getUuid(), owner,
             cdn.getLabel(), "prefix", cdn.getUrl());
+    }
+
+    @Test
+    public void testAsyncExportV2() {
+        Owner owner = this.createOwner();
+        owner.setId(TestUtil.randomString());
+        when(ownerCurator.findOwnerById(owner.getId())).thenReturn(owner);
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN));
+        Consumer consumer = this.createConsumer(owner, ctype);
+
+        consumerResource.exportDataAsyncV2(consumer.getUuid());
+        verify(manifestManager).generateManifestAsyncV2(consumer.getUuid(), owner);
     }
 
     @Test

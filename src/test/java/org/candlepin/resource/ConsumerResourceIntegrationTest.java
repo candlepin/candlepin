@@ -97,12 +97,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.core.Response;
 
 
-
 public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     private static final String METADATA_VALUE = "jsontestname";
     private static final String METADATA_NAME = "name";
     private static final String CONSUMER_NAME = "consumer_name";
     private static final String USER_NAME = "testing user";
+
+    @TempDir
+    private Path exportWorkDirectory;
 
     private PoolService poolService;
     private ConsumerResource consumerResource;
@@ -124,9 +126,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     private PrincipalProvider principalProvider;
 
     private User someuser;
-
-    @TempDir
-    private Path exportDirectory;
 
     private static final String DEFAULT_SERVICE_LEVEL = "VIP";
 
@@ -215,7 +214,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Override
     public void init() throws Exception {
         super.init(false);
-        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.exportDirectory.toString());
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.exportWorkDirectory.toString());
 
         poolService = injector.getInstance(PoolService.class);
         consumerResource = injector.getInstance(ConsumerResource.class);
