@@ -82,11 +82,15 @@ public class OAuth implements AuthProvider {
      * @return the principal if it can be created, null otherwise
      */
     public Principal getPrincipal(HttpRequest httpRequest) {
+        if (httpRequest == null) {
+            return null;
+        }
+
         Principal principal = null;
         I18n i18n = i18nProvider.get();
         try {
-            if (AuthUtil.getHeader(httpRequest, "Authorization").contains("oauth")) {
-                OAuthMessage requestMessage = new RestEasyOAuthMessage(httpRequest);
+            OAuthMessage requestMessage = new RestEasyOAuthMessage(httpRequest);
+            if (this.isOAuthRequest(httpRequest, requestMessage)) {
                 OAuthAccessor accessor = this.getAccessor(requestMessage);
 
                 // TODO: This is known to be memory intensive.
@@ -131,6 +135,13 @@ public class OAuth implements AuthProvider {
         }
 
         return principal;
+    }
+
+    private boolean isOAuthRequest(HttpRequest request, OAuthMessage message) throws IOException {
+        return AuthUtil.getHeader(request, "Authorization").contains("oauth") ||
+            message.getParameters()
+                .stream()
+                .anyMatch(parameter -> parameter.getKey().startsWith("oauth_"));
     }
 
     /**
