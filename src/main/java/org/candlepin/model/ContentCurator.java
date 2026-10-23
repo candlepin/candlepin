@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +34,6 @@ import java.util.TreeSet;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Query;
@@ -684,8 +684,42 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
      *  a list of active content and their respective enabled state for the given owner
      */
     public List<ProductContent> getActiveContentByOwner(String ownerId) {
-        EntityManager entityManager = this.getEntityManager();
+        return this.getContentByOwner(ownerId, false);
+    }
 
+    /**
+     * Fetches global content from non-expired pools, including future subscriptions
+     *
+     * @param ownerId
+     *     owner identifier
+     * @return global repositories from the recursive pool product graph
+     */
+    public List<ProductContent> getExportV2ContentByOwner(String ownerId) {
+        return this.getContentByOwner(ownerId, true);
+    }
+
+    /**
+     * Checks for pool expirations since a content snapshot was prepared
+     *
+     * @param ownerId
+     *     owner identifier
+     * @param timestamp
+     *     snapshot timestamp
+     * @return whether a pool has expired since the snapshot
+     */
+    public boolean hasPoolsExpiredSince(String ownerId, Date timestamp) {
+        Number count = (Number) this.getEntityManager()
+            .createNativeQuery("SELECT COUNT(*) FROM cp_pool WHERE owner_id = :owner_id " +
+                "AND enddate >= :timestamp AND enddate < now()")
+            .setParameter("owner_id", ownerId)
+            .setParameter("timestamp", timestamp)
+            .unwrap(NativeQuery.class)
+            .addSynchronizedEntityClass(Pool.class)
+            .getSingleResult();
+        return count.longValue() > 0;
+    }
+
+    private List<ProductContent> getContentByOwner(String ownerId, boolean exportV2) {
         // Use CTEs to fetch the graph of active products from which we will pull content
 
         // Impl note:
@@ -697,7 +731,8 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
             WITH RECURSIVE pool_products (product_uuid) AS (
                 SELECT DISTINCT pool.product_uuid
                     FROM cp_pool pool
-                    WHERE pool.owner_id = :owner_id AND now() BETWEEN pool.startdate AND pool.enddate
+                    WHERE pool.owner_id = :owner_id AND now() <= pool.enddate
+                        AND (:include_future = true OR now() >= pool.startdate)
             ),
             pcmap_anchor (product_uuid, child_uuid) AS (
                 SELECT uuid AS product_uuid, derived_product_uuid AS child_uuid
@@ -726,6 +761,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
                 FROM cp_product_contents pc
                 JOIN active_products ap ON ap.uuid = pc.product_uuid
                 JOIN cp_contents content ON content.uuid = pc.content_uuid
+                WHERE (:global_only = false OR content.namespace = '')
             """;
 
         // TODO: Convert this to a TupleTransformer when we jump to Hibernate 6
@@ -744,6 +780,8 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         return this.getEntityManager()
             .createNativeQuery(sql)
             .setParameter("owner_id", ownerId)
+            .setParameter("include_future", exportV2)
+            .setParameter("global_only", exportV2)
             .unwrap(NativeQuery.class)
             .addSynchronizedEntityClass(Pool.class)
             .addSynchronizedEntityClass(Product.class)

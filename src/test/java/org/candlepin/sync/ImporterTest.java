@@ -81,6 +81,11 @@ import org.candlepin.pki.certs.ContentAccessPayloadBuilderProvider;
 import org.candlepin.pki.certs.EntitlementPayloadGenerator;
 import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.pki.certs.SCACertificateGenerator;
+import org.candlepin.pki.certs.ScaCertificateDataProvider;
+import org.candlepin.pki.certs.ScaCertificateEncoder;
+import org.candlepin.pki.certs.ScaCertificateLifecycle;
+import org.candlepin.pki.certs.ScaContentDataProvider;
+import org.candlepin.pki.certs.ScaPayloadEncoder;
 import org.candlepin.pki.certs.V3CapabilityCheck;
 import org.candlepin.pki.huffman.Huffman;
 import org.candlepin.pki.util.ConsumerKeyPairGenerator;
@@ -1611,24 +1616,19 @@ public class ImporterTest extends DatabaseTestFixture {
         X509V3ExtensionUtil v3ExtensionUtil
             = new X509V3ExtensionUtil(this.config, this.entitlementCurator, new Huffman());
         V3CapabilityCheck v3CapabilityCheck = new V3CapabilityCheck(this.consumerTypeCurator);
+        ScaCertificateDataProvider certificateDataProvider = new ScaCertificateDataProvider(this.environmentCurator);
+        ScaCertificateEncoder certificateEncoder = new ScaCertificateEncoder(cryptoManager,
+            CryptoUtil.getPemEncoder(), new Huffman());
+        ScaCertificateLifecycle certificateLifecycle = new ScaCertificateLifecycle(this.config,
+            CryptoUtil.getPemEncoder(), keyPairGenerator, certificateDataProvider, certificateEncoder,
+            this.caCertCurator, this.certSerialCurator);
         ContentAccessPayloadBuilderProvider payloadBuilderProvider = new ContentAccessPayloadBuilderProvider(
-            cryptoManager,
-            new EntitlementPayloadGenerator(this.mapper),
-            v3ExtensionUtil,
-            this.contentCurator,
+            new ScaContentDataProvider(this.config, this.contentCurator, v3ExtensionUtil),
+            new ScaPayloadEncoder(cryptoManager, new EntitlementPayloadGenerator(this.mapper)),
             this.caPayloadCurator);
 
-        return new SCACertificateGenerator(
-            this.config,
-            cryptoManager,
-            CryptoUtil.getPemEncoder(),
-            keyPairGenerator,
-            v3ExtensionUtil,
-            v3CapabilityCheck,
-            payloadBuilderProvider,
-            this.caCertCurator,
-            this.certSerialCurator,
-            this.environmentCurator);
+        return new SCACertificateGenerator(cryptoManager, v3CapabilityCheck, payloadBuilderProvider,
+            certificateDataProvider, certificateLifecycle);
     }
 
     private File[] createUpstreamFiles() throws URISyntaxException {

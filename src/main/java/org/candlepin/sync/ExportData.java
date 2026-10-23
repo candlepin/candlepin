@@ -27,7 +27,13 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.SCACertificate;
+import org.candlepin.pki.CryptoCapabilitiesException;
+import org.candlepin.pki.certs.CertificateCreationException;
+import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
+import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.version.VersionUtil;
 
 import java.nio.file.Path;
@@ -87,6 +93,7 @@ public class ExportData {
      */
     private final ModelTranslator modelTranslator;
 
+    private final SCACertificate scaCertificate;
     /**
      * Metadata captured when this export data is constructed
      */
@@ -103,6 +110,7 @@ public class ExportData {
      * Exported subscriptions keyed by subscription ID
      */
     private final Map<String, SubscriptionDTO> subscriptions = new HashMap<>();
+    private final Map<String, List<ProductContent>> certificateContent = new HashMap<>();
 
     /**
      * Assembles the data for an export of the supplied consumer's owner
@@ -123,11 +131,13 @@ public class ExportData {
      *     if any argument is null
      */
     public ExportData(Consumer consumer, ModelTranslator modelTranslator, Configuration configuration, PoolCurator poolCurator,
-        ProductCurator productCurator, PrincipalProvider principalProvider) {
+        ProductCurator productCurator, PrincipalProvider principalProvider,
+        SCACertificateGenerator scaCertificateGenerator) throws ExportCreationException {
         this.poolCurator = Objects.requireNonNull(poolCurator);
         this.productCurator = Objects.requireNonNull(productCurator);
         this.configuration = Objects.requireNonNull(configuration);
         this.modelTranslator = Objects.requireNonNull(modelTranslator);
+        Objects.requireNonNull(scaCertificateGenerator);
         Objects.requireNonNull(principalProvider);
         Objects.requireNonNull(consumer);
 
@@ -136,6 +146,21 @@ public class ExportData {
             .setUrlWeb(this.getWebAppUrl());
         this.metaDTO = createMeta(configuration, principalProvider);
         this.addProductsByConsumer(consumer);
+        try {
+            this.scaCertificate = scaCertificateGenerator.generateScaCertificate(consumer, this.getCertificateContent());
+        }
+        catch (CertificateCreationException | CryptoCapabilitiesException | ConcurrentContentPayloadCreationException e) {
+            throw new ExportCreationException("Unable to create export archive", e);
+        }
+    }
+
+    /**
+     * Retrieves the SCA certificate generated from the exported product content
+     *
+     * @return the export certificate
+     */
+    public SCACertificate getScaCertificate() {
+        return this.scaCertificate;
     }
 
     /**
@@ -154,6 +179,17 @@ public class ExportData {
      */
     public Map<String, ProductDTO> getProducts() {
         return products;
+    }
+
+    /**
+     * Retrieves the content links represented in the exported product JSON
+     *
+     * @return selected content links, retaining each product's enabled state
+     */
+    private List<ProductContent> getCertificateContent() {
+        return this.certificateContent.values().stream()
+            .flatMap(List::stream)
+            .toList();
     }
 
     /**
@@ -228,8 +264,19 @@ public class ExportData {
             pool.getSubscriptionId(),
             this.modelTranslator.translate(pool, SubscriptionDTO.class)));
 
-        products.forEach(product -> this.products.put(product.getId(), this.modelTranslator.translate(product,
-            ProductDTO.class)));
+        for (Product product : products) {
+            ProductDTO dto = this.modelTranslator.translate(product, ProductDTO.class);
+            this.products.put(product.getId(), dto);
+            Map<String, ProductContent> content = new HashMap<>();
+            for (ProductContent link : product.getProductContent()) {
+                String contentId = link.getContent().getId();
+                if (dto.getProductContent().containsKey(contentId)) {
+                    content.put(contentId, new ProductContent(link.getContent(),
+                        dto.getProductContent().get(contentId).isEnabled()));
+                }
+            }
+            this.certificateContent.put(product.getId(), List.copyOf(content.values()));
+        }
     }
 
     /**
