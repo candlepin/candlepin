@@ -47,14 +47,17 @@ class BasicAuthSpecTest {
     }
 
     @Test
-    void shouldHideWhetherUserExists() {
+    void shouldReturnInvalidCredentialsForIncorrectUsernamesOrPasswords() {
         ApiClient admin = ApiClients.admin();
         OwnerDTO owner = admin.owners().createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, owner);
         ObjectMapper mapper = new ObjectMapper();
 
-        for (String username : List.of(user.getUsername(), user.getUsername() + "-missing")) {
-            ApiClient client = ApiClients.basic(username, "wrong-password");
+        List<ApiClient> clients = List.of(
+            ApiClients.basic(user.getUsername(), "wrong-password"),
+            ApiClients.basic(user.getUsername() + "-missing", user.getPassword()),
+            ApiClients.basic(user.getUsername(), ""));
+        for (ApiClient client : clients) {
             ApiException failure = catchApiException(client.consumerTypes()::getConsumerTypes);
 
             assertThat(failure.getCode()).isEqualTo(401);
