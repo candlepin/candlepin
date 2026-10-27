@@ -15,6 +15,15 @@ dependencies {
 
     // Plugins are not yet available in convention plugins, so we have to load it here.
     implementation(libs.test.logger.plugin)
+
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly(libs.junit.platform.launcher)
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
 }
 
 gradlePlugin {

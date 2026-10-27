@@ -21,6 +21,7 @@ maven-build-helper-plugin = "3.6.2"
 maven-compiler-plugin = "3.16.0"
 maven-exec-plugin = "3.6.4"
 maven-jar-plugin = "3.5.1"
+maven-lockfile = "5.18.6"
 maven-resources-plugin = "3.5.0"
 maven-war-plugin = "3.5.1"
 
@@ -120,6 +121,7 @@ test-logger-plugin = { module = "com.adarshr:gradle-test-logger-plugin", version
 
 # These library entries exist solely so Dependabot can map the version aliases above to real Maven
 # coordinates. They are NOT used as Gradle dependencies: PomGenerator reads only the [versions] entries.
+maven-lockfile-extension = { module = "io.github.chains-project:maven-lockfile", version.ref = "maven-lockfile" }
 mvn-build-helper-plugin = { module = "org.codehaus.mojo:build-helper-maven-plugin", version.ref = "maven-build-helper-plugin" }
 mvn-compiler-plugin = { module = "org.apache.maven.plugins:maven-compiler-plugin", version.ref = "maven-compiler-plugin" }
 mvn-exec-plugin = { module = "org.codehaus.mojo:exec-maven-plugin", version.ref = "maven-exec-plugin" }

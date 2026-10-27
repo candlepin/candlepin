@@ -45,9 +45,9 @@ class PomGeneratorExtension {
 }
 
 /**
- * Generates a Maven multi-module pom.xml hierarchy that mirrors the Gradle build configuration.
+ * Generates a Maven multi-module POM hierarchy that mirrors the Gradle build configuration.
  *
- * <p>Produces three files: a parent pom, a WAR module pom, and an API JAR module pom.
+ * <p>Produces three POM files and the Maven lockfile core-extension configuration for the WAR module.
  * All dependency versions, plugin versions, and build settings are read dynamically
  * from the Gradle project model so the output stays in sync with build.gradle and the
  * version catalog.
@@ -77,6 +77,13 @@ class PomGeneratorTask extends DefaultTask {
     @Input
     String getProjectVersion() {
         return project.version.toString()
+    }
+
+    @Input
+    String getMavenLockfileVersion() {
+        def catalog = project.extensions.getByType(
+            org.gradle.api.artifacts.VersionCatalogsExtension).named("libs")
+        return catalog.findVersion("maven-lockfile").get().toString()
     }
 
     @Input
@@ -121,12 +128,13 @@ class PomGeneratorTask extends DefaultTask {
         return [
             new File(baseDir, "pom.xml"),
             new File(baseDir, "maven/war/pom.xml"),
-            new File(baseDir, "maven/api/pom.xml")
+            new File(baseDir, "maven/api/pom.xml"),
+            new File(baseDir, "maven/war/.mvn/extensions.xml")
         ]
     }
 
     /**
-     * Collects all build metadata from the Gradle project and writes the three pom.xml files.
+     * Collects build metadata from the Gradle project and writes the generated POMs and WAR extension configuration.
      */
     @TaskAction
     void generate() {
@@ -152,8 +160,31 @@ class PomGeneratorTask extends DefaultTask {
         List<String> apiJarIncludes = collectApiJarIncludes()
         writeWarPom(baseDir, projectVersion, allDeclaredDeps)
         writeApiPom(baseDir, projectVersion, allDeclaredDeps, apiJarIncludes)
+        writeMavenLockfileExtension(baseDir, getMavenLockfileVersion())
 
         logger.lifecycle("Generated Maven multi-module project at: ${baseDir.canonicalPath}")
+    }
+
+    /** Writes the Maven lockfile core extension configuration for the WAR module. */
+    void writeMavenLockfileExtension(File baseDir, String extensionVersion) {
+        File extensionFile = new File(baseDir, "maven/war/.mvn/extensions.xml")
+        extensionFile.parentFile.mkdirs()
+
+        StringWriter sw = new StringWriter()
+        MarkupBuilder xml = new MarkupBuilder(new IndentPrinter(sw, "    "))
+        xml.doubleQuotes = true
+        xml.mkp.xmlDeclaration(version: "1.0", encoding: "UTF-8")
+
+        xml."extensions"(xmlns: "http://maven.apache.org/EXTENSIONS/1.2.0") {
+            extension {
+                groupId("io.github.chains-project")
+                artifactId("maven-lockfile")
+                version(extensionVersion)
+            }
+        }
+
+        extensionFile.setText(sw.toString(), "UTF-8")
+        logger.lifecycle("Generated: ${extensionFile.canonicalPath}")
     }
 
     /** Resolves the output directory from the extension, falling back to the project root. */
@@ -941,7 +972,7 @@ class PomGenerator implements Plugin<Project> {
         project.extensions.create("pomGenerator", PomGeneratorExtension)
         project.tasks.register("generatePom", PomGeneratorTask) {
             group = "build"
-            description = "Generate Maven multi-module pom.xml files from Gradle configuration"
+            description = "Generate Maven POM files and lockfile extension from Gradle configuration"
         }
     }
 }
