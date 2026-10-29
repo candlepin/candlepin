@@ -39,6 +39,7 @@ import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.PoolService;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.paging.Page;
@@ -51,6 +52,7 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.hamcrest.Matchers;
+import org.hibernate.SessionEventListener;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -75,6 +77,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -138,6 +141,169 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         consumer = this.createMockConsumer(owner, false);
         consumer.setFact("cpu_cores", "4");
         consumer = consumerCurator.merge(consumer);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void testListByOwnerForExportV2(boolean filterNamespaces) {
+        Owner owner = this.createOwner();
+        Owner otherOwner = this.createOwner();
+        Product product = this.createProduct(TestUtil.createProduct().setNamespace(""));
+        Product otherProduct = this.createProduct(TestUtil.createProduct().setNamespace("other-namespace"));
+        Pool normalPool = this.createPool(owner, product);
+        Pool bonusPool = this.createPool(owner, product);
+        bonusPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+        this.poolCurator.merge(bonusPool);
+        this.createPool(otherOwner, product);
+        Pool namespacedPool = this.createPool(owner, otherProduct);
+        this.poolCurator.flush();
+        this.poolCurator.clear();
+
+        assertThat(this.poolCurator.listByOwnerTypeWithNamespaceFilter(owner.getId(), filterNamespaces,
+            PoolType.NORMAL, PoolType.BONUS))
+            .extracting(PoolExportProjection::poolId)
+            .containsExactlyInAnyOrderElementsOf(filterNamespaces ?
+                List.of(normalPool.getId(), bonusPool.getId()) :
+                List.of(normalPool.getId(), bonusPool.getId(), namespacedPool.getId()));
+        assertThat(this.poolCurator.listByOwnerTypeWithNamespaceFilter(owner.getId(), filterNamespaces, PoolType.NORMAL))
+            .extracting(PoolExportProjection::poolId)
+            .containsExactlyInAnyOrderElementsOf(filterNamespaces ?
+                List.of(normalPool.getId()) : List.of(normalPool.getId(), namespacedPool.getId()));
+        assertThat(this.poolCurator.listByOwnerTypeWithNamespaceFilter(owner.getId(), filterNamespaces,
+            PoolType.STACK_DERIVED)).isEmpty();
+        assertThat(this.poolCurator.listByOwnerTypeWithNamespaceFilter(owner.getId(), filterNamespaces)).isEmpty();
+        assertThat(this.poolCurator.listByOwnerTypeWithNamespaceFilter(owner.getId(), filterNamespaces,
+            (PoolType[]) null)).isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void testListByOwnerForExportV2ExcludesExpiredPoolsAndIncludesFuturePools(boolean filterNamespaces) {
+        Owner owner = this.createOwner();
+        Product product = this.createProduct(TestUtil.createProduct().setNamespace(""));
+        Instant now = Instant.now();
+        Pool active = this.createPool(owner, product, 1L, Date.from(now.minus(1, ChronoUnit.DAYS)),
+            Date.from(now.plus(1, ChronoUnit.DAYS)));
+        Pool future = this.createPool(owner, product, 1L, Date.from(now.plus(1, ChronoUnit.DAYS)),
+            Date.from(now.plus(2, ChronoUnit.DAYS)));
+        this.createPool(owner, product, 1L, Date.from(now.minus(2, ChronoUnit.DAYS)),
+            Date.from(now.minus(1, ChronoUnit.MINUTES)));
+        Product namespaced = this.createProduct(TestUtil.createProduct().setNamespace("private"));
+        this.createPool(owner, namespaced, 1L, Date.from(now.minus(2, ChronoUnit.DAYS)),
+            Date.from(now.minus(1, ChronoUnit.MINUTES)));
+        this.poolCurator.flush();
+        this.poolCurator.clear();
+
+        assertThat(this.poolCurator.listByOwnerTypeWithNamespaceFilter(owner.getId(), filterNamespaces, PoolType.NORMAL))
+            .extracting(PoolExportProjection::poolId)
+            .containsExactlyInAnyOrder(active.getId(), future.getId());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = { "unknown-owner" })
+    public void testListByOwnerForExportV2WithInvalidOwner(String ownerId) {
+        assertThat(this.poolCurator.listByOwnerTypeWithNamespaceFilter(ownerId, true, PoolType.NORMAL)).isEmpty();
+        assertThat(this.poolCurator.listByOwnerTypeWithNamespaceFilter(ownerId, false, PoolType.NORMAL)).isEmpty();
+    }
+
+    @Test
+    public void testExportProjectionValuesAndMissingSubscription() {
+        Owner owner = this.createOwner();
+        Product product = this.createProduct(TestUtil.createProduct().setNamespace(""));
+        Pool pool = this.createPool(owner, product);
+        pool.setContractNumber("contract");
+        pool.setAccountNumber("account");
+        this.poolCurator.merge(pool);
+        Pool withoutSubscription = this.createPool(owner, product);
+        withoutSubscription.setSourceSubscription(null);
+        withoutSubscription.setContractNumber(null);
+        withoutSubscription.setAccountNumber(null);
+        this.poolCurator.merge(withoutSubscription);
+        this.poolCurator.flush();
+        this.poolCurator.clear();
+
+        List<PoolExportProjection> results = this.poolCurator.listByOwnerTypeWithNamespaceFilter(
+            owner.getId(), true, PoolType.NORMAL);
+        assertThat(results).hasSize(2);
+        PoolExportProjection projected = results.stream()
+            .filter(row -> row.poolId().equals(pool.getId()))
+            .findFirst()
+            .orElseThrow();
+        assertThat(projected.poolId()).isEqualTo(pool.getId());
+        assertThat(projected.productUuid()).isEqualTo(product.getUuid());
+        assertThat(projected.productId()).isEqualTo(product.getId());
+        assertThat(projected.subscriptionId()).isEqualTo(pool.getSubscriptionId());
+        assertThat(projected.created()).hasTime(pool.getCreated().getTime());
+        assertThat(projected.updated()).hasTime(pool.getUpdated().getTime());
+        assertThat(projected.startDate()).hasTime(pool.getStartDate().getTime());
+        assertThat(projected.endDate()).hasTime(pool.getEndDate().getTime());
+        assertThat(projected.contractNumber()).isEqualTo("contract");
+        assertThat(projected.accountNumber()).isEqualTo("account");
+        assertThat(results.stream().filter(row -> row.poolId().equals(withoutSubscription.getId())))
+            .singleElement()
+            .satisfies(row -> {
+                assertThat(row.subscriptionId()).isNull();
+                assertThat(row.contractNumber()).isNull();
+                assertThat(row.accountNumber()).isNull();
+            });
+    }
+
+    @Test
+    public void testExportProjectionRetainsPoolsSharingSubscriptionId() {
+        Owner owner = this.createOwner();
+        Product product = this.createProduct(TestUtil.createProduct().setNamespace(""));
+        Pool first = this.createPool(owner, product);
+        Pool second = this.createPool(owner, product);
+        second.setSubscriptionId(first.getSubscriptionId());
+        second.setSubscriptionSubKey("second");
+        this.poolCurator.merge(second);
+        this.poolCurator.flush();
+        this.poolCurator.clear();
+
+        List<PoolExportProjection> results = this.poolCurator.listByOwnerTypeWithNamespaceFilter(
+            owner.getId(), true, PoolType.NORMAL);
+        assertThat(results).extracting(PoolExportProjection::poolId)
+            .containsExactlyInAnyOrder(first.getId(), second.getId());
+        assertThat(results).extracting(PoolExportProjection::subscriptionId)
+            .containsExactly(first.getSubscriptionId(), first.getSubscriptionId());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 10, 100})
+    public void testExportProjectionUsesOneQueryWithoutLoadingEntities(int poolCount) {
+        Owner owner = this.createOwner();
+        for (int i = 0; i < poolCount; i++) {
+            Product product = this.createProduct(TestUtil.createProduct().setNamespace(""));
+            this.createPool(owner, product);
+        }
+        this.poolCurator.flush();
+        this.poolCurator.clear();
+        AtomicInteger statements = new AtomicInteger();
+        this.getCurrentSession().addEventListeners(new SessionEventListener() {
+            @Override
+            public void jdbcPrepareStatementStart() {
+                statements.incrementAndGet();
+            }
+        });
+
+        List<PoolExportProjection> results = this.poolCurator.listByOwnerTypeWithNamespaceFilter(
+            owner.getId(), true, PoolType.NORMAL);
+        assertThat(results).hasSize(poolCount);
+        assertThat(results).allSatisfy(row -> {
+            assertThat(row.poolId()).isNotNull();
+            assertThat(row.productUuid()).isNotNull();
+            assertThat(row.productId()).isNotNull();
+            assertThat(row.subscriptionId()).isNotNull();
+            assertThat(row.created()).isNotNull();
+            assertThat(row.updated()).isNotNull();
+            assertThat(row.startDate()).isNotNull();
+            assertThat(row.endDate()).isNotNull();
+            assertThat(row.contractNumber()).isNotNull();
+            assertThat(row.accountNumber()).isNotNull();
+        });
+        assertThat(statements.get()).isEqualTo(1);
+        assertThat(this.getCurrentSession().getStatistics().getEntityCount()).isZero();
     }
 
     public static Stream<Arguments> schemeSource() {

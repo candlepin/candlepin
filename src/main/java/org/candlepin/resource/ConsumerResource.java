@@ -19,6 +19,7 @@ import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.EntitleByProductsJob;
 import org.candlepin.async.tasks.EntitlerJob;
+import org.candlepin.async.tasks.ExportJobV2;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
@@ -3154,6 +3155,45 @@ public class ConsumerResource implements ConsumerApi {
         catch (JobException e) {
             String errmsg = this.i18n.tr("An unexpected exception occurred " +
                 "while scheduling job \"{0}\"", config.getJobKey());
+            log.error(errmsg, e);
+            throw new IseException(errmsg, e);
+        }
+
+        return this.translator.translate(job, AsyncJobStatusDTO.class);
+    }
+
+    /**
+     * Queues asynchronous generation and storage of a version 2 manifest for a consumer
+     * <p>
+     * Looks up the consumer and its owner, delegates export eligibility validation and job configuration
+     * to the manifest manager, and queues the export job. The returned status identifies the job to poll;
+     * after successful completion, its result supplies the export ID and download link for the stored manifest.
+     * Manifest generation runs in the background and uses the configured API and web application URLs.
+     *
+     * @param consumerUuid
+     *     UUID of the manifest consumer whose owner's subscriptions and products are to be exported
+     * @throws ForbiddenException
+     *     if the consumer's type does not support manifest exports
+     * @throws IseException
+     *     if the export job cannot be queued
+     * @return the status of the queued export job
+     */
+    @Override
+    public AsyncJobStatusDTO exportDataAsyncV2(@Verify(Consumer.class) String consumerUuid) {
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+
+        JobConfig<ExportJobV2.ExportJobConfigV2> jobConfig = manifestManager.generateManifestAsyncV2(consumerUuid, owner);
+
+        AsyncJobStatus job = null;
+
+        try {
+            job = this.jobManager.queueJob(jobConfig);
+        }
+        catch (JobException e) {
+            String errmsg = this.i18n.tr("An unexpected exception occurred " +
+                "while scheduling job \"{0}\"", jobConfig.getJobKey());
             log.error(errmsg, e);
             throw new IseException(errmsg, e);
         }

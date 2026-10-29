@@ -113,6 +113,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolExportProjection;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
@@ -296,6 +297,28 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new org.candlepin.dto.manifest.v1.UpstreamConsumerTranslator(),
             UpstreamConsumer.class, org.candlepin.dto.manifest.v1.UpstreamConsumerDTO.class);
+        // V2 Export DTO translators
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v2.ConsumerTranslator(consumerTypeCurator),
+            Consumer.class, org.candlepin.dto.manifest.v2.ConsumerDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v2.BrandingTranslator(),
+            Branding.class, org.candlepin.dto.manifest.v2.BrandingDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v2.ConsumerTypeTranslator(),
+            ConsumerType.class, org.candlepin.dto.manifest.v2.ConsumerTypeDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v2.ContentTranslator(),
+            Content.class, org.candlepin.dto.manifest.v2.ContentDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v2.ProductTranslator(),
+            Product.class, org.candlepin.dto.manifest.v2.ProductDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v2.PoolExportProjectionTranslator(),
+            PoolExportProjection.class, org.candlepin.dto.manifest.v2.SubscriptionDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v2.MetaTranslator(),
+            org.candlepin.sync.Meta.class, org.candlepin.dto.manifest.v2.MetaDTO.class);
 
         // Shims
         /////////////////////////////////////////////

@@ -16,6 +16,7 @@ package org.candlepin.controller;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -32,11 +33,14 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
+import org.candlepin.async.tasks.ExportJobV2;
 import org.candlepin.async.tasks.ImportJob;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.config.Configuration;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
@@ -53,6 +57,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ExportResult;
 import org.candlepin.sync.Exporter;
+import org.candlepin.sync.ExporterV2;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.Importer.Conflict;
 import org.candlepin.sync.file.ManifestFile;
@@ -73,6 +78,7 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.File;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -87,6 +93,7 @@ public class ManifestManagerTest {
 
     @Mock private ManifestFileService fileService;
     @Mock private Exporter exporter;
+    @Mock private ExporterV2 exporterV2;
     @Mock private Importer importer;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
@@ -98,14 +105,17 @@ public class ManifestManagerTest {
     @Mock private I18n i18n;
     @Mock private EventSink eventSink;
     @Mock private EventFactory eventFactory;
+    @Mock private ModelTranslator modelTranslator;
+    @Mock private Configuration config;
 
     private ManifestManager manager;
 
     @BeforeEach
     public void setupTest() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        manager = new ManifestManager(fileService, exporter, importer, consumerCurator, consumerTypeCurator,
-            entitlementCurator, cdnCurator, poolManager, principalProvider, i18n, eventSink, eventFactory);
+        manager = new ManifestManager(fileService, exporter, exporterV2, importer, consumerCurator, consumerTypeCurator,
+            entitlementCurator, cdnCurator, poolManager, principalProvider, i18n, eventSink, eventFactory
+        );
     }
 
     protected Consumer createMockConsumer(Owner owner, boolean manifestDistributor) {
@@ -129,6 +139,54 @@ public class ManifestManagerTest {
 
     protected Consumer createMockConsumer(boolean manifestDistributor) {
         return createMockConsumer(TestUtil.createOwner(), manifestDistributor);
+    }
+
+    @Test
+    public void testGenerateManifestAsyncV2() {
+        Owner owner = TestUtil.createOwner();
+        Consumer consumer = this.createMockConsumer(owner, true);
+
+        when(consumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
+
+        JobConfig<ExportJobV2.ExportJobConfigV2> jobConfig = manager.generateManifestAsyncV2(consumer.getUuid(), owner);
+
+        assertNotNull(jobConfig);
+        assertEquals(ExportJobV2.JOB_KEY, jobConfig.getJobKey());
+        assertEquals(ExportJobV2.JOB_NAME, jobConfig.getJobName());
+        assertEquals(consumer.getUuid(), jobConfig.getJobArguments().getAsString(ExportJobV2.CONSUMER_KEY));
+    }
+
+    @Test
+    public void testGenerateAndStoreManifestV2() throws Exception {
+        Consumer consumer = this.createMockConsumer(true);
+
+        Event event = mock(Event.class);
+        when(eventFactory.exportCreated(eq(consumer))).thenReturn(event);
+
+        UserPrincipal principal = TestUtil.createOwnerPrincipal();
+        when(principalProvider.get()).thenReturn(principal);
+
+        String exportId = "export-id";
+        ManifestFile manifest = mock(ManifestFile.class);
+        Path exportPath = mock(Path.class);
+        File exportFile = mock(File.class);
+        when(exporterV2.getFullExport(consumer)).thenReturn(exportPath);
+        when(exportPath.toFile()).thenReturn(exportFile);
+        when(manifest.getId()).thenReturn(exportId);
+        when(fileService.store(eq(ManifestFileType.EXPORT), eq(exportFile),
+            eq(principal.getName()), any(String.class))).thenReturn(manifest);
+        when(consumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
+
+        ExportResult result = manager.generateAndStoreManifestV2(consumer.getUuid());
+
+        assertEquals(consumer.getUuid(), result.getExportedConsumer());
+        assertEquals(exportId, result.getExportId());
+
+        verify(exporterV2).getFullExport(consumer);
+
+        verify(eventFactory).exportCreated(consumer);
+        verify(eventSink).queueEvent(event);
+        verify(fileService).delete(ManifestFileType.EXPORT, consumer.getUuid());
     }
 
     @Test
