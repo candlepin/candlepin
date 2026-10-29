@@ -1473,6 +1473,18 @@ public class ConsumerResourceTest {
     }
 
     @Test
+    public void testAsyncExportV2() {
+        Owner owner = this.createOwner();
+        owner.setId(TestUtil.randomString());
+        when(ownerCurator.findOwnerById(owner.getId())).thenReturn(owner);
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN));
+        Consumer consumer = this.createConsumer(owner, ctype);
+
+        consumerResource.exportDataAsyncV2(consumer.getUuid());
+        verify(manifestManager).generateManifestAsyncV2(consumer.getUuid(), owner);
+    }
+
+    @Test
     public void deleteConsumerThrowsGoneExceptionIfConsumerDoesNotExistOnInitialLookup() {
         String targetConsumerUuid = "my-test-consumer";
         when(consumerCurator.findByUuid(targetConsumerUuid)).thenReturn(null);
