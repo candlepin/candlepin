@@ -14,21 +14,14 @@
  */
 package org.candlepin.pki.certs;
 
-import org.candlepin.controller.util.ContentPathBuilder;
-import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ContentAccessPayload;
 import org.candlepin.model.ContentAccessPayloadCurator;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
-import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.Scheme;
 import org.candlepin.util.Util;
-import org.candlepin.util.X509V3ExtensionUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,16 +29,14 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HexFormat;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -59,14 +50,12 @@ import jakarta.persistence.PersistenceException;
 public class ContentAccessPayloadBuilder {
     private static final Logger log = LoggerFactory.getLogger(ContentAccessPayloadBuilder.class);
 
-    private static final int CONTENT_ACCESS_PAYLOAD_KEY_VERSION = 2;
+    private static final int CONTENT_ACCESS_PAYLOAD_KEY_VERSION = 3;
     private static final String KEY_HASH_ALGORITHM = "SHA-256";
     private static final HexFormat HEX_FORMATTER = HexFormat.of();
 
-    private final CryptoManager cryptoManager;
-    private final EntitlementPayloadGenerator entitlementPayloadGenerator;
-    private final X509V3ExtensionUtil v3ExtensionUtil;
-    private final ContentCurator contentCurator;
+    private final ScaContentDataProvider dataProvider;
+    private final ScaPayloadEncoder encoder;
     private final ContentAccessPayloadCurator contentAccessPayloadCurator;
 
     // Collected builder state
@@ -74,19 +63,26 @@ public class ContentAccessPayloadBuilder {
     private Consumer consumer;
     private List<Environment> environments;
     private Scheme scheme;
+    private List<ProductContent> exportContent;
 
-    public ContentAccessPayloadBuilder(
-        CryptoManager cryptoManager,
-        EntitlementPayloadGenerator entitlementPayloadGenerator,
-        X509V3ExtensionUtil v3ExtensionUtil,
-        ContentCurator contentCurator,
+    public ContentAccessPayloadBuilder(ScaContentDataProvider dataProvider, ScaPayloadEncoder encoder,
         ContentAccessPayloadCurator contentAccessPayloadCurator) {
 
-        this.cryptoManager = Objects.requireNonNull(cryptoManager);
-        this.entitlementPayloadGenerator = Objects.requireNonNull(entitlementPayloadGenerator);
-        this.v3ExtensionUtil = Objects.requireNonNull(v3ExtensionUtil);
-        this.contentCurator = Objects.requireNonNull(contentCurator);
+        this.dataProvider = Objects.requireNonNull(dataProvider);
+        this.encoder = Objects.requireNonNull(encoder);
         this.contentAccessPayloadCurator = Objects.requireNonNull(contentAccessPayloadCurator);
+    }
+
+    /**
+     * Selects the supplied content for an uncached Export V2 payload
+     *
+     * @param content
+     *     the content links selected for the product export; cannot be null
+     * @return this builder
+     */
+    public ContentAccessPayloadBuilder forExportV2(Collection<ProductContent> content) {
+        this.exportContent = List.copyOf(content);
+        return this;
     }
 
     private String getNormalizedArchitectures() {
@@ -123,7 +119,9 @@ public class ContentAccessPayloadBuilder {
      *  a content access payload key
      */
     private String generatePayloadKey() {
-        String input = new StringBuilder("arches:")
+        String input = new StringBuilder("strategy:")
+            .append("export:1")
+            .append("-arches:")
             .append(this.getNormalizedArchitectures())
             .append("-environments:")
             .append(this.getNormalizedEnvironmentIds())
@@ -150,68 +148,12 @@ public class ContentAccessPayloadBuilder {
         Date payloadTimestamp = payload.getTimestamp();
 
         Stream<Date> ownerContentUpdate = Stream.of(this.owner.getLastContentUpdate());
-        Stream<Date> envContentUpdates = Optional.ofNullable(this.environments)
-            .orElseGet(List::of)
+        Stream<Date> envContentUpdates = Optional.ofNullable(this.environments).orElseGet(List::of)
             .stream()
             .map(Environment::getLastContentUpdate);
 
         return Stream.concat(ownerContentUpdate, envContentUpdates)
             .anyMatch(contentUpdate -> contentUpdate.after(payloadTimestamp));
-    }
-
-    private byte[] generateContentAccessPayload(Date timestamp, Map<String, ProductContent> activateContent,
-        PromotedContent promotedContent) {
-
-        log.info("Generating content access payload for consumer \"{}\"...", this.consumer.getUuid());
-
-        Product engProduct = new Product()
-            .setId("content_access")
-            .setName(" Content Access") // why is there a leading space here?
-            .setProductContent(activateContent.values());
-
-        Product skuProduct = new Product()
-            .setId("content_access")
-            .setName("Content Access");
-
-        Pool emptyPool = new Pool()
-            .setProduct(skuProduct)
-            .setStartDate(timestamp)
-            .setEndDate(timestamp); // this should probably be now + 1yr or some such, no?
-
-        Set<String> entitledProductIds = Set.of("content-access");
-
-        org.candlepin.model.dto.Product productModel = this.v3ExtensionUtil.mapProduct(engProduct, skuProduct,
-            promotedContent, this.consumer, emptyPool, entitledProductIds);
-
-        return this.entitlementPayloadGenerator.generate(List.of(productModel), this.consumer.getUuid(),
-            emptyPool, null);
-    }
-
-    private String buildContentAccessPayload(Date timestamp) {
-        List<Environment> environments = Optional.ofNullable(this.environments)
-            .orElseGet(List::of);
-
-        ContentPathBuilder contentPathBuilder = ContentPathBuilder.from(this.owner, environments);
-        PromotedContent promotedContent = new PromotedContent(contentPathBuilder).withAll(environments);
-
-        Function<ProductContent, String> cidFetcher = pcinfo -> pcinfo.getContent().getId();
-        Map<String, ProductContent> ownerContent = this.contentCurator
-            .getActiveContentByOwner(this.owner.getId())
-            .stream()
-            .collect(Collectors.toMap(cidFetcher, Function.identity(),
-                (v1, v2) -> new ProductContent(v2.getContent(), v1.isEnabled() || v2.isEnabled())));
-
-        byte[] payload = this.generateContentAccessPayload(timestamp, ownerContent, promotedContent);
-        byte[] signature = this.cryptoManager.getSigner(this.scheme)
-            .sign(payload);
-
-        return new StringBuilder("-----BEGIN ENTITLEMENT DATA-----\n")
-            .append(Util.toBase64(payload))
-            .append("-----END ENTITLEMENT DATA-----\n")
-            .append("-----BEGIN SIGNATURE-----\n")
-            .append(Util.toBase64(signature))
-            .append("-----END SIGNATURE-----\n")
-            .toString();
     }
 
     /**
@@ -302,7 +244,8 @@ public class ContentAccessPayloadBuilder {
      * or consumer have not yet been set, this method throws an exception.
      * <p>
      * This method may be called multiple times, and will generate the same payload if the state of the
-     * organization, consumer, and environments does not change between invocations.
+     * organization, consumer, and environments does not change between invocations. Export V2 payloads
+     * always use their supplied content and are neither read from nor written to the cache.
      *
      * @throws IllegalStateException
      *  if the crypto scheme, owner, or consumer has not yet been set
@@ -327,6 +270,16 @@ public class ContentAccessPayloadBuilder {
             throw new IllegalStateException("consumer has not been set");
         }
 
+        if (this.exportContent != null) {
+            Date timestamp = new Date();
+            ScaPayloadData data = this.dataProvider.prepareForExport(this.owner, this.consumer,
+                timestamp.toInstant(), this.exportContent);
+            return new ContentAccessPayload()
+                .setOwner(this.owner)
+                .setTimestamp(timestamp)
+                .setPayload(this.encoder.encode(data, this.scheme));
+        }
+
         String payloadKey = this.generatePayloadKey();
 
         ContentAccessPayload payload = this.contentAccessPayloadCurator
@@ -336,7 +289,10 @@ public class ContentAccessPayloadBuilder {
             log.info("Building content access payload for: {}, {}", owner.getKey(), payloadKey);
 
             Date timestamp = new Date();
-            String payloadData = this.buildContentAccessPayload(timestamp);
+            List<Environment> selectedEnvironments = Optional.ofNullable(this.environments).orElseGet(List::of);
+            ScaPayloadData data = this.dataProvider.gather(this.owner, this.consumer, selectedEnvironments,
+                timestamp.toInstant());
+            String payloadData = this.encoder.encode(data, this.scheme);
 
             if (payload == null) {
                 payload = new ContentAccessPayload()

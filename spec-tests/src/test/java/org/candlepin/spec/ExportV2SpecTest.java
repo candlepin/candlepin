@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.BrandingDTO;
+import org.candlepin.dto.api.client.v1.CapabilityDTO;
 import org.candlepin.dto.api.client.v1.CloudAuthenticationResultDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
@@ -58,21 +59,26 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
+import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.InflaterInputStream;
 
 @SpecTest
 @OnlyInHosted
@@ -80,6 +86,7 @@ public class ExportV2SpecTest {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Test
+    @SuppressWarnings("checkstyle:methodlength")
     public void shouldCreateExportAsync() throws ApiException, IOException {
 
         ApiClient adminClient = ApiClients.admin();
@@ -101,6 +108,8 @@ public class ExportV2SpecTest {
                 .contractNumber("active-contract")
                 .accountNumber("active-account"));
         ProductDTO futureProduct = this.createProductGraph(adminClient);
+        ContentDTO futureContent = adminClient.hosted().createContent(Contents.random().arches("aarch64"));
+        adminClient.hosted().addContentToProduct(futureProduct.getId(), futureContent.getId(), false);
         ProductDTO expiredProduct = this.createProductGraph(adminClient);
         // future subscription
         OffsetDateTime futureStart = OffsetDateTime.now()
@@ -111,8 +120,7 @@ public class ExportV2SpecTest {
                 .accountNumber("future-account")
                 .startDate(futureStart)
                 .endDate(futureStart.plusYears(1)));
-        OffsetDateTime expiredEnd = OffsetDateTime.now()
-            .minusYears(1);
+        OffsetDateTime expiredEnd = OffsetDateTime.now().minusYears(1);
         adminClient.hosted()
             .createSubscription(Subscriptions.random(owner, expiredProduct)
                 .contractNumber("expired-contract")
@@ -132,7 +140,7 @@ public class ExportV2SpecTest {
         ConsumerDTO consumer = adminClient.consumers()
             .createConsumer(Consumers.random(owner, ConsumerTypes.Candlepin)
                 .putFactsItem("distributor_version", "sat-6.19")
-                .capabilities(null));
+                .capabilities(Set.of(new CapabilityDTO().name("cert_v3"))));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
         ProductDTO expectedProduct = adminClient.ownerProducts()
@@ -156,32 +164,83 @@ public class ExportV2SpecTest {
         File export = this.createExportAsync(consumerClient, consumer.getUuid());
         OffsetDateTime exportEnd = OffsetDateTime.now();
 
-        FileSystem archive = FileSystems.newFileSystem(
+        try (FileSystem archive = FileSystems.newFileSystem(
             URI.create("jar:" + export.toURI()),
-            Map.of());
-        JsonNode meta = this.readExportFile(archive, "meta.json");
-        this.assertMeta(meta, exportStart, exportEnd, consumer.getUuid());
-        Set<String> productFiles = this.assertProductFiles(archive, expectedProduct);
-        productFiles.addAll(this.assertProductFiles(archive, expectedFutureProduct));
-        this.assertDirectoryFiles(archive, "products", productFiles);
-        this.assertProductFilesMissing(archive, expiredProduct);
-        this.assertProductFilesMissing(archive, namespacedProduct);
-        assertFalse(Files.exists(archive.getPath("subscriptions/" + namespacedPool.getId() + ".json")));
-        JsonNode exportedRoot = this.readExportFile(archive, "products/" + prod.getId() + ".json");
-        JsonNode exportedDerived = this.readExportFile(archive, "products/" + derivedProduct.getId() + ".json");
-        this.assertField(exportedRoot.get("productContent")
-            .get(content.getId()), "enabled", true);
-        this.assertField(exportedDerived.get("productContent")
-            .get(content.getId()), "enabled", false);
-        this.assertDirectoryFiles(archive, "subscriptions", expectedPools.stream()
-            .map(pool -> pool.getId() + ".json")
-            .collect(Collectors.toSet()));
-        this.assertConsumer(this.readExportFile(archive, "upstream_consumer/consumer.json"),
-            expectedConsumer, meta.get("webAppPrefix"));
-        for (PoolDTO pool : expectedPools) {
-            this.assertSubscription(archive, pool);
+            Map.of())) {
+            JsonNode meta = this.readExportFile(archive, "meta.json");
+            this.assertMeta(meta, exportStart, exportEnd, consumer.getUuid());
+            Set<String> productFiles = this.assertProductFiles(archive, expectedProduct);
+            productFiles.addAll(this.assertProductFiles(archive, expectedFutureProduct));
+            this.assertDirectoryFiles(archive, "products", productFiles);
+            this.assertProductFilesMissing(archive, expiredProduct);
+            this.assertProductFilesMissing(archive, namespacedProduct);
+            assertFalse(Files.exists(archive.getPath("subscriptions/" + namespacedPool.getId() + ".json")));
+            JsonNode exportedRoot = this.readExportFile(archive, "products/" + prod.getId() + ".json");
+            JsonNode exportedDerived = this.readExportFile(archive, "products/" + derivedProduct.getId() + ".json");
+            this.assertField(exportedRoot.get("productContent")
+                .get(content.getId()), "enabled", true);
+            this.assertField(exportedDerived.get("productContent")
+                .get(content.getId()), "enabled", false);
+            this.assertDirectoryFiles(archive, "subscriptions", expectedPools.stream()
+                .map(pool -> pool.getId() + ".json")
+                .collect(Collectors.toSet()));
+            this.assertConsumer(this.readExportFile(archive, "upstream_consumer/consumer.json"),
+                expectedConsumer, meta.get("webAppPrefix"));
+            for (PoolDTO pool : expectedPools) {
+                this.assertSubscription(archive, pool);
+            }
+
+            Path certificateDirectory = archive.getPath("content_access_certificates");
+            try (Stream<Path> certificates = Files.list(certificateDirectory)) {
+                List<Path> certificatePaths = certificates.toList();
+                assertEquals(1, certificatePaths.size());
+                Path certificatePath = certificatePaths.get(0);
+                assertTrue(certificatePath.getFileName().toString().matches("[0-9]+\\.pem"));
+                String certificate = Files.readString(certificatePath);
+                assertTrue(certificate.contains("-----BEGIN CERTIFICATE-----"));
+                assertTrue(certificate.contains("-----BEGIN PRIVATE KEY-----"));
+                String start = "-----BEGIN ENTITLEMENT DATA-----";
+                String encoded = certificate.substring(certificate.indexOf(start) + start.length(),
+                    certificate.indexOf("-----END ENTITLEMENT DATA-----"));
+                byte[] compressed = Base64.getMimeDecoder().decode(encoded);
+                try (InflaterInputStream data = new InflaterInputStream(new ByteArrayInputStream(compressed))) {
+                    JsonNode payload = this.mapper.readTree(new String(data.readAllBytes(), StandardCharsets.UTF_8));
+                    this.assertCertificateContent(payload, expectedProduct, expectedFutureProduct);
+                }
+            }
+        }
+    }
+
+    private void assertCertificateContent(JsonNode payload, ProductDTO... products) {
+        Map<String, Boolean> expected = new HashMap<>();
+        for (ProductDTO product : products) {
+            this.collectCertificateContent(product, expected);
         }
 
+        JsonNode repositories = payload.get("products").get(0).get("content");
+        assertEquals(expected.size(), repositories.size());
+        Map<String, Boolean> actual = new HashMap<>();
+        for (JsonNode repository : repositories) {
+            // Enabled content omits the flag; disabled content explicitly sets it to false.
+            JsonNode enabled = repository.get("enabled");
+            if (enabled != null) {
+                assertTrue(enabled.isBoolean());
+            }
+            actual.put(repository.get("id").asString(), enabled == null || enabled.asBoolean());
+        }
+        assertEquals(expected, actual);
+    }
+
+    private void collectCertificateContent(ProductDTO product, Map<String, Boolean> content) {
+        for (ProductContentDTO entry : product.getProductContent()) {
+            content.merge(entry.getContent().getId(), entry.getEnabled(), Boolean::logicalOr);
+        }
+        if (product.getDerivedProduct() != null) {
+            this.collectCertificateContent(product.getDerivedProduct(), content);
+        }
+        for (ProductDTO provided : product.getProvidedProducts()) {
+            this.collectCertificateContent(provided, content);
+        }
     }
 
     private ProductDTO createActiveProductGraph(ApiClient adminClient) {

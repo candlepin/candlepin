@@ -28,11 +28,17 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolExportProjection;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.pki.CryptoCapabilitiesException;
+import org.candlepin.pki.certs.CertificateCreationException;
+import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
+import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.version.VersionUtil;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,11 +52,11 @@ import jakarta.inject.Singleton;
  * Gathers and translates the data required for a version 2 manifest export
  * <p>
  * Created to support separation of duties in the export code: this class gathers domain data and prepares
- * manifest DTOs, while {@link ExporterV2} handles serialization, archive layout, and file creation.
+ * manifest DTOs and an SCA certificate, while {@link ExporterV2} handles serialization, archive layout, and file creation.
  * <p>
  * Aggregation translates the supplied consumer into a {@link ConsumerDTO} and sets its API and web URLs
- * from configuration. It also builds a {@link MetaDTO} containing the manifest format version,
- * creation time, current principal's name, and configured web URL.
+ * from configuration. It also builds a {@link MetaDTO} containing the manifest format version {@code 2.0.0},
+ * Candlepin version and release, creation time, current principal's name, and configured web URL.
  * <p>
  * Subscription selection uses the consumer's owner, rather than the consumer's entitlements. The pool
  * curator loads that owner's unexpired {@link Pool.PoolType#NORMAL} pools, including pools whose start
@@ -61,8 +67,12 @@ import jakarta.inject.Singleton;
  * product curator initializes branding, content, and product relationships for translation. The same
  * namespace setting applies throughout traversal: when enabled, non-global products are excluded and
  * traversal stops at them. Each selected pool projection supplies a {@link SubscriptionDTO}, keyed by
- * pool ID, and each resolved product into a {@link ProductDTO}, keyed by product ID. Repeated
+ * pool ID, and each resolved product supplies a {@link ProductDTO}, keyed by product ID. Repeated
  * IDs replace earlier map entries.
+ * <p>
+ * Content associations from the translated products supply the SCA certificate payload. Enabled flags
+ * come from the DTOs, and content shared by different products retains its per-product associations.
+ * The certificate generator creates the certificate and private key included in the export.
  * <p>
  * This singleton retains only injected dependencies. Each call to {@link #aggregate(Consumer)} creates
  * separate export data, reads the current configuration and principal, and captures the work directory
@@ -74,11 +84,30 @@ import jakarta.inject.Singleton;
  */
 @Singleton
 public class ExportDataAggregator {
+    /**
+     * Export settings read for each aggregation
+     */
     private final Configuration configuration;
+    /**
+     * Queries for eligible owner pool projections
+     */
     private final PoolCurator poolCurator;
+    /**
+     * Recursive product graph loading for translation
+     */
     private final ProductCurator productCurator;
+    /**
+     * Translation of domain data into manifest DTOs
+     */
     private final ModelTranslator modelTranslator;
+    /**
+     * Current principal used to identify the export creator
+     */
     private final PrincipalProvider principalProvider;
+    /**
+     * Certificate generation from the exported content associations
+     */
+    private final SCACertificateGenerator scaCertificateGenerator;
 
     /**
      * Initializes the dependencies used to gather export data
@@ -93,29 +122,38 @@ public class ExportDataAggregator {
      *     curator used to resolve pool products and their related products
      * @param principalProvider
      *     provider of the principal creating each export
+     * @param scaCertificateGenerator
+     *     generator for the export certificate and its content payload
      * @throws NullPointerException
      *     if any dependency is null
      */
     @Inject
     public ExportDataAggregator(ModelTranslator modelTranslator, Configuration configuration, PoolCurator poolCurator,
-        ProductCurator productCurator, PrincipalProvider principalProvider) {
+        ProductCurator productCurator, PrincipalProvider principalProvider, SCACertificateGenerator scaCertificateGenerator) {
         this.modelTranslator = Objects.requireNonNull(modelTranslator);
         this.configuration = Objects.requireNonNull(configuration);
         this.poolCurator = Objects.requireNonNull(poolCurator);
         this.productCurator = Objects.requireNonNull(productCurator);
         this.principalProvider = Objects.requireNonNull(principalProvider);
+        this.scaCertificateGenerator = Objects.requireNonNull(scaCertificateGenerator);
     }
 
     /**
-     * Assembles independent data for a version 2 manifest export
+     * Assembles a version 2 manifest payload and generates its SCA certificate
+     * <p>
+     * Collects owner pool projections, resolves their product graphs, and translates the selected data.
+     * Generates a certificate from content associations present in the exported product DTOs. Captures
+     * the configured work directory without creating it; archive creation belongs to {@link ExporterV2}.
      *
      * @param consumer
      *     consumer to represent in the manifest and whose owner supplies the exported pools
      * @throws NullPointerException
      *     if the consumer is null
-     * @return the gathered data for this export
+     * @throws ExportCreationException
+     *     if certificate creation, cryptographic capability checks, or content payload creation fails
+     * @return independent export data containing metadata, consumer, products, subscriptions, and certificate
      */
-    public ExportData aggregate(Consumer consumer) {
+    public ExportData aggregate(Consumer consumer) throws ExportCreationException {
         Objects.requireNonNull(consumer);
 
         ConsumerDTO consumerDTO = this.modelTranslator.translate(consumer, ConsumerDTO.class)
@@ -125,9 +163,16 @@ public class ExportDataAggregator {
         Path workDirectory = Paths.get(this.configuration.getString(ConfigProperties.SYNC_WORK_DIR));
         Map<String, ProductDTO> products = new HashMap<>();
         Map<String, SubscriptionDTO> subscriptions = new HashMap<>();
-        this.addProductsByConsumer(consumer, products, subscriptions);
+        List<ProductContent> certificateContent = new ArrayList<>();
+        this.addProductsByConsumer(consumer, products, subscriptions, certificateContent);
 
-        return new ExportData(metaDTO, consumerDTO, products, subscriptions, workDirectory);
+        try {
+            return new ExportData(metaDTO, consumerDTO, products, subscriptions, workDirectory,
+                scaCertificateGenerator.generateScaCertificate(consumer, certificateContent));
+        }
+        catch (CertificateCreationException | CryptoCapabilitiesException | ConcurrentContentPayloadCreationException e) {
+            throw new ExportCreationException("Unable to create export archive", e);
+        }
     }
 
     private MetaDTO createMeta() {
@@ -139,8 +184,28 @@ public class ExportDataAggregator {
         return this.modelTranslator.translate(meta, MetaDTO.class);
     }
 
+    /**
+     * Populates subscriptions, products, and certificate content from eligible pools of the consumer's owner
+     * <p>
+     * Pool projections supply subscription data and distinct product UUIDs for recursive product loading.
+     * Namespace filtering applies to both pool selection and product traversal. Products use public product
+     * IDs as keys, while subscriptions use pool IDs; repeated keys replace earlier entries.
+     * <p>
+     * Certificate content includes only associations present in each translated product DTO, using the DTO's
+     * enabled flags. Content IDs are deduplicated within each product, with the last association winning.
+     * Associations shared across products remain separate, preserving their individual enabled flags.
+     *
+     * @param consumer
+     *     consumer whose owner supplies the pools
+     * @param products
+     *     destination for translated products keyed by public product ID
+     * @param subscriptions
+     *     destination for translated subscriptions keyed by pool ID
+     * @param certificateContent
+     *     destination to which content associations from the final product entries are appended
+     */
     private void addProductsByConsumer(Consumer consumer, Map<String, ProductDTO> products,
-        Map<String, SubscriptionDTO> subscriptions) {
+        Map<String, SubscriptionDTO> subscriptions, List<ProductContent> certificateContent) {
         boolean filterNamespaces = this.configuration.getBoolean(ConfigProperties.EXPORT_FILTER_NON_GLOBAL_NAMESPACE);
         List<PoolExportProjection> pools = this.poolCurator.listByOwnerTypeWithNamespaceFilter(
             consumer.getOwner()
@@ -160,8 +225,23 @@ public class ExportDataAggregator {
             pool.poolId(),
             this.modelTranslator.translate(pool, SubscriptionDTO.class)));
 
-        resolvedProducts.forEach(product -> products.put(product.getId(), this.modelTranslator.translate(product,
-            ProductDTO.class)));
+        Map<String, List<ProductContent>> contents = new HashMap<>();
+
+        for (Product product : resolvedProducts) {
+            ProductDTO dto = this.modelTranslator.translate(product, ProductDTO.class);
+            products.put(product.getId(), dto);
+            Map<String, ProductContent> content = new HashMap<>();
+            for (ProductContent link : product.getProductContent()) {
+                String contentId = link.getContent().getId();
+                if (dto.getProductContent().containsKey(contentId)) {
+                    content.put(contentId, new ProductContent(link.getContent(),
+                        dto.getProductContent().get(contentId).isEnabled()));
+                }
+            }
+            contents.put(product.getId(), List.copyOf(content.values()));
+        }
+
+        certificateContent.addAll(contents.values().stream().flatMap(List::stream).toList());
     }
 
 }
