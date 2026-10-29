@@ -20,12 +20,18 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.exceptions.CandlepinException;
+import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.NotAuthorizedException;
+import org.candlepin.exceptions.mappers.RuntimeExceptionMapper;
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
@@ -48,6 +54,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -66,6 +74,8 @@ import java.util.stream.Stream;
 
 import jakarta.inject.Provider;
 import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 
 @ExtendWith(MockitoExtension.class)
@@ -124,10 +134,17 @@ public class BasicAuthViaUserServiceTest {
     /**
      * The user service indicates that the given credentials are invalid
      */
-    @Test
-    public void invalidUserPassword() throws Exception {
-        setUserAndPassword("billy", "madison");
-        when(userService.validateUser("billy", "madison")).thenReturn(false);
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = "madison")
+    public void invalidUserPassword(String password) {
+        if (password == null) {
+            this.setUserNoPassword("billy");
+        }
+        else {
+            this.setUserAndPassword("billy", password);
+        }
+        when(this.userService.validateUser("billy", password)).thenReturn(false);
 
         NotAuthorizedException result = assertThrows(NotAuthorizedException.class,
             () -> this.auth.getPrincipal(request));
@@ -135,13 +152,14 @@ public class BasicAuthViaUserServiceTest {
         assertEquals(Status.UNAUTHORIZED, result.httpReturnCode());
         assertEquals("Invalid Credentials", result.getMessage());
         assertThat(result.headers()).containsEntry("WWW-Authenticate", "Basic Realm=candlepin");
+        verify(this.userService, never()).findByLogin(anyString());
     }
 
     /**
      * Valid credentials are given - checks if the correct principal is created.
      */
     @Test
-    public void correctPrincipal() throws Exception {
+    public void correctPrincipal() {
         Owner owner = new Owner()
             .setKey("user")
             .setDisplayName("user");
@@ -160,7 +178,7 @@ public class BasicAuthViaUserServiceTest {
     }
 
     @Test
-    public void correctPrincipalColonPassword() throws Exception {
+    public void correctPrincipalColonPassword() {
         Owner owner = new Owner()
             .setKey("user")
             .setDisplayName("user");
@@ -178,7 +196,7 @@ public class BasicAuthViaUserServiceTest {
     }
 
     @Test
-    public void correctPrincipalNoPassword() throws Exception {
+    public void correctPrincipalNoPassword() {
         Owner owner = new Owner()
             .setKey("user")
             .setDisplayName("user");
@@ -198,16 +216,24 @@ public class BasicAuthViaUserServiceTest {
 
     private static Stream<Arguments> expectedAuthenticationFailures() {
         return Stream.of(false, true).flatMap(lookup -> Stream.of(
-            Arguments.of(lookup, new UserInvalidException("alice"), "User \"alice\" is not valid."),
-            Arguments.of(lookup, new UserDisabledException("alice"), "has been disabled"),
-            Arguments.of(lookup, new UserUnacceptedTermsException("alice"), "accept Red Hat's Terms and conditions"),
-            Arguments.of(lookup, new UserUnauthorizedException("alice"), "Invalid username or password.")));
+            Arguments.of(lookup, new UserInvalidException("alice", "backend-secret"),
+                "User \"alice\" is not valid.", "User \"alice\" is not valid."),
+            Arguments.of(lookup, new UserDisabledException("alice", "backend-secret"),
+                "The user \"alice\" has been disabled, if this is a mistake, please contact customer service.",
+                "has been disabled"),
+            Arguments.of(lookup, new UserUnacceptedTermsException("alice", "backend-secret"),
+                "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc " +
+                ". You may have to log out of and back into the  Customer Portal in order to see the terms.",
+                "accept Red Hat's Terms and conditions"),
+            Arguments.of(lookup, new UserUnauthorizedException("alice", "backend-secret"),
+                "Invalid username or password. To create a login, please visit" +
+                    " https://www.redhat.com/wapps/ugc/register.html", "Invalid username or password.")));
     }
 
     @ParameterizedTest
     @MethodSource("expectedAuthenticationFailures")
-    public void testExpectedFailuresHideAccountDetails(boolean lookup, UserServiceException failure,
-        String logDetail) {
+    public void testExpectedFailuresReturnAppropriateMessages(boolean lookup, UserServiceException failure,
+        String responseMessage, String logDetail) {
 
         setUserAndPassword("alice", "password");
         if (lookup) {
@@ -226,11 +252,19 @@ public class BasicAuthViaUserServiceTest {
 
             assertThat(result)
                 .returns(Status.UNAUTHORIZED, CandlepinException::httpReturnCode)
-                .returns("Invalid Credentials", exception -> exception.message().getDisplayMessage())
+                .returns(responseMessage, exception -> exception.message().getDisplayMessage())
                 .satisfies(exception ->
                     assertThat(exception.headers()).containsEntry("WWW-Authenticate", "Basic Realm=candlepin"))
                 .returns(false, CandlepinException::isLogException)
                 .returns(null, CandlepinException::getCause);
+
+            RuntimeExceptionMapper mapper = spy(new RuntimeExceptionMapper());
+            doReturn(MediaType.APPLICATION_JSON_TYPE).when(mapper).determineBestMediaType();
+            try (Response response = mapper.toResponse(result)) {
+                assertEquals(401, response.getStatus());
+                assertEquals(responseMessage, ((ExceptionMessage) response.getEntity()).getDisplayMessage());
+                assertEquals("Basic Realm=candlepin", response.getHeaderString("WWW-Authenticate"));
+            }
 
             List<ILoggingEvent> events = Stream.concat(
                 authLogs.getEvents(Level.WARN).stream(),
@@ -244,6 +278,25 @@ public class BasicAuthViaUserServiceTest {
                     assertNull(event.getThrowableProxy());
                 });
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    public void testPreservesAlreadyTranslatedAuthenticationFailures(boolean lookup) {
+        this.setUserAndPassword("alice", "password");
+        NotAuthorizedException failure = new NotAuthorizedException("Account requires attention", false);
+        if (lookup) {
+            when(this.userService.validateUser("alice", "password")).thenReturn(true);
+            when(this.userService.findByLogin("alice")).thenThrow(failure);
+        }
+        else {
+            when(this.userService.validateUser("alice", "password")).thenThrow(failure);
+        }
+
+        NotAuthorizedException result = assertThrows(NotAuthorizedException.class,
+            () -> this.auth.getPrincipal(this.request));
+
+        assertSame(failure, result);
     }
 
     @Test

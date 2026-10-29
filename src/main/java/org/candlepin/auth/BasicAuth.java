@@ -79,14 +79,13 @@ public class BasicAuth extends UserAuth {
             }
         }
         catch (UserServiceException e) {
-            throw hideAccountDetails(UserServiceExceptionTranslator.translate(e, this.i18nProvider.get(), log,
-                Status.SERVICE_UNAVAILABLE));
+            throw UserServiceExceptionTranslator.translate(e, this.i18nProvider.get(), log, Status.SERVICE_UNAVAILABLE);
         }
         catch (CandlepinException e) {
             if (log.isDebugEnabled()) {
                 log.debug("Error getting principal " + e);
             }
-            throw hideAccountDetails(e);
+            throw e;
         }
         catch (Exception e) {
             if (log.isDebugEnabled()) {
@@ -96,14 +95,4 @@ public class BasicAuth extends UserAuth {
         }
         return null;
     }
-
-    private CandlepinException hideAccountDetails(CandlepinException exception) {
-        // This also covers lookup failures already translated by UserAuth.createPrincipal.
-        if (exception instanceof NotAuthorizedException) {
-            return new NotAuthorizedException(this.i18nProvider.get().tr("Invalid Credentials"), false);
-        }
-
-        return exception;
-    }
-
 }

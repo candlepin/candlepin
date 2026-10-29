@@ -76,8 +76,7 @@ public abstract class UserAuth implements AuthProvider {
             user = this.userServiceAdapter.findByLogin(username);
         }
         catch (UserServiceException e) {
-            throw UserServiceExceptionTranslator.translate(e, this.i18nProvider.get(), log,
-                unexpectedFailureStatus);
+            throw UserServiceExceptionTranslator.translate(e, this.i18nProvider.get(), log, unexpectedFailureStatus);
         }
 
         if (user == null) {
@@ -92,5 +91,4 @@ public abstract class UserAuth implements AuthProvider {
             (new UserPrincipal(username, this.permissionFactory.createPermissions(user), false,
                 user.getPrimaryOwner()));
     }
-
 }

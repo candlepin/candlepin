@@ -151,5 +151,7 @@ public class TrustedUserAuthTest {
             () -> this.auth.getPrincipal(this.request));
 
         assertEquals(Status.UNAUTHORIZED, result.httpReturnCode());
+        assertEquals("Invalid username or password. To create a login, please visit " +
+            "https://www.redhat.com/wapps/ugc/register.html", result.getMessage());
     }
 }
