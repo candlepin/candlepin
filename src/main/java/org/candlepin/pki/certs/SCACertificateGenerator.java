@@ -70,7 +70,7 @@ public class SCACertificateGenerator {
 
     private static final String SCA_ENTITLEMENT_TYPE = "OrgLevel";
 
-    public record SCACertificateComponents(SCACertificate certificate, ContentAccessPayload payload) {};
+    public record SCACertificateComponents(SCACertificate certificate, ContentAccessPayload payload) {}
 
     private final Configuration configuration;
 
