@@ -27,6 +27,7 @@ import org.candlepin.dto.api.client.v1.BrandingDTO;
 import org.candlepin.dto.api.client.v1.CloudAuthenticationResultDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
+import org.candlepin.dto.api.client.v1.CryptographicCapabilitiesDTO;
 import org.candlepin.dto.api.client.v1.ExportResultDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
@@ -34,25 +35,31 @@ import org.candlepin.dto.api.client.v1.ProductContentDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.StatusDTO;
 import org.candlepin.invoker.client.ApiException;
+import org.candlepin.spec.bootstrap.assertions.CertificateAssert;
 import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.assertions.OnlyWithCapability;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
+import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.Branding;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.CryptoCapabilities;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
+import org.candlepin.spec.bootstrap.data.util.ExportUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -65,7 +72,10 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.Signature;
+import java.security.cert.X509Certificate;
 import java.time.OffsetDateTime;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -156,32 +166,67 @@ public class ExportV2SpecTest {
         File export = this.createExportAsync(consumerClient, consumer.getUuid());
         OffsetDateTime exportEnd = OffsetDateTime.now();
 
-        FileSystem archive = FileSystems.newFileSystem(
-            URI.create("jar:" + export.toURI()),
-            Map.of());
-        JsonNode meta = this.readExportFile(archive, "meta.json");
-        this.assertMeta(meta, exportStart, exportEnd, consumer.getUuid());
-        Set<String> productFiles = this.assertProductFiles(archive, expectedProduct);
-        productFiles.addAll(this.assertProductFiles(archive, expectedFutureProduct));
-        this.assertDirectoryFiles(archive, "products", productFiles);
-        this.assertProductFilesMissing(archive, expiredProduct);
-        this.assertProductFilesMissing(archive, namespacedProduct);
-        assertFalse(Files.exists(archive.getPath("subscriptions/" + namespacedPool.getId() + ".json")));
-        JsonNode exportedRoot = this.readExportFile(archive, "products/" + prod.getId() + ".json");
-        JsonNode exportedDerived = this.readExportFile(archive, "products/" + derivedProduct.getId() + ".json");
-        this.assertField(exportedRoot.get("productContent")
-            .get(content.getId()), "enabled", true);
-        this.assertField(exportedDerived.get("productContent")
-            .get(content.getId()), "enabled", false);
-        this.assertDirectoryFiles(archive, "subscriptions", expectedPools.stream()
-            .map(pool -> pool.getId() + ".json")
-            .collect(Collectors.toSet()));
-        this.assertConsumer(this.readExportFile(archive, "upstream_consumer/consumer.json"),
-            expectedConsumer, meta.get("webAppPrefix"));
-        for (PoolDTO pool : expectedPools) {
-            this.assertSubscription(archive, pool);
+        try (FileSystem signedArchive = FileSystems.newFileSystem(URI.create("jar:" + export.toURI()), Map.of());
+            FileSystem archive = FileSystems.newFileSystem(signedArchive.getPath(ExportUtil.EXPORT_NAME))) {
+            JsonNode meta = this.readExportFile(archive, "meta.json");
+            this.assertMeta(meta, exportStart, exportEnd, consumer.getUuid());
+            Set<String> productFiles = this.assertProductFiles(archive, expectedProduct);
+            productFiles.addAll(this.assertProductFiles(archive, expectedFutureProduct));
+            this.assertDirectoryFiles(archive, "products", productFiles);
+            this.assertProductFilesMissing(archive, expiredProduct);
+            this.assertProductFilesMissing(archive, namespacedProduct);
+            assertFalse(Files.exists(archive.getPath("subscriptions/" + namespacedPool.getId() + ".json")));
+            JsonNode exportedRoot = this.readExportFile(archive, "products/" + prod.getId() + ".json");
+            JsonNode exportedDerived = this.readExportFile(archive, "products/" + derivedProduct.getId() + ".json");
+            this.assertField(exportedRoot.get("productContent")
+                .get(content.getId()), "enabled", true);
+            this.assertField(exportedDerived.get("productContent")
+                .get(content.getId()), "enabled", false);
+            this.assertDirectoryFiles(archive, "subscriptions", expectedPools.stream()
+                .map(pool -> pool.getId() + ".json")
+                .collect(Collectors.toSet()));
+            this.assertConsumer(this.readExportFile(archive, "upstream_consumer/consumer.json"),
+                expectedConsumer, meta.get("webAppPrefix"));
+            for (PoolDTO pool : expectedPools) {
+                this.assertSubscription(archive, pool);
+            }
         }
+    }
 
+    private static Stream<CryptographicCapabilitiesDTO> capabilitiesSource() {
+        return CryptoCapabilities.getSupportedCapabilities().stream();
+    }
+
+    @ParameterizedTest
+    @MethodSource("capabilitiesSource")
+    public void shouldExportSchemeAndSignManifest(CryptographicCapabilitiesDTO capabilities) throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        ConsumerDTO consumer = adminClient.consumers()
+            .createConsumer(Consumers.random(owner, ConsumerTypes.Candlepin)
+                .cryptographicCapabilities(capabilities));
+
+        File export = this.createExportAsync(ApiClients.ssl(consumer), consumer.getUuid());
+
+        try (FileSystem signedArchive = FileSystems.newFileSystem(export.toPath());
+            FileSystem archive = FileSystems.newFileSystem(signedArchive.getPath(ExportUtil.EXPORT_NAME))) {
+            JsonNode scheme = this.readExportFile(archive, "/" + ExportUtil.SCHEME_FILENAME);
+            for (String field : List.of("name", "certificate", "key_algorithm", "signature_algorithm")) {
+                assertTrue(scheme.hasNonNull(field), "Missing scheme field: " + field);
+                assertFalse(scheme.get(field).asString().isBlank(), "Empty scheme field: " + field);
+            }
+
+            X509Certificate certificate = X509Cert.parseCertificate(
+                Base64.getDecoder().decode(scheme.get("certificate").asString()));
+            CertificateAssert.assertThatCert(new X509Cert(certificate))
+                .usesKeyAlgorithmMatchingCapabilities(capabilities)
+                .usesSignatureAlgorithmMatchingCapabilities(capabilities);
+
+            Signature verifier = Signature.getInstance(scheme.get("signature_algorithm").asString());
+            verifier.initVerify(certificate);
+            verifier.update(Files.readAllBytes(signedArchive.getPath(ExportUtil.EXPORT_NAME)));
+            assertTrue(verifier.verify(Files.readAllBytes(signedArchive.getPath(ExportUtil.SIGNATURE_FILENAME))));
+        }
     }
 
     private ProductDTO createActiveProductGraph(ApiClient adminClient) {

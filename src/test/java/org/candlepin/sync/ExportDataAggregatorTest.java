@@ -234,8 +234,7 @@ class ExportDataAggregatorTest {
         configuration.setProperty(ConfigProperties.EXPORT_FILTER_NON_GLOBAL_NAMESPACE, Boolean.toString(filterNamespaces));
         StandardTranslator translator = new StandardTranslator(mock(ConsumerTypeCurator.class),
             mock(EnvironmentCurator.class), mock(OwnerCurator.class));
-        Consumer consumer = new Consumer()
-            .setOwner(new Owner().setId("owner-id").setKey("owner"))
+        Consumer consumer = new Consumer().setOwner(new Owner().setId("owner-id").setKey("owner"))
             .setEntitlements(Set.of());
         Principal principal = mock(Principal.class);
         when(principal.getName()).thenReturn("principal");
@@ -253,7 +252,8 @@ class ExportDataAggregatorTest {
             .thenReturn(pools.stream().map(this::projectPool).toList());
         when(productCurator.getProductsByIdsRecursive(filterNamespaces, productUuids)).thenReturn(products);
 
-        ExportData data = new ExportDataAggregator(translator, configuration, poolCurator, productCurator, principalProvider)
+        ExportData data = new ExportDataAggregator(translator, configuration, poolCurator, productCurator,
+            principalProvider)
             .aggregate(consumer);
 
         verify(poolCurator).listByOwnerTypeWithNamespaceFilter("owner-id", filterNamespaces, Pool.PoolType.NORMAL);

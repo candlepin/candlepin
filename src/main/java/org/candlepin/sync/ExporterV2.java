@@ -18,6 +18,10 @@ package org.candlepin.sync;
 import org.candlepin.dto.manifest.v2.ProductDTO;
 import org.candlepin.dto.manifest.v2.SubscriptionDTO;
 import org.candlepin.model.Consumer;
+import org.candlepin.pki.CryptoCapabilitiesException;
+import org.candlepin.pki.CryptoManager;
+import org.candlepin.pki.Scheme;
+import org.candlepin.pki.SignatureException;
 
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -26,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.file.FileAlreadyExistsException;
@@ -36,6 +41,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
 import java.nio.file.StandardOpenOption;
+import java.security.cert.CertificateEncodingException;
 import java.util.Map;
 import java.util.Objects;
 
@@ -50,14 +56,19 @@ public class ExporterV2 {
     public static final String SUBSCRIPTIONS = "subscriptions";
     public static final String PRODUCTS = "products";
     public static final String ID_JSON = "%s.json";
+    public static final String CONSUMER_EXPORT_ZIP = "consumer_export.zip";
+    public static final String SIGNATURE = "signature";
 
     private final ObjectMapper mapper;
     private final ExportDataAggregator exportDataAggregator;
+    private final CryptoManager cryptoManager;
 
     @Inject
-    public ExporterV2(@Named("ExportObjectMapper") ObjectMapper mapper, ExportDataAggregator exportDataAggregator) {
+    public ExporterV2(@Named("ExportObjectMapper") ObjectMapper mapper, ExportDataAggregator exportDataAggregator,
+        CryptoManager cryptoManager) {
         this.mapper = Objects.requireNonNull(mapper);
         this.exportDataAggregator = Objects.requireNonNull(exportDataAggregator);
+        this.cryptoManager = Objects.requireNonNull(cryptoManager);
     }
 
     /**
@@ -65,19 +76,24 @@ public class ExporterV2 {
      * <p>
      * Delegates data gathering and translation to {@link ExportDataAggregator}, then writes JSON entries
      * for export metadata, the upstream consumer, owner subscriptions, and their resolved products.
-     * The archive contains {@code meta.json}, {@code upstream_consumer/consumer.json}, subscription files
+     * The archive contains {@code meta.json}, {@code scheme.json}, {@code upstream_consumer/consumer.json}, subscription files
      * under {@code subscriptions/} named by pool ID, and product files under {@code products/} named by
      * product ID. Namespace filtering and selection of export data are handled by the aggregator.
      * <p>
+     * Selects a cryptographic scheme from the consumer's capabilities and includes its certificate and
+     * algorithms in {@code scheme.json}
+     * at the archive root. Signs the completed archive using that same
+     * scheme and packages it as {@code consumer_export.zip} alongside its detached {@code signature}.
+     * <p>
      * Creates the archive in the configured work directory, creating that directory if necessary.
      * Returns after the archive has been closed. The caller is responsible for storing or serving the
-     * completed archive and deleting it when no longer needed. If writing or closing the archive fails
-     * with an I/O error, attempts to delete the partial archive before reporting the failure.
+     * completed archive and deleting it when no longer needed. Deletes the temporary archive and attempts
+     * to delete any partial output archive if export creation fails.
      *
      * @param consumer
      *     consumer to represent in the manifest and whose owner supplies the exported subscriptions
      * @throws ExportCreationException
-     *     if the archive path cannot be prepared, the ZIP filesystem cannot be opened, or archive I/O fails
+     *     if archive creation, scheme negotiation, certificate encoding, or signing fails
      * @throws NullPointerException
      *     if the consumer is null
      * @throws IllegalArgumentException
@@ -85,11 +101,12 @@ public class ExporterV2 {
      * @return the path to the completed ZIP archive
      */
     public Path getFullExport(Consumer consumer) throws ExportCreationException {
-        boolean success = false;
+        Scheme scheme = this.getCryptoScheme(consumer);
         ExportData data = this.exportDataAggregator.aggregate(consumer);
         Path archivePath = createArchiveFile(data);
         try {
             try (FileSystem archive = createArchive(archivePath)) {
+                writeFile(archive.getPath(SchemeFile.FILENAME), SchemeFile.from(scheme));
                 writeFile(archive.getPath(META_JSON), data.getMetaDTO());
                 writeFile(archive.getPath(UPSTREAM_CONSUMER, CONSUMER_JSON), data.getConsumerDTO());
                 for (Map.Entry<String, SubscriptionDTO> entry : data.getSubscriptions().entrySet()) {
@@ -103,18 +120,40 @@ public class ExporterV2 {
                         entry);
                 }
             }
-            success = true;
-            return archivePath;
+            return this.signArchive(archivePath, data, scheme);
         }
-        catch (IOException e) {
+        catch (IOException | CertificateEncodingException e) {
             log.error("Error generating manifest export V2", e);
             throw new ExportCreationException("Unable to create export archive", e);
         }
         finally {
-            // clean-up archive, there was an error generating the export
-            if (!success && archivePath != null) {
-                deleteArchive(archivePath);
-            }
+            this.deleteArchive(archivePath);
+        }
+    }
+
+    private Scheme getCryptoScheme(Consumer consumer) throws ExportCreationException {
+        try {
+            return cryptoManager.getCryptoScheme(consumer);
+        }
+        catch (CryptoCapabilitiesException e) {
+            throw new ExportCreationException("Unable to select a cryptographic scheme for export", e);
+        }
+    }
+
+    private Path signArchive(Path archivePath, ExportData data, Scheme scheme) throws ExportCreationException {
+
+        Path signedArchivePath = this.createArchiveFile(data);
+        try (FileSystem signedArchive = this.createArchive(signedArchivePath);
+             InputStream input = Files.newInputStream(archivePath)) {
+            byte[] signature = this.cryptoManager.getSigner(scheme).sign(input);
+            Files.copy(archivePath, signedArchive.getPath(CONSUMER_EXPORT_ZIP));
+            Files.write(signedArchive.getPath(SIGNATURE), signature, StandardOpenOption.CREATE_NEW);
+            return signedArchivePath;
+        }
+        catch (IOException | SignatureException e) {
+            log.error("Error signing manifest export V2", e);
+            this.deleteArchive(signedArchivePath);
+            throw new ExportCreationException("Unable to sign export archive", e);
         }
     }
 

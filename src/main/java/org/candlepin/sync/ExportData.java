@@ -26,7 +26,8 @@ import java.util.Map;
 /**
  * Data for a single version 2 manifest export
  * <p>
- * Holds the DTOs and work directory prepared by {@link ExportDataAggregator} for {@link ExporterV2}.
+ * Holds the DTOs and work directory prepared by {@link ExportDataAggregator}
+ * for {@link ExporterV2}.
  * This class only stores data; gathering, translation, and archive writing belong to those collaborators.
  * The DTOs and maps are mutable and belong to the current export. Products are keyed by product ID and
  * subscriptions by pool ID. Additional export data can be added as the manifest requirements evolve.
@@ -122,4 +123,5 @@ public class ExportData {
     public Path getWorkDirectory() {
         return this.workDirectory;
     }
+
 }
