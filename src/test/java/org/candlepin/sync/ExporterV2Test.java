@@ -17,9 +17,13 @@ package org.candlepin.sync;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Principal;
@@ -48,17 +52,22 @@ import org.candlepin.model.PoolExportProjection;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.Scheme;
+import org.candlepin.pki.Signer;
 import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.version.VersionUtil;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -67,7 +76,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -76,12 +87,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyException;
 import java.security.KeyPair;
+import java.security.Signature;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
 class ExporterV2Test {
@@ -112,8 +129,6 @@ class ExporterV2Test {
 
     @BeforeEach
     void setUp() {
-        Principal principal = Mockito.mock(Principal.class);
-
         this.config = TestConfig.defaults();
         this.mapper = ObjectMapperFactory.getSyncObjectMapper(this.config);
         this.cryptoManager = CryptoUtil.getCryptoManager(this.config);
@@ -121,15 +136,11 @@ class ExporterV2Test {
         );
 
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, this.workDirectory.toString());
-
-        when(principalProvider.get()).thenReturn(principal);
-        when(principal.getName()).thenReturn(TEST_EXPORT_USER);
-        when(consumerTypeCurator.getConsumerType(any())).thenReturn(systemType);
     }
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    public void testExportV2(boolean filterNamespaces) throws KeyException, ExportCreationException {
+    public void testExportV2(boolean filterNamespaces) throws Exception {
         this.config.setProperty(ConfigProperties.EXPORT_FILTER_NON_GLOBAL_NAMESPACE, Boolean.toString(filterNamespaces));
 
         Owner owner = TestUtil.createOwner("Example-Corporation");
@@ -216,6 +227,7 @@ class ExporterV2Test {
         assertNotNull(export);
         assertTrue(Files.exists(export));
         assertTrue(Files.isRegularFile(export));
+        this.verifySignature(export, this.cryptoManager.getDefaultCryptoScheme());
 
         Path metaPath = Paths.get("meta.json");
         Verify.existsIn(export)
@@ -244,6 +256,149 @@ class ExporterV2Test {
         verifyProduct(export, mktSubProd);
 
         exporter.deleteArchive(export);
+    }
+
+    private static Stream<Scheme> schemeSource() {
+        return CryptoUtil.SUPPORTED_SCHEMES.values().stream();
+    }
+
+    @ParameterizedTest
+    @MethodSource("schemeSource")
+    @NullSource
+    void testExportsSchemeAndSignsManifest(Scheme scheme) throws Exception {
+        Consumer consumer = new Consumer()
+            .setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN).setId("manifest-type"));
+        if (scheme != null) {
+            CryptoUtil.configureConsumerForSchemes(consumer, scheme);
+        }
+        Scheme expected = scheme != null ? scheme : this.cryptoManager.getDefaultCryptoScheme();
+        ExporterV2 exporter = this.createExporter(this.cryptoManager, consumer);
+
+        Path export = exporter.getFullExport(consumer);
+
+        this.verifySignature(export, expected);
+        try (Stream<Path> files = Files.list(this.workDirectory)) {
+            assertEquals(List.of(export), files.toList());
+        }
+        exporter.deleteArchive(export);
+        this.assertWorkDirectoryEmpty();
+    }
+
+    @Test
+    void testEmptyCapabilitiesUseDefaultScheme() throws Exception {
+        Consumer consumer = new Consumer()
+            .setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN).setId("manifest-type"))
+            .setSupportedKeyAlgorithmOids(Set.of())
+            .setSupportedSignatureAlgorithmOids(Set.of());
+        ExporterV2 exporter = this.createExporter(this.cryptoManager, consumer);
+
+        Path export = exporter.getFullExport(consumer);
+
+        this.verifySignature(export, this.cryptoManager.getDefaultCryptoScheme());
+        exporter.deleteArchive(export);
+        this.assertWorkDirectoryEmpty();
+    }
+
+    @Test
+    void testRejectsUnsupportedSchemes() throws IOException {
+        Consumer consumer = CryptoUtil.configureConsumerWithNoSelectableScheme(new Consumer()
+            .setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN).setId("manifest-type")));
+        ExporterV2 exporter = this.createExporter(this.cryptoManager, consumer);
+
+        ExportCreationException exception = assertThrows(ExportCreationException.class,
+            () -> exporter.getFullExport(consumer));
+
+        assertInstanceOf(CryptoCapabilitiesException.class, exception.getCause());
+        this.assertWorkDirectoryEmpty();
+    }
+
+    @Test
+    void testCleansUpAfterCertificateEncodingFailure() throws Exception {
+        Consumer consumer = new Consumer();
+        CryptoManager manager = mock(CryptoManager.class);
+        X509Certificate certificate = mock(X509Certificate.class);
+        CertificateEncodingException failure = new CertificateEncodingException("Cannot encode certificate");
+        when(certificate.getEncoded()).thenThrow(failure);
+        Scheme original = this.cryptoManager.getDefaultCryptoScheme();
+        Scheme scheme = new Scheme(original.name(), certificate, original.privateKey(),
+            original.signatureAlgorithm(), original.keyAlgorithm(), original.keySize());
+        when(manager.getCryptoScheme(consumer)).thenReturn(scheme);
+        ExporterV2 exporter = this.createExporter(manager, consumer);
+
+        ExportCreationException exception = assertThrows(ExportCreationException.class,
+            () -> exporter.getFullExport(consumer));
+
+        assertSame(failure, exception.getCause());
+        this.assertWorkDirectoryEmpty();
+    }
+
+    @Test
+    void testCleansUpAfterSigningFailure() throws Exception {
+        Consumer consumer = new Consumer();
+        CryptoManager manager = mock(CryptoManager.class);
+        Scheme scheme = this.cryptoManager.getDefaultCryptoScheme();
+        Signer signer = mock(Signer.class);
+        org.candlepin.pki.SignatureException failure = new org.candlepin.pki.SignatureException("Cannot sign");
+        when(manager.getCryptoScheme(consumer)).thenReturn(scheme);
+        when(manager.getSigner(scheme)).thenReturn(signer);
+        when(signer.sign(any(InputStream.class))).thenThrow(failure);
+        ExporterV2 exporter = this.createExporter(manager, consumer);
+
+        ExportCreationException exception = assertThrows(ExportCreationException.class,
+            () -> exporter.getFullExport(consumer));
+
+        assertSame(failure, exception.getCause());
+        this.assertWorkDirectoryEmpty();
+    }
+
+    @Test
+    void testRejectsNullConsumer() throws IOException {
+        ExporterV2 exporter = new ExporterV2(this.mapper,
+            new ExportDataAggregator(this.modelTranslator, this.config, this.poolCurator, this.productCurator,
+                this.principalProvider), this.cryptoManager);
+
+        assertThrows(NullPointerException.class, () -> exporter.getFullExport(null));
+        this.assertWorkDirectoryEmpty();
+    }
+
+    private ExporterV2 createExporter(CryptoManager manager, Consumer consumer) {
+        ExportDataAggregator aggregator = mock(ExportDataAggregator.class);
+        when(aggregator.aggregate(consumer)).thenReturn(new ExportData(new MetaDTO(), new ConsumerDTO(),
+            Map.of(), Map.of(), this.workDirectory));
+        return new ExporterV2(this.mapper, aggregator, manager);
+    }
+
+    private void assertWorkDirectoryEmpty() throws IOException {
+        try (Stream<Path> files = Files.list(this.workDirectory)) {
+            assertEquals(List.of(), files.toList());
+        }
+    }
+
+    private void verifySignature(Path export, Scheme expected) throws Exception {
+        try (FileSystem signedArchive = FileSystems.newFileSystem(export);
+            FileSystem archive = FileSystems.newFileSystem(signedArchive.getPath("consumer_export.zip"))) {
+            SchemeFile scheme;
+            try (BufferedReader reader = Files.newBufferedReader(archive.getPath("/scheme.json"))) {
+                scheme = this.mapper.readValue(reader, SchemeFile.class);
+            }
+            assertEquals(expected.name(), scheme.name());
+            assertEquals(expected.signatureAlgorithm(), scheme.signatureAlgorithm());
+            assertEquals(expected.keyAlgorithm(), scheme.keyAlgorithm());
+            assertEquals(Base64.getEncoder().encodeToString(expected.certificate().getEncoded()), scheme.certificate());
+
+            X509Certificate certificate = (X509Certificate) CertificateFactory.getInstance("X.509")
+                .generateCertificate(new ByteArrayInputStream(Base64.getDecoder().decode(scheme.certificate())));
+            Signature verifier = Signature.getInstance(scheme.signatureAlgorithm(), CryptoUtil.getSecurityProvider());
+            verifier.initVerify(certificate);
+            byte[] payload = Files.readAllBytes(signedArchive.getPath("consumer_export.zip"));
+            byte[] signature = Files.readAllBytes(signedArchive.getPath("signature"));
+            verifier.update(payload);
+            assertTrue(verifier.verify(signature));
+
+            payload[0] ^= 1;
+            verifier.update(payload);
+            assertFalse(verifier.verify(signature), "Modified payload must fail signature verification");
+        }
     }
 
     private void verifyMeta(MetaDTO metaDto) {
@@ -321,7 +476,8 @@ class ExporterV2Test {
 
         static Verify verifyOn(Path archive, Verify test) {
             return path -> {
-                try (FileSystem fs = FileSystems.newFileSystem(URI.create("jar:" + archive.toUri()), Map.of())) {
+                try (FileSystem signedArchive = FileSystems.newFileSystem(URI.create("jar:" + archive.toUri()), Map.of());
+                    FileSystem fs = FileSystems.newFileSystem(signedArchive.getPath("consumer_export.zip"))) {
                     test.verify(fs.getPath(fs.getSeparator())
                         .resolve(path.toString()));
                 }
@@ -362,10 +518,15 @@ class ExporterV2Test {
     }
 
     private ExporterV2 createExporter() {
+        Principal principal = Mockito.mock(Principal.class);
+        when(this.principalProvider.get()).thenReturn(principal);
+        when(principal.getName()).thenReturn(TEST_EXPORT_USER);
+        when(this.consumerTypeCurator.getConsumerType(any())).thenReturn(this.systemType);
         return new ExporterV2(
             this.mapper,
             new ExportDataAggregator(this.modelTranslator, this.config, this.poolCurator, this.productCurator,
-                this.principalProvider)
+                this.principalProvider),
+            this.cryptoManager
         );
     }
 
