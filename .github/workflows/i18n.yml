@@ -34,8 +34,10 @@ jobs:
     steps:
       - name: Mask secrets
         shell: bash
+        env:
+          CANDLEPIN_BOT_TOKEN: ${{ secrets.CANDLEPIN_BOT_TOKEN }}
         run: |
-          echo "::add-mask::${{ secrets.CANDLEPIN_BOT_TOKEN }}"
+          echo "::add-mask::$CANDLEPIN_BOT_TOKEN"
 
       - name: Install dependencies
         shell: bash

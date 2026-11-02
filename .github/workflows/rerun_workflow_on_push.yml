@@ -14,8 +14,10 @@ jobs:
     steps:
       - name: Mask secrets
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
+          echo "::add-mask::$GITHUB_TOKEN"
 
       - name: Get PR info
         uses: 8BitJonny/gh-get-current-pr@4056877062a1f3b624d5d4c2bedefa9cf51435c9
