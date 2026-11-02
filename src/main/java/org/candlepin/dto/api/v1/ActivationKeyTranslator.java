@@ -122,7 +122,7 @@ public class ActivationKeyTranslator implements ObjectTranslator<ActivationKey, 
             for (ActivationKeyPool poolEntry : pools) {
                 if (poolEntry != null) {
                     ActivationKeyPoolDTO akPoolDTO = new ActivationKeyPoolDTO();
-                    akPoolDTO.poolId(poolEntry.getPool().getId());
+                    akPoolDTO.poolId(poolEntry.getPoolId());
                     akPoolDTO.quantity(poolEntry.getQuantity());
                     poolDTOs.add(akPoolDTO);
                 }

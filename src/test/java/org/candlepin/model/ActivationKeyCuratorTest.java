@@ -27,7 +27,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -125,6 +127,80 @@ class ActivationKeyCuratorTest extends DatabaseTestFixture {
         assertThat(activationKeyCurator.getByKeyName(owner2, owner2Key.getName()))
             .isNotNull()
             .isEqualTo(owner2Key);
+    }
+
+    @Test
+    public void testListByOwnerWithNullOwner() {
+        List<ActivationKey> actual = this.activationKeyCurator.listByOwner(null, null);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "   " })
+    @NullAndEmptySource
+    public void testListByOwnerWithUnspecifiedKeyName(String keyName) {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        List<ActivationKey> owner1Keys = new ArrayList<>();
+        List<ActivationKey> owner2Keys = new ArrayList<>();
+
+        // Create activation keys for both owner 1 and 2
+        for (int i = 0; i < 5; i++) {
+            ActivationKey owner1Key = this.createActivationKey(owner1);
+            owner1Keys.add(owner1Key);
+            ActivationKey owner2Key = this.createActivationKey(owner2);
+            owner2Keys.add(owner2Key);
+        }
+
+        List<ActivationKey> actual = this.activationKeyCurator.listByOwner(owner1, keyName);
+
+        assertThat(actual)
+            .isNotNull()
+            .containsExactlyInAnyOrderElementsOf(owner1Keys);
+    }
+
+    @Test
+    public void testListByOwnerWithActivationKeyName() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        List<ActivationKey> owner1Keys = new ArrayList<>();
+        List<ActivationKey> owner2Keys = new ArrayList<>();
+
+        String keyName = TestUtil.randomString("expected-");
+
+        ActivationKey key = new ActivationKey();
+
+        key.setOwner(owner);
+
+        // Create an activation key with our target key name for both owners
+        ActivationKey expected = new ActivationKey()
+            .setOwner(owner1)
+            .setName(keyName);
+        expected = this.activationKeyCurator.create(expected);
+        ActivationKey owner2Key = new ActivationKey()
+            .setOwner(owner2)
+            .setName(keyName);
+        owner2Key = this.activationKeyCurator.create(owner2Key);
+
+        // Create other activation keys for both owner 1 and 2
+        for (int i = 0; i < 5; i++) {
+            ActivationKey owner1Key = this.createActivationKey(owner1);
+            owner1Keys.add(owner1Key);
+            owner2Key = this.createActivationKey(owner2);
+            owner2Keys.add(owner2Key);
+        }
+
+        List<ActivationKey> actual = this.activationKeyCurator.listByOwner(owner1, keyName);
+
+        assertThat(actual)
+            .isNotNull()
+            .singleElement()
+            .isEqualTo(expected);
     }
 
     private List<String> listAllActivationKeyPoolIdsByOwner(String ownerKey) {
