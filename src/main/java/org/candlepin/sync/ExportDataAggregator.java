@@ -18,6 +18,7 @@ package org.candlepin.sync;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.manifest.v2.CertificateDTO;
 import org.candlepin.dto.manifest.v2.ConsumerDTO;
 import org.candlepin.dto.manifest.v2.MetaDTO;
 import org.candlepin.dto.manifest.v2.ProductDTO;
@@ -51,6 +52,9 @@ import jakarta.inject.Singleton;
  * Aggregation translates the supplied consumer into a {@link ConsumerDTO} and sets its API and web URLs
  * from configuration. It also builds a {@link MetaDTO} containing the manifest format version,
  * creation time, current principal's name, and configured web URL.
+ * <p>
+ * The consumer's existing identity certificate and private key are translated for upstream authentication.
+ * Missing identity certificates prevent export; aggregation does not generate or renew certificates.
  * <p>
  * Subscription selection uses the consumer's owner, rather than the consumer's entitlements. The pool
  * curator loads that owner's unexpired {@link Pool.PoolType#NORMAL} pools, including pools whose start
@@ -113,10 +117,17 @@ public class ExportDataAggregator {
      *     consumer to represent in the manifest and whose owner supplies the exported pools
      * @throws NullPointerException
      *     if the consumer is null
-     * @return the gathered data for this export
+     * @throws ExportCreationException
+     *     if the consumer has no identity certificate or its serial ID is missing
+     * @return the gathered data, including the existing identity certificate, for this export
      */
-    public ExportData aggregate(Consumer consumer) {
+    public ExportData aggregate(Consumer consumer) throws ExportCreationException {
         Objects.requireNonNull(consumer);
+        if (consumer.getIdCert() == null || consumer.getIdCert().getSerial() == null ||
+            consumer.getIdCert().getSerial().getId() == null) {
+            throw new ExportCreationException("The consumer for export does not have a valid identity certificate");
+        }
+        CertificateDTO identityCertificate = this.modelTranslator.translate(consumer.getIdCert(), CertificateDTO.class);
 
         ConsumerDTO consumerDTO = this.modelTranslator.translate(consumer, ConsumerDTO.class)
             .setUrlApi(this.configuration.getString(ConfigProperties.PREFIX_APIURL))
@@ -127,7 +138,7 @@ public class ExportDataAggregator {
         Map<String, SubscriptionDTO> subscriptions = new HashMap<>();
         this.addProductsByConsumer(consumer, products, subscriptions);
 
-        return new ExportData(metaDTO, consumerDTO, products, subscriptions, workDirectory);
+        return new ExportData(metaDTO, consumerDTO, products, subscriptions, identityCertificate, workDirectory);
     }
 
     private MetaDTO createMeta() {

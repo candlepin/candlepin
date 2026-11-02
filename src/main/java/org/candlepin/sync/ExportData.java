@@ -15,6 +15,7 @@
 
 package org.candlepin.sync;
 
+import org.candlepin.dto.manifest.v2.CertificateDTO;
 import org.candlepin.dto.manifest.v2.ConsumerDTO;
 import org.candlepin.dto.manifest.v2.MetaDTO;
 import org.candlepin.dto.manifest.v2.ProductDTO;
@@ -26,7 +27,8 @@ import java.util.Map;
 /**
  * Data for a single version 2 manifest export
  * <p>
- * Holds the DTOs and work directory prepared by {@link ExportDataAggregator} for {@link ExporterV2}.
+ * Holds the consumer identity certificate, other DTOs, and work directory prepared by
+ * {@link ExportDataAggregator} for {@link ExporterV2}.
  * This class only stores data; gathering, translation, and archive writing belong to those collaborators.
  * The DTOs and maps are mutable and belong to the current export. Products are keyed by product ID and
  * subscriptions by pool ID. Additional export data can be added as the manifest requirements evolve.
@@ -52,6 +54,11 @@ public class ExportData {
      * Directory captured for archive creation
      */
     private final Path workDirectory;
+    /**
+     * Existing consumer identity certificate and private key for upstream authentication
+     */
+    private final CertificateDTO identityCertificate;
+
 
     /**
      * Stores the data prepared for an export
@@ -64,16 +71,28 @@ public class ExportData {
      *     product DTOs keyed by product ID
      * @param subscriptions
      *     subscription DTOs keyed by pool ID
+     * @param identityCertificate
+     *     translated consumer identity certificate including its private key and serial metadata
      * @param workDirectory
      *     directory in which to create the archive
      */
     protected ExportData(MetaDTO metaDTO, ConsumerDTO consumerDTO, Map<String, ProductDTO> products,
-        Map<String, SubscriptionDTO> subscriptions, Path workDirectory) {
+        Map<String, SubscriptionDTO> subscriptions, CertificateDTO identityCertificate, Path workDirectory) {
         this.metaDTO = metaDTO;
         this.consumerDTO = consumerDTO;
         this.products = products;
         this.subscriptions = subscriptions;
         this.workDirectory = workDirectory;
+        this.identityCertificate = identityCertificate;
+    }
+
+    /**
+     * Consumer identity certificate for serialization
+     *
+     * @return the mutable certificate DTO held by this instance
+     */
+    public CertificateDTO getIdentityCertificate() {
+        return this.identityCertificate;
     }
 
     /**
