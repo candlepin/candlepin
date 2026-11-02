@@ -178,6 +178,7 @@ public class ExportV2SpecTest {
             .collect(Collectors.toSet()));
         this.assertConsumer(this.readExportFile(archive, "upstream_consumer/consumer.json"),
             expectedConsumer, meta.get("webAppPrefix"));
+        this.assertIdentityCertificate(archive, expectedConsumer);
         for (PoolDTO pool : expectedPools) {
             this.assertSubscription(archive, pool);
         }
@@ -394,6 +395,19 @@ public class ExportV2SpecTest {
         this.assertField(actual, "releaseVer", expected.getReleaseVer());
         this.assertField(actual, "gpgUrl", expected.getGpgUrl());
         this.assertField(actual, "arches", expected.getArches());
+    }
+
+    private void assertIdentityCertificate(FileSystem archive, ConsumerDTO consumer) throws IOException {
+        JsonNode identityCertificate = this.readExportFile(archive, "upstream_consumer/" +
+            consumer.getIdCert().getSerial().getId() + ".json");
+        this.assertField(identityCertificate, "id", consumer.getIdCert().getId());
+        this.assertField(identityCertificate, "cert", consumer.getIdCert().getCert());
+        this.assertField(identityCertificate, "key", consumer.getIdCert().getKey());
+        this.assertField(identityCertificate.get("serial"), "id", consumer.getIdCert().getSerial().getId());
+        this.assertDate(identityCertificate.get("serial").get("expiration"),
+            consumer.getIdCert().getSerial().getExpiration());
+        this.assertDirectoryFiles(archive, "upstream_consumer", Set.of("consumer.json",
+            consumer.getIdCert().getSerial().getId() + ".json"));
     }
 
     private void assertConsumer(JsonNode actual, ConsumerDTO expected, JsonNode webAppPrefix) {
