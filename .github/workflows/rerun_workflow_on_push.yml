@@ -8,9 +8,16 @@ on:
       - candlepin-*-HOTFIX
       - feature/*
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   rerun-workflows:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      pull-requests: read
     steps:
       - name: Mask secrets
         shell: bash
@@ -18,76 +25,113 @@ jobs:
           echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
 
       - name: Get PR info
-        uses: 8BitJonny/gh-get-current-pr@4056877062a1f3b624d5d4c2bedefa9cf51435c9
         id: PR
-        with:
-          github-token: ${{ github.token }}
+        shell: bash
+        run: |
+          skip_ci=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" | \
+            jq --arg sha "$GITHUB_SHA" '
+              ((map(select(.head.sha == $sha or .merge_commit_sha == $sha)) | first) // {labels: []}) |
+              [.labels[]?.name] | join(",") | ascii_downcase | contains("skip ci")')
+          echo "skip_ci=$skip_ci" >> "$GITHUB_OUTPUT"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Rerun workflows
-        if: ${{ !contains(steps.PR.outputs.pr_labels, 'skip CI') }}
+        if: ${{ steps.PR.outputs.skip_ci != 'true' }}
         shell: bash
         run: |
           base_branch="${GITHUB_REF#refs/heads/}"
-          if [[ $base_branch == "main" ]] || [[ $base_branch == "feature/"* ]]; then
-            pr_workflows=("checkstyle.yml" "spec_tests.yml" "unit_tests.yml" "validate_translations.yml")
-          else
-            pr_workflows=("pr_verification.yml")
-          fi
-          
-          # List affected PRs exclude dependabots, weblate and draft PRs
-          pr_head_shas=$(gh api \
-          -H "Accept: application/vnd.github+json" \
-          /repos/candlepin/candlepin/pulls | \
-          jq --arg base "$base_branch" -r '.[] | select(.base.ref == $base and .draft == false and .user.login != "weblate" and .user.login != "dependabot[bot]") | .head.sha')
-          
-          # Iterate over the array elements using a for loop
-            for workflow in "${pr_workflows[@]}"; do
-              # List runners id for PR verification
-              for head_sha in $pr_head_shas; do
-                runner_id=$(gh api \
-                -H "Accept: application/vnd.github+json" \
-                /repos/candlepin/candlepin/actions/workflows/$workflow/runs?head_sha=$head_sha | \
-                jq -r '.workflow_runs[] | .id')
-                runner_ids+=($runner_id)
-              done
-            done
-          
-          # Cancel running workflows
-          for id in "${runner_ids[@]}"; do
-            # Get status of running workflow
-            status=$(gh api \
+          pr_workflows=("checkstyle.yml" "spec_tests.yml" "unit_tests.yml" "validate_translations.yml")
+          run_ids=()
+          failed_ids=()
+
+          # List all affected PRs, excluding bots and drafts.
+          prs=$(gh api --method GET --paginate \
             -H "Accept: application/vnd.github+json" \
-            /repos/candlepin/candlepin/actions/runs/$id | \
-            jq -r '.status')
-          
-            # Cancel workflow if it in progress or in queue
-            if [ "$status" = "in_progress" ] || [ "$status" = "queued" ]; then
-              cancelled_ids+=($id)
-              gh api \
+            "/repos/${GITHUB_REPOSITORY}/pulls" \
+            -f base="$base_branch" -f state=open -f per_page=100 | \
+            jq -r '.[] |
+              select(.draft == false and .user.login != "weblate" and .user.login != "dependabot[bot]") |
+              [.number, .head.sha, .head.ref, .head.repo.full_name] | @tsv')
+
+          while IFS=$'\t' read -r pr_number head_sha head_branch head_repo; do
+            [[ -n "$pr_number" ]] || continue
+            for workflow in "${pr_workflows[@]}"; do
+              # Fork runs can omit PR associations, so also match the head repository and branch.
+              run_id=$(gh api --method GET --paginate --slurp \
+                -H "Accept: application/vnd.github+json" \
+                "/repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow}/runs" \
+                -f head_sha="$head_sha" -f event=pull_request -f per_page=100 | \
+                jq -r --argjson pr_number "$pr_number" --arg head_repo "$head_repo" \
+                  --arg head_branch "$head_branch" '
+                  [.[].workflow_runs[] |
+                    select(.head_repository.full_name == $head_repo and .head_branch == $head_branch) |
+                    select(any(.pull_requests[]; .number == $pr_number) or (.pull_requests | length) == 0)] |
+                  max_by([.created_at, .id]) | .id // empty')
+              if [[ -n "$run_id" && " ${run_ids[*]} " != *" $run_id "* ]]; then
+                run_ids+=("$run_id")
+              fi
+            done
+          done <<< "$prs"
+
+          # Process runs independently so a failure cannot strand the rest of the batch.
+          for id in "${run_ids[@]}"; do
+            if ! status=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/${GITHUB_REPOSITORY}/actions/runs/${id}" | \
+              jq -er '.status'); then
+              echo "::error::Failed to get status of workflow run $id." >&2
+              failed_ids+=("$id")
+              continue
+            fi
+
+            # Every nonterminal status must finish cancellation before a rerun is requested.
+            if [[ "$status" != "completed" ]]; then
+              if ! gh api \
+                --method POST \
+                -H "Accept: application/vnd.github+json" \
+                "/repos/${GITHUB_REPOSITORY}/actions/runs/${id}/cancel"; then
+                echo "::error::Failed to cancel workflow run $id (status: $status)." >&2
+                failed_ids+=("$id")
+                continue
+              fi
+
+              # Give this run up to 60 checks at five-second intervals to complete.
+              for ((attempt = 0; attempt < 60; attempt++)); do
+                sleep 5
+                if ! status=$(gh api \
+                  -H "Accept: application/vnd.github+json" \
+                  "/repos/${GITHUB_REPOSITORY}/actions/runs/${id}" | \
+                  jq -er '.status'); then
+                  echo "::error::Failed to get status of workflow run $id while waiting for cancellation." >&2
+                  status=""
+                  break
+                fi
+                [[ "$status" = "completed" ]] && break
+              done
+              if [[ "$status" != "completed" ]]; then
+                if [[ -n "$status" ]]; then
+                  echo "::error::Timed out waiting for workflow run $id to cancel (60 checks, 5-second interval)." >&2
+                fi
+                failed_ids+=("$id")
+                continue
+              fi
+            fi
+
+            if ! gh api \
               --method POST \
               -H "Accept: application/vnd.github+json" \
-              /repos/candlepin/candlepin/actions/runs/$id/cancel
+              "/repos/${GITHUB_REPOSITORY}/actions/runs/${id}/rerun"; then
+              echo "::error::Failed to rerun workflow run $id." >&2
+              failed_ids+=("$id")
             fi
           done
-          
-          # We need to wait here because canceling workflows take some time
-          for id in "${cancelled_ids[@]}"; do
-            while : ; do
-              sleep 2 # We sleep here so we don't overwhelm the GH API
-              status=$(gh api \
-              -H "Accept: application/vnd.github+json" \
-              /repos/candlepin/candlepin/actions/runs/$id | \
-              jq -r '.status')
-              [[ $status = "completed" ]] && break
-            done
-          done
-          
-          # Rerun workflows
-          for id in "${runner_ids[@]}"; do 
-            gh api \
-            --method POST \
-            -H "Accept: application/vnd.github+json" \
-            /repos/candlepin/candlepin/actions/runs/$id/rerun
-          done
+
+          if [[ ${#failed_ids[@]} -gt 0 ]]; then
+            echo "::error::Failed to rerun workflow runs: ${failed_ids[*]}" >&2
+            exit 1
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
