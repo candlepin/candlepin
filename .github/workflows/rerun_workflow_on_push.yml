@@ -21,8 +21,10 @@ jobs:
     steps:
       - name: Mask secrets
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
+          echo "::add-mask::$GITHUB_TOKEN"
 
       - name: Get PR info
         id: PR
