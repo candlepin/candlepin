@@ -58,7 +58,7 @@ class ExportDataAggregatorTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void testExportsOwnerPoolsAndProductGraph(boolean filterNamespaces) {
+    public void testExportsOwnerPoolsAndProductGraph(boolean filterNamespaces) {
         Product shared = new Product("shared", "Shared").setNamespace("");
         shared.addContent(new Content("global-content").setNamespace(""), true);
         Product provided = new Product("provided", "Provided").setNamespace("");
@@ -142,7 +142,7 @@ class ExportDataAggregatorTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void testEmptyOwnerPoolsProduceEmptyExport(boolean filterNamespaces) {
+    public void testEmptyOwnerPoolsProduceEmptyExport(boolean filterNamespaces) {
         ExportData data = this.createExportData(List.of(), List.of(), filterNamespaces);
 
         assertTrue(data.getProducts().isEmpty());
@@ -150,7 +150,7 @@ class ExportDataAggregatorTest {
     }
 
     @Test
-    void testPoolWithoutProductIdDoesNotSupplyNullProductId() {
+    public void testPoolWithoutProductIdDoesNotSupplyNullProductId() {
         Pool pool = new Pool().setId("pool").setSubscriptionId("subscription");
 
         ExportData data = this.createExportData(List.of(pool), List.of(), true);
@@ -161,7 +161,7 @@ class ExportDataAggregatorTest {
     }
 
     @Test
-    void testRejectsNullConsumer() {
+    public void testRejectsNullConsumer() {
         ExportDataAggregator aggregator = new ExportDataAggregator(mock(ModelTranslator.class), TestConfig.defaults(),
             mock(PoolCurator.class), mock(ProductCurator.class), mock(PrincipalProvider.class));
 
@@ -169,7 +169,7 @@ class ExportDataAggregatorTest {
     }
 
     @Test
-    void testRepeatedAggregationKeepsExportDataSeparate() {
+    public void testRepeatedAggregationKeepsExportDataSeparate() {
         DevConfig configuration = TestConfig.defaults();
         configuration.setProperty(ConfigProperties.EXPORT_FILTER_NON_GLOBAL_NAMESPACE, "true");
         configuration.setProperty(ConfigProperties.SYNC_WORK_DIR, "/first-export");
