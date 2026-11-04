@@ -1046,7 +1046,7 @@ class OwnerContentResourceSpecTest {
                   .orElse(Stream.empty())
                   .map(ProductContentDTO::getContent);
             }
-        };
+        }
 
         private ApiClient adminClient;
 
