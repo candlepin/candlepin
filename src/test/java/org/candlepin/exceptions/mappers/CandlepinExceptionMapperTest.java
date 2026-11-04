@@ -14,6 +14,7 @@
  */
 package org.candlepin.exceptions.mappers;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -22,6 +23,11 @@ import static org.mockito.Mockito.when;
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.guice.I18nProvider;
 import org.candlepin.guice.TestingScope;
+import org.candlepin.test.TestLogCapture;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.ThrowableProxy;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -71,6 +77,28 @@ public class CandlepinExceptionMapperTest {
         assertEquals(MediaType.APPLICATION_ATOM_XML_TYPE,
             r.getMetadata().get("Content-Type").get(0));
         assertTrue(em.getDisplayMessage().startsWith("Runtime Error " + re.getMessage()));
+    }
+
+    @Test
+    public void testDefaultBuilderLogsRootCauseLocationAndException() {
+        IOException cause = new IOException("fake io exception");
+        cause.setStackTrace(new StackTraceElement[] {
+            new StackTraceElement("org.example.Service", "load", "Service.java", 42),
+            new StackTraceElement("org.example.Caller", "call", "Caller.java", 84)
+        });
+        RuntimeException exception = new RuntimeException("oops", cause);
+
+        try (TestLogCapture logs = new TestLogCapture(CandlepinExceptionMapper.class)) {
+            this.cem.getDefaultBuilder(exception, null, MediaType.APPLICATION_JSON_TYPE);
+
+            assertThat(logs.getEvents())
+                .singleElement()
+                .returns(Level.ERROR, ILoggingEvent::getLevel)
+                .returns("Runtime Error oops at org.example.Service.load:42",
+                    ILoggingEvent::getFormattedMessage);
+            ThrowableProxy proxy = (ThrowableProxy) logs.getEvents().getFirst().getThrowableProxy();
+            assertThat(proxy.getThrowable()).isSameAs(exception);
+        }
     }
 
     @Test
