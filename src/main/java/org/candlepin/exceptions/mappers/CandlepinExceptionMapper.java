@@ -66,7 +66,7 @@ public class CandlepinExceptionMapper {
         if (header != null) {
             List<MediaType> headerMediaTypes = parseHeader(header);
 
-            mediaType = headerMediaTypes.size() == 0 ? MediaType.TEXT_PLAIN_TYPE :
+            mediaType = headerMediaTypes.isEmpty() ? MediaType.TEXT_PLAIN_TYPE :
                 getBestMatch(DESIRED_RESPONSE_TYPES, headerMediaTypes);
         }
 
@@ -89,7 +89,8 @@ public class CandlepinExceptionMapper {
             cause = cause.getCause();
         }
 
-        String message = "";
+        String message = i18n.get().tr("Runtime Error {0}", exception.getMessage());
+        String details = "";
         StackTraceElement[] stes = cause.getStackTrace();
 
         // 1051215: the exception may not have a stacktrace, rare but could
@@ -99,16 +100,11 @@ public class CandlepinExceptionMapper {
             int line = ele.getLineNumber();
             String method = ele.getMethodName();
             String clazz = ele.getClassName();
-            message = i18n.get().tr("Runtime Error {0} at {1}.{2}:{3}",
-                exception.getMessage(), clazz, method, line);
-        }
-        else {
-            // just use the exception message
-            message = i18n.get().tr("Runtime Error {0}", exception.getMessage());
+            details = i18n.get().tr(" at {1}.{2}:{3}", clazz, method, line);
         }
 
         if (!(exception instanceof CandlepinException) || ((CandlepinException) exception).isLogException()) {
-            log.error(message, exception);
+            log.error("{}{}", message, details, exception);
         }
 
         if (status == null) {
