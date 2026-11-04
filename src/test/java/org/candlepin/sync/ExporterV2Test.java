@@ -266,7 +266,7 @@ class ExporterV2Test {
     @ParameterizedTest
     @MethodSource("schemeSource")
     @NullSource
-    void testSignsManifestWithConsumerScheme(Scheme scheme) throws Exception {
+    public void testSignsManifestWithConsumerScheme(Scheme scheme) throws Exception {
         Consumer consumer = new Consumer()
             .setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN).setId("manifest-type"));
         if (scheme != null) {
@@ -286,7 +286,7 @@ class ExporterV2Test {
     }
 
     @Test
-    void testEmptyCapabilitiesUseDefaultScheme() throws Exception {
+    public void testEmptyCapabilitiesUseDefaultScheme() throws Exception {
         Consumer consumer = new Consumer()
             .setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN).setId("manifest-type"))
             .setSupportedKeyAlgorithmOids(Set.of())
@@ -301,7 +301,7 @@ class ExporterV2Test {
     }
 
     @Test
-    void testRejectsUnsupportedSchemesBeforeGatheringData() throws IOException {
+    public void testRejectsUnsupportedSchemesBeforeGatheringData() throws IOException {
         Consumer consumer = CryptoUtil.configureConsumerWithNoSelectableScheme(new Consumer()
             .setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN).setId("manifest-type")));
         ExportDataAggregator aggregator = mock(ExportDataAggregator.class);
@@ -316,7 +316,7 @@ class ExporterV2Test {
     }
 
     @Test
-    void testCleansUpAfterCertificateEncodingFailure() throws Exception {
+    public void testCleansUpAfterCertificateEncodingFailure() throws Exception {
         Consumer consumer = new Consumer();
         CryptoManager manager = mock(CryptoManager.class);
         X509Certificate certificate = mock(X509Certificate.class);
@@ -336,7 +336,7 @@ class ExporterV2Test {
     }
 
     @Test
-    void testCleansUpAfterSigningFailure() throws Exception {
+    public void testCleansUpAfterSigningFailure() throws Exception {
         Consumer consumer = new Consumer();
         CryptoManager manager = mock(CryptoManager.class);
         Scheme scheme = this.cryptoManager.getDefaultCryptoScheme();
@@ -356,12 +356,12 @@ class ExporterV2Test {
     }
 
     @Test
-    void testRejectsNullConsumer() throws IOException {
+    public void testRejectsNullConsumer() throws IOException {
         ExporterV2 exporter = new ExporterV2(this.mapper,
             new ExportDataAggregator(this.modelTranslator, this.config, this.poolCurator, this.productCurator,
                 this.principalProvider), this.cryptoManager);
 
-        assertThrows(NullPointerException.class, () -> exporter.getFullExport(null));
+        assertThrows(IllegalArgumentException.class, () -> exporter.getFullExport(null));
         this.assertWorkDirectoryEmpty();
     }
 

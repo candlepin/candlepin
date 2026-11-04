@@ -94,10 +94,8 @@ public class ExporterV2 {
      *     consumer to represent in the manifest and whose owner supplies the exported subscriptions
      * @throws ExportCreationException
      *     if archive creation, scheme negotiation, certificate encoding, or signing fails
-     * @throws NullPointerException
-     *     if the consumer is null
      * @throws IllegalArgumentException
-     *     if a pool or product ID used as a filename contains the archive's path separator
+     *     if the consumer is null or a pool or product ID used as a filename contains the archive's path separator
      * @return the path to the completed ZIP archive
      */
     public Path getFullExport(Consumer consumer) throws ExportCreationException {
@@ -127,7 +125,7 @@ public class ExporterV2 {
             throw new ExportCreationException("Unable to create export archive", e);
         }
         finally {
-            this.deleteArchive(archivePath);
+            deleteArchive(archivePath);
         }
     }
 
