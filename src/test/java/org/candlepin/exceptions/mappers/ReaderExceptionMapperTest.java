@@ -32,34 +32,34 @@ import jakarta.ws.rs.core.Response;
 public class ReaderExceptionMapperTest extends TestExceptionMapperBase {
 
     @Test
-    public void handleExceptionWithoutResponse() {
+    public void testHandleExceptionWithoutResponse() {
         ReaderException nfe = new ReaderException("unacceptable");
         ReaderExceptionMapper nfem = injector.getInstance(ReaderExceptionMapper.class);
         Response r = nfem.toResponse(nfe);
         assertEquals(500, r.getStatus());
-        verifyMessage(r, rtmsg("unacceptable"));
+        verifyMessage(r, "Internal Server Error");
     }
 
     @Test
-    public void handleExceptionWithResponse() {
+    public void testHandleExceptionWithResponse() {
         Response mockr = mock(Response.class);
         when(mockr.getStatus()).thenReturn(400);
         ReaderException nfe = new ReaderException("unacceptable", mockr);
         ReaderExceptionMapper nfem = injector.getInstance(ReaderExceptionMapper.class);
         Response r = nfem.toResponse(nfe);
         assertEquals(400, r.getStatus());
-        verifyMessage(r, rtmsg("unacceptable"));
+        verifyMessage(r, "Bad Request");
     }
 
     @Test
-    public void handleJsonMappingExceptionWithResponse() {
+    public void testHandleJsonMappingExceptionWithResponse() {
         Response mockr = mock(Response.class);
         when(mockr.getStatus()).thenReturn(400);
         ReaderException nfe = new ReaderException("kaboom", mock(DatabindException.class));
         ReaderExceptionMapper nfem = injector.getInstance(ReaderExceptionMapper.class);
         Response r = nfem.toResponse(nfe);
         assertEquals(400, r.getStatus());
-        verifyMessage(r, rtmsg("kaboom"));
+        verifyMessage(r, "Bad Request");
     }
 
     @Override

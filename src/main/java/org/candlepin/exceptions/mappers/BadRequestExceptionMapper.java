@@ -16,16 +16,11 @@ package org.candlepin.exceptions.mappers;
 
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.util.JaxRsExceptionResponseBuilder;
-import org.candlepin.version.VersionUtil;
 
 import org.jboss.resteasy.spi.BadRequestException;
-import org.xnap.commons.i18n.I18n;
-
-import java.util.Map;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.ResponseBuilder;
 import jakarta.ws.rs.core.Response.Status;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
@@ -49,29 +44,12 @@ public class BadRequestExceptionMapper extends CandlepinExceptionMapper
 
     @Override
     public final Response toResponse(final BadRequestException exception) {
-        if (badQueryParamHandler.canHandle(exception)) {
-            return badQueryParamHandler.getResponse(exception);
+        if (this.badQueryParamHandler.canHandle(exception)) {
+            return this.badQueryParamHandler.getResponse(exception);
         }
-        else {
-            // This is here to preserve old functionality.
-            // It may be just as good to use getDefaultBuilder here
-            Map<String, String> map = VersionUtil.getVersionMap();
-            ResponseBuilder bldr = Response.status(Status.BAD_REQUEST)
-                .type(determineBestMediaType())
-                .header(VersionUtil.VERSION_HEADER, map.get("version") + "-" + map.get("release"));
 
-            // Use the message in the original exception if we have it
-            String message = null;
-            for (Throwable current = exception; current != null; current = current.getCause()) {
-                message = current.getMessage();
-            }
-
-            // Set default message if we didn't have anything...
-            if (message == null || message.isEmpty()) {
-                message = I18n.marktr("Bad Request");
-            }
-
-            return bldr.entity(new ExceptionMessage(i18n.get().tr(message))).build();
-        }
+        return this.getDefaultBuilder(exception, Status.BAD_REQUEST)
+            .entity(new ExceptionMessage(this.i18n.get().tr("Bad Request")))
+            .build();
     }
 }

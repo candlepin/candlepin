@@ -14,6 +14,8 @@
  */
 package org.candlepin.exceptions.mappers;
 
+import org.candlepin.exceptions.ExceptionMessage;
+
 import org.jboss.resteasy.spi.ReaderException;
 
 import tools.jackson.databind.DatabindException;
@@ -57,6 +59,8 @@ public class ReaderExceptionMapper extends CandlepinExceptionMapper
             status = Response.Status.INTERNAL_SERVER_ERROR;
         }
 
-        return this.getDefaultBuilder(exception, status, determineBestMediaType()).build();
+        return this.getDefaultBuilder(exception, status)
+            .entity(new ExceptionMessage(this.getStatusMessage(status)))
+            .build();
     }
 }

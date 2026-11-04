@@ -14,6 +14,8 @@
  */
 package org.candlepin.exceptions.mappers;
 
+import org.candlepin.exceptions.ExceptionMessage;
+
 import jakarta.ws.rs.NotSupportedException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
@@ -31,9 +33,9 @@ public class NotSupportedExceptionMapper extends
 
     @Override
     public Response toResponse(NotSupportedException exception) {
-        return getDefaultBuilder(exception,
-            Response.Status.UNSUPPORTED_MEDIA_TYPE,
-            determineBestMediaType()).build();
+        return this.getDefaultBuilder(exception, Response.Status.UNSUPPORTED_MEDIA_TYPE)
+            .entity(new ExceptionMessage(this.i18n.get().tr("Unsupported Media Type")))
+            .build();
     }
 
 }

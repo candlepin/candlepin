@@ -15,6 +15,8 @@
 package org.candlepin.exceptions.mappers;
 
 
+import org.candlepin.exceptions.ExceptionMessage;
+
 import jakarta.ws.rs.NotAcceptableException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
@@ -31,7 +33,8 @@ public class NotAcceptableExceptionMapper extends CandlepinExceptionMapper
 
     @Override
     public Response toResponse(NotAcceptableException exception) {
-        return getDefaultBuilder(exception, Response.Status.NOT_ACCEPTABLE,
-            determineBestMediaType()).build();
+        return this.getDefaultBuilder(exception, Response.Status.NOT_ACCEPTABLE)
+            .entity(new ExceptionMessage(this.i18n.get().tr("Not Acceptable")))
+            .build();
     }
 }

@@ -29,17 +29,17 @@ import jakarta.ws.rs.core.Response;
 public class JAXBUnmarshalExceptionMapperTest extends TestExceptionMapperBase {
 
     @Test
-    public void handleExceptionWithoutResponse() {
+    public void testHandleExceptionWithoutResponse() {
         JAXBUnmarshalException nfe = new JAXBUnmarshalException("unacceptable");
         JAXBUnmarshalExceptionMapper nfem =
             injector.getInstance(JAXBUnmarshalExceptionMapper.class);
         Response r = nfem.toResponse(nfe);
         assertEquals(400, r.getStatus());
-        verifyMessage(r, rtmsg("unacceptable"));
+        verifyMessage(r, "Bad Request");
     }
 
     @Test
-    public void handleExceptionWithResponse() {
+    public void testHandleExceptionWithResponse() {
         Response mockr = mock(Response.class);
         when(mockr.getStatus()).thenReturn(500);
         JAXBUnmarshalException nfe = new JAXBUnmarshalException("unacceptable", mockr);
@@ -47,7 +47,7 @@ public class JAXBUnmarshalExceptionMapperTest extends TestExceptionMapperBase {
             injector.getInstance(JAXBUnmarshalExceptionMapper.class);
         Response r = nfem.toResponse(nfe);
         assertEquals(500, r.getStatus());
-        verifyMessage(r, rtmsg("unacceptable"));
+        verifyMessage(r, "Internal Server Error");
     }
 
     @Override

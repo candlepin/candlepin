@@ -118,8 +118,33 @@ public class CandlepinExceptionMapper {
         Map<String, String> map = VersionUtil.getVersionMap();
 
         return Response.status(status)
-            .entity(new ExceptionMessage(message))
+            .entity(new ExceptionMessage(i18n.get().tr("An unexpected error occurred")))
             .type(responseMediaType)
             .header(VersionUtil.VERSION_HEADER, map.get("version") + "-" + map.get("release"));
+    }
+
+    /**
+     * Translated client message for an HTTP status
+     *
+     * @param status
+     *     the response status, or null for an internal server error
+     * @return a message containing no exception details
+     */
+    protected String getStatusMessage(Status status) {
+        if (status == null) {
+            status = Status.INTERNAL_SERVER_ERROR;
+        }
+
+        return switch (status) {
+            case BAD_REQUEST -> this.i18n.get().tr("Bad Request");
+            case UNAUTHORIZED -> this.i18n.get().tr("Unauthorized");
+            case FORBIDDEN -> this.i18n.get().tr("Forbidden");
+            case NOT_FOUND -> this.i18n.get().tr("Not Found");
+            case METHOD_NOT_ALLOWED -> this.i18n.get().tr("Method Not Allowed");
+            case NOT_ACCEPTABLE -> this.i18n.get().tr("Not Acceptable");
+            case UNSUPPORTED_MEDIA_TYPE -> this.i18n.get().tr("Unsupported Media Type");
+            case INTERNAL_SERVER_ERROR -> this.i18n.get().tr("Internal Server Error");
+            default -> this.i18n.get().tr("Request failed with status code {0}", status.getStatusCode());
+        };
     }
 }

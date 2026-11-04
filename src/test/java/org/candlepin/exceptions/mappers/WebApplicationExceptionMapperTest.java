@@ -30,7 +30,7 @@ import jakarta.ws.rs.core.Response.Status;
 public class WebApplicationExceptionMapperTest extends TestExceptionMapperBase {
 
     @Test
-    public void handleExceptionWithResponse() {
+    public void testHandleExceptionWithResponse() {
         Response mockr = mock(Response.class);
         when(mockr.getStatus()).thenReturn(500);
         when(mockr.getStatusInfo()).thenReturn(Status.INTERNAL_SERVER_ERROR);
@@ -40,7 +40,7 @@ public class WebApplicationExceptionMapperTest extends TestExceptionMapperBase {
             injector.getInstance(WebApplicationExceptionMapper.class);
         Response r = nfem.toResponse(nfe);
         assertEquals(500, r.getStatus());
-        verifyMessage(r, rtmsg(""));
+        verifyMessage(r, "Internal Server Error");
     }
 
     @Override

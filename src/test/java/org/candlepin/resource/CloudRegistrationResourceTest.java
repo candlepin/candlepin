@@ -77,6 +77,9 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.ThrowableProxy;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -105,6 +108,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -1005,15 +1009,32 @@ public class CloudRegistrationResourceTest {
 
             assertEquals(status, result.httpReturnCode().getStatusCode());
             assertEquals(responseMessage, result.getMessage());
-            RuntimeExceptionMapper mapper = spy(new RuntimeExceptionMapper());
+            Injector injector = Guice.createInjector(binder -> {
+                binder.bind(I18n.class).toInstance(this.i18n);
+                binder.bind(HttpServletRequest.class).toInstance(mock(HttpServletRequest.class));
+            });
+            RuntimeExceptionMapper mapper = spy(injector.getInstance(RuntimeExceptionMapper.class));
             doReturn(MediaType.APPLICATION_JSON_TYPE).when(mapper).determineBestMediaType();
+            boolean serverError = result.httpReturnCode().getFamily() == Response.Status.Family.SERVER_ERROR;
             try (Response response = mapper.toResponse(result)) {
                 assertEquals(status, response.getStatus());
-                assertEquals(responseMessage, ((ExceptionMessage) response.getEntity()).getDisplayMessage());
+                assertEquals(serverError ? "An unexpected error occurred" : responseMessage,
+                    ((ExceptionMessage) response.getEntity()).getDisplayMessage());
                 assertThat(ObjectMapperFactory.getObjectMapper().writeValueAsString(response.getEntity()))
                     .doesNotContain("backend-secret", "nested-secret");
             }
-            assertThat(mapperLogs.getEvents(Level.WARN)).isEmpty();
+            if (serverError) {
+                assertThat(mapperLogs.getEvents(Level.WARN))
+                    .singleElement()
+                    .returns(Level.ERROR, ILoggingEvent::getLevel)
+                    .satisfies(event -> {
+                        assertThat(event.getFormattedMessage()).startsWith("Runtime Error " + responseMessage);
+                        assertThat(((ThrowableProxy) event.getThrowableProxy()).getThrowable()).isSameAs(result);
+                    });
+            }
+            else {
+                assertThat(mapperLogs.getEvents(Level.WARN)).isEmpty();
+            }
             assertThat(runtimeMapperLogs.getEvents(Level.WARN)).isEmpty();
 
             if (!(failure instanceof CloudRegistrationAuthorizationException)) {

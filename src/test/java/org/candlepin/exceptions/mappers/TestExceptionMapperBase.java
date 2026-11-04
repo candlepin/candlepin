@@ -14,8 +14,7 @@
  */
 package org.candlepin.exceptions.mappers;
 
-import static org.candlepin.exceptions.util.RegexMatcher.matchesRegex;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 
@@ -51,15 +50,11 @@ public abstract class TestExceptionMapperBase {
         rem = injector.getInstance(RuntimeExceptionMapper.class);
     }
 
-    protected String rtmsg(String msg) {
-        return "^Runtime Error " + msg;
-    }
-
     protected void verifyMessage(Response r, String expectedmsg) {
         ExceptionMessage em = (ExceptionMessage) r.getEntity();
 
         assertNotNull(em);
-        assertThat(em.getDisplayMessage(), matchesRegex(expectedmsg));
+        assertEquals(expectedmsg, em.getDisplayMessage());
     }
 
     public abstract Class<?> getMapperClass();

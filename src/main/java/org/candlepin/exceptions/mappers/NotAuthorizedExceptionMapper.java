@@ -14,6 +14,8 @@
  */
 package org.candlepin.exceptions.mappers;
 
+import org.candlepin.exceptions.ExceptionMessage;
+
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
@@ -30,7 +32,9 @@ public class NotAuthorizedExceptionMapper extends CandlepinExceptionMapper
 
     @Override
     public Response toResponse(NotAuthorizedException exception) {
-        return getDefaultBuilder(exception, Response.Status.UNAUTHORIZED, determineBestMediaType()).build();
+        return this.getDefaultBuilder(exception, Response.Status.UNAUTHORIZED)
+            .entity(new ExceptionMessage(this.i18n.get().tr("Unauthorized")))
+            .build();
     }
 
 }

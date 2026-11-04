@@ -28,12 +28,12 @@ import jakarta.ws.rs.core.Response.Status;
 public class NotFoundExceptionMapperTest extends TestExceptionMapperBase {
 
     @Test
-    public void handleNotFoundException() {
+    public void testHandleNotFoundException() {
         NotFoundException nfe = new NotFoundException("unacceptable");
         NotFoundExceptionMapper nfem = injector.getInstance(NotFoundExceptionMapper.class);
         Response r = nfem.toResponse(nfe);
         assertEquals(404, r.getStatus());
-        verifyMessage(r, rtmsg("unacceptable"));
+        verifyMessage(r, "Not Found");
     }
 
     @Override

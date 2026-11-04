@@ -14,6 +14,8 @@
  */
 package org.candlepin.exceptions.mappers;
 
+import org.candlepin.exceptions.ExceptionMessage;
+
 import jakarta.ws.rs.NotAllowedException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
@@ -30,8 +32,9 @@ public class NotAllowedExceptionMapper extends CandlepinExceptionMapper
 
     @Override
     public Response toResponse(NotAllowedException exception) {
-        return getDefaultBuilder(exception, null,
-            determineBestMediaType()).status(Response.Status.METHOD_NOT_ALLOWED).build();
+        return this.getDefaultBuilder(exception, Response.Status.METHOD_NOT_ALLOWED)
+            .entity(new ExceptionMessage(this.i18n.get().tr("Method Not Allowed")))
+            .build();
     }
 
 }

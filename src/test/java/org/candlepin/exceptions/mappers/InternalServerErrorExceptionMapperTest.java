@@ -28,13 +28,13 @@ public class InternalServerErrorExceptionMapperTest extends
     TestExceptionMapperBase {
 
     @Test
-    public void handleISE() {
+    public void testHandleISE() {
         InternalServerErrorException isee = new InternalServerErrorException("fubarred");
         InternalServerErrorExceptionMapper iseem =
             injector.getInstance(InternalServerErrorExceptionMapper.class);
         Response r = iseem.toResponse(isee);
         assertEquals(500, r.getStatus());
-        verifyMessage(r, rtmsg("fubarred"));
+        verifyMessage(r, "Internal Server Error");
     }
 
     @Override

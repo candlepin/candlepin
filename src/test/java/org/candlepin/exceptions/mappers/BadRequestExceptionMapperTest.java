@@ -18,6 +18,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.jboss.resteasy.spi.BadRequestException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
@@ -47,6 +50,17 @@ public class BadRequestExceptionMapperTest extends TestExceptionMapperBase {
 
         assertEquals(Status.BAD_REQUEST.getStatusCode(), r.getStatus());
         verifyMessage(r, "Bad Request");
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"https://internal.example/private", "secret-token"})
+    public void testHidesExceptionAndCauseMessages(String message) {
+        BadRequestException exception = new BadRequestException(message, new IllegalArgumentException("private cause"));
+        Response response = injector.getInstance(BadRequestExceptionMapper.class).toResponse(exception);
+
+        assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        verifyMessage(response, "Bad Request");
     }
 
     @Override

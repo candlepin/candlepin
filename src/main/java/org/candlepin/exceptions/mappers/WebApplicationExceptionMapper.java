@@ -14,6 +14,8 @@
  */
 package org.candlepin.exceptions.mappers;
 
+import org.candlepin.exceptions.ExceptionMessage;
+
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
@@ -30,8 +32,9 @@ public class WebApplicationExceptionMapper extends CandlepinExceptionMapper
 
     @Override
     public Response toResponse(WebApplicationException exception) {
-        return getDefaultBuilder(exception, Response.Status.fromStatusCode(
-            exception.getResponse().getStatus()),
-            determineBestMediaType()).build();
+        Response.Status status = Response.Status.fromStatusCode(exception.getResponse().getStatus());
+        return this.getDefaultBuilder(exception, status)
+            .entity(new ExceptionMessage(this.getStatusMessage(status)))
+            .build();
     }
 }
