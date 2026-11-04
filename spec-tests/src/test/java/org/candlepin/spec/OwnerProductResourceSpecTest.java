@@ -778,7 +778,7 @@ public class OwnerProductResourceSpecTest {
             public boolean custom() {
                 return this.owner() != null;
             }
-        };
+        }
 
         private ApiClient adminClient;
 

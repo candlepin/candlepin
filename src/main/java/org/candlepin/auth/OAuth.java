@@ -53,7 +53,7 @@ import jakarta.ws.rs.core.Response;
  */
 public class OAuth implements AuthProvider {
 
-    private static final Logger log = LoggerFactory.getLogger(OAuth.class);;
+    private static final Logger log = LoggerFactory.getLogger(OAuth.class);
     private static final OAuthValidator VALIDATOR = new SimpleOAuthValidator();
     private static final String SIGNATURE_TYPE = "HMAC-SHA1";
 

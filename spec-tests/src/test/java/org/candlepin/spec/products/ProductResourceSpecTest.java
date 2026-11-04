@@ -289,7 +289,7 @@ public class ProductResourceSpecTest {
             public boolean custom() {
                 return this.owner() != null;
             }
-        };
+        }
 
         private ApiClient adminClient;
 

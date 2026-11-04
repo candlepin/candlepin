@@ -322,7 +322,7 @@ public class ContentResourceSpecTest {
                   .orElse(Stream.empty())
                   .map(ProductContentDTO::getContent);
             }
-        };
+        }
 
         private ApiClient adminClient;
 
