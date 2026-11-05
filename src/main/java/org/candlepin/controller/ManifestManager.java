@@ -304,8 +304,7 @@ public class ManifestManager {
         }
 
         // The specified consumer must match that of the manifest.
-        if (!exportedConsumer.getUuid()
-            .equals(manifest.getTargetId())) {
+        if (!exportedConsumer.getUuid().equals(manifest.getTargetId())) {
             throw new BadRequestException(
                 i18n.tr("Could not validate export against specified consumer: {0}",
                     exportedConsumer.getUuid()));

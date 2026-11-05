@@ -69,6 +69,7 @@ public class ScaPayloadEncoder {
     private EntitlementBody createBody(ScaPayloadData data) {
         Product product = new Product();
         product.setId("content_access");
+        // This is virtual product for content access, the space in the name is intentional
         product.setName(" Content Access");
         product.setVersion("");
         product.setBrandType("");

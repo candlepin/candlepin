@@ -206,6 +206,20 @@ public class ExportDataAggregator {
      */
     private void aggregateConsumerRelatedData(Consumer consumer, Map<String, ProductDTO> products,
         Map<String, SubscriptionDTO> subscriptions, List<ProductContent> certificateContent) {
+        /*
+         * If in the future we need to implement filtering based on environment and/or architecture
+         * for export V2 this would be the starting point. Currently, we take into account all products
+         * that could be linked to at least on pool for a given consumer. All products considered here
+         * satisfy namespace filtering as configured.
+         * 
+         * And all products here are used for export and for SCA certificate generation. This should
+         * be considered a hard requirement for any changes in filtering logic.
+         *
+         * Any changes to filtering logic must consider how to identify what should be exported.
+         * These curator calls are trying to optimize the recursive lookup for a minimal number of
+         * SQL queries to be executed.
+         */
+
         boolean filterNamespaces = this.configuration.getBoolean(ConfigProperties.EXPORT_FILTER_NON_GLOBAL_NAMESPACE);
         List<PoolExportProjection> pools = this.poolCurator.listByOwnerTypeWithNamespaceFilter(
             consumer.getOwner()

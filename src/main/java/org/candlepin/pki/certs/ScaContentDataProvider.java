@@ -95,6 +95,7 @@ public class ScaContentDataProvider {
             .withAll(environments);
         Product product = new Product()
             .setId("content_access")
+            // This is virtual product for content access, the space in the name is intentional
             .setName(" Content Access")
             .setProductContent(this.mergeContent(content));
         boolean filterEnvironments = this.configuration.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);

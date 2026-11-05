@@ -67,7 +67,7 @@ public class EntitlementPayloadGenerator extends X509Util {
      *
      * @return compressed UTF-8 JSON bytes
      */
-    /* pkg-private */ byte[] generate(EntitlementBody body) {
+    protected byte[] generate(EntitlementBody body) {
         return this.processPayload(this.toJson(Objects.requireNonNull(body)));
     }
 
