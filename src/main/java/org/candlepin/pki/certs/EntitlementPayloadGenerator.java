@@ -59,8 +59,16 @@ public class EntitlementPayloadGenerator extends X509Util {
 
         EntitlementBody map = createEntitlementBody(productModels, consumerUuid, pool, quantity);
 
-        String json = toJson(map);
-        return processPayload(json);
+        return this.generate(map);
+    }
+
+    /**
+     * Serializes and compresses a prepared entitlement body
+     *
+     * @return compressed UTF-8 JSON bytes
+     */
+    /* pkg-private */ byte[] generate(EntitlementBody body) {
+        return this.processPayload(this.toJson(Objects.requireNonNull(body)));
     }
 
     private EntitlementBody createEntitlementBody(List<org.candlepin.model.dto.Product> productModels,

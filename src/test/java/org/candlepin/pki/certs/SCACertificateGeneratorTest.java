@@ -113,24 +113,19 @@ public class SCACertificateGeneratorTest extends DatabaseTestFixture {
     }
 
     private SCACertificateGenerator getNewGenerator() {
+        ScaCertificateDataProvider certificateDataProvider = new ScaCertificateDataProvider(this.environmentCurator);
+        ScaCertificateEncoder certificateEncoder = new ScaCertificateEncoder(this.cryptoManager,
+            CryptoUtil.getPemEncoder(), new Huffman());
+        ScaCertificateLifecycle certificateLifecycle = new ScaCertificateLifecycle(this.config,
+            CryptoUtil.getPemEncoder(), this.keyPairGenerator, certificateDataProvider, certificateEncoder,
+            this.caCertCurator, this.certSerialCurator);
         ContentAccessPayloadBuilderProvider payloadBuilderProvider = new ContentAccessPayloadBuilderProvider(
-            this.cryptoManager,
-            new EntitlementPayloadGenerator(new ObjectMapper()),
-            this.v3ExtensionUtil,
-            this.contentCurator,
+            new ScaContentDataProvider(this.config, this.contentCurator, this.v3ExtensionUtil),
+            new ScaPayloadEncoder(this.cryptoManager, new EntitlementPayloadGenerator(new ObjectMapper())),
             this.caPayloadCurator);
 
-        return new SCACertificateGenerator(
-            this.config,
-            this.cryptoManager,
-            CryptoUtil.getPemEncoder(),
-            this.keyPairGenerator,
-            this.v3ExtensionUtil,
-            this.v3CapabilityCheck,
-            payloadBuilderProvider,
-            this.caCertCurator,
-            this.certSerialCurator,
-            this.environmentCurator);
+        return new SCACertificateGenerator(this.cryptoManager, this.v3CapabilityCheck, payloadBuilderProvider,
+            certificateDataProvider, certificateLifecycle);
     }
 
     private X509Certificate getX509Certificate(SCACertificate container) throws CertificateException {
@@ -651,6 +646,95 @@ public class SCACertificateGeneratorTest extends DatabaseTestFixture {
             .isNotNull()
             .extracting(CertificateSerial::getSerial)
             .isNotEqualTo(initialSerial);
+    }
+
+    @Test
+    public void testExportV2GenerationIncludesFutureContentAndPreservesConsumerCertificate() throws Exception {
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner);
+        doReturn(true).when(this.v3CapabilityCheck).isCertV3Capable(consumer);
+        SCACertificate original = this.generator.generate(consumer);
+        Content future = this.createContent().setArches("aarch64");
+        this.contentCurator.merge(future);
+        Product product = this.createProduct();
+        ProductContent link = new ProductContent(product, future, false);
+        this.getEntityManager().persist(link);
+        this.createPool(owner, product, 1L, TestUtil.createDate(2090, 1, 1), TestUtil.createDate(2100, 1, 1));
+        consumer.setFact(Consumer.Facts.ARCHITECTURE, "x86_64");
+        this.contentCurator.flush();
+
+        SCACertificate exported = this.generator.generateScaCertificate(consumer, List.of(link));
+        assertThat(consumer.getContentAccessCert().getSerial()).isEqualTo(original.getSerial());
+        assertThat(exported.getSerial()).isNotEqualTo(original.getSerial());
+        assertThat(exported.getKey()).isEqualTo(original.getKey());
+        List<String> paths = new X509HuffmanDecodeUtil()
+            .extractContentPaths(this.extractEntitlementDataPayload(this.getX509Certificate(exported)));
+        assertThat(paths).containsExactly("/" + this.urlEncode(owner.getKey()));
+        JsonNode repositories = this.mapper.readTree(this.extractEntitlementDataJson(exported.getCert()))
+            .get("products")
+            .get(0)
+            .get("content");
+        assertThat(repositories.size()).isEqualTo(1);
+        assertThat(repositories.get(0)
+            .get("id")
+            .asString()).isEqualTo(future.getId());
+        assertThat(repositories.get(0).get("enabled").asBoolean()).isFalse();
+    }
+
+    @Test
+    public void testGenerateScaCertificateWithEmptyContent() throws Exception {
+        Consumer consumer = this.createConsumer(this.createOwner());
+        doReturn(true).when(this.v3CapabilityCheck).isCertV3Capable(consumer);
+
+        SCACertificate certificate = this.generator.generateScaCertificate(consumer, List.of());
+
+        JsonNode repositories = this.mapper.readTree(this.extractEntitlementDataJson(certificate.getCert()))
+            .get("products")
+            .get(0)
+            .get("content");
+        assertThat(repositories.size()).isZero();
+    }
+
+    @Test
+    public void testGenerateScaCertificateWithNullConsumer() {
+        assertThrows(IllegalArgumentException.class,
+            () -> this.generator.generateScaCertificate(null, List.of()));
+    }
+
+    @Test
+    public void testGenerateScaCertificateWithNullContent() {
+        Consumer consumer = this.createConsumer(this.createOwner());
+
+        assertThrows(IllegalArgumentException.class,
+            () -> this.generator.generateScaCertificate(consumer, null));
+    }
+
+    @Test
+    public void testGenerateScaCertificateWithNullOwner() {
+        Consumer consumer = new Consumer();
+
+        assertThrows(CertificateCreationException.class,
+            () -> this.generator.generateScaCertificate(consumer, List.of()));
+    }
+
+    @Test
+    public void testGenerateScaCertificateWithNonScaOwner() {
+        Owner owner = this.createNonSCAOwner("non-sca");
+        Consumer consumer = this.createConsumer(owner);
+
+        assertThrows(CertificateCreationException.class,
+            () -> this.generator.generateScaCertificate(consumer, List.of()));
+    }
+
+    @Test
+    public void testGenerateScaCertificateWithNonV3CapableConsumer() {
+        Consumer consumer = this.createConsumer(this.createOwner());
+        doReturn(false)
+            .when(this.v3CapabilityCheck)
+            .isCertV3Capable(consumer);
+
+        assertThrows(CertificateCreationException.class,
+            () -> this.generator.generateScaCertificate(consumer, List.of()));
     }
 
     @Test

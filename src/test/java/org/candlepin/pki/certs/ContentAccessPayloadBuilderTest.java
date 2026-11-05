@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.candlepin.config.Configuration;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessPayload;
@@ -89,10 +90,9 @@ public class ContentAccessPayloadBuilderTest extends DatabaseTestFixture {
 
     private ContentAccessPayloadBuilder buildContentAccessPayloadBuilder() {
         return new ContentAccessPayloadBuilder(
-            this.cryptoManager,
-            this.buildEntitlementPayloadGenerator(),
-            this.buildV3ExtensionUtil(),
-            this.contentCurator,
+            new ScaContentDataProvider(this.injector.getInstance(Configuration.class), this.contentCurator,
+                this.buildV3ExtensionUtil()),
+            new ScaPayloadEncoder(this.cryptoManager, this.buildEntitlementPayloadGenerator()),
             this.caPayloadCurator);
     }
 
