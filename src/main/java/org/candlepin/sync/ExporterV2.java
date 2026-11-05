@@ -210,10 +210,8 @@ public class ExporterV2 {
         /**
          * Writes entry content to the supplied writer
          *
-         * @param writer
-         *     writer managed and closed by the exporter
-         * @throws IOException
-         *     if content cannot be written
+         * @param writer writer managed and closed by the exporter
+         * @throws IOException if content cannot be written
          */
         void write(Writer writer) throws IOException;
     }

@@ -26,8 +26,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -48,7 +48,6 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.KeyPairData;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -62,10 +61,10 @@ import org.candlepin.model.SCACertificate;
 import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.Scheme;
+import org.candlepin.pki.Signer;
 import org.candlepin.pki.certs.CertificateCreationException;
 import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
 import org.candlepin.pki.certs.SCACertificateGenerator;
-import org.candlepin.pki.Signer;
 import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
@@ -394,8 +393,14 @@ class ExporterV2Test {
 
     private ExporterV2 createExporter(CryptoManager manager, Consumer consumer) throws ExportCreationException {
         ExportDataAggregator aggregator = mock(ExportDataAggregator.class);
+        CertificateSerial serial = new CertificateSerial();
+        serial.setId(42L);
+        SCACertificate certificate = new SCACertificate();
+        certificate.setSerial(serial);
+        certificate.setCert("test certificate");
+        certificate.setKey("test private key");
         when(aggregator.aggregate(consumer)).thenReturn(new ExportData(new MetaDTO(), new ConsumerDTO(),
-            Map.of(), Map.of(), this.workDirectory, new SCACertificate()));
+            Map.of(), Map.of(), this.workDirectory, certificate));
         return new ExporterV2(this.mapper, aggregator, manager);
     }
 
@@ -452,7 +457,7 @@ class ExporterV2Test {
     }
 
     @Test
-    void exportsCertificateAndKeyUnderSerialId() throws Exception {
+    public void exportsCertificateAndKeyUnderSerialId() throws Exception {
         Owner owner = TestUtil.createOwner("Example-Corporation");
         Consumer consumer = this.createCertificateConsumer(owner);
         SCACertificate storedCertificate = new SCACertificate();
@@ -471,7 +476,8 @@ class ExporterV2Test {
         Path export = this.createExporter()
             .getFullExport(consumer);
 
-        try (FileSystem archive = FileSystems.newFileSystem(export)) {
+        try (FileSystem signedArchive = FileSystems.newFileSystem(export);
+            FileSystem archive = FileSystems.newFileSystem(signedArchive.getPath(ExporterV2.CONSUMER_EXPORT_ZIP))) {
             Path directory = archive.getPath(ExporterV2.CERTIFICATES_DIRECTORY);
             assertEquals(certificate.getCert() + certificate.getKey(), Files.readString(directory.resolve("42.pem")));
             try (Stream<Path> files = Files.list(directory)) {

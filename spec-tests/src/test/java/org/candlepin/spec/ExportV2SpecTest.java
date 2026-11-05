@@ -262,6 +262,7 @@ public class ExportV2SpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         ConsumerDTO consumer = adminClient.consumers()
             .createConsumer(Consumers.random(owner, ConsumerTypes.Candlepin)
+                .capabilities(Set.of(new CapabilityDTO().name("cert_v3")))
                 .cryptographicCapabilities(capabilities));
 
         File export = this.createExportAsync(ApiClients.ssl(consumer), consumer.getUuid());
@@ -613,7 +614,8 @@ public class ExportV2SpecTest {
             .waitForJob(jobStatus.getId());
         if (!jobStatus.getState()
             .equals("FINISHED")) {
-            throw new ApiException("Unable to create export.");
+            throw new ApiException("Unable to create export: job " + jobStatus.getId() +
+                " ended with state " + jobStatus.getState() + ", result: " + jobStatus.getResultData());
         }
 
         ExportResultDTO result = ApiClient.MAPPER
