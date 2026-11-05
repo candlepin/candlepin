@@ -211,7 +211,7 @@ public class ExportDataAggregator {
          * for export V2 this would be the starting point. Currently, we take into account all products
          * that could be linked to at least on pool for a given consumer. All products considered here
          * satisfy namespace filtering as configured.
-         * 
+         *
          * And all products here are used for export and for SCA certificate generation. This should
          * be considered a hard requirement for any changes in filtering logic.
          *
