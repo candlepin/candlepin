@@ -27,13 +27,13 @@ import jakarta.ws.rs.core.Response;
 public class NotAcceptableExceptionMapperTest extends TestExceptionMapperBase {
 
     @Test
-    public void handleNotAcceptableException() {
+    public void testHandleNotAcceptableException() {
         NotAcceptableException nae = new NotAcceptableException("unacceptable");
         NotAcceptableExceptionMapper naem =
             injector.getInstance(NotAcceptableExceptionMapper.class);
         Response r = naem.toResponse(nae);
         assertEquals(406, r.getStatus());
-        verifyMessage(r, rtmsg("unacceptable"));
+        verifyMessage(r, "Not Acceptable");
     }
 
     @Override

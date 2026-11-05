@@ -14,6 +14,8 @@
  */
 package org.candlepin.exceptions.mappers;
 
+import org.candlepin.exceptions.ExceptionMessage;
+
 import org.jboss.resteasy.spi.ApplicationException;
 
 import jakarta.ws.rs.core.Response;
@@ -31,6 +33,8 @@ public class ApplicationExceptionMapper extends CandlepinExceptionMapper
 
     @Override
     public Response toResponse(ApplicationException exception) {
-        return getDefaultBuilder(exception, null, determineBestMediaType()).build();
+        return this.getDefaultBuilder(exception, Response.Status.INTERNAL_SERVER_ERROR)
+            .entity(new ExceptionMessage(this.i18n.get().tr("Internal Server Error")))
+            .build();
     }
 }

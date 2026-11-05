@@ -29,24 +29,24 @@ import jakarta.ws.rs.core.Response;
 public class ApplicationExceptionMapperTest extends TestExceptionMapperBase {
 
     @Test
-    public void withCause() {
+    public void testWithCause() {
         EOFException eofe = new EOFException("screwed");
         ApplicationException ae = new ApplicationException("oops", eofe);
         ApplicationExceptionMapper aem =
             injector.getInstance(ApplicationExceptionMapper.class);
         Response r = aem.toResponse(ae);
         assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), r.getStatus());
-        verifyMessage(r, rtmsg("oops"));
+        verifyMessage(r, "Internal Server Error");
     }
 
     @Test
-    public void noCause() {
+    public void testNoCause() {
         ApplicationException ae = new ApplicationException("oops", null);
         ApplicationExceptionMapper aem =
             injector.getInstance(ApplicationExceptionMapper.class);
         Response r = aem.toResponse(ae);
         assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), r.getStatus());
-        verifyMessage(r, rtmsg("oops"));
+        verifyMessage(r, "Internal Server Error");
     }
 
     @Override

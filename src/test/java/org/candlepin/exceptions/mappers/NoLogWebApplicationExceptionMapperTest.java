@@ -28,13 +28,13 @@ public class NoLogWebApplicationExceptionMapperTest extends
     TestExceptionMapperBase {
 
     @Test
-    public void handleNoLogWebAppExc() {
+    public void testHandleNoLogWebAppExc() {
         NoLogWebApplicationException isee = new NoLogWebApplicationException(400);
         NoLogWebApplicationExceptionMapper iseem =
             injector.getInstance(NoLogWebApplicationExceptionMapper.class);
         Response r = iseem.toResponse(isee);
         assertEquals(400, r.getStatus());
-        verifyMessage(r, rtmsg(""));
+        verifyMessage(r, "Bad Request");
     }
 
     @Override

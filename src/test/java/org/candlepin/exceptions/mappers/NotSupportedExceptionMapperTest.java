@@ -28,14 +28,14 @@ public class NotSupportedExceptionMapperTest extends
     TestExceptionMapperBase {
 
     @Test
-    public void handleException() {
+    public void testHandleException() {
         NotSupportedException nae =
             new NotSupportedException("unacceptable");
         NotSupportedExceptionMapper naem =
             injector.getInstance(NotSupportedExceptionMapper.class);
         Response r = naem.toResponse(nae);
         assertEquals(415, r.getStatus());
-        verifyMessage(r, rtmsg("unacceptable"));
+        verifyMessage(r, "Unsupported Media Type");
     }
 
     @Override

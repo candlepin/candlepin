@@ -29,23 +29,23 @@ import jakarta.ws.rs.core.Response;
 public class WriterExceptionMapperTest extends TestExceptionMapperBase {
 
     @Test
-    public void handleExceptionWithoutResponse() {
+    public void testHandleExceptionWithoutResponse() {
         WriterException nfe = new WriterException("unacceptable");
         WriterExceptionMapper nfem = injector.getInstance(WriterExceptionMapper.class);
         Response r = nfem.toResponse(nfe);
         assertEquals(500, r.getStatus());
-        verifyMessage(r, rtmsg("unacceptable"));
+        verifyMessage(r, "Internal Server Error");
     }
 
     @Test
-    public void handleExceptionWithResponse() {
+    public void testHandleExceptionWithResponse() {
         Response mockr = mock(Response.class);
         when(mockr.getStatus()).thenReturn(400);
         WriterException nfe = new WriterException("unacceptable", mockr);
         WriterExceptionMapper nfem = injector.getInstance(WriterExceptionMapper.class);
         Response r = nfem.toResponse(nfe);
         assertEquals(400, r.getStatus());
-        verifyMessage(r, rtmsg("unacceptable"));
+        verifyMessage(r, "Bad Request");
     }
 
     @Override

@@ -14,14 +14,16 @@
  */
 package org.candlepin.exceptions.mappers;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.guice.I18nProvider;
 import org.candlepin.guice.TestingScope;
+import org.candlepin.logging.LoggingUtil;
+import org.candlepin.version.VersionUtil;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -30,6 +32,11 @@ import com.google.inject.servlet.RequestScoped;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.slf4j.MDC;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;
@@ -59,7 +66,7 @@ public class CandlepinExceptionMapperTest {
     }
 
     @Test
-    public void defaultBuilder() {
+    public void testDefaultBuilder() {
         IOException ioe = new IOException("fake io exception");
         RuntimeException re = new RuntimeException("oops", ioe);
         ResponseBuilder bldr = cem.getDefaultBuilder(re, null,
@@ -70,11 +77,11 @@ public class CandlepinExceptionMapperTest {
         assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), r.getStatus());
         assertEquals(MediaType.APPLICATION_ATOM_XML_TYPE,
             r.getMetadata().get("Content-Type").get(0));
-        assertTrue(em.getDisplayMessage().startsWith("Runtime Error " + re.getMessage()));
+        assertEquals("An unexpected error occurred", em.getDisplayMessage());
     }
 
     @Test
-    public void handleArrayIndexException() {
+    public void testHandleArrayIndexException() {
         // Java 7 has a nice constructor where you can pass in false to not
         // fill in the stacktrace, but Java 6 does not have such a facility.
         // No amount of combination of creating Throwable without a stack
@@ -91,9 +98,55 @@ public class CandlepinExceptionMapperTest {
         ExceptionMessage em = (ExceptionMessage) r.getEntity();
 
         assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), r.getStatus());
-        assertEquals("Runtime Error no stack trace", em.getDisplayMessage());
+        assertEquals("An unexpected error occurred", em.getDisplayMessage());
         assertEquals(MediaType.APPLICATION_JSON_TYPE,
             r.getMetadata().get("Content-Type").get(0));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"https://internal.example/private", "secret-token"})
+    public void testHidesExceptionDetails(String message) {
+        RuntimeException exception = new RuntimeException(message, new IOException("private cause"));
+        exception.setStackTrace(new StackTraceElement[] {
+            new StackTraceElement("private.Class", "secretMethod", "Private.java", 42)
+        });
+
+        Response response = this.cem.getDefaultBuilder(exception, Status.BAD_REQUEST).build();
+
+        assertEquals(400, response.getStatus());
+        assertEquals("An unexpected error occurred", ((ExceptionMessage) response.getEntity()).getDisplayMessage());
+        assertThat(response.getHeaderString(VersionUtil.VERSION_HEADER)).isNotBlank();
+    }
+
+    @Test
+    public void testPreservesRequestUuid() {
+        try (MDC.MDCCloseable ignored = MDC.putCloseable(LoggingUtil.MDC_REQUEST_UUID_KEY, "test-request")) {
+            Response response = this.cem.getDefaultBuilder(new RuntimeException("private"), null).build();
+
+            assertEquals("test-request", ((ExceptionMessage) response.getEntity()).getRequestUuid());
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "BAD_REQUEST, Bad Request",
+        "UNAUTHORIZED, Unauthorized",
+        "FORBIDDEN, Forbidden",
+        "NOT_FOUND, Not Found",
+        "METHOD_NOT_ALLOWED, Method Not Allowed",
+        "NOT_ACCEPTABLE, Not Acceptable",
+        "UNSUPPORTED_MEDIA_TYPE, Unsupported Media Type",
+        "INTERNAL_SERVER_ERROR, Internal Server Error",
+        "CONFLICT, Request failed with status code 409"
+    })
+    public void testMapsStatusToMessage(Status status, String expected) {
+        assertEquals(expected, this.cem.getStatusMessage(status));
+    }
+
+    @Test
+    public void testDefaultsStatusMessageToInternalServerError() {
+        assertEquals("Internal Server Error", this.cem.getStatusMessage(null));
     }
 
     public static class MapperTestModule extends AbstractModule {

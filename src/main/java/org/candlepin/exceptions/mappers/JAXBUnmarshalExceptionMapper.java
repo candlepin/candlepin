@@ -14,6 +14,8 @@
  */
 package org.candlepin.exceptions.mappers;
 
+import org.candlepin.exceptions.ExceptionMessage;
+
 import org.jboss.resteasy.plugins.providers.jaxb.JAXBUnmarshalException;
 
 import jakarta.ws.rs.core.Response;
@@ -37,6 +39,8 @@ public class JAXBUnmarshalExceptionMapper extends CandlepinExceptionMapper
             status = Response.Status.fromStatusCode(
                 exception.getResponse().getStatus());
         }
-        return getDefaultBuilder(exception, status, determineBestMediaType()).build();
+        return this.getDefaultBuilder(exception, status)
+            .entity(new ExceptionMessage(this.getStatusMessage(status)))
+            .build();
     }
 }

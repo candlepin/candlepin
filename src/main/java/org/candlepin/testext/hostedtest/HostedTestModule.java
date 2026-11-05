@@ -34,6 +34,7 @@ public class HostedTestModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(HostedTestResource.class);
+        bind(ExceptionTestResource.class);
         bind(HostedTestDataStore.class).asEagerSingleton();
 
         bind(SubscriptionServiceAdapter.class).to(HostedTestSubscriptionServiceAdapter.class)

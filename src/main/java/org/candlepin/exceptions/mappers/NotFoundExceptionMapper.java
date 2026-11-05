@@ -14,6 +14,7 @@
  */
 package org.candlepin.exceptions.mappers;
 
+import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.util.JaxRsExceptionResponseBuilder;
 
 import jakarta.inject.Inject;
@@ -40,12 +41,13 @@ public class NotFoundExceptionMapper extends CandlepinExceptionMapper
     // notice this takes in a resteasy NFE *NOT* the candlepin one.
     @Override
     public final Response toResponse(final NotFoundException exception) {
-        if (badQueryParamHandler.canHandle(exception)) {
-            return badQueryParamHandler.getResponse(exception);
+        if (this.badQueryParamHandler.canHandle(exception)) {
+            return this.badQueryParamHandler.getResponse(exception);
         }
 
-        return getDefaultBuilder(exception, Response.Status.NOT_FOUND,
-                determineBestMediaType()).build();
+        return this.getDefaultBuilder(exception, Response.Status.NOT_FOUND)
+            .entity(new ExceptionMessage(this.i18n.get().tr("Not Found")))
+            .build();
     }
 
 }

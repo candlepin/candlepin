@@ -28,13 +28,13 @@ public class NotAllowedExceptionMapperTest extends
     TestExceptionMapperBase {
 
     @Test
-    public void handleMethodNotAllowed() {
+    public void testHandleMethodNotAllowed() {
         NotAllowedException mnae = new NotAllowedException("Not Allowed");
         NotAllowedExceptionMapper mnaem =
             injector.getInstance(NotAllowedExceptionMapper.class);
         Response r = mnaem.toResponse(mnae);
         assertEquals(405, r.getStatus());
-        verifyMessage(r, rtmsg(".+ Not Allowed.*"));
+        verifyMessage(r, "Method Not Allowed");
     }
 
     @Override

@@ -14,14 +14,19 @@
  */
 package org.candlepin.exceptions.mappers;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.ExceptionMessage;
+import org.candlepin.exceptions.IseException;
+import org.candlepin.exceptions.ServiceUnavailableException;
+import org.candlepin.logging.LoggingUtil;
 import org.candlepin.version.VersionUtil;
 
 import org.jboss.resteasy.spi.BadRequestException;
@@ -30,6 +35,11 @@ import org.jboss.resteasy.util.HttpHeaderNames;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.slf4j.MDC;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +64,7 @@ public class RuntimeExceptionMapperTest extends TestExceptionMapperBase {
     }
 
     @Test
-    public void toResponseBasicRuntimeException() {
+    public void testToResponseBasicRuntimeException() {
         when(req.getHeader(HttpHeaderNames.ACCEPT)).thenReturn("application/json");
 
         Response r = rem.toResponse(new RuntimeException("test exception"));
@@ -66,7 +76,7 @@ public class RuntimeExceptionMapperTest extends TestExceptionMapperBase {
         assertEquals(MediaType.APPLICATION_JSON_TYPE, mm.get("Content-Type").get(0));
         assertEquals("${version}-${release}",
             r.getMetadata().get(VersionUtil.VERSION_HEADER).get(0));
-        verifyMessage(r, rtmsg("test exception"));
+        verifyMessage(r, "An unexpected error occurred");
     }
 
     @Disabled
@@ -80,7 +90,7 @@ public class RuntimeExceptionMapperTest extends TestExceptionMapperBase {
     }
 
     @Test
-    public void nullAcceptHeader() {
+    public void testNullAcceptHeader() {
         when(req.getHeader(HttpHeaderNames.ACCEPT)).thenReturn(null);
         Response r = rem.toResponse(new RuntimeException("null accept header"));
         assertNotNull(r);
@@ -89,7 +99,7 @@ public class RuntimeExceptionMapperTest extends TestExceptionMapperBase {
         assertEquals(MediaType.APPLICATION_JSON_TYPE, mm.get("Content-Type").get(0));
         assertEquals("${version}-${release}",
             r.getMetadata().get(VersionUtil.VERSION_HEADER).get(0));
-        verifyMessage(r, rtmsg("null accept header"));
+        verifyMessage(r, "An unexpected error occurred");
     }
 
     @Test
@@ -122,7 +132,7 @@ public class RuntimeExceptionMapperTest extends TestExceptionMapperBase {
     }
 
     @Test
-    public void childException() {
+    public void testChildException() {
         when(req.getHeader(HttpHeaderNames.ACCEPT)).thenReturn("application/json");
 
         RuntimeException child = new RuntimeException("child ex");
@@ -130,17 +140,76 @@ public class RuntimeExceptionMapperTest extends TestExceptionMapperBase {
         Response r = rem.toResponse(re);
         assertNotNull(r);
         assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), r.getStatus());
-        verifyMessage(r, rtmsg("child ex"));
+        verifyMessage(r, "An unexpected error occurred");
     }
 
     @Test
-    public void jbossBadRequestException() {
+    public void testJbossBadRequestException() {
         String foo = "foo";
         BadRequestException bre = new BadRequestException(foo);
         Response r = rem.toResponse(bre);
 
         assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), r.getStatus());
-        verifyMessage(r, "Runtime Error");
+        verifyMessage(r, "An unexpected error occurred");
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "INTERNAL_SERVER_ERROR, false",
+        "INTERNAL_SERVER_ERROR, true",
+        "BAD_GATEWAY, false",
+        "SERVICE_UNAVAILABLE, true",
+        "GATEWAY_TIMEOUT, false"
+    })
+    public void testHidesServerErrorDetails(Status status, boolean wrapped) {
+        String message = "https://internal.example/private secret-token";
+        CandlepinException exception = new CandlepinException(status, message, new IOException("private cause"));
+        when(this.req.getHeader(HttpHeaderNames.ACCEPT)).thenReturn("application/atom+xml");
+
+        Response response = this.rem.toResponse(wrapped ? new RuntimeException("private wrapper", exception) :
+            exception);
+
+        assertEquals(status.getStatusCode(), response.getStatus());
+        assertEquals(MediaType.APPLICATION_ATOM_XML_TYPE, response.getMediaType());
+        this.verifyMessage(response, "An unexpected error occurred");
+        assertEquals(message, exception.message().getDisplayMessage());
+        assertThat(response.getHeaders().get(VersionUtil.VERSION_HEADER)).hasSize(1);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"https://internal.example/private secret-token"})
+    public void testHidesIseDetails(String message) {
+        Response response = this.rem.toResponse(new IseException(message, new IOException("private cause")));
+
+        assertEquals(500, response.getStatus());
+        this.verifyMessage(response, "An unexpected error occurred");
+    }
+
+    @Test
+    public void testPreservesServerErrorMetadata() {
+        ServiceUnavailableException exception = new ServiceUnavailableException("private diagnostics")
+            .setRetryAfterTime(60);
+        try (MDC.MDCCloseable ignored = MDC.putCloseable(LoggingUtil.MDC_REQUEST_UUID_KEY, "test-request")) {
+            Response response = this.rem.toResponse(exception);
+
+            assertEquals(503, response.getStatus());
+            assertEquals("60", response.getHeaderString("Retry-After"));
+            assertEquals("test-request", ((ExceptionMessage) response.getEntity()).getRequestUuid());
+            this.verifyMessage(response, "An unexpected error occurred");
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"BAD_REQUEST, false", "CONFLICT, true"})
+    public void testPreservesClientErrorMessages(Status status, boolean wrapped) {
+        CandlepinException exception = new CandlepinException(status, "Please correct the request");
+
+        Response response = this.rem.toResponse(wrapped ? new RuntimeException(exception) : exception);
+
+        assertEquals(status.getStatusCode(), response.getStatus());
+        assertSame(exception.message(), response.getEntity());
+        this.verifyMessage(response, "Please correct the request");
     }
 
     @Override

@@ -22,6 +22,7 @@ import java.util.Map;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.ResponseBuilder;
+import jakarta.ws.rs.core.Response.Status;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 
@@ -58,11 +59,17 @@ public class RuntimeExceptionMapper extends CandlepinExceptionMapper
     }
 
     protected ResponseBuilder getBuilder(CandlepinException exception, MediaType responseMediaType) {
-        ResponseBuilder bldr = Response.status(exception.httpReturnCode())
-            .entity(exception.message()).type(responseMediaType);
+        ResponseBuilder bldr;
+        if (exception.httpReturnCode().getFamily() == Status.Family.SERVER_ERROR) {
+            bldr = getDefaultBuilder(exception, exception.httpReturnCode(), responseMediaType);
+        }
+        else {
+            bldr = Response.status(exception.httpReturnCode())
+                .entity(exception.message()).type(responseMediaType);
 
-        Map<String, String> map = VersionUtil.getVersionMap();
-        bldr.header(VersionUtil.VERSION_HEADER, map.get("version") + "-" + map.get("release"));
+            Map<String, String> map = VersionUtil.getVersionMap();
+            bldr.header(VersionUtil.VERSION_HEADER, map.get("version") + "-" + map.get("release"));
+        }
 
         for (Map.Entry<String, String> hdr : exception.headers().entrySet()) {
             bldr.header(hdr.getKey(), hdr.getValue());

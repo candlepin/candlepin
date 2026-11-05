@@ -64,7 +64,9 @@ public class ValidationExceptionMapper extends CandlepinExceptionMapper
             builder.entity(new ExceptionMessage(errmsg.toString()));
         }
         else {
-            getDefaultBuilder(exception, Response.Status.BAD_REQUEST, determineBestMediaType());
+            return getDefaultBuilder(exception, Status.BAD_REQUEST)
+                .entity(new ExceptionMessage(this.getStatusMessage(Status.BAD_REQUEST)))
+                .build();
         }
 
         return builder.build();

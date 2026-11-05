@@ -14,9 +14,15 @@
  */
 package org.candlepin.exceptions.mappers;
 
+import org.candlepin.exceptions.ExceptionMessage;
+
 import org.jboss.resteasy.spi.DefaultOptionsMethodException;
 
+import java.util.List;
+
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.ResponseBuilder;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 
@@ -30,10 +36,46 @@ public class DefaultOptionsMethodExceptionMapper extends
     CandlepinExceptionMapper implements
     ExceptionMapper<DefaultOptionsMethodException> {
 
+    private static final List<String> ENTITY_HEADERS = List.of(
+        HttpHeaders.CONTENT_LENGTH,
+        HttpHeaders.CONTENT_ENCODING,
+        HttpHeaders.CONTENT_LANGUAGE,
+        HttpHeaders.CONTENT_LOCATION,
+        "Content-Range",
+        "Content-Disposition",
+        HttpHeaders.ETAG,
+        HttpHeaders.LAST_MODIFIED,
+        "Content-MD5",
+        "Digest",
+        "Content-Digest",
+        "Repr-Digest"
+    );
+
     @Override
     public Response toResponse(DefaultOptionsMethodException exception) {
         Response resp = exception.getResponse();
-        return (resp != null) ? resp :
-            getDefaultBuilder(exception, null, determineBestMediaType()).build();
+        if (resp != null) {
+            if (resp.getStatus() < Response.Status.BAD_REQUEST.getStatusCode()) {
+                return resp;
+            }
+
+            Response.Status status = Response.Status.fromStatusCode(resp.getStatus());
+            String message = status != null ? this.getStatusMessage(status) :
+                this.i18n.get().tr("Request failed with status code {0}", resp.getStatus());
+            ResponseBuilder builder = Response.fromResponse(resp)
+                .entity(new ExceptionMessage(message))
+                .type(this.determineBestMediaType());
+
+            // These headers describe the original entity and cannot describe the replacement error body.
+            for (String header : ENTITY_HEADERS) {
+                builder.header(header, null);
+            }
+
+            return builder.build();
+        }
+
+        return this.getDefaultBuilder(exception, Response.Status.INTERNAL_SERVER_ERROR)
+            .entity(new ExceptionMessage(this.i18n.get().tr("Internal Server Error")))
+            .build();
     }
 }

@@ -29,17 +29,17 @@ import jakarta.ws.rs.core.Response;
 public class FailureExceptionMapperTest extends TestExceptionMapperBase {
 
     @Test
-    public void handleExceptionWithoutResponse() {
+    public void testHandleExceptionWithoutResponse() {
         Failure nfe = new Failure("unacceptable");
         FailureExceptionMapper nfem =
             injector.getInstance(FailureExceptionMapper.class);
         Response r = nfem.toResponse(nfe);
         assertEquals(400, r.getStatus());
-        verifyMessage(r, rtmsg("unacceptable"));
+        verifyMessage(r, "Bad Request");
     }
 
     @Test
-    public void handleExceptionWithResponse() {
+    public void testHandleExceptionWithResponse() {
         Response mockr = mock(Response.class);
         when(mockr.getStatus()).thenReturn(500);
         Failure nfe = new Failure("unacceptable", mockr);
@@ -47,7 +47,7 @@ public class FailureExceptionMapperTest extends TestExceptionMapperBase {
             injector.getInstance(FailureExceptionMapper.class);
         Response r = nfem.toResponse(nfe);
         assertEquals(500, r.getStatus());
-        verifyMessage(r, rtmsg("unacceptable"));
+        verifyMessage(r, "Internal Server Error");
     }
     public Class<?> getMapperClass() {
         return FailureExceptionMapper.class;

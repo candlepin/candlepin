@@ -27,14 +27,14 @@ import jakarta.ws.rs.core.Response;
 public class NotAuthorizedExceptionMapperTest extends TestExceptionMapperBase {
 
     @Test
-    public void handleException() {
+    public void testHandleException() {
         NotAuthorizedException nae = new NotAuthorizedException(
             "Not Authorized", "Negotiate", "Basic realm=candlepin");
         NotAuthorizedExceptionMapper naem =
             injector.getInstance(NotAuthorizedExceptionMapper.class);
         Response r = naem.toResponse(nae);
         assertEquals(401, r.getStatus());
-        verifyMessage(r, rtmsg("Not Authorized"));
+        verifyMessage(r, "Unauthorized");
     }
 
     @Override
