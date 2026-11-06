@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-18 07:03+0000\n"
+"POT-Creation-Date: 2026-10-25 07:04+0000\n"
 "PO-Revision-Date: 2016-03-02 04:24-0500\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Hindi\n"
@@ -2255,37 +2255,37 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:372
+#: src/main/java/org/candlepin/sync/Importer.java:379
 msgid "Wrong metadata type"
 msgstr "गलत मेटाडेटा प्रकार"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:381
+#: src/main/java/org/candlepin/sync/Importer.java:388
 msgid "Invalid owner"
 msgstr "अवैध स्वामी"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:394
+#: src/main/java/org/candlepin/sync/Importer.java:401
 msgid "Import is older than existing data"
 msgstr "मौजूदा आँकड़ा से आयात अधिक पुराना"
 
-#: src/main/java/org/candlepin/sync/Importer.java:413
+#: src/main/java/org/candlepin/sync/Importer.java:420
 msgid "Import is the same as existing data"
 msgstr "मौजूदा आँकड़ा की तरह आयात"
 
-#: src/main/java/org/candlepin/sync/Importer.java:453
+#: src/main/java/org/candlepin/sync/Importer.java:460
 #, fuzzy
 #| msgid "The archive does not contain the required consumer.json file"
 msgid "The provided manifest has no content in the exported consumer archive"
 msgstr "अभिलेख के लिए जरूरी consumer.json फ़ाइल नहीं समाहित है."
 
-#: src/main/java/org/candlepin/sync/Importer.java:478
+#: src/main/java/org/candlepin/sync/Importer.java:485
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "अभिलेख के लिए जरूरी consumer_export.zip फ़ाइल नहीं समाहित है."
 
-#: src/main/java/org/candlepin/sync/Importer.java:483
+#: src/main/java/org/candlepin/sync/Importer.java:490
 #, fuzzy
 #| msgid "Unable to find upstream certificate for entitlement: {0}"
 msgid "Unable to read certificates to validate manifest"
@@ -2293,52 +2293,52 @@ msgstr "एंटाइटेलमेंट के लिए अपस्ट्
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rajesh
-#: src/main/java/org/candlepin/sync/Importer.java:488
-#: src/main/java/org/candlepin/sync/Importer.java:492
+#: src/main/java/org/candlepin/sync/Importer.java:495
+#: src/main/java/org/candlepin/sync/Importer.java:499
 msgid "Failed to import archive"
 msgstr "अभिलेख आयात करने में विफल"
 
-#: src/main/java/org/candlepin/sync/Importer.java:496
-#: src/main/java/org/candlepin/sync/Importer.java:985
+#: src/main/java/org/candlepin/sync/Importer.java:503
+#: src/main/java/org/candlepin/sync/Importer.java:992
 msgid "Unable to extract export archive"
 msgstr "निर्यात अभिलेख निष्कर्षण में असमर्थ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:543
-#: src/main/java/org/candlepin/sync/Importer.java:900
+#: src/main/java/org/candlepin/sync/Importer.java:550
+#: src/main/java/org/candlepin/sync/Importer.java:907
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "अभिलेख {0} एक ठीक से संकुचित फाइल नहीं है या खाली है"
 
-#: src/main/java/org/candlepin/sync/Importer.java:555
+#: src/main/java/org/candlepin/sync/Importer.java:562
 msgid "Archive signed by an untrusted certificate"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:579
-#: src/main/java/org/candlepin/sync/Importer.java:617
+#: src/main/java/org/candlepin/sync/Importer.java:586
+#: src/main/java/org/candlepin/sync/Importer.java:624
 msgid "Archive failed signature check"
 msgstr "अभिलेख हस्ताक्षर जाँच में विफल रहा"
 
-#: src/main/java/org/candlepin/sync/Importer.java:630
+#: src/main/java/org/candlepin/sync/Importer.java:637
 msgid "The archive does not contain the required signature file"
 msgstr "अभिलेख के लिए जरूरी हस्ताक्षर फ़ाइल नहीं समाहित है."
 
-#: src/main/java/org/candlepin/sync/Importer.java:659
+#: src/main/java/org/candlepin/sync/Importer.java:666
 msgid "The archive does not contain the required meta.json file"
 msgstr "अभिलेख के लिए जरूरी meta.json फ़ाइल नहीं समाहित है."
 
-#: src/main/java/org/candlepin/sync/Importer.java:664
+#: src/main/java/org/candlepin/sync/Importer.java:671
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "अभिलेख के लिए जरूरी consumer_types निर्देशिका नहीं समाहित है."
 
-#: src/main/java/org/candlepin/sync/Importer.java:669
+#: src/main/java/org/candlepin/sync/Importer.java:676
 msgid "The archive does not contain the required consumer.json file"
 msgstr "अभिलेख के लिए जरूरी consumer.json फ़ाइल नहीं समाहित है."
 
-#: src/main/java/org/candlepin/sync/Importer.java:675
+#: src/main/java/org/candlepin/sync/Importer.java:682
 msgid "The archive does not contain the required entitlements directory"
 msgstr "अभिलेख के लिए जरूरी एंटाइटेल निर्देशिका नहीं समाहित है."
 
-#: src/main/java/org/candlepin/sync/Importer.java:913
+#: src/main/java/org/candlepin/sync/Importer.java:920
 #, java-format
 msgid "Entry is outside of the target directory: {0}"
 msgstr ""
