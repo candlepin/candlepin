@@ -235,10 +235,6 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @NotNull
     private String typeId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "type_id", insertable = false, updatable = false)
-    private ConsumerType type;
-
     @Column(name = "owner_id", nullable = false)
     private String ownerId;
 
@@ -484,17 +480,6 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     }
 
     /**
-     * Fetches the type of this consumer, if the type ID is set. This may perform a lazy lookup of the
-     * consumer type, and should generally be avoided if the type ID is sufficient.
-     *
-     * @return
-     *  The type of this consumer, if the type ID is populated; null otherwise.
-     */
-    public ConsumerType getType() {
-        return this.type;
-    }
-
-    /**
      * Sets the ID of the consumer type to of this consumer.
      *
      * @param typeId
@@ -505,7 +490,6 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
      */
     public Consumer setTypeId(String typeId) {
         this.typeId = typeId;
-        this.type = null;
 
         this.updateRHCloudProfileModified();
 
@@ -526,10 +510,7 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
             throw new IllegalArgumentException("type is null or has not been persisted");
         }
 
-        this.setTypeId(type.getId());
-        this.type = type;
-
-        return this;
+        return this.setTypeId(type.getId());
     }
 
     /**
