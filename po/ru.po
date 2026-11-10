@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-15 07:09+0000\n"
+"POT-Creation-Date: 2026-10-30 16:02+0000\n"
 "PO-Revision-Date: 2026-07-30 21:17+0000\n"
 "Last-Translator: Andrei Stepanov <adem4ik@gmail.com>\n"
 "Language-Team: Russian <https://translate.fedoraproject.org/projects/"
@@ -418,7 +418,8 @@ msgstr "Не удалось активировать подписку по те�
 #, java-format
 msgid ""
 "The Dell service tag \"{0}\" has already been used to redeem a subscription."
-msgstr "Тег обслуживания Dell «{0}» уже был использован для активации подписки."
+msgstr ""
+"Тег обслуживания Dell «{0}» уже был использован для активации подписки."
 
 #: src/main/java/org/candlepin/exceptions/mappers/ServiceExceptionMapper.java:70
 #, java-format
@@ -518,13 +519,13 @@ msgstr ""
 msgid "Facts from multiple different cloud providers were found."
 msgstr "Обнаружены факты от нескольких разных облачных провайдеров."
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:802
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:808
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr "Система с UUID {0} является виртуальным гостем, и у нее нет гостей."
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1215
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1225
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1221
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1231
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:166
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."
@@ -678,8 +679,8 @@ msgstr "Поддерживает только {1} из {2} vCPU."
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
 msgid ""
 "Guest has not been reported on any host and is using a temporary unmapped "
-"guest subscription. For more information, please see https://access.redhat."
-"com/solutions/1592573"
+"guest subscription. For more information, please see https://"
+"access.redhat.com/solutions/1592573"
 msgstr ""
 "Гостевая система не зарегистрирована ни на одной основной системе и "
 "использует временную непривязанную подписку для гостевых систем. "
@@ -969,7 +970,7 @@ msgstr "Идентификатор облачной учётной записи 
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:258
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2619
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2971
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2975
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:661
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:127
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:157
@@ -1018,8 +1019,8 @@ msgid ""
 "The 'environmentId' query parameter cannot be used without also specifying "
 "the 'owner' query parameter."
 msgstr ""
-"Параметр запроса «environmentId» нельзя использовать без указания параметра «"
-"owner»."
+"Параметр запроса «environmentId» нельзя использовать без указания параметра "
+"«owner»."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:634
 msgid "Must specify at least one search criteria."
@@ -1252,8 +1253,8 @@ msgstr ""
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr "Для организации «{0}» отключено автоматическое присоединение."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2833
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2872
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2837
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2876
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:191
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:209
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:239
@@ -1263,34 +1264,34 @@ msgstr "Для организации «{0}» отключено автомат�
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr "Привилегии с идентификатором «{0}» не найдены."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2848
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2852
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr "Не удалось найти сертификат на права доступа с серийным номером «{0}»."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2865
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2869
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr "Нет разрешений для потребителя «{0}» с идентификатором буфера «{1}»"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2937
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2941
 msgid "Unable to create export archive"
 msgstr "Не удалось создать архив"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3079
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3084
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3083
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3088
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "Ошибка при повторной генерации сертификата для {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3120
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3124
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "Система с UUID {0} не является виртуальным гостем."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3199
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3203
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "Запись об удалении для гипервизора «{0}» не найдена."
@@ -1872,7 +1873,8 @@ msgstr "Исходный владелец должен быть анонимны
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1796
 msgid "Claimant owner does not exist in Candlepin or upstream!"
-msgstr "Владелец-заявитель не существует в Candlepin или в вышестоящей системе!"
+msgstr ""
+"Владелец-заявитель не существует в Candlepin или в вышестоящей системе!"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1801
 msgid "Claimant owner cannot be anonymous!"
@@ -2032,8 +2034,8 @@ msgstr "Необходимо выбрать язык уведомлений."
 msgid ""
 "Your subscription redemption is being processed and should be available "
 "soon. You will be notified via email once it is available. If you have any "
-"questions, additional information can be found here: https://access.redhat."
-"com/kb/docs/DOC-53864."
+"questions, additional information can be found here: https://"
+"access.redhat.com/kb/docs/DOC-53864."
 msgstr ""
 "Активация вашей подписки обрабатывается и должна стать доступной в ближайшее "
 "время. Вы получите уведомление по электронной почте, когда она станет "
@@ -2083,8 +2085,8 @@ msgstr "Нет таких типов: {0}"
 #, java-format
 msgid "Failed to parse parameter \"{0}\"; expected format: key:value"
 msgstr ""
-"Не удалось проанализировать параметр «{0}»; предполагаемый формат: ключ:"
-"значение"
+"Не удалось проанализировать параметр «{0}»; предполагаемый формат: "
+"ключ:значение"
 
 #: src/main/java/org/candlepin/resource/validation/DTOValidator.java:91
 msgid "collection contains null elements"
@@ -2127,11 +2129,11 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:266
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:281
 msgid "Organization"
 msgstr "Организация"
 
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:287
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:302
 #, java-format
 msgid "{0} with ID(s) {1} could not be found."
 msgstr "{0} с ИД {1} не найдены."

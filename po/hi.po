@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-15 07:09+0000\n"
+"POT-Creation-Date: 2026-10-30 16:02+0000\n"
 "PO-Revision-Date: 2016-03-02 04:24-0500\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Hindi\n"
@@ -509,13 +509,13 @@ msgstr "एक ही समय में बदलाव के चलते �
 msgid "Facts from multiple different cloud providers were found."
 msgstr ""
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:802
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:808
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr "UUID {0} के साथ तंत्र एक आभासी अतिथि है. इसके पास अतिथि नहीं है."
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1215
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1225
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1221
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1231
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:166
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."
@@ -658,8 +658,8 @@ msgstr ""
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
 msgid ""
 "Guest has not been reported on any host and is using a temporary unmapped "
-"guest subscription. For more information, please see https://access.redhat."
-"com/solutions/1592573"
+"guest subscription. For more information, please see https://"
+"access.redhat.com/solutions/1592573"
 msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
@@ -921,7 +921,7 @@ msgstr "ID {0} के साथ उत्पाद नहीं मिल सक
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:258
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2619
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2971
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2975
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:661
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:127
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:157
@@ -1200,8 +1200,8 @@ msgstr ""
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2833
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2872
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2837
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2876
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:191
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:209
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:239
@@ -1211,34 +1211,34 @@ msgstr ""
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2848
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2852
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2865
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2869
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2937
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2941
 msgid "Unable to create export archive"
 msgstr "निर्यात अभिलेख बनाने में असमर्थ"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3079
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3084
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3083
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3088
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "इकाई {0} के लिए आईडी प्रमाणपत्र फिर जनन करने में समस्या"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3120
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3124
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "UUID {0} के साथ तंत्र एक आभासी अतिथि नहीं है."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3199
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3203
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr ""
@@ -1941,8 +1941,8 @@ msgstr "अधिसूचना के लिए ईमेल लोकेल �
 msgid ""
 "Your subscription redemption is being processed and should be available "
 "soon. You will be notified via email once it is available. If you have any "
-"questions, additional information can be found here: https://access.redhat."
-"com/kb/docs/DOC-53864."
+"questions, additional information can be found here: https://"
+"access.redhat.com/kb/docs/DOC-53864."
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
@@ -2027,11 +2027,11 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rajesh
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:266
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:281
 msgid "Organization"
 msgstr "संगठन"
 
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:287
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:302
 #, fuzzy, java-format
 #| msgid "{0} with id {1} could not be found."
 msgid "{0} with ID(s) {1} could not be found."

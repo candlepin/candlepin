@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-15 07:09+0000\n"
+"POT-Creation-Date: 2026-10-30 16:02+0000\n"
 "PO-Revision-Date: 2024-12-16 10:38+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://translate.fedoraproject.org/projects/"
@@ -457,15 +457,15 @@ msgstr ""
 msgid "Facts from multiple different cloud providers were found."
 msgstr "Виявлено факти від декількох різних надавачів хмарних послуг."
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:802
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:808
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr ""
 "Система із UUID {0} є віртуальною гостьовою системою. У ній немає гостьових "
 "систем."
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1215
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1225
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1221
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1231
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:166
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."
@@ -626,8 +626,8 @@ msgstr "Передбачено підтримку лише {1} з {2} вірту
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
 msgid ""
 "Guest has not been reported on any host and is using a temporary unmapped "
-"guest subscription. For more information, please see https://access.redhat."
-"com/solutions/1592573"
+"guest subscription. For more information, please see https://"
+"access.redhat.com/solutions/1592573"
 msgstr ""
 "Не повідомлено про належність гостьової системи до будь-якої основної "
 "системи. Гостьова система використовує тимчасову непривʼязану передплату "
@@ -924,7 +924,7 @@ msgstr "Ідентифікатор облікового запису «хмар�
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:258
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2619
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2971
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2975
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:661
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:127
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:157
@@ -1196,8 +1196,8 @@ msgstr ""
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr "Для організації «{0}» вимкнено автоматичне долучення."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2833
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2872
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2837
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2876
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:191
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:209
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:239
@@ -1207,35 +1207,35 @@ msgstr "Для організації «{0}» вимкнено автомати�
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr "Не вдалося знайти реєстраційні дані із ідентифікатором «{0}»."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2848
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2852
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 "Не вдалося знайти сертифікат реєстраційних даних із серійним номером «{0}»."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2865
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2869
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
 "Немає реєстраційних даних для споживача «{0}» із ідентифікатором буфера «{1}»"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2937
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2941
 msgid "Unable to create export archive"
 msgstr "Не вдалося створити архів експортування"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3079
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3084
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3083
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3088
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr ""
 "Проблема із повторним створенням сертифіката ідентифікатора для модуля {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3120
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3124
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "Система з UUID {0} не є віртуальною гостьовою системою."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3199
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3203
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "Не виявлено запису вилучення для гіпервізора «{0}»."
@@ -1957,8 +1957,8 @@ msgstr "для сповіщення слід вказати локаль еле�
 msgid ""
 "Your subscription redemption is being processed and should be available "
 "soon. You will be notified via email once it is available. If you have any "
-"questions, additional information can be found here: https://access.redhat."
-"com/kb/docs/DOC-53864."
+"questions, additional information can be found here: https://"
+"access.redhat.com/kb/docs/DOC-53864."
 msgstr ""
 "Триває обробка вашого запиту щодо відкликання передплати. Невдовзі мають "
 "з'явитися результати. Вас буде сповіщено електронною поштою, якщо така є "
@@ -2048,11 +2048,11 @@ msgstr ""
 "параметр упорядкування (order) повинен мати значення «ascending» або "
 "«descending»"
 
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:266
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:281
 msgid "Organization"
 msgstr "Організація"
 
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:287
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:302
 #, java-format
 msgid "{0} with ID(s) {1} could not be found."
 msgstr "Не вдалося знайти {0} із ідентифікаторами {1}."
