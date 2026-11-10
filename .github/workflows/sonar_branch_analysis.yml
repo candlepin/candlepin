@@ -28,9 +28,12 @@ jobs:
     steps:
       - name: Mask secrets
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
-          echo "::add-mask::${{ secrets.SONAR_TOKEN }}"
+          echo "::add-mask::$GITHUB_TOKEN"
+          echo "::add-mask::$SONAR_TOKEN"
 
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
