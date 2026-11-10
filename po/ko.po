@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-11 07:11+0000\n"
+"POT-Creation-Date: 2026-10-30 16:02+0000\n"
 "PO-Revision-Date: 2026-03-17 09:58+0000\n"
 "Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
@@ -508,14 +508,14 @@ msgstr "{0}은 {1}에 대해 잘못된 값입니다"
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "요청은 동시 변경으로 인해 실패했으며, 다시 시도하세요."
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:803
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:809
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr ""
 "UUID {0}을 갖는 시스템은 가상 게스트입니다. 이는 게스트를 갖을 수 없습니다."
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1325
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1335
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1331
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1341
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:166
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."
@@ -576,8 +576,8 @@ msgid ""
 "knowledge/node/129003 for more information."
 msgstr ""
 "너무 많은 내용이 인증서 {0}에 설정되어 있습니다. 신규 클라이언트는 아마도 이 "
-"문제를 처리 할 수도 있습니다. 자세한 정보는 지식 데이터베이스 https://access."
-"redhat.com/knowledge/node/129003를 참조하세요."
+"문제를 처리 할 수도 있습니다. 자세한 정보는 지식 데이터베이스 https://"
+"access.redhat.com/knowledge/node/129003를 참조하세요."
 
 #: src/main/java/org/candlepin/pki/certs/UeberCertificateGenerator.java:116
 #, java-format
@@ -667,8 +667,8 @@ msgstr "{2} vCPU 중 {1} 만 지원합니다."
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
 msgid ""
 "Guest has not been reported on any host and is using a temporary unmapped "
-"guest subscription. For more information, please see https://access.redhat."
-"com/solutions/1592573"
+"guest subscription. For more information, please see https://"
+"access.redhat.com/solutions/1592573"
 msgstr ""
 "게스트가 호스트에서 보고되어 있지 않으며 일치되지 않은 임시 게스트 서브스크립"
 "션을 사용하고 있습니다. 보다 자세한 내용은 https://access.redhat.com/"
@@ -949,7 +949,7 @@ msgstr "클라우드 계정 ID가 null이거나 비어있습니다"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:258
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2676
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3028
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3032
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:681
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:127
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:157
@@ -1145,8 +1145,8 @@ msgstr "환경 \"{0}\"는 두 번 이상 지정됩니다."
 #, java-format
 msgid "Problem updating unit {0}. Hypervisor id: {1} is already used."
 msgstr ""
-"장치 {0}을 최신화 중에 문제가 발생했습니다. 하이퍼바이저 id: {1}은 이미 "
-"사용되고 있습니다."
+"장치 {0}을 최신화 중에 문제가 발생했습니다. 하이퍼바이저 id: {1}은 이미 사용"
+"되고 있습니다."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2178
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2189
@@ -1234,8 +1234,8 @@ msgstr ""
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr "\"{0}\" 조직에 자동 연결이 해제되었습니다."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2890
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2929
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2894
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2933
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:191
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:209
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:239
@@ -1245,34 +1245,34 @@ msgstr "\"{0}\" 조직에 자동 연결이 해제되었습니다."
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr "ID ''{0}''인 인타이틀먼트를 찾을 수 없습니다."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2905
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2909
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr "시리얼 번호 ''{0}''인 인타이틀먼트 인증서를 찾을 수 없습니다."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2922
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2926
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr "풀 id ''{1}''인 소비자 ''{0}''에 대한 권한이 없습니다"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2994
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2998
 msgid "Unable to create export archive"
 msgstr "내보내기 아카이브를 생성할 수 없음"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3136
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3141
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3140
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3145
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "장치 {0}의 ID 인증서를 다시 생성하는 도중 문제 발생"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3177
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3181
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "UUID {0}를 갖는 시스템은 가상 게스트가 아닙니다."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3256
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3260
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "하이퍼바이저 ''{0}''의 삭제 기록을 찾을 수 없습니다."
@@ -2035,8 +2035,8 @@ msgstr "통지를 위해 이메일 로케일이 필요함"
 msgid ""
 "Your subscription redemption is being processed and should be available "
 "soon. You will be notified via email once it is available. If you have any "
-"questions, additional information can be found here: https://access.redhat."
-"com/kb/docs/DOC-53864."
+"questions, additional information can be found here: https://"
+"access.redhat.com/kb/docs/DOC-53864."
 msgstr ""
 "당신의 구독 상환을 처리 중이고 곧 사용 할 수 있게 될 것입니다. 당신은 사용가"
 "능한 때에 전자우편으로 통지를 받게 될 것입니다. 만약 질문을 갖고 있으면, 추"
@@ -2150,11 +2150,11 @@ msgstr "익명의 소유자는 아직 candlepin의 부여된 업스트림이 없
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:266
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:281
 msgid "Organization"
 msgstr "조직"
 
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:287
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:302
 #, java-format
 msgid "{0} with ID(s) {1} could not be found."
 msgstr "{0}(ID {1}인)를 찾을 수 없습니다."
