@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-03 07:34+0000\n"
+"POT-Creation-Date: 2026-10-30 16:02+0000\n"
 "PO-Revision-Date: 2017-10-18 11:52-0400\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Oriya\n"
@@ -377,16 +377,16 @@ msgstr ""
 msgid "A CDN with label {0} does not exist on this system."
 msgstr "ନାମପଟି {0} ସହିତ ଗୋଟିଏ CDN ଏହି ତନ୍ତ୍ରରେ ଅବସ୍ଥିତ ନାହିଁ।"
 
-#: src/main/java/org/candlepin/controller/PoolManager.java:328
+#: src/main/java/org/candlepin/controller/PoolManager.java:341
 msgid "No owner specified, or owner lacks identifying information"
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/PoolManager.java:337
+#: src/main/java/org/candlepin/controller/PoolManager.java:350
 #, java-format
 msgid "Unable to find an owner with the key \"{0}\""
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/PoolManager.java:345
+#: src/main/java/org/candlepin/controller/PoolManager.java:358
 #, java-format
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr ""
@@ -929,7 +929,7 @@ msgstr "id {0} ବିଶିଷ୍ଟ ଉତ୍ପାଦନ ମିଳିଲା �
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:287
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2774
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3134
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3133
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:682
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:127
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:157
@@ -1259,8 +1259,8 @@ msgstr ""
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2993
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3032
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2992
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3031
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:191
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:209
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:239
@@ -1270,48 +1270,48 @@ msgstr ""
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3008
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3007
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3025
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3024
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3096
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3095
 msgid "Unable to create export archive"
 msgstr "ରପ୍ତାନୀ ଅଭିଲେଖ ସୃଷ୍ଟିକରିବାରେ ଅସମର୍ଥ"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3099
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3098
 #: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:261
 #, fuzzy, java-format
 #| msgid "Unable to create entitlement certificate archive"
 msgid "Unable to determine the signature scheme for consumer: {0}"
 msgstr "ଅଧିକାର ପ୍ରମାଣପତ୍ର ଅଭିଲେଖ ନିର୍ମାଣ କରିବାରେ ଅସମର୍ଥ"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3252
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3257
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3251
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3256
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "ଏକକ {0} ପାଇଁ ସମସ୍ୟା ପୁନଃ ନିର୍ମାଣ ID ପ୍ରମାଣପତ୍ର"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3260
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3259
 #: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:208
 #, fuzzy, java-format
 #| msgid "Unable to find upstream certificate for entitlement: {0}"
 msgid "Unable to generate ID certificate for consumer: {0}"
 msgstr "ଅଧିକାର ପାଇଁ ଅପଷ୍ଟ୍ରିମ ପ୍ରମାଣପତ୍ର ପାଇବାରେ ଅସମର୍ଥ: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3297
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3296
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "UUID {0} ବିଶିଷ୍ଟ ତନ୍ତ୍ରଟି ଗୋଟିଏ ଆଭାସୀ ଅତିଥି ନୁହଁ।"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3379
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3386
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr ""
@@ -2189,11 +2189,11 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mgiri
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:266
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:281
 msgid "Organization"
 msgstr "ଅନୁଷ୍ଠାନ"
 
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:287
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:302
 #, fuzzy, java-format
 #| msgid "{0} with id {1} could not be found."
 msgid "{0} with ID(s) {1} could not be found."
@@ -2225,63 +2225,63 @@ msgstr "ମାଲିକ ପୂର୍ବରୁ ଅନ୍ୟ ଏକ ସଦସ୍�
 msgid "Unable to find product with ID: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:222
+#: src/main/java/org/candlepin/sync/Importer.java:227
 msgid "Uploaded manifest file does not exist."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mgiri
-#: src/main/java/org/candlepin/sync/Importer.java:292
+#: src/main/java/org/candlepin/sync/Importer.java:297
 #, java-format
 msgid "{0} file imported successfully."
 msgstr "{0} ଫାଇଲ ସଫଳତାର ସହିତ ଆମଦାନୀ ହୋଇଛି।"
 
-#: src/main/java/org/candlepin/sync/Importer.java:294
+#: src/main/java/org/candlepin/sync/Importer.java:299
 #, java-format
 msgid "{0} file imported forcibly."
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:299
+#: src/main/java/org/candlepin/sync/Importer.java:304
 msgid "No active subscriptions found in the file."
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:304
+#: src/main/java/org/candlepin/sync/Importer.java:309
 msgid "One or more inactive subscriptions found in the file."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:366
+#: src/main/java/org/candlepin/sync/Importer.java:371
 msgid "Wrong metadata type"
 msgstr "ଭୁଲ ଅଧିତଥ୍ୟ ପ୍ରକାର"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:375
+#: src/main/java/org/candlepin/sync/Importer.java:380
 msgid "Invalid owner"
 msgstr "ଅବୈଧ ମାଲିକ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:388
+#: src/main/java/org/candlepin/sync/Importer.java:393
 msgid "Import is older than existing data"
 msgstr "ଆମଦାନୀଟି ସ୍ଥିତବାନ ତଥ୍ୟ ଠାରୁ ପୁରୁଣା"
 
-#: src/main/java/org/candlepin/sync/Importer.java:407
+#: src/main/java/org/candlepin/sync/Importer.java:412
 msgid "Import is the same as existing data"
 msgstr "ଆମଦାନୀଟି ସ୍ଥିତବାନ ତଥ୍ୟ ସହିତ ସମାନ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:441
+#: src/main/java/org/candlepin/sync/Importer.java:452
 #, fuzzy
 #| msgid "The archive does not contain the required consumer.json file"
 msgid "The provided manifest has no content in the exported consumer archive"
 msgstr "ଆଲେଖୀରେ ଆବଶ୍ୟକୀୟ consumer.json ଫାଇଲ ନଥାଏ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:466
+#: src/main/java/org/candlepin/sync/Importer.java:477
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "ଆଲେଖୀରେ ଆବଶ୍ୟକୀୟ consumer_export.zip ଫାଇଲ ନଥାଏ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:471
+#: src/main/java/org/candlepin/sync/Importer.java:482
 #, fuzzy
 #| msgid "Unable to find upstream certificate for entitlement: {0}"
 msgid "Unable to read certificates to validate manifest"
@@ -2289,51 +2289,52 @@ msgstr "ଅଧିକାର ପାଇଁ ଅପଷ୍ଟ୍ରିମ ପ୍ରମ
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mgiri
-#: src/main/java/org/candlepin/sync/Importer.java:476
-#: src/main/java/org/candlepin/sync/Importer.java:480
+#: src/main/java/org/candlepin/sync/Importer.java:487
+#: src/main/java/org/candlepin/sync/Importer.java:491
 msgid "Failed to import archive"
 msgstr "ଅଭିଲେଖରେ ଆମଦାନୀ କରିବାରେ ବିଫଳ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:484
-#: src/main/java/org/candlepin/sync/Importer.java:941
+#: src/main/java/org/candlepin/sync/Importer.java:495
+#: src/main/java/org/candlepin/sync/Importer.java:984
 msgid "Unable to extract export archive"
 msgstr "ରପ୍ତାନୀ ଅଭିଲେଖ ବାହାର କରିବାରେ ଅସମର୍ଥ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:531
-#: src/main/java/org/candlepin/sync/Importer.java:856
+#: src/main/java/org/candlepin/sync/Importer.java:542
+#: src/main/java/org/candlepin/sync/Importer.java:899
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "ଆଲେଖୀ {0} କୁ ସଠିକ ଭାବରେ ସଙ୍କୋଚନ କରାଯାଇ ନାହିଁ ଅଥବା ଖାଲି ଅଛି"
 
-#: src/main/java/org/candlepin/sync/Importer.java:541
+#: src/main/java/org/candlepin/sync/Importer.java:554
 msgid "Archive signed by an untrusted certificate"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:572
+#: src/main/java/org/candlepin/sync/Importer.java:578
+#: src/main/java/org/candlepin/sync/Importer.java:616
 msgid "Archive failed signature check"
 msgstr "ଆଲେଖି ହସ୍ତକ୍ଷର ଯାଞ୍ଚ କରିବାରେ ବିଫଳ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:586
+#: src/main/java/org/candlepin/sync/Importer.java:629
 msgid "The archive does not contain the required signature file"
 msgstr "ଆଲେଖୀରେ ଆବଶ୍ୟକୀୟ ହସ୍ତାକ୍ଷର ଫାଇଲ ନଥାଏ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:615
+#: src/main/java/org/candlepin/sync/Importer.java:658
 msgid "The archive does not contain the required meta.json file"
 msgstr "ଆଲେଖୀରେ ଆବଶ୍ୟକୀୟ meta.json ଫାଇଲ ନଥାଏ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:620
+#: src/main/java/org/candlepin/sync/Importer.java:663
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "ଆଲେଖୀରେ ଆବଶ୍ୟକୀୟ consumer_types ଡିରେକ୍ଟୋରୀ ନଥାଏ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:625
+#: src/main/java/org/candlepin/sync/Importer.java:668
 msgid "The archive does not contain the required consumer.json file"
 msgstr "ଆଲେଖୀରେ ଆବଶ୍ୟକୀୟ consumer.json ଫାଇଲ ନଥାଏ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:631
+#: src/main/java/org/candlepin/sync/Importer.java:674
 msgid "The archive does not contain the required entitlements directory"
 msgstr "ଆଲେଖୀରେ ଆବଶ୍ୟକୀୟ ଅଧିକାର ଡିରେକ୍ଟୋରୀ ନଥାଏ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:869
+#: src/main/java/org/candlepin/sync/Importer.java:912
 #, java-format
 msgid "Entry is outside of the target directory: {0}"
 msgstr ""

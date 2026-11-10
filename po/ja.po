@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-03 07:34+0000\n"
+"POT-Creation-Date: 2026-10-30 16:02+0000\n"
 "PO-Revision-Date: 2022-11-28 11:19+0000\n"
 "Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
 "Language-Team: Japanese <https://translate.fedoraproject.org/projects/"
@@ -377,16 +377,16 @@ msgstr ""
 msgid "A CDN with label {0} does not exist on this system."
 msgstr "ラベルが {0} の CDN はこのシステムには存在しません。"
 
-#: src/main/java/org/candlepin/controller/PoolManager.java:328
+#: src/main/java/org/candlepin/controller/PoolManager.java:341
 msgid "No owner specified, or owner lacks identifying information"
 msgstr "所有者が指定されていないか、所有者に識別情報がありません"
 
-#: src/main/java/org/candlepin/controller/PoolManager.java:337
+#: src/main/java/org/candlepin/controller/PoolManager.java:350
 #, java-format
 msgid "Unable to find an owner with the key \"{0}\""
 msgstr "キー \"{0}\" を持つ所有者が見つかりません"
 
-#: src/main/java/org/candlepin/controller/PoolManager.java:345
+#: src/main/java/org/candlepin/controller/PoolManager.java:358
 #, java-format
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr "ID \"{0}\" を持つ所有者が見つかりません"
@@ -976,7 +976,7 @@ msgstr "クラウドアカウント ID が null または空です"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:287
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2774
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3134
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3133
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:682
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:127
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:157
@@ -1307,8 +1307,8 @@ msgstr ""
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr "組織 \"{0}\" の自動アタッチは無効になっています。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2993
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3032
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2992
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3031
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:191
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:209
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:239
@@ -1318,13 +1318,13 @@ msgstr "組織 \"{0}\" の自動アタッチは無効になっています。"
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr "ID \"{0}\" のエンタイトルメントは見つかりませんでした。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3008
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3007
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 "シリアル番号が \"{0}\" のエンタイトルメント証明書は見つかりませんでした。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3025
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3024
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
@@ -1332,36 +1332,36 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3096
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3095
 msgid "Unable to create export archive"
 msgstr "エクスポートアーカイブを作成できません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3099
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3098
 #: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:261
 #, fuzzy, java-format
 #| msgid "Cannot retrieve content access certificate for consumer: {0}"
 msgid "Unable to determine the signature scheme for consumer: {0}"
 msgstr "コンシューマーのコンテンツアクセス証明書を取得できません: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3252
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3257
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3251
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3256
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "ユニット {0} の ID 証明書の再生成に問題があります"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3260
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3259
 #: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:208
 #, fuzzy, java-format
 #| msgid "Unable to find upstream certificate for entitlement: {0}"
 msgid "Unable to generate ID certificate for consumer: {0}"
 msgstr "エンタイトルメントのアップストリームの証明書が見つかりません: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3297
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3296
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "UUID {0} のシステムは仮想ゲストではありません。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3379
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3386
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "ハイパーバイザー \"{0}\" の削除記録は見つかりませんでした。"
@@ -2274,11 +2274,11 @@ msgstr "匿名所有者はまだ candlepin のアップストリームの権限�
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:266
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:281
 msgid "Organization"
 msgstr "組織"
 
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:287
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:302
 #, java-format
 msgid "{0} with ID(s) {1} could not be found."
 msgstr "ID {1} の {0} は見つかりませんでした。"
@@ -2314,63 +2314,63 @@ msgstr ""
 msgid "Unable to find product with ID: {0}"
 msgstr "次の ID の製品が見つかりません: {0}"
 
-#: src/main/java/org/candlepin/sync/Importer.java:222
+#: src/main/java/org/candlepin/sync/Importer.java:227
 msgid "Uploaded manifest file does not exist."
 msgstr "アップデートしたマニフェストファイルは存在しません。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: src/main/java/org/candlepin/sync/Importer.java:292
+#: src/main/java/org/candlepin/sync/Importer.java:297
 #, java-format
 msgid "{0} file imported successfully."
 msgstr "{0} ファイルは正常にインポートされました。"
 
-#: src/main/java/org/candlepin/sync/Importer.java:294
+#: src/main/java/org/candlepin/sync/Importer.java:299
 #, java-format
 msgid "{0} file imported forcibly."
 msgstr "{0} ファイルが強制的にインポートされました。"
 
-#: src/main/java/org/candlepin/sync/Importer.java:299
+#: src/main/java/org/candlepin/sync/Importer.java:304
 msgid "No active subscriptions found in the file."
 msgstr "ファイルに有効なサブスクリプションが見つかりません。"
 
-#: src/main/java/org/candlepin/sync/Importer.java:304
+#: src/main/java/org/candlepin/sync/Importer.java:309
 msgid "One or more inactive subscriptions found in the file."
 msgstr "ファイルに使用されていないサブスクリプションが見つかりました。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:366
+#: src/main/java/org/candlepin/sync/Importer.java:371
 msgid "Wrong metadata type"
 msgstr "不正なメタデータタイプ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:375
+#: src/main/java/org/candlepin/sync/Importer.java:380
 msgid "Invalid owner"
 msgstr "無効な所有者"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:388
+#: src/main/java/org/candlepin/sync/Importer.java:393
 msgid "Import is older than existing data"
 msgstr "インポートは既存データよりも古いものです"
 
-#: src/main/java/org/candlepin/sync/Importer.java:407
+#: src/main/java/org/candlepin/sync/Importer.java:412
 msgid "Import is the same as existing data"
 msgstr "インポートが既存データと同じです"
 
-#: src/main/java/org/candlepin/sync/Importer.java:441
+#: src/main/java/org/candlepin/sync/Importer.java:452
 msgid "The provided manifest has no content in the exported consumer archive"
 msgstr ""
 "エクスポートされたコンシューマーアーカイブにある、指定のマニフェストにはコン"
 "テンツがありません"
 
-#: src/main/java/org/candlepin/sync/Importer.java:466
+#: src/main/java/org/candlepin/sync/Importer.java:477
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "アーカイブには必要な consumer_export.zip ファイルが含まれていません"
 
-#: src/main/java/org/candlepin/sync/Importer.java:471
+#: src/main/java/org/candlepin/sync/Importer.java:482
 #, fuzzy
 #| msgid "Unable to find upstream certificate for entitlement: {0}"
 msgid "Unable to read certificates to validate manifest"
@@ -2378,51 +2378,52 @@ msgstr "エンタイトルメントのアップストリームの証明書が見
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author noriko
-#: src/main/java/org/candlepin/sync/Importer.java:476
-#: src/main/java/org/candlepin/sync/Importer.java:480
+#: src/main/java/org/candlepin/sync/Importer.java:487
+#: src/main/java/org/candlepin/sync/Importer.java:491
 msgid "Failed to import archive"
 msgstr "アーカイブのインポートに失敗しました"
 
-#: src/main/java/org/candlepin/sync/Importer.java:484
-#: src/main/java/org/candlepin/sync/Importer.java:941
+#: src/main/java/org/candlepin/sync/Importer.java:495
+#: src/main/java/org/candlepin/sync/Importer.java:984
 msgid "Unable to extract export archive"
 msgstr "エクスポートアーカイブが抽出できません"
 
-#: src/main/java/org/candlepin/sync/Importer.java:531
-#: src/main/java/org/candlepin/sync/Importer.java:856
+#: src/main/java/org/candlepin/sync/Importer.java:542
+#: src/main/java/org/candlepin/sync/Importer.java:899
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "アーカイブ {0} は、適切に圧縮されていないか、または空のファイルです"
 
-#: src/main/java/org/candlepin/sync/Importer.java:541
+#: src/main/java/org/candlepin/sync/Importer.java:554
 msgid "Archive signed by an untrusted certificate"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:572
+#: src/main/java/org/candlepin/sync/Importer.java:578
+#: src/main/java/org/candlepin/sync/Importer.java:616
 msgid "Archive failed signature check"
 msgstr "アーカイブでの署名チェックに失敗しました"
 
-#: src/main/java/org/candlepin/sync/Importer.java:586
+#: src/main/java/org/candlepin/sync/Importer.java:629
 msgid "The archive does not contain the required signature file"
 msgstr "アーカイブには必要な署名ファイルが含まれていません"
 
-#: src/main/java/org/candlepin/sync/Importer.java:615
+#: src/main/java/org/candlepin/sync/Importer.java:658
 msgid "The archive does not contain the required meta.json file"
 msgstr "アーカイブに必要な meta.json ファイルが含まれていません"
 
-#: src/main/java/org/candlepin/sync/Importer.java:620
+#: src/main/java/org/candlepin/sync/Importer.java:663
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "アーカイブに必要な consumer_types ディレクトリーが含まれていません"
 
-#: src/main/java/org/candlepin/sync/Importer.java:625
+#: src/main/java/org/candlepin/sync/Importer.java:668
 msgid "The archive does not contain the required consumer.json file"
 msgstr "アーカイブに必要な consumer.json ファイルが含まれていません"
 
-#: src/main/java/org/candlepin/sync/Importer.java:631
+#: src/main/java/org/candlepin/sync/Importer.java:674
 msgid "The archive does not contain the required entitlements directory"
 msgstr "アーカイブに必要なエンタイトルメントのディレクトリーが含まれていません"
 
-#: src/main/java/org/candlepin/sync/Importer.java:869
+#: src/main/java/org/candlepin/sync/Importer.java:912
 #, java-format
 msgid "Entry is outside of the target directory: {0}"
 msgstr "エントリーがターゲットディレクトリー外にあります: {0}"
