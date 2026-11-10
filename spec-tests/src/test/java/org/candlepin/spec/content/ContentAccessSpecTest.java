@@ -62,8 +62,6 @@ import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 import org.candlepin.spec.bootstrap.data.util.ExportUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
-import com.google.gson.internal.LinkedTreeMap;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -1945,10 +1943,10 @@ public class ContentAccessSpecTest {
     }
 
     private List<String> getSerialIdsFromCertExport(Object export) {
-        List<Map<String, LinkedTreeMap>> certsToKeyVal = ((List<Map<String, LinkedTreeMap>>) export);
+        List<Map<String, Map>> certsToKeyVal = ((List<Map<String, Map>>) export);
         List<String> serialIds = new ArrayList<>();
         certsToKeyVal.forEach(entry -> {
-            LinkedTreeMap serial = entry.get("serial");
+            Map serial = entry.get("serial");
             if (serial != null) {
                 serialIds.add(serial.get("id").toString());
             }
