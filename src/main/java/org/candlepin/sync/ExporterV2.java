@@ -15,6 +15,7 @@
 
 package org.candlepin.sync;
 
+import org.candlepin.dto.manifest.v2.CertificateDTO;
 import org.candlepin.dto.manifest.v2.ProductDTO;
 import org.candlepin.dto.manifest.v2.SubscriptionDTO;
 import org.candlepin.model.Consumer;
@@ -78,6 +79,9 @@ public class ExporterV2 {
      * for export metadata, the upstream consumer, owner subscriptions, and their resolved products.
      * The archive contains {@code meta.json}, {@code scheme.json}, {@code upstream_consumer/consumer.json}, subscription files
      * under {@code subscriptions/} named by pool ID, and product files under {@code products/} named by
+     * product ID. The existing identity certificate and private key are serialized as
+     * {@code upstream_consumer/<serial-id>.json}. Namespace filtering and selection of export data are
+     * handled by the aggregator.
      * product ID. Namespace filtering and selection of export data are handled by the aggregator.
      * <p>
      * Selects a cryptographic scheme from the consumer's capabilities and includes its certificate and
@@ -93,7 +97,10 @@ public class ExporterV2 {
      * @param consumer
      *     consumer to represent in the manifest and whose owner supplies the exported subscriptions
      * @throws ExportCreationException
-     *     if archive creation, scheme negotiation, certificate encoding, or signing fails
+     *     if the consumer has no identity certificate or serial ID, the archive path cannot be prepared,
+     *     the ZIP filesystem cannot be opened, or archive I/O fails, or signing fails
+     * @throws NullPointerException
+     *     if the consumer is null
      * @throws IllegalArgumentException
      *     if the consumer is null or a pool or product ID used as a filename contains the archive's path separator
      * @return the path to the completed ZIP archive
@@ -107,6 +114,9 @@ public class ExporterV2 {
                 writeFile(archive.getPath(SchemeFile.FILENAME), SchemeFile.from(scheme));
                 writeFile(archive.getPath(META_JSON), data.getMetaDTO());
                 writeFile(archive.getPath(UPSTREAM_CONSUMER, CONSUMER_JSON), data.getConsumerDTO());
+                CertificateDTO identityCertificate = data.getIdentityCertificate();
+                writeFile(pathBasedOnId(archive, UPSTREAM_CONSUMER, ID_JSON,
+                    identityCertificate.getSerial().getId().toString()), identityCertificate);
                 for (Map.Entry<String, SubscriptionDTO> entry : data.getSubscriptions().entrySet()) {
                     writeFile(
                         pathBasedOnId(archive, SUBSCRIPTIONS, ID_JSON, entry.getKey()),
