@@ -33,11 +33,13 @@ import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
+import org.candlepin.dto.manifest.v2.CertificateDTO;
 import org.candlepin.dto.manifest.v2.ConsumerDTO;
 import org.candlepin.dto.manifest.v2.MetaDTO;
 import org.candlepin.dto.manifest.v2.ProductDTO;
 import org.candlepin.dto.manifest.v2.SubscriptionDTO;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -210,7 +212,7 @@ class ExporterV2Test {
             .thenReturn(filterNamespaces ? List.of(mktProd, mktSubProd, prod12345, subProvidedProduct332211) :
                 List.of(mktProd, mktSubProd, prod12345, subProvidedProduct332211, subNamespacedProduct));
 
-        IdentityCertificate idcert = new IdentityCertificate();
+        IdentityCertificate idcert = this.createIdentityCertificate();
         KeyPairData keyPairData = this.generateConsumerKeyPairData(null);
 
         Consumer consumer = new Consumer()
@@ -237,6 +239,7 @@ class ExporterV2Test {
             .verify(metaPath);
 
         verifyConsumer(export, consumer);
+        this.verifyIdentityCertificate(export, idcert);
 
         verifySubscription(export, pool);
         verifySubscription(export, secondPool);
@@ -365,10 +368,11 @@ class ExporterV2Test {
         this.assertWorkDirectoryEmpty();
     }
 
-    private ExporterV2 createExporter(CryptoManager manager, Consumer consumer) {
+    private ExporterV2 createExporter(CryptoManager manager, Consumer consumer) throws ExportCreationException {
         ExportDataAggregator aggregator = mock(ExportDataAggregator.class);
         when(aggregator.aggregate(consumer)).thenReturn(new ExportData(new MetaDTO(), new ConsumerDTO(),
-            Map.of(), Map.of(), this.workDirectory));
+            Map.of(), Map.of(),
+            this.modelTranslator.translate(this.createIdentityCertificate(), CertificateDTO.class), this.workDirectory));
         return new ExporterV2(this.mapper, aggregator, manager);
     }
 
@@ -399,6 +403,31 @@ class ExporterV2Test {
             verifier.update(payload);
             assertTrue(verifier.verify(signature));
         }
+    }
+
+    private IdentityCertificate createIdentityCertificate() {
+        IdentityCertificate idcert = new IdentityCertificate();
+        idcert.setId("identity-id");
+        idcert.setSerial(new CertificateSerial(42L, new Date(10000L)));
+        idcert.setCert("-----BEGIN CERTIFICATE-----\nexisting certificate\n-----END CERTIFICATE-----");
+        idcert.setKey("-----BEGIN PRIVATE KEY-----\nexisting key\n-----END PRIVATE KEY-----");
+        idcert.setCreated(new Date(1000L));
+        idcert.setUpdated(new Date(2000L));
+        return idcert;
+    }
+
+    private void verifyIdentityCertificate(Path export, IdentityCertificate idcert) {
+        Verify.content(export, CertificateDTO.class, dto -> {
+            assertEquals(idcert.getId(), dto.getId());
+            assertEquals(idcert.getCert(), dto.getCertificate());
+            assertEquals(idcert.getKey(), dto.getKey());
+            assertEquals(idcert.getCreated(), dto.getCreated());
+            assertEquals(idcert.getUpdated(), dto.getUpdated());
+            assertEquals(idcert.getSerial().getId(), dto.getSerial().getId());
+            assertEquals(idcert.getSerial().getSerial(), dto.getSerial().getSerial());
+            assertEquals(idcert.getSerial().getExpiration(), dto.getSerial().getExpiration());
+            assertEquals(idcert.getSerial().isRevoked(), dto.getSerial().isRevoked());
+        }).verify(Paths.get(ExporterV2.UPSTREAM_CONSUMER, idcert.getSerial().getId() + ".json"));
     }
 
     private void verifyMeta(MetaDTO metaDto) {

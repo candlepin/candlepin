@@ -32,10 +32,12 @@ import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -58,7 +60,7 @@ class ExportDataAggregatorTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    public void testExportsOwnerPoolsAndProductGraph(boolean filterNamespaces) {
+    void testExportsOwnerPoolsAndProductGraph(boolean filterNamespaces) throws ExportCreationException {
         Product shared = new Product("shared", "Shared").setNamespace("");
         shared.addContent(new Content("global-content").setNamespace(""), true);
         Product provided = new Product("provided", "Provided").setNamespace("");
@@ -142,7 +144,7 @@ class ExportDataAggregatorTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    public void testEmptyOwnerPoolsProduceEmptyExport(boolean filterNamespaces) {
+    void testEmptyOwnerPoolsProduceEmptyExport(boolean filterNamespaces) throws ExportCreationException {
         ExportData data = this.createExportData(List.of(), List.of(), filterNamespaces);
 
         assertTrue(data.getProducts().isEmpty());
@@ -150,7 +152,7 @@ class ExportDataAggregatorTest {
     }
 
     @Test
-    public void testPoolWithoutProductIdDoesNotSupplyNullProductId() {
+    void testPoolWithoutProductIdDoesNotSupplyNullProductId() throws ExportCreationException {
         Pool pool = new Pool().setId("pool").setSubscriptionId("subscription");
 
         ExportData data = this.createExportData(List.of(pool), List.of(), true);
@@ -161,7 +163,7 @@ class ExportDataAggregatorTest {
     }
 
     @Test
-    public void testRejectsNullConsumer() {
+    void testRejectsNullConsumer() throws ExportCreationException {
         ExportDataAggregator aggregator = new ExportDataAggregator(mock(ModelTranslator.class), TestConfig.defaults(),
             mock(PoolCurator.class), mock(ProductCurator.class), mock(PrincipalProvider.class));
 
@@ -169,7 +171,7 @@ class ExportDataAggregatorTest {
     }
 
     @Test
-    public void testRepeatedAggregationKeepsExportDataSeparate() {
+    void testRepeatedAggregationKeepsExportDataSeparate() throws ExportCreationException {
         DevConfig configuration = TestConfig.defaults();
         configuration.setProperty(ConfigProperties.EXPORT_FILTER_NON_GLOBAL_NAMESPACE, "true");
         configuration.setProperty(ConfigProperties.SYNC_WORK_DIR, "/first-export");
@@ -197,12 +199,17 @@ class ExportDataAggregatorTest {
         ExportDataAggregator aggregator = new ExportDataAggregator(translator, configuration, poolCurator,
             productCurator, principalProvider);
 
-        ExportData first = aggregator.aggregate(new Consumer().setUuid("first-consumer")
+        IdentityCertificate firstIdentityCertificate = this.createIdentityCertificate();
+        ExportData first = aggregator.aggregate(new Consumer()
+            .setIdCert(firstIdentityCertificate)
+            .setUuid("first-consumer")
             .setOwner(new Owner().setId("first-owner")).setEntitlements(Set.of()));
         configuration.setProperty(ConfigProperties.SYNC_WORK_DIR, "/second-export");
         configuration.setProperty(ConfigProperties.PREFIX_APIURL, "https://second.example.com/api");
         configuration.setProperty(ConfigProperties.PREFIX_WEBURL, "https://second.example.com");
-        ExportData second = aggregator.aggregate(new Consumer().setUuid("second-consumer")
+        ExportData second = aggregator.aggregate(new Consumer()
+            .setIdCert(this.createIdentityCertificate())
+            .setUuid("second-consumer")
             .setOwner(new Owner().setId("second-owner")).setEntitlements(Set.of()));
 
         assertEquals(Set.of("product"), first.getProducts().keySet());
@@ -211,6 +218,10 @@ class ExportDataAggregatorTest {
         assertTrue(second.getSubscriptions().isEmpty());
         assertNotSame(first.getProducts(), second.getProducts());
         assertNotSame(first.getSubscriptions(), second.getSubscriptions());
+        assertEquals(firstIdentityCertificate.getCertificate(), first.getIdentityCertificate().getCertificate());
+        assertEquals(firstIdentityCertificate.getKey(), first.getIdentityCertificate().getKey());
+        assertEquals(firstIdentityCertificate.getSerial().getId(), first.getIdentityCertificate().getSerial().getId());
+        assertNotSame(first.getIdentityCertificate(), second.getIdentityCertificate());
         assertEquals("first-consumer", first.getConsumerDTO().getUuid());
         assertEquals("second-consumer", second.getConsumerDTO().getUuid());
         assertEquals("first-principal", first.getMetaDTO().getPrincipalName());
@@ -223,18 +234,43 @@ class ExportDataAggregatorTest {
         assertEquals(Paths.get("/second-export"), second.getWorkDirectory());
     }
 
+    @Test
+    void testRejectsMissingIdentityCertificate() {
+        ExportDataAggregator aggregator = new ExportDataAggregator(mock(ModelTranslator.class), TestConfig.defaults(),
+            mock(PoolCurator.class), mock(ProductCurator.class), mock(PrincipalProvider.class));
+
+        assertThrows(ExportCreationException.class, () -> aggregator.aggregate(new Consumer()));
+        assertThrows(ExportCreationException.class,
+            () -> aggregator.aggregate(new Consumer().setIdCert(new IdentityCertificate())));
+        IdentityCertificate certificate = new IdentityCertificate();
+        certificate.setSerial(new CertificateSerial(new Date()));
+        assertThrows(ExportCreationException.class,
+            () -> aggregator.aggregate(new Consumer().setIdCert(certificate)));
+    }
+
+    private IdentityCertificate createIdentityCertificate() {
+        IdentityCertificate certificate = new IdentityCertificate();
+        certificate.setId("identity-id");
+        certificate.setSerial(new CertificateSerial(42L, new Date(10000L)));
+        certificate.setCert("existing certificate");
+        certificate.setKey("existing private key");
+        return certificate;
+    }
+
     private PoolExportProjection projectPool(Pool pool) {
         return new PoolExportProjection(pool.getId(), pool.getProductUuid(), pool.getProductId(),
             pool.getSubscriptionId(), pool.getCreated(), pool.getUpdated(), pool.getStartDate(), pool.getEndDate(),
             pool.getContractNumber(), pool.getAccountNumber());
     }
 
-    private ExportData createExportData(List<Pool> pools, List<Product> products, boolean filterNamespaces) {
+    private ExportData createExportData(List<Pool> pools, List<Product> products, boolean filterNamespaces)
+        throws ExportCreationException {
         DevConfig configuration = TestConfig.defaults();
         configuration.setProperty(ConfigProperties.EXPORT_FILTER_NON_GLOBAL_NAMESPACE, Boolean.toString(filterNamespaces));
         StandardTranslator translator = new StandardTranslator(mock(ConsumerTypeCurator.class),
             mock(EnvironmentCurator.class), mock(OwnerCurator.class));
         Consumer consumer = new Consumer()
+            .setIdCert(this.createIdentityCertificate())
             .setOwner(new Owner().setId("owner-id").setKey("owner"))
             .setEntitlements(Set.of());
         Principal principal = mock(Principal.class);
