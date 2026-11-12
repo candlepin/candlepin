@@ -19,9 +19,15 @@ package org.candlepin.sync;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,23 +50,29 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolExportProjection;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.SCACertificate;
+import org.candlepin.pki.certs.SCACertificateGenerator;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 class ExportDataAggregatorTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void testExportsOwnerPoolsAndProductGraph(boolean filterNamespaces) throws ExportCreationException {
+    void testExportsOwnerPoolsAndProductGraph(boolean filterNamespaces) throws Exception {
         Product shared = new Product("shared", "Shared").setNamespace("");
         shared.addContent(new Content("global-content").setNamespace(""), true);
         Product provided = new Product("provided", "Provided").setNamespace("");
@@ -144,7 +156,7 @@ class ExportDataAggregatorTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void testEmptyOwnerPoolsProduceEmptyExport(boolean filterNamespaces) throws ExportCreationException {
+    void testEmptyOwnerPoolsProduceEmptyExport(boolean filterNamespaces) throws Exception {
         ExportData data = this.createExportData(List.of(), List.of(), filterNamespaces);
 
         assertTrue(data.getProducts().isEmpty());
@@ -152,7 +164,7 @@ class ExportDataAggregatorTest {
     }
 
     @Test
-    void testPoolWithoutProductIdDoesNotSupplyNullProductId() throws ExportCreationException {
+    void testPoolWithoutProductIdDoesNotSupplyNullProductId() throws Exception {
         Pool pool = new Pool().setId("pool").setSubscriptionId("subscription");
 
         ExportData data = this.createExportData(List.of(pool), List.of(), true);
@@ -162,10 +174,134 @@ class ExportDataAggregatorTest {
         assertNull(data.getSubscriptions().get("pool").getProductId());
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void testGeneratesCertificateFromExportedContent(boolean filterNamespaces) throws Exception {
+        Content globalContent = new Content("global-content").setNamespace("");
+        Product first = new Product("first", "First").setUuid("first-uuid").setNamespace("");
+        first.addContent(globalContent, true);
+        Product second = new Product("second", "Second").setUuid("second-uuid").setNamespace("");
+        second.addContent(globalContent, false);
+        Product privateProduct = new Product("private", "Private").setUuid("private-uuid").setNamespace("private");
+        privateProduct.addContent(new Content("private-content").setNamespace("private"), false);
+        Pool firstPool = new Pool().setId("first-pool").setProduct(first);
+        Pool secondPool = new Pool().setId("second-pool").setProduct(second);
+        Pool privatePool = new Pool().setId("private-pool").setProduct(privateProduct);
+        List<ProductContent> certificateContent = new ArrayList<>();
+        SCACertificateGenerator generator = mock(SCACertificateGenerator.class);
+        SCACertificate certificate = new SCACertificate();
+        certificate.setCert("certificate");
+        certificate.setKey("private key");
+        when(generator.generateScaCertificate(any(Consumer.class), anyList())).thenAnswer(invocation -> {
+            certificateContent.addAll(invocation.<List<ProductContent>>getArgument(1));
+            return certificate;
+        });
+
+        ExportData data = this.createExportData(
+            filterNamespaces ? List.of(firstPool, secondPool) : List.of(firstPool, secondPool, privatePool),
+            filterNamespaces ? List.of(first, second) : List.of(first, second, privateProduct),
+            filterNamespaces, generator);
+
+        assertEquals(certificate.getCert(), data.getScaCertificate().getCertificate());
+        assertEquals(certificate.getKey(), data.getScaCertificate().getKey());
+        assertEquals(filterNamespaces ? 2 : 3, certificateContent.size());
+        assertEquals(filterNamespaces ? Set.of("global-content") : Set.of("global-content", "private-content"),
+            certificateContent.stream()
+                .map(link -> link.getContent().getId())
+                .collect(Collectors.toSet()));
+        assertEquals(Set.of(true, false), certificateContent.stream()
+            .filter(link -> link.getContent().getId().equals("global-content"))
+            .map(ProductContent::isEnabled)
+            .collect(Collectors.toSet()));
+    }
+
+    @Test
+    public void testDeduplicatesContentIdsWithinProduct() throws Exception {
+        Content first = new Content("content").setName("First");
+        Content last = new Content("content").setName("Last");
+        Product product = spy(new Product("product", "Product").setUuid("product-uuid"));
+        doReturn(List.of(new ProductContent(first, true), new ProductContent(last, false)))
+            .when(product).getProductContent();
+        Pool pool = new Pool().setId("pool").setProduct(product);
+        SCACertificateGenerator generator = mock(SCACertificateGenerator.class);
+
+        ExportData data = this.createExportData(List.of(pool), List.of(product), true, generator);
+
+        ArgumentCaptor<List<ProductContent>> captor = ArgumentCaptor.captor();
+        verify(generator).generateScaCertificate(any(Consumer.class), captor.capture());
+        assertEquals(Set.of("content"), data.getProducts().get("product").getProductContent().keySet());
+        assertEquals("Last", data.getProducts().get("product").getProductContent().get("content").getName());
+        assertEquals(1, captor.getValue().size());
+        assertSame(last, captor.getValue().get(0).getContent());
+        assertEquals(false, captor.getValue().get(0).isEnabled());
+    }
+
+    @Test
+    public void testDeduplicatesContentFromRepeatedProducts() throws Exception {
+        Content content = new Content("content");
+        Product product = new Product("product", "Product").setUuid("product-uuid");
+        product.addContent(content, true);
+        Pool pool = new Pool().setId("pool").setProduct(product);
+        SCACertificateGenerator generator = mock(SCACertificateGenerator.class);
+
+        ExportData data = this.createExportData(List.of(pool), List.of(product, product), true, generator);
+
+        ArgumentCaptor<List<ProductContent>> captor = ArgumentCaptor.captor();
+        verify(generator).generateScaCertificate(any(Consumer.class), captor.capture());
+        assertEquals(Set.of("content"), data.getProducts().get("product").getProductContent().keySet());
+        assertEquals(1, captor.getValue().size());
+        assertSame(content, captor.getValue().get(0).getContent());
+        assertTrue(captor.getValue().get(0).isEnabled());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void testCertificateContentMatchesLastProductWithSamePublicId(boolean replacementHasContent)
+        throws Exception {
+        Product original = new Product("product", "Original").setUuid("original-uuid");
+        original.addContent(new Content("original-content"), true);
+        Content replacementContent = new Content("replacement-content");
+        Product replacement = new Product("product", "Replacement").setUuid("replacement-uuid");
+        if (replacementHasContent) {
+            replacement.addContent(replacementContent, false);
+        }
+        Pool pool = new Pool().setId("pool").setProduct(original);
+        SCACertificateGenerator generator = mock(SCACertificateGenerator.class);
+
+        ExportData data = this.createExportData(List.of(pool), List.of(original, replacement), true, generator);
+
+        ArgumentCaptor<List<ProductContent>> captor = ArgumentCaptor.captor();
+        verify(generator).generateScaCertificate(any(Consumer.class), captor.capture());
+        assertEquals("Replacement", data.getProducts().get("product").getName());
+        assertEquals(replacementHasContent ? Set.of("replacement-content") : Set.of(),
+            data.getProducts().get("product").getProductContent().keySet());
+        assertEquals(replacementHasContent ? 1 : 0, captor.getValue().size());
+        if (replacementHasContent) {
+            assertSame(replacementContent, captor.getValue().get(0).getContent());
+            assertEquals(false, captor.getValue().get(0).isEnabled());
+        }
+    }
+
+    @Test
+    void testGeneratesCertificateForEmptyExport() throws Exception {
+        SCACertificateGenerator generator = mock(SCACertificateGenerator.class);
+        SCACertificate certificate = new SCACertificate();
+        certificate.setCert("certificate");
+        certificate.setKey("private key");
+        when(generator.generateScaCertificate(any(Consumer.class), anyList())).thenReturn(certificate);
+
+        ExportData data = this.createExportData(List.of(), List.of(), true, generator);
+
+        assertEquals(certificate.getCert(), data.getScaCertificate().getCertificate());
+        assertEquals(certificate.getKey(), data.getScaCertificate().getKey());
+        verify(generator).generateScaCertificate(any(Consumer.class), eq(List.of()));
+    }
+
     @Test
     void testRejectsNullConsumer() throws ExportCreationException {
         ExportDataAggregator aggregator = new ExportDataAggregator(mock(ModelTranslator.class), TestConfig.defaults(),
-            mock(PoolCurator.class), mock(ProductCurator.class), mock(PrincipalProvider.class));
+            mock(PoolCurator.class), mock(ProductCurator.class), mock(PrincipalProvider.class),
+            mock(SCACertificateGenerator.class));
 
         assertThrows(NullPointerException.class, () -> aggregator.aggregate(null));
     }
@@ -181,6 +317,7 @@ class ExportDataAggregatorTest {
             mock(EnvironmentCurator.class), mock(OwnerCurator.class));
         Principal firstPrincipal = mock(Principal.class);
         Principal secondPrincipal = mock(Principal.class);
+        SCACertificateGenerator scaCertificateGenerator = mock(SCACertificateGenerator.class);
         when(firstPrincipal.getName()).thenReturn("first-principal");
         when(secondPrincipal.getName()).thenReturn("second-principal");
         PrincipalProvider principalProvider = mock(PrincipalProvider.class);
@@ -197,7 +334,7 @@ class ExportDataAggregatorTest {
             .thenReturn(List.of(product));
         when(productCurator.getProductsByIdsRecursive(true, List.of())).thenReturn(List.of());
         ExportDataAggregator aggregator = new ExportDataAggregator(translator, configuration, poolCurator,
-            productCurator, principalProvider);
+            productCurator, principalProvider, scaCertificateGenerator);
 
         IdentityCertificate firstIdentityCertificate = this.createIdentityCertificate();
         ExportData first = aggregator.aggregate(new Consumer()
@@ -237,7 +374,8 @@ class ExportDataAggregatorTest {
     @Test
     void testRejectsMissingIdentityCertificate() {
         ExportDataAggregator aggregator = new ExportDataAggregator(mock(ModelTranslator.class), TestConfig.defaults(),
-            mock(PoolCurator.class), mock(ProductCurator.class), mock(PrincipalProvider.class));
+            mock(PoolCurator.class), mock(ProductCurator.class), mock(PrincipalProvider.class),
+            mock(SCACertificateGenerator.class));
 
         assertThrows(ExportCreationException.class, () -> aggregator.aggregate(new Consumer()));
         assertThrows(ExportCreationException.class,
@@ -264,7 +402,13 @@ class ExportDataAggregatorTest {
     }
 
     private ExportData createExportData(List<Pool> pools, List<Product> products, boolean filterNamespaces)
-        throws ExportCreationException {
+        throws Exception {
+        return this.createExportData(pools, products, filterNamespaces, mock(SCACertificateGenerator.class));
+    }
+
+    private ExportData createExportData(List<Pool> pools, List<Product> products, boolean filterNamespaces,
+        SCACertificateGenerator scaCertificateGenerator)
+        throws Exception {
         DevConfig configuration = TestConfig.defaults();
         configuration.setProperty(ConfigProperties.EXPORT_FILTER_NON_GLOBAL_NAMESPACE, Boolean.toString(filterNamespaces));
         StandardTranslator translator = new StandardTranslator(mock(ConsumerTypeCurator.class),
@@ -285,13 +429,16 @@ class ExportDataAggregatorTest {
             .toList();
         ProductCurator productCurator = mock(ProductCurator.class);
         PoolCurator poolCurator = mock(PoolCurator.class);
+        List<PoolExportProjection> projections = pools.stream().map(this::projectPool).toList();
         when(poolCurator.listByOwnerTypeWithNamespaceFilter("owner-id", filterNamespaces, Pool.PoolType.NORMAL))
-            .thenReturn(pools.stream().map(this::projectPool).toList());
+            .thenReturn(projections);
         when(productCurator.getProductsByIdsRecursive(filterNamespaces, productUuids)).thenReturn(products);
 
-        ExportData data = new ExportDataAggregator(translator, configuration, poolCurator, productCurator, principalProvider)
+        ExportData data = new ExportDataAggregator(translator, configuration, poolCurator, productCurator, principalProvider,
+            scaCertificateGenerator)
             .aggregate(consumer);
 
+        verify(scaCertificateGenerator).generateScaCertificate(eq(consumer), anyList());
         verify(poolCurator).listByOwnerTypeWithNamespaceFilter("owner-id", filterNamespaces, Pool.PoolType.NORMAL);
         verify(productCurator).getProductsByIdsRecursive(filterNamespaces, productUuids);
         return data;

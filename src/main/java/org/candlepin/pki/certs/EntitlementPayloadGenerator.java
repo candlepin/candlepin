@@ -48,19 +48,61 @@ public class EntitlementPayloadGenerator extends X509Util {
 
     private final ObjectMapper mapper;
 
+    /**
+     * Creates a payload generator with the certificate payload JSON mapper
+     *
+     * @param objectMapper
+     *     mapper configured for certificate payload serialization; cannot be null
+     * @throws NullPointerException
+     *     if the mapper is null
+     */
     @Inject
     public EntitlementPayloadGenerator(
         @Named("X509V3ExtensionUtilObjectMapper") ObjectMapper objectMapper) {
         this.mapper = Objects.requireNonNull(objectMapper);
     }
 
+    /**
+     * Builds, serializes, and compresses an entitlement payload from product and pool data
+     *
+     * @param productModels
+     *     product metadata to include in the payload
+     * @param consumerUuid
+     *     UUID of the consumer represented in the payload
+     * @param pool
+     *     source of subscription, order, and pool metadata; must have a product and validity dates
+     * @param quantity
+     *     quantity of the entitlement represented in the payload
+     * @throws NullPointerException
+     *     if the pool, its product, or either validity date is null
+     * @throws NumberFormatException
+     *     if a numeric product attribute cannot be parsed as an integer
+     * @throws CertificateCreationException
+     *     if payload compression fails
+     * @return zlib-compressed UTF-8 JSON bytes
+     */
     public byte[] generate(List<org.candlepin.model.dto.Product> productModels,
         String consumerUuid, Pool pool, Integer quantity) {
 
         EntitlementBody map = createEntitlementBody(productModels, consumerUuid, pool, quantity);
 
-        String json = toJson(map);
-        return processPayload(json);
+        return this.generate(map);
+    }
+
+    /**
+     * Serializes and compresses a prepared entitlement body
+     *
+     * @param body
+     *     prepared entitlement metadata to serialize; cannot be null
+     * @throws NullPointerException
+     *     if the body is null
+     * @throws CertificateCreationException
+     *     if payload compression fails
+     * @return zlib-compressed UTF-8 JSON bytes
+     */
+    public byte[] generate(EntitlementBody body) {
+        Objects.requireNonNull(body);
+        return this.processPayload(this.toJson(Objects.requireNonNull(body)));
     }
 
     private EntitlementBody createEntitlementBody(List<org.candlepin.model.dto.Product> productModels,
