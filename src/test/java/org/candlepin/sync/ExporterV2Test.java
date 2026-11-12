@@ -23,7 +23,10 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -55,10 +58,14 @@ import org.candlepin.model.PoolExportProjection;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.SCACertificate;
 import org.candlepin.pki.CryptoCapabilitiesException;
 import org.candlepin.pki.CryptoManager;
 import org.candlepin.pki.Scheme;
 import org.candlepin.pki.Signer;
+import org.candlepin.pki.certs.CertificateCreationException;
+import org.candlepin.pki.certs.ConcurrentContentPayloadCreationException;
+import org.candlepin.pki.certs.SCACertificateGenerator;
 import org.candlepin.test.CryptoUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
@@ -72,6 +79,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -120,13 +128,15 @@ class ExporterV2Test {
     @Mock
     private ProductCurator productCurator;
 
+    @Mock
+    private SCACertificateGenerator scaCertificateGenerator;
+    @TempDir
+    private Path workDirectory;
+
     private DevConfig config;
     private ObjectMapper mapper;
     private CryptoManager cryptoManager;
     private ModelTranslator modelTranslator;
-
-    @TempDir
-    private Path workDirectory;
 
     private final ConsumerType systemType = new ConsumerType("system").setId("ct-1");
 
@@ -189,6 +199,9 @@ class ExporterV2Test {
         subNamespacedProduct.setNamespace("namespaced");
         subNamespacedProduct.setAttributes(Collections.emptyMap());
 
+        Content sharedContent = new Content("shared-content");
+        mktProd.addContent(sharedContent, true);
+        mktSubProd.addContent(sharedContent, false);
         mktProd.addProvidedProduct(prod12345);
         mktProd.addProvidedProduct(subNamespacedProduct);
         mktProd.addProvidedProduct(subProvidedProduct332211);
@@ -212,25 +225,24 @@ class ExporterV2Test {
             .thenReturn(filterNamespaces ? List.of(mktProd, mktSubProd, prod12345, subProvidedProduct332211) :
                 List.of(mktProd, mktSubProd, prod12345, subProvidedProduct332211, subNamespacedProduct));
 
-        IdentityCertificate idcert = this.createIdentityCertificate();
-        KeyPairData keyPairData = this.generateConsumerKeyPairData(null);
+        Consumer consumer = createCertificateConsumer(owner);
+        IdentityCertificate idcert = consumer.getIdCert();
 
-        Consumer consumer = new Consumer()
-            .setIdCert(idcert)
-            .setKeyPairData(keyPairData)
-            .setType(systemType)
-            .setEntitlements(Set.of())
-            .setOwner(owner)
-            .setName("Test Consumer")
-            .setUuid("test-consumer-id");
+        SCACertificate storedCertificate = new SCACertificate();
+        storedCertificate.setCert("stored consumer certificate");
+        SCACertificate certificate = createTestCertificate(consumer, storedCertificate);
 
         ExporterV2 exporter = this.createExporter();
         Path export = exporter.getFullExport(consumer);
 
+        this.verifyCertificateContent(consumer, sharedContent);
         assertNotNull(export);
         assertTrue(Files.exists(export));
         assertTrue(Files.isRegularFile(export));
         this.verifySignature(export, this.cryptoManager.getDefaultCryptoScheme());
+
+        Verify.existsIn(export)
+            .verify(Paths.get(ExporterV2.CERTIFICATES_DIRECTORY, certificate.getSerial().getSerial() + ".json"));
 
         Path metaPath = Paths.get("meta.json");
         Verify.existsIn(export)
@@ -244,11 +256,11 @@ class ExporterV2Test {
         verifySubscription(export, pool);
         verifySubscription(export, secondPool);
         Verify.isMissing(export)
-            .verify(Paths.get(ExporterV2.SUBSCRIPTIONS, pool.getSubscriptionId() + ".json"));
+            .verify(Paths.get(ExporterV2.SUBSCRIPTIONS_DIRECTORY, pool.getSubscriptionId() + ".json"));
 
         if (filterNamespaces) {
             Verify.isMissing(export)
-                .verify(Paths.get(ExporterV2.PRODUCTS, subNamespacedProduct.getId() + ".json"));
+                .verify(Paths.get(ExporterV2.PRODUCTS_DIRECTORY, subNamespacedProduct.getId() + ".json"));
         }
         else {
             this.verifyProduct(export, subNamespacedProduct);
@@ -260,6 +272,23 @@ class ExporterV2Test {
         verifyProduct(export, mktSubProd);
 
         exporter.deleteArchive(export);
+    }
+
+    private void verifyCertificateContent(Consumer consumer, Content sharedContent) throws Exception {
+        ArgumentCaptor<List<ProductContent>> contentCaptor = ArgumentCaptor.captor();
+        verify(this.scaCertificateGenerator).generateScaCertificate(eq(consumer), contentCaptor.capture());
+
+        List<ProductContent> content = contentCaptor.getValue();
+        assertEquals(3, content.size());
+        assertEquals(2L, content.stream()
+            .filter(link -> link.getContent() == sharedContent)
+            .count());
+        assertTrue(content.stream()
+            .anyMatch(link -> link.getContent().getId().equals("content-12345") && link.isEnabled()));
+        assertEquals(Set.of(true, false), content.stream()
+            .filter(link -> link.getContent() == sharedContent)
+            .map(ProductContent::isEnabled)
+            .collect(Collectors.toSet()));
     }
 
     private static Stream<Scheme> schemeSource() {
@@ -362,7 +391,7 @@ class ExporterV2Test {
     public void testRejectsNullConsumer() throws IOException {
         ExporterV2 exporter = new ExporterV2(this.mapper,
             new ExportDataAggregator(this.modelTranslator, this.config, this.poolCurator, this.productCurator,
-                this.principalProvider), this.cryptoManager);
+                this.principalProvider, this.scaCertificateGenerator), this.cryptoManager);
 
         assertThrows(IllegalArgumentException.class, () -> exporter.getFullExport(null));
         this.assertWorkDirectoryEmpty();
@@ -370,9 +399,17 @@ class ExporterV2Test {
 
     private ExporterV2 createExporter(CryptoManager manager, Consumer consumer) throws ExportCreationException {
         ExportDataAggregator aggregator = mock(ExportDataAggregator.class);
+        CertificateSerial serial = new CertificateSerial();
+        serial.setId(42L);
+        SCACertificate certificate = new SCACertificate();
+        certificate.setSerial(serial);
+        certificate.setCert("test certificate");
+        certificate.setKey("test private key");
         when(aggregator.aggregate(consumer)).thenReturn(new ExportData(new MetaDTO(), new ConsumerDTO(),
             Map.of(), Map.of(),
-            this.modelTranslator.translate(this.createIdentityCertificate(), CertificateDTO.class), this.workDirectory));
+            this.modelTranslator.translate(this.createIdentityCertificate(), CertificateDTO.class),
+            this.workDirectory,
+            this.modelTranslator.translate(certificate, CertificateDTO.class)));
         return new ExporterV2(this.mapper, aggregator, manager);
     }
 
@@ -437,6 +474,110 @@ class ExporterV2Test {
         assertEquals(version.get("version") + "-" + version.get("release"), metaDto.getVersion());
     }
 
+    private SCACertificate createTestCertificate(Consumer consumer, SCACertificate storedCertificate)
+        throws ConcurrentContentPayloadCreationException,
+        CryptoCapabilitiesException {
+        consumer.setContentAccessCert(storedCertificate);
+        CertificateSerial serial = new CertificateSerial();
+        serial.setId(42L);
+        SCACertificate certificate = new SCACertificate();
+        certificate.setSerial(serial);
+        certificate.setCert("-----BEGIN CERTIFICATE-----\ncertificate\n-----END CERTIFICATE-----\n" +
+            "-----BEGIN ENTITLEMENT DATA-----\npayload\n-----END ENTITLEMENT DATA-----\n" +
+            "-----BEGIN SIGNATURE-----\nsignature\n-----END SIGNATURE-----\n");
+        certificate.setKey("-----BEGIN PRIVATE KEY-----\nkey\n-----END PRIVATE KEY-----\n");
+        when(this.scaCertificateGenerator.generateScaCertificate(eq(consumer), anyList())).thenReturn(certificate);
+        return certificate;
+    }
+
+    @Test
+    public void exportsCertificateAndKeyUnderSerialId() throws Exception {
+        Owner owner = TestUtil.createOwner("Example-Corporation");
+        Consumer consumer = this.createCertificateConsumer(owner);
+        SCACertificate storedCertificate = new SCACertificate();
+        storedCertificate.setCert("stored consumer certificate");
+        consumer.setContentAccessCert(storedCertificate);
+        CertificateSerial serial = new CertificateSerial();
+        serial.setId(42L);
+        SCACertificate certificate = new SCACertificate();
+        certificate.setSerial(serial);
+        certificate.setCert("-----BEGIN CERTIFICATE-----\ncertificate\n-----END CERTIFICATE-----\n" +
+            "-----BEGIN ENTITLEMENT DATA-----\npayload\n-----END ENTITLEMENT DATA-----\n" +
+            "-----BEGIN SIGNATURE-----\nsignature\n-----END SIGNATURE-----\n");
+        certificate.setKey("-----BEGIN PRIVATE KEY-----\nkey\n-----END PRIVATE KEY-----\n");
+        when(this.scaCertificateGenerator.generateScaCertificate(eq(consumer), anyList())).thenReturn(certificate);
+
+        Path export = this.createExporter()
+            .getFullExport(consumer);
+
+        try (FileSystem signedArchive = FileSystems.newFileSystem(export);
+            FileSystem archive = FileSystems.newFileSystem(signedArchive.getPath(ExporterV2.CONSUMER_EXPORT_ZIP))) {
+            Path directory = archive.getPath(ExporterV2.CERTIFICATES_DIRECTORY);
+            CertificateDTO exported = this.mapper.readValue(
+                Files.readString(directory.resolve("42.json")), CertificateDTO.class);
+            assertEquals(certificate.getCert(), exported.getCertificate());
+            assertEquals(certificate.getKey(), exported.getKey());
+            assertEquals(certificate.getSerial().getId(), exported.getSerial().getId());
+            try (Stream<Path> files = Files.list(directory)) {
+                assertEquals(List.of("42.json"), files.map(path -> path.getFileName()
+                        .toString())
+                    .toList());
+            }
+            assertTrue(Files.exists(archive.getPath(ExporterV2.META_JSON)));
+            assertTrue(Files.exists(archive.getPath(ExporterV2.UPSTREAM_CONSUMER, ExporterV2.CONSUMER_JSON)));
+        }
+        verify(this.scaCertificateGenerator).generateScaCertificate(eq(consumer), anyList());
+        assertSame(storedCertificate, consumer.getContentAccessCert());
+        assertEquals("stored consumer certificate", storedCertificate.getCert());
+    }
+
+    @Test
+    void omitsCertificateDirectoryWhenGeneratorReturnsNull() throws Exception {
+        Owner owner = TestUtil.createOwner("Example-Corporation");
+        Consumer consumer = this.createCertificateConsumer(owner);
+        when(this.scaCertificateGenerator.generateScaCertificate(eq(consumer), anyList()))
+            .thenThrow(CertificateCreationException.class);
+
+        assertThrows(ExportCreationException.class,
+            () -> {
+                this.createExporter()
+                    .getFullExport(consumer);
+            });
+    }
+
+    private static Stream<Exception> certificateGenerationFailures() {
+        return Stream.of(new CryptoCapabilitiesException("unsupported scheme"),
+            new ConcurrentContentPayloadCreationException("concurrent payload creation"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("certificateGenerationFailures")
+    void removesArchiveWhenCertificateGenerationFails(Exception failure) throws Exception {
+        Owner owner = TestUtil.createOwner("Example-Corporation");
+        Consumer consumer = this.createCertificateConsumer(owner);
+        when(this.scaCertificateGenerator.generateScaCertificate(eq(consumer), anyList())).thenThrow(failure);
+
+        ExportCreationException actual = assertThrows(ExportCreationException.class,
+            () -> this.createExporter()
+                .getFullExport(consumer));
+
+        assertSame(failure, actual.getCause());
+        assertEquals("Unable to create SCA certificate", actual.getMessage());
+        verify(this.scaCertificateGenerator).generateScaCertificate(eq(consumer), anyList());
+        try (Stream<Path> files = Files.list(this.workDirectory)) {
+            assertFalse(files.findAny()
+                .isPresent());
+        }
+    }
+
+    private Consumer createCertificateConsumer(Owner owner) {
+        return new Consumer()
+            .setIdCert(this.createIdentityCertificate())
+            .setOwner(owner)
+            .setType(this.systemType)
+            .setName("Export consumer")
+            .setUuid("export-consumer");
+    }
     private java.util.function.Consumer<ConsumerDTO> createConsumerVerifier(Consumer consumer) {
         return dto -> {
             assertEquals(consumer.getUuid(), dto.getUuid());
@@ -484,7 +625,7 @@ class ExporterV2Test {
     }
 
     private void verifySubscription(Path archive, Pool pool) {
-        Path subscriptionPath = Paths.get(ExporterV2.SUBSCRIPTIONS, pool.getId() + ".json");
+        Path subscriptionPath = Paths.get(ExporterV2.SUBSCRIPTIONS_DIRECTORY, pool.getId() + ".json");
         Verify.existsIn(archive)
             .verify(subscriptionPath);
         Verify.content(archive, SubscriptionDTO.class, createSubscriptionVerifier(pool))
@@ -492,7 +633,7 @@ class ExporterV2Test {
     }
 
     private void verifyProduct(Path archive, Product product) {
-        Path productPath = Paths.get(ExporterV2.PRODUCTS, product.getId() + ".json");
+        Path productPath = Paths.get(ExporterV2.PRODUCTS_DIRECTORY, product.getId() + ".json");
         Verify.existsIn(archive)
             .verify(productPath);
         Verify.content(archive, ProductDTO.class, createProductVerifier(product))
@@ -554,7 +695,7 @@ class ExporterV2Test {
         return new ExporterV2(
             this.mapper,
             new ExportDataAggregator(this.modelTranslator, this.config, this.poolCurator, this.productCurator,
-                this.principalProvider),
+                this.principalProvider, this.scaCertificateGenerator),
             this.cryptoManager
         );
     }

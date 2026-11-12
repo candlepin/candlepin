@@ -27,9 +27,10 @@ import java.util.Map;
 /**
  * Data for a single version 2 manifest export
  * <p>
- * Holds the consumer identity certificate, other DTOs, and work directory prepared by
+ * Holds the DTOs, simple content access (SCA) certificate, and work directory prepared by
  * {@link ExportDataAggregator} for {@link ExporterV2}.
- * This class only stores data; gathering, translation, and archive writing belong to those collaborators.
+ * Separates the export payload from the gathering, translation, certificate generation, and archive writing
+ * performed by those collaborators. Supplied references are retained without validation or defensive copies.
  * The DTOs and maps are mutable and belong to the current export. Products are keyed by product ID and
  * subscriptions by pool ID. Additional export data can be added as the manifest requirements evolve.
  */
@@ -55,13 +56,17 @@ public class ExportData {
      */
     private final Path workDirectory;
     /**
+     * SCA certificate and private key to include in the archive
+     */
+    private final CertificateDTO scaCertificate;
+    /**
      * Existing consumer identity certificate and private key for upstream authentication
      */
     private final CertificateDTO identityCertificate;
 
 
     /**
-     * Stores the data prepared for an export
+     * Stores references to the data prepared for a single export
      *
      * @param metaDTO
      *     export metadata
@@ -75,15 +80,19 @@ public class ExportData {
      *     translated consumer identity certificate including its private key and serial metadata
      * @param workDirectory
      *     directory in which to create the archive
+     * @param scaCertificate
+     *     SCA certificate containing the exported content payload and its private key
      */
     protected ExportData(MetaDTO metaDTO, ConsumerDTO consumerDTO, Map<String, ProductDTO> products,
-        Map<String, SubscriptionDTO> subscriptions, CertificateDTO identityCertificate, Path workDirectory) {
+        Map<String, SubscriptionDTO> subscriptions, CertificateDTO identityCertificate, Path workDirectory,
+        CertificateDTO scaCertificate) {
         this.metaDTO = metaDTO;
         this.consumerDTO = consumerDTO;
         this.products = products;
         this.subscriptions = subscriptions;
         this.workDirectory = workDirectory;
         this.identityCertificate = identityCertificate;
+        this.scaCertificate = scaCertificate;
     }
 
     /**
@@ -93,6 +102,15 @@ public class ExportData {
      */
     public CertificateDTO getIdentityCertificate() {
         return this.identityCertificate;
+    }
+
+    /**
+     * SCA certificate prepared from the exported product content
+     *
+     * @return the supplied certificate, or null if none was supplied
+     */
+    public CertificateDTO getScaCertificate() {
+        return this.scaCertificate;
     }
 
     /**
@@ -123,7 +141,10 @@ public class ExportData {
     }
 
     /**
-     * Export metadata, including creation time, creator, and manifest format version
+     * Export metadata, including creation time, creator, Candlepin version, and manifest format version
+     * <p>
+     * The aggregator supplies the Candlepin version and release in {@code version} and {@code 2.0.0} in
+     * {@code manifestVersion}.
      *
      * @return the mutable metadata DTO held by this instance
      */
