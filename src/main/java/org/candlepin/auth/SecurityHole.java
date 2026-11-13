@@ -46,15 +46,19 @@ public @interface SecurityHole {
     boolean anon() default false;
 
     /**
-     * @return true if the method allows an activation key identity (e.g.
-     * {@link ActivationKeyPrincipal}).
+     * @return true if the method allows an activation key identity ({@link ActivationKeyPrincipal}).
      */
     boolean activationKey() default false;
 
     /**
-     * @return true if the method allows auto-registration token principals (e.g.
-     * {@link AnonymousCloudConsumerPrincipal}).
+     * @return true if the method allows auto-registration token principals
+     * ({@link AnonymousCloudConsumerPrincipal} and {@link CloudConsumerPrincipal}).
      */
     boolean autoregToken() default false;
+
+    /**
+     * @return true if the method allows consumer principals ({@link ConsumerPrincipal}).
+     */
+    boolean consumer() default false;
 
 }
