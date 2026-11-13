@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.CertificateAssert.assertThatCert;
 import static org.candlepin.spec.bootstrap.assertions.PrivateKeyAssert.assertThatKey;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertGone;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -155,6 +156,46 @@ public class ConsumerResourceSpecTest {
             .isAfterOrEqualTo(init)
             .isAfterOrEqualTo(output.getCreated())
             .isBeforeOrEqualTo(post);
+    }
+
+    @Test
+    public void consumerShouldNotRegisterAnotherConsumerWithDifferentOwner() {
+        OwnerDTO otherOwner = this.adminClient.owners().createOwner(Owners.random());
+        ConsumerDTO consumer = this.adminClient.consumers().createConsumer(Consumers.random(this.owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        assertForbidden(() -> consumerClient.consumers().createConsumer(Consumers.random(otherOwner)));
+    }
+
+    @Test
+    public void consumerShouldNotRegisterAnotherConsumerInDifferentOwnerEnvironment() {
+        OwnerDTO otherOwner = this.adminClient.owners().createOwner(Owners.random());
+        EnvironmentDTO environment = this.adminClient.owners()
+            .createEnvironment(otherOwner.getKey(), Environments.random());
+        ConsumerDTO consumer = this.adminClient.consumers().createConsumer(Consumers.random(this.owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        assertForbidden(() -> consumerClient.environments()
+            .createConsumerInEnvironment(environment.getId(), Consumers.random(otherOwner)));
+    }
+
+    @Test
+    public void consumerShouldNotRegisterAnotherConsumerWithSameOwner() {
+        ConsumerDTO consumer = this.adminClient.consumers().createConsumer(Consumers.random(this.owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        assertForbidden(() -> consumerClient.consumers().createConsumer(Consumers.random(this.owner)));
+    }
+
+    @Test
+    public void consumerShouldNotRegisterAnotherConsumerInSameOwnerEnvironment() {
+        EnvironmentDTO environment = this.adminClient.owners()
+                .createEnvironment(this.owner.getKey(), Environments.random());
+        ConsumerDTO consumer = this.adminClient.consumers().createConsumer(Consumers.random(this.owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        assertForbidden(() -> consumerClient.environments()
+                .createConsumerInEnvironment(environment.getId(), Consumers.random(this.owner)));
     }
 
     @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")

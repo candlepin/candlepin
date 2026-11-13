@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.CertificateAssert.assertThatCert;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotImplemented;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertThatStatus;
@@ -127,6 +128,191 @@ class CloudRegistrationSpecTest {
 
         assertTokenType(ApiClient.MAPPER, token, STANDARD_TOKEN_TYPE);
         assertNotNull(consumer);
+    }
+
+    @Test
+    public void cloudRegistrationTokenShouldNotRegisterConsumerWithDifferentOwner() {
+        ApiClient adminClient = ApiClients.admin();
+        HostedTestApi upstreamClient = adminClient.hosted();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        OwnerDTO otherOwner = adminClient.owners().createOwner(Owners.random());
+        upstreamClient.createOwner(owner);
+        String token = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorize(owner.getKey(), "test-type", "test_signature");
+        assertTokenType(ApiClient.MAPPER, token, STANDARD_TOKEN_TYPE);
+
+        assertForbidden(() -> ApiClients.bearerToken(token).consumers()
+            .createConsumer(Consumers.random(otherOwner)));
+    }
+
+    @Test
+    public void anonymousCloudRegistrationTokenShouldNotRegisterConsumerWithDifferentOwner() {
+        ApiClient adminClient = ApiClients.admin();
+        HostedTestApi upstreamClient = adminClient.hosted();
+        OwnerDTO owner = Owners.randomSca().anonymous(true);
+        OwnerDTO otherOwner = adminClient.owners().createOwner(Owners.random());
+        ProductDTO product = Products.random();
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        upstreamClient.createProduct(product);
+        upstreamClient.associateProductIdsToCloudOffer(offerId, List.of(product.getId()));
+        upstreamClient.createOwner(owner);
+
+        // Autoregistration v2 before the owner is associated with a cloud account, will result
+        // in a response that includes an anonymous token, and has a null owner (since one may not
+        // even exist yet).
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+        assertTokenType(ApiClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+
+        upstreamClient.associateOwnerToCloudAccount(accountId, owner.getKey());
+        upstreamClient.createSubscription(Subscriptions.random(owner, product));
+        adminClient.owners().createOwner(owner);
+        adminClient.ownerProducts().createProduct(owner.getKey(), product);
+        adminClient.owners().createPool(owner.getKey(), Pools.random(product));
+
+        assertForbidden(() -> ApiClients.bearerToken(result.getToken()).consumers()
+            .createConsumer(Consumers.random(otherOwner)));
+    }
+
+    @Test
+    @OnlyInHosted
+    public void cloudRegistrationTokenShouldNotRegisterWithClaimedOwnerOutsideItsScope() {
+        ApiClient adminClient = ApiClients.admin();
+        HostedTestApi upstreamClient = adminClient.hosted();
+        OwnerClient owners = adminClient.owners();
+
+        // The owner the cloud principal is actually scoped to.
+        OwnerDTO scopedOwner = owners.createOwner(Owners.random());
+        upstreamClient.createOwner(scopedOwner);
+
+        // An unrelated anonymous owner that has been claimed and migrated to a fully provisioned claimant
+        // org. The cloud principal scoped to 'scopedOwner' has no relationship to any of these owners.
+        OwnerDTO claimedOwner = owners.createOwner(Owners.randomSca().anonymous(true));
+        upstreamClient.createOwner(claimedOwner);
+
+        OwnerDTO claimantOwner = owners.createOwner(Owners.randomSca());
+        ProductDTO claimantProduct = adminClient.ownerProducts()
+            .createProduct(claimantOwner.getKey(), Products.random());
+        upstreamClient.createProduct(claimantProduct);
+        owners.createPool(claimantOwner.getKey(), Pools.random(claimantProduct));
+        upstreamClient.createSubscription(Subscriptions.random(claimantOwner, claimantProduct));
+
+        AsyncJobStatusDTO claimJob = owners.claim(claimedOwner.getKey(),
+            new ClaimantOwner().claimantOwnerKey(claimantOwner.getKey()));
+        assertThatJob(adminClient.jobs().waitForJob(claimJob)).isFinished();
+
+        String token = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorize(scopedOwner.getKey(), "test-type", "test_signature");
+        assertTokenType(ApiClient.MAPPER, token, STANDARD_TOKEN_TYPE);
+
+        // Registering against the claimed owner must be forbidden: the requested owner is outside the
+        // principal's scope, and the claimed-owner exception should not let it slip through to the
+        // unrelated claimant org.
+        assertForbidden(() -> ApiClients.bearerToken(token).consumers()
+            .createConsumer(Consumers.random(claimedOwner)));
+
+        // The claimant org must not have received a consumer from the unrelated principal.
+        assertThat(owners.listOwnerConsumers(claimantOwner.getKey())).isEmpty();
+    }
+
+    @Test
+    @OnlyInHosted
+    public void anonymousCloudRegistrationTokenShouldNotRegisterWithClaimedOwnerOutsideItsScope() {
+        ApiClient adminClient = ApiClients.admin();
+        HostedTestApi upstreamClient = adminClient.hosted();
+        OwnerClient owners = adminClient.owners();
+
+        ProductDTO product = Products.random();
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        upstreamClient.createProduct(product);
+        upstreamClient.associateProductIdsToCloudOffer(offerId, List.of(product.getId()));
+
+        // The owner the anonymous cloud principal is actually scoped to.
+        OwnerDTO scopedOwner = Owners.randomSca().anonymous(true);
+        upstreamClient.createOwner(scopedOwner);
+
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+        assertTokenType(ApiClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+
+        upstreamClient.associateOwnerToCloudAccount(accountId, scopedOwner.getKey());
+        upstreamClient.createSubscription(Subscriptions.random(scopedOwner, product));
+        owners.createOwner(scopedOwner);
+        adminClient.ownerProducts().createProduct(scopedOwner.getKey(), product);
+        owners.createPool(scopedOwner.getKey(), Pools.random(product));
+
+        // An unrelated anonymous owner that has been claimed and migrated to a fully provisioned claimant
+        // org.
+        OwnerDTO claimedOwner = owners.createOwner(Owners.randomSca().anonymous(true));
+        upstreamClient.createOwner(claimedOwner);
+
+        OwnerDTO claimantOwner = owners.createOwner(Owners.randomSca());
+        ProductDTO claimantProduct = adminClient.ownerProducts()
+            .createProduct(claimantOwner.getKey(), Products.random());
+        upstreamClient.createProduct(claimantProduct);
+        owners.createPool(claimantOwner.getKey(), Pools.random(claimantProduct));
+        upstreamClient.createSubscription(Subscriptions.random(claimantOwner, claimantProduct));
+
+        AsyncJobStatusDTO claimJob = owners.claim(claimedOwner.getKey(),
+            new ClaimantOwner().claimantOwnerKey(claimantOwner.getKey()));
+        assertThatJob(adminClient.jobs().waitForJob(claimJob)).isFinished();
+
+        assertForbidden(() -> ApiClients.bearerToken(result.getToken()).consumers()
+            .createConsumer(Consumers.random(claimedOwner)));
+
+        assertThat(owners.listOwnerConsumers(claimantOwner.getKey())).isEmpty();
+    }
+
+    @Test
+    @OnlyInHosted
+    public void anonymousCloudRegistrationTokenShouldNotRegisterWithArbitraryOwner() {
+        ApiClient adminClient = ApiClients.admin();
+        HostedTestApi upstreamClient = adminClient.hosted();
+        OwnerClient owners = adminClient.owners();
+
+        ProductDTO product = Products.random();
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        upstreamClient.createProduct(product);
+        upstreamClient.associateProductIdsToCloudOffer(offerId, List.of(product.getId()));
+
+        // The owner the anonymous cloud principal is actually scoped to.
+        OwnerDTO scopedOwner = Owners.randomSca().anonymous(true);
+        upstreamClient.createOwner(scopedOwner);
+
+        CloudAuthenticationResultDTO result = ApiClients.noAuth().cloudAuthorization()
+            .cloudAuthorizeV2(accountId, instanceId, offerId, "test-type", "");
+        assertTokenType(ApiClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+
+        upstreamClient.associateOwnerToCloudAccount(accountId, scopedOwner.getKey());
+        upstreamClient.createSubscription(Subscriptions.random(scopedOwner, product));
+        owners.createOwner(scopedOwner);
+        adminClient.ownerProducts().createProduct(scopedOwner.getKey(), product);
+        owners.createPool(scopedOwner.getKey(), Pools.random(product));
+
+        // An unrelated, fully provisioned victim org the anonymous principal has no relationship to.
+        OwnerDTO victimOwner = owners.createOwner(Owners.randomSca());
+        ProductDTO victimProduct = adminClient.ownerProducts()
+            .createProduct(victimOwner.getKey(), Products.random());
+        upstreamClient.createProduct(victimProduct);
+        owners.createPool(victimOwner.getKey(), Pools.random(victimProduct));
+        upstreamClient.createSubscription(Subscriptions.random(victimOwner, victimProduct));
+
+        // Supplying an existing organization key the anonymous principal is not scoped to must be rejected,
+        // rather than letting an unscoped token pick any organization to register with.
+        assertForbidden(() -> ApiClients.bearerToken(result.getToken()).consumers()
+            .createConsumer(Consumers.random(victimOwner)));
+
+        // The victim org must not have received a consumer from the unrelated anonymous principal.
+        assertThat(owners.listOwnerConsumers(victimOwner.getKey())).isEmpty();
     }
 
     @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")

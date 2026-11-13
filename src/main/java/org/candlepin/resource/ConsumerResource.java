@@ -400,11 +400,10 @@ public class ConsumerResource implements ConsumerApi {
 
     @Override
     @Transactional
-    @SecurityHole
     @RootResource.LinkedResource
-    public Stream<ContentOverrideDTO> listConsumerContentOverrides(String consumerUuid) {
-        Principal principal = ResteasyContext.getContextData(Principal.class);
-        Consumer consumer = this.verifyAndGetParent(consumerUuid, principal, Access.READ_ONLY);
+    public Stream<ContentOverrideDTO> listConsumerContentOverrides(
+        @Verify(Consumer.class) String consumerUuid) {
+        Consumer consumer = this.consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
         return this.ccoCurator.getLayeredContentOverrides(consumer.getId())
             .stream()
@@ -428,26 +427,22 @@ public class ConsumerResource implements ConsumerApi {
 
     @Override
     @Transactional
-    @SecurityHole
-    public Stream<ContentOverrideDTO> addConsumerContentOverrides(
-        String consumerUuid, List<ContentOverrideDTO> entries) {
-
+    public Stream<ContentOverrideDTO> addConsumerContentOverrides(@Verify(Consumer.class) String consumerUuid,
+        List<ContentOverrideDTO> entries) {
         // Validate our input
+        Consumer consumer = this.consumerCurator.verifyAndLookupConsumer(consumerUuid);
         this.coValidator.validate(entries);
-        Principal principal = ResteasyContext.getContextData(Principal.class);
-        // Fetch the "parent" content override object...
-        Consumer parent = this.verifyAndGetParent(consumerUuid, principal, Access.ALL);
 
         List<ConsumerContentOverride> overrides = entries.stream()
             .map(dto -> new ConsumerContentOverride()
-                .setConsumer(parent)
+                .setConsumer(consumer)
                 .setContentLabel(dto.getContentLabel())
                 .setName(dto.getName())
                 .setValue(dto.getValue()))
             .toList();
 
         Map<String, Map<String, ConsumerContentOverride>> overrideMap = this.ccoCurator
-            .retrieveAll(parent, overrides);
+            .retrieveAll(consumer, overrides);
 
         try {
             for (ConsumerContentOverride inbound : overrides) {
@@ -473,69 +468,50 @@ public class ConsumerResource implements ConsumerApi {
             throw e;
         }
 
-        parent.setUpdated(new Date());
+        consumer.setUpdated(new Date());
         this.ccoCurator.flush();
 
         // Hibernate typically persists automatically before executing a query against a table with
         // pending changes, but if it doesn't, we can add a flush here to make sure this outputs the
         // correct values
-        return this.ccoCurator.getList(parent)
+        return this.ccoCurator.getList(consumer)
             .stream()
             .map(this.translator.getStreamMapper(ConsumerContentOverride.class, ContentOverrideDTO.class));
     }
 
     @Override
     @Transactional
-    @SecurityHole
     public Stream<ContentOverrideDTO> deleteConsumerContentOverrides(
-        String consumerUuid, List<ContentOverrideDTO> entries) {
-
-        Principal principal = ResteasyContext.getContextData(Principal.class);
-        Consumer parent = this.verifyAndGetParent(consumerUuid, principal, Access.ALL);
+        @Verify(Consumer.class) String consumerUuid, List<ContentOverrideDTO> entries) {
+        Consumer consumer = this.consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
         if (entries.size() == 0) {
-            this.ccoCurator.removeByParent(parent);
+            this.ccoCurator.removeByParent(consumer);
         }
         else {
             for (ContentOverrideDTO dto : entries) {
                 String label = dto.getContentLabel();
                 if (StringUtils.isBlank(label)) {
-                    this.ccoCurator.removeByParent(parent);
+                    this.ccoCurator.removeByParent(consumer);
                 }
                 else {
                     String name = dto.getName();
                     if (StringUtils.isBlank(name)) {
-                        this.ccoCurator.removeByContentLabel(parent, dto.getContentLabel());
+                        this.ccoCurator.removeByContentLabel(consumer, dto.getContentLabel());
                     }
                     else {
-                        this.ccoCurator.removeByName(parent, dto.getContentLabel(), name);
+                        this.ccoCurator.removeByName(consumer, dto.getContentLabel(), name);
                     }
                 }
             }
         }
 
-        parent.setUpdated(new Date());
+        consumer.setUpdated(new Date());
         this.ccoCurator.flush();
 
-        return this.ccoCurator.getList(parent)
+        return this.ccoCurator.getList(consumer)
             .stream()
             .map(this.translator.getStreamMapper(ConsumerContentOverride.class, ContentOverrideDTO.class));
-    }
-
-    private Consumer verifyAndGetParent(String parentId, Principal principal, Access access) {
-        if (parentId == null || parentId.isEmpty()) {
-            throw new BadRequestException("No consumer specified");
-        }
-
-        // Throws exception if criteria block the id
-        Consumer result = this.consumerCurator.verifyAndLookupConsumer(parentId);
-
-        // Now that we know it exists, verify access level
-        if (!principal.canAccess(result, SubResource.NONE, access)) {
-            throw new ForbiddenException(i18n.tr("Insufficient permissions"));
-        }
-
-        return result;
     }
 
     /**
@@ -1549,6 +1525,24 @@ public class ConsumerResource implements ConsumerApi {
         }
         else {
             owner = origOwner;
+        }
+
+        // Forbid cloud/anoncloud principals to register to an owner different from the one they are scoped
+        // at. The comparison is made against the requested (original) owner rather than the resolved owner,
+        // so that a principal scoped at an owner that has since been claimed is still allowed to migrate to
+        // its claimant, while a principal cannot register under an unrelated owner by targeting a claimed
+        // one. A principal without a scoped owner key is never allowed to register with an arbitrary owner.
+        if (principal instanceof CloudConsumerPrincipal cloudConsumerPrincipal &&
+            !cloudConsumerPrincipal.getOwnerKey().equals(origOwner.getKey())) {
+
+            throw new ForbiddenException(i18n.tr("{0} is not authorized to register with " +
+                "organization {1}", principal.getName(), origOwner.getKey()));
+        }
+        if (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal &&
+            !origOwner.getKey().equals(anonymPrincipal.getAnonymousCloudConsumer().getOwnerKey())) {
+
+            throw new ForbiddenException(i18n.tr("{0} is not authorized to register with " +
+                "organization {1}", principal.getName(), origOwner.getKey()));
         }
 
         // Check permissions for current principal on the owner:
@@ -3334,7 +3328,7 @@ public class ConsumerResource implements ConsumerApi {
         .partialStacks(Map.of());
 
     @Override
-    @SecurityHole
+    @SecurityHole(consumer = true)
     @Transactional
     public ComplianceStatusDTO getComplianceStatus(String uuid, OffsetDateTime onDate) {
 

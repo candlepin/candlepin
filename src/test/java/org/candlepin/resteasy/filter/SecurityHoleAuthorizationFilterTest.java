@@ -27,14 +27,18 @@ import org.candlepin.TestingModules;
 import org.candlepin.auth.ActivationKeyPrincipal;
 import org.candlepin.auth.AnonymousCloudConsumerPrincipal;
 import org.candlepin.auth.CloudConsumerPrincipal;
+import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
+import org.candlepin.dto.api.server.v1.CloudRegistrationDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.TooManyRequestsException;
 import org.candlepin.model.AnonymousCloudConsumer;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.resource.CloudRegistrationResource;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.MethodLocator;
@@ -65,6 +69,7 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
@@ -121,7 +126,7 @@ public class SecurityHoleAuthorizationFilterTest {
         when(mockOwnerCurator.existsByKey(anyString())).thenReturn(false);
 
         TooManyRequestsException thrown = assertThrows(TooManyRequestsException.class, () -> {
-            interceptor.runFilter(openRequest());
+            interceptor.runFilter(requestOpenToActivationKeyAndCloudPrincipals());
         });
         assertRetryAfterHeader(SecurityHoleAuthorizationFilter.ORG_NOT_CREATED_IN_CANDLEPIN, thrown);
     }
@@ -135,7 +140,7 @@ public class SecurityHoleAuthorizationFilterTest {
         when(mockPoolCurator.hasPoolsForProducts(anyString(), any())).thenReturn(false);
 
         TooManyRequestsException thrown = assertThrows(TooManyRequestsException.class, () -> {
-            interceptor.runFilter(openRequest());
+            interceptor.runFilter(requestOpenToActivationKeyAndCloudPrincipals());
         });
         assertRetryAfterHeader(SecurityHoleAuthorizationFilter.ORG_DOES_NOT_HAVE_POOLS, thrown);
     }
@@ -148,7 +153,7 @@ public class SecurityHoleAuthorizationFilterTest {
             OrgForCloudAccountNotCreatedYetException.class);
 
         TooManyRequestsException thrown = assertThrows(TooManyRequestsException.class, () -> {
-            interceptor.runFilter(openRequest());
+            interceptor.runFilter(requestOpenToActivationKeyAndCloudPrincipals());
         });
         assertRetryAfterHeader(SecurityHoleAuthorizationFilter.ORG_DOES_NOT_EXIST_AT_ALL, thrown);
     }
@@ -161,7 +166,7 @@ public class SecurityHoleAuthorizationFilterTest {
             OrgForCloudAccountNotEntitledYetException.class);
 
         TooManyRequestsException thrown = assertThrows(TooManyRequestsException.class,
-            () -> interceptor.runFilter(openRequest()));
+            () -> interceptor.runFilter(requestOpenToActivationKeyAndCloudPrincipals()));
         assertRetryAfterHeader(SecurityHoleAuthorizationFilter.ORG_IS_NOT_ENTITLED, thrown);
     }
 
@@ -173,7 +178,25 @@ public class SecurityHoleAuthorizationFilterTest {
             "owner_key");
         when(mockPoolCurator.hasPoolsForProducts(anyString(), any())).thenReturn(true);
 
-        interceptor.runFilter(openRequest());
+        interceptor.runFilter(requestOpenToActivationKeyAndCloudPrincipals());
+    }
+
+    @Test
+    public void testRunFilterWithCloudConsumerPrincipalThatShouldPass() {
+        setupCloudConsumerPrincipal();
+        interceptor.runFilter(requestOpenToActivationKeyAndCloudPrincipals());
+    }
+
+    @Test
+    public void testRunFilterWithActivationKeyPrincipalThatShouldPass() {
+        setupActivationKeyPrincipal();
+        interceptor.runFilter(requestOpenToActivationKeyAndCloudPrincipals());
+    }
+
+    @Test
+    public void testRunFilterWithConsumerPrincipalThatShouldPass() {
+        setupConsumerPrincipal();
+        interceptor.runFilter(requestOpenToConsumerPrincipal());
     }
 
     @ParameterizedTest
@@ -181,7 +204,7 @@ public class SecurityHoleAuthorizationFilterTest {
     public void shouldForbidAccessWithoutSecurityHole(Principal principal) {
         when(mockSecurityContext.getUserPrincipal()).thenReturn(principal);
 
-        assertThatThrownBy(() -> interceptor.runFilter(secureRequest()))
+        assertThatThrownBy(() -> interceptor.runFilter(requestClosedToSpecificPrincipals()))
             .isInstanceOf(ForbiddenException.class);
     }
 
@@ -189,7 +212,8 @@ public class SecurityHoleAuthorizationFilterTest {
         return Stream.of(
             Arguments.of(new ActivationKeyPrincipal("keys")),
             Arguments.of(new AnonymousCloudConsumerPrincipal(mock(AnonymousCloudConsumer.class))),
-            Arguments.of(new CloudConsumerPrincipal(new Owner()))
+            Arguments.of(new CloudConsumerPrincipal(new Owner())),
+            Arguments.of(new ConsumerPrincipal(mock(Consumer.class), mock(Owner.class)))
         );
     }
 
@@ -204,16 +228,33 @@ public class SecurityHoleAuthorizationFilterTest {
         when(mockSecurityContext.getUserPrincipal()).thenReturn(principal);
     }
 
+    private void setupCloudConsumerPrincipal() {
+        Owner mockOwner = mock(Owner.class);
+        CloudConsumerPrincipal principal = new CloudConsumerPrincipal(mockOwner, "random-name");
+        when(mockSecurityContext.getUserPrincipal()).thenReturn(principal);
+    }
+
+    private void setupActivationKeyPrincipal() {
+        ActivationKeyPrincipal principal = new ActivationKeyPrincipal("key1,key2");
+        when(mockSecurityContext.getUserPrincipal()).thenReturn(principal);
+    }
+
+    private void setupConsumerPrincipal() {
+        ConsumerPrincipal principal = new ConsumerPrincipal(mock(Consumer.class), mock(Owner.class));
+        when(mockSecurityContext.getUserPrincipal()).thenReturn(principal);
+    }
+
     private void assertRetryAfterHeader(int expectedTime, TooManyRequestsException exception) {
         assertEquals(expectedTime, exception.getRetryAfterTime());
     }
 
     /**
-     * Creates a request to an endpoint with a security hole defined
+     * Creates a request to an endpoint with @SecurityHole that is OPEN to {@link ActivationKeyPrincipal},
+     * {@link CloudConsumerPrincipal} and {@link AnonymousCloudConsumerPrincipal}.
      *
      * @return mocked request
      */
-    private ContainerRequestContext openRequest() {
+    private ContainerRequestContext requestOpenToActivationKeyAndCloudPrincipals() {
         try {
             Class clazz = ConsumerResource.class;
             when(mockResourceInfo.getResourceClass()).thenReturn(clazz);
@@ -234,19 +275,45 @@ public class SecurityHoleAuthorizationFilterTest {
     }
 
     /**
-     * Creates a request to a secured endpoint
+     * Creates a request to an endpoint with @SecurityHole that is OPEN to {@link ConsumerPrincipal}.
      *
      * @return mocked request
      */
-    private ContainerRequestContext secureRequest() {
+    private ContainerRequestContext requestOpenToConsumerPrincipal() {
         try {
             Class clazz = ConsumerResource.class;
+            when(mockResourceInfo.getResourceClass()).thenReturn(clazz);
+
+            mockReq = MockHttpRequest.create("POST", "http://localhost/candlepin/fakeurl");
+            Method method = ConsumerResource.class.getMethod("getComplianceStatus", String.class,
+                OffsetDateTime.class);
+            when(mockResourceInfo.getResourceMethod()).thenReturn(method);
+
+            ResteasyContext.pushContext(ResourceInfo.class, this.mockResourceInfo);
+            ResteasyContext.pushContext(SecurityContext.class, this.mockSecurityContext);
+
+            return new PostMatchContainerRequestContext(mockReq, null);
+        }
+        catch (URISyntaxException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Creates a request to an endpoint with @SecurityHole that is CLOSED to {@link ActivationKeyPrincipal},
+     * {@link CloudConsumerPrincipal}, {@link AnonymousCloudConsumerPrincipal} and {@link ConsumerPrincipal}.
+     *
+     * @return mocked request
+     */
+    private ContainerRequestContext requestClosedToSpecificPrincipals() {
+        try {
+            Class clazz = CloudRegistrationResource.class;
 
             when(mockResourceInfo.getResourceClass()).thenReturn(clazz);
 
             mockReq = MockHttpRequest.create("POST", "http://localhost/candlepin/consumers");
-            Method method = ConsumerResource.class
-                .getMethod("listConsumerContentOverrides", String.class);
+            Method method = CloudRegistrationResource.class
+                .getMethod("cloudAuthorize", CloudRegistrationDTO.class, Integer.class);
             when(mockResourceInfo.getResourceMethod()).thenReturn(method);
 
             ResteasyContext.pushContext(ResourceInfo.class, this.mockResourceInfo);
