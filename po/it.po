@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-15 07:09+0000\n"
+"POT-Creation-Date: 2026-10-30 16:02+0000\n"
 "PO-Revision-Date: 2026-10-13 09:54+0000\n"
 "Last-Translator: Nikos Moumoulidis <nmoumoul@redhat.com>\n"
 "Language-Team: Italian <https://translate.fedoraproject.org/projects/"
@@ -536,14 +536,14 @@ msgid "Facts from multiple different cloud providers were found."
 msgstr ""
 "Sono stati trovati fatti provenienti da diversi fornitori di servizi cloud."
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:802
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:808
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr ""
 "Il sistema con un UUID {0} è un guest virtuale. Non presenta alcun guest."
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1215
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1225
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1221
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1231
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:166
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."
@@ -607,8 +607,8 @@ msgid ""
 msgstr ""
 "Troppi set di contenuti per il certificato {0}. Potrebbe essere disponibile "
 "un client più recente per risolvere questo problema. Per ulteriori "
-"informazioni, consultare il database della conoscenza https://access.redhat."
-"com/knowledge/node/129003."
+"informazioni, consultare il database della conoscenza https://"
+"access.redhat.com/knowledge/node/129003."
 
 #: src/main/java/org/candlepin/pki/certs/UeberCertificateGenerator.java:116
 #, java-format
@@ -704,8 +704,8 @@ msgstr "Supporta solo {1} vCPU su {2}."
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
 msgid ""
 "Guest has not been reported on any host and is using a temporary unmapped "
-"guest subscription. For more information, please see https://access.redhat."
-"com/solutions/1592573"
+"guest subscription. For more information, please see https://"
+"access.redhat.com/solutions/1592573"
 msgstr ""
 "L'ospite non è stato segnalato su nessun host e sta utilizzando un "
 "abbonamento ospite temporaneo non mappato. Per ulteriori informazioni, "
@@ -1001,7 +1001,7 @@ msgstr "L'ID dell'account cloud è nullo o vuoto"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:258
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2619
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2971
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2975
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:661
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:127
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:157
@@ -1300,8 +1300,8 @@ msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr ""
 "L''associazione automatica è disabilitata per l''organizzazione \"{0}\"."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2833
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2872
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2837
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2876
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:191
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:209
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:239
@@ -1311,36 +1311,36 @@ msgstr ""
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr "Impossibile trovare il diritto con ID \"{0}\"."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2848
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2852
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 "Impossibile trovare il certificato di autorizzazione con numero di serie "
 "\"{0}\"."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2865
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2869
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr "Nessun diritto per il consumatore \"{0}\" con id pool \"{1}\""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2937
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2941
 msgid "Unable to create export archive"
 msgstr "Impossibile creare l''archivio di esportazione"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3079
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3084
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3083
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3088
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "Problema nella rigenerazione del cert id per l''unità {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3120
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3124
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "Il sistema con UUID {0} non è un guest virtuale."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3199
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3203
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "Record di eliminazione per hypervisor \"{0}\" non trovato."
@@ -2105,8 +2105,8 @@ msgstr "email locale necessaria per la notifica"
 msgid ""
 "Your subscription redemption is being processed and should be available "
 "soon. You will be notified via email once it is available. If you have any "
-"questions, additional information can be found here: https://access.redhat."
-"com/kb/docs/DOC-53864."
+"questions, additional information can be found here: https://"
+"access.redhat.com/kb/docs/DOC-53864."
 msgstr ""
 "Il riscatto dell'abbonamento è in fase di elaborazione e dovrebbe essere "
 "disponibile a breve. Verrai avvisato via email non appena sarà disponibile. "
@@ -2159,8 +2159,8 @@ msgstr "Tipo di unità non trovata: {0}"
 #, java-format
 msgid "Failed to parse parameter \"{0}\"; expected format: key:value"
 msgstr ""
-"Impossibile analizzare il parametro \"{0}\"; il formato atteso è chiave:"
-"valore"
+"Impossibile analizzare il parametro \"{0}\"; il formato atteso è "
+"chiave:valore"
 
 #: src/main/java/org/candlepin/resource/validation/DTOValidator.java:91
 msgid "collection contains null elements"
@@ -2202,11 +2202,11 @@ msgstr "il parametro order deve essere \"ascending\" o \"descending\""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:266
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:281
 msgid "Organization"
 msgstr "Organizzazione"
 
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:287
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:302
 #, java-format
 msgid "{0} with ID(s) {1} could not be found."
 msgstr "Non è stato trovato \"{0}\" con ID \"{1}\"."
