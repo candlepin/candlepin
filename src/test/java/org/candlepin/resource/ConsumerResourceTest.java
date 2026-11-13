@@ -45,6 +45,7 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.AnonymousCloudConsumerPrincipal;
+import org.candlepin.auth.CloudConsumerPrincipal;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
@@ -74,6 +75,7 @@ import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ExceptionMessage;
+import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
@@ -185,6 +187,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
@@ -1314,6 +1317,77 @@ public class ConsumerResourceTest {
         Owner newOwner = this.consumerResource.setupOwner(up, ownerKey);
 
         assertEquals(ownerKey, newOwner.getKey());
+    }
+
+    @Test
+    public void cloudConsumerPrincipalShouldNotCreateConsumerWithDifferentOwner() {
+        Owner owner = this.createOwner();
+        Owner otherOwner = this.createOwner();
+        CloudConsumerPrincipal principal = new CloudConsumerPrincipal(owner);
+        Consumer consumer = this.createConsumer(owner);
+        ConsumerDTO consumerDto = this.translator.translate(consumer, ConsumerDTO.class);
+
+        this.mockConsumerCreation(principal, consumer);
+
+        assertThrows(ForbiddenException.class, () -> this.mockedConsumerResource.createConsumer(consumerDto,
+            null, otherOwner.getKey(), null, true));
+    }
+
+    @Test
+    public void cloudConsumerPrincipalShouldCreateConsumerWithClaimantOwner() {
+        Owner owner = this.createOwner();
+        Owner claimantOwner = this.createOwner();
+        owner.setClaimed(true).setClaimantOwner(claimantOwner.getKey());
+        CloudConsumerPrincipal principal = new CloudConsumerPrincipal(owner);
+        Consumer consumer = this.createConsumer(claimantOwner);
+        ConsumerDTO consumerDto = this.translator.translate(consumer, ConsumerDTO.class);
+
+        this.mockConsumerCreation(principal, consumer);
+
+        this.mockedConsumerResource.createConsumer(consumerDto, null, owner.getKey(), null, true);
+
+        verify(this.mockedConsumerResource).createConsumerFromDTO(any(ConsumerDTO.class),
+            any(ConsumerType.class), eq(principal), any(), eq(claimantOwner), any(), anyBoolean());
+    }
+
+    @Test
+    public void anonymousCloudConsumerPrincipalShouldNotCreateConsumerWithDifferentOwner() {
+        Owner owner = this.createOwner();
+        Owner otherOwner = this.createOwner();
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer().setOwnerKey(owner.getKey());
+        AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
+        Consumer consumerToCreate = this.createConsumer(owner);
+        ConsumerDTO consumerDto = this.translator.translate(consumerToCreate, ConsumerDTO.class);
+
+        this.mockConsumerCreation(principal, consumerToCreate);
+
+        assertThrows(ForbiddenException.class, () -> this.mockedConsumerResource.createConsumer(consumerDto,
+            null, otherOwner.getKey(), null, true));
+    }
+
+    @Test
+    public void anonymousCloudConsumerPrincipalShouldCreateConsumerWithClaimantOwner() {
+        Owner owner = this.createOwner();
+        Owner claimantOwner = this.createOwner();
+        owner.setClaimed(true).setClaimantOwner(claimantOwner.getKey());
+        AnonymousCloudConsumer anonymousConsumer = new AnonymousCloudConsumer().setOwnerKey(owner.getKey());
+        AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(anonymousConsumer);
+        Consumer consumer = this.createConsumer(claimantOwner);
+        ConsumerDTO consumerDto = this.translator.translate(consumer, ConsumerDTO.class);
+
+        this.mockConsumerCreation(principal, consumer);
+
+        this.mockedConsumerResource.createConsumer(consumerDto, null, owner.getKey(), null, true);
+
+        verify(this.mockedConsumerResource).createConsumerFromDTO(any(ConsumerDTO.class),
+            any(ConsumerType.class), eq(principal), any(), eq(claimantOwner), any(), anyBoolean());
+    }
+
+    private void mockConsumerCreation(Principal principal, Consumer consumer) {
+        when(this.principalProvider.get()).thenReturn(principal);
+        when(this.consumerCloudDataBuilder.build(consumer)).thenReturn(Optional.empty());
+        doReturn(consumer).when(this.mockedConsumerResource).createConsumerFromDTO(any(ConsumerDTO.class),
+            any(ConsumerType.class), any(Principal.class), any(), any(Owner.class), any(), anyBoolean());
     }
 
     @Test
