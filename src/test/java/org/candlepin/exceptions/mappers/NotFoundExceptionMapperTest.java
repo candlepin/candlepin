@@ -33,7 +33,7 @@ public class NotFoundExceptionMapperTest extends TestExceptionMapperBase {
         NotFoundExceptionMapper nfem = injector.getInstance(NotFoundExceptionMapper.class);
         Response r = nfem.toResponse(nfe);
         assertEquals(404, r.getStatus());
-        verifyMessage(r, rtmsg("unacceptable"));
+        verifyMessage(r, "Requested resource was not found.");
     }
 
     @Override
