@@ -17,6 +17,7 @@ package org.candlepin.resteasy.filter;
 import org.candlepin.auth.ActivationKeyPrincipal;
 import org.candlepin.auth.AnonymousCloudConsumerPrincipal;
 import org.candlepin.auth.CloudConsumerPrincipal;
+import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SecurityHole;
 import org.candlepin.exceptions.TooManyRequestsException;
@@ -107,6 +108,11 @@ public class SecurityHoleAuthorizationFilter extends AbstractAuthorizationFilter
         }
         if (principal instanceof CloudConsumerPrincipal) {
             if (!securityHole.autoregToken()) {
+                denyAccess(principal, method);
+            }
+        }
+        if (principal instanceof ConsumerPrincipal) {
+            if (!securityHole.consumer()) {
                 denyAccess(principal, method);
             }
         }
