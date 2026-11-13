@@ -327,7 +327,8 @@ public class AnonymousConsumerResourceCreationTest {
         AnonymousCloudConsumer cloudConsumer = new AnonymousCloudConsumer()
             .setCloudAccountId("account_id")
             .setCloudOfferingId("cloud_offering")
-            .setContentAccessCert(expectedCert);
+            .setContentAccessCert(expectedCert)
+            .setOwnerKey(owner.getKey());
         Principal p = new AnonymousCloudConsumerPrincipal(cloudConsumer);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
@@ -352,7 +353,8 @@ public class AnonymousConsumerResourceCreationTest {
         AnonymousCloudConsumer cloudConsumer = new AnonymousCloudConsumer()
             .setCloudAccountId("account_id")
             .setCloudOfferingId("cloud_offering")
-            .setContentAccessCert(expectedCert);
+            .setContentAccessCert(expectedCert)
+            .setOwnerKey(owner.getKey());
         Principal p = new AnonymousCloudConsumerPrincipal(cloudConsumer);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
