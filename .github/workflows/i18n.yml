@@ -118,7 +118,8 @@ jobs:
 
           if [ "$has_changes" = true ]; then
             if [ -n "$pr_number" ]; then
-              gh pr edit "$pr_number" --title "$title" --body "$body"
+              gh api --method PATCH "repos/$GITHUB_REPOSITORY/pulls/$pr_number" \
+                -f title="$title" -f body="$body" --silent
             else
               gh pr create --base "$GIT_BRANCH" --head "$pr_branch" --title "$title" --body "$body"
             fi
