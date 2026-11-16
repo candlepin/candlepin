@@ -1,6 +1,6 @@
 [versions]
 artemis = "2.57.0"
-bouncycastle = "1.86"
+bouncycastle = "1.87"
 guice = "7.0.0"
 hibernate = "7.4.15.Final"
 hibernate-validator = "9.1.6.Final"
