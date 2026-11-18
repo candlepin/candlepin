@@ -75,6 +75,18 @@ public class JobExecutionContext {
     }
 
     /**
+     * Returns whether this is the last attempt for the executing job. This is true when the current
+     * attempt number equals the maximum number of attempts, meaning no further retries will occur
+     * if this attempt fails with a non-terminal exception.
+     *
+     * @return
+     *  true if this is the last attempt; false otherwise
+     */
+    public boolean isLastAttempt() {
+        return this.job.getAttempts() >= this.job.getMaxAttempts();
+    }
+
+    /**
      * Sets the specified formatted string as the result of the job's execution.
      *
      * @param format
