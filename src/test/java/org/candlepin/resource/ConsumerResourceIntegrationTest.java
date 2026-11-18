@@ -873,6 +873,52 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertNotEquals(entCertBefore, entCertAfter);
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testRegenerateEntitlementCertificateOfAnotherConsumerWithValidConsumerByEntitlement() {
+        // Create owner2/product2/pool2 and manifestConsumer in owner2.
+        Owner owner2 = new Owner()
+            .setKey("test-owner-2")
+            .setDisplayName("test-owner-2")
+            .setDefaultServiceLevel(DEFAULT_SERVICE_LEVEL);
+        owner2.setContentAccessModeList(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue())
+            .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+        owner2 = this.ownerCurator.create(owner2);
+
+        ConsumerType manifestType = consumerTypeCurator.create(
+            new ConsumerType(ConsumerTypeEnum.CANDLEPIN).setManifest(true));
+        Consumer manifestConsumer = TestUtil.createConsumer(manifestType, owner2);
+        manifestConsumer = consumerCurator.create(manifestConsumer);
+
+        Product product2 = TestUtil.createProduct();
+        product2.setAttribute(Product.Attributes.SUPPORT_LEVEL, DEFAULT_SERVICE_LEVEL);
+        product2 = productCurator.create(product2);
+
+        Pool pool2 = createPool(owner2, product2, 10L,
+            TestUtil.createDateOffset(0, 0, -1), TestUtil.createDateOffset(10, 0, 0));
+
+        // manifestConsumer binds an entitlement from pool2
+        ConsumerPrincipal principal2 = new ConsumerPrincipal(manifestConsumer, owner2);
+        ResteasyContext.pushContext(Principal.class, principal2);
+        setupPrincipal(principal2);
+        Response rsp = consumerResource.bind(manifestConsumer.getUuid(), pool2.getId(), null, 1, null,
+            null, false, null, null);
+
+        List<EntitlementDTO> resultList = (List<EntitlementDTO>) rsp.getEntity();
+        assertEquals(1, resultList.size());
+        EntitlementDTO ent = resultList.getFirst();
+        assertEquals(1, ent.getCertificates().size());
+
+        // consumer1 in a different org (owner), tries to regenerate manifestConsumer's entitlement by DB id
+        ConsumerPrincipal principal1 = new ConsumerPrincipal(this.consumer, this.owner);
+        ResteasyContext.pushContext(Principal.class, principal1);
+        setupPrincipal(principal1);
+
+        assertThrows(NotFoundException.class,
+            () -> consumerResource.regenerateEntitlementCertificates(this.consumer.getUuid(), ent.getId(),
+                false, false));
+    }
+
     @Test
     public void testInvalidProductId() {
         assertThrows(BadRequestException.class, () -> consumerResource.bind(consumer.getUuid(), "JarjarBinks",

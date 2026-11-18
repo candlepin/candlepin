@@ -42,6 +42,7 @@ import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
 import org.candlepin.spec.bootstrap.client.api.JobsClient;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.client.cert.X509Cert;
+import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
@@ -54,6 +55,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.ZoneId;
 import java.util.List;
@@ -123,6 +126,29 @@ public class EntitlementCertificateSpecTest {
         assertNotEquals(oldCerts.get(0).getSerial().getId(), newCerts.get(0).getSerial().getId());
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void shouldNotRegenerateEntitlementRevokedByCleanup(boolean lazyRegen) {
+        OwnerDTO scaOwner = ownerApi.createOwner(Owners.randomSca());
+        ProductDTO product = ownerProductApi.createProduct(scaOwner.getKey(), Products.randomEng());
+        PoolDTO scaPool = ownerApi.createPool(scaOwner.getKey(), Pools.random(product));
+        ConsumerDTO manifest = Consumers.random(scaOwner, ConsumerTypes.Candlepin)
+            .putFactsItem("distributor_version", "sat-6.20");
+        manifest = client.consumers().createConsumer(manifest);
+        ConsumerClient manifestApi = ApiClients.ssl(manifest).consumers();
+        manifestApi.bindPool(manifest.getUuid(), scaPool.getId(), 1);
+        List<EntitlementDTO> entitlements = manifestApi.listEntitlements(manifest.getUuid());
+        assertThat(entitlements).hasSize(1);
+
+        manifestApi.regenerateEntitlementCertificates(manifest.getUuid(), entitlements.get(0).getId(),
+            lazyRegen, true);
+
+        assertThat(manifestApi.listEntitlements(manifest.getUuid()))
+            .extracting(EntitlementDTO::getId)
+            .isEmpty();
+        assertThat(manifestApi.fetchCertificates(manifest.getUuid())).isEmpty();
+    }
+
     @Test
     public void shouldNotAllowConsumerToRegenerateAnothersCertsByEntitlement() throws Exception {
         List<EntitlementDTO> ents = consumerApi.listEntitlements(system.getUuid());
@@ -131,6 +157,34 @@ public class EntitlementCertificateSpecTest {
         ConsumerClient consumerApi2 = consumerClient.consumers();
         assertNotFound(() -> consumerApi2.regenerateEntitlementCertificates(
             system.getUuid(), ents.get(0).getId(), false, false));
+    }
+
+    @Test
+    public void shouldNotAllowConsumerToRegenerateAnothersCertByEntitlementUsingTheirOwnConsumerIdentity() {
+        // Create newOwner, manifestConsumer in newOwner, and bind an entitlement to manifestConsumer
+        OwnerDTO newOwner = ownerApi.createOwner(Owners.randomSca());
+        ProductDTO newProduct = Products.randomEng();
+        newProduct = ownerProductApi.createProduct(newOwner.getKey(), newProduct);
+        PoolDTO newPool = Pools.random(newProduct);
+        newPool = ownerApi.createPool(newOwner.getKey(), newPool);
+
+        ConsumerDTO manifestConsumer = Consumers.random(newOwner, ConsumerTypes.Candlepin)
+            .putFactsItem("distributor_version", "sat-6.20");
+        manifestConsumer = client.consumers().createConsumer(manifestConsumer);
+        ApiClient manifestConsumerClient = ApiClients.ssl(manifestConsumer);
+        manifestConsumerClient.consumers().bindPool(manifestConsumer.getUuid(), newPool.getId(), 1);
+        List<EntitlementDTO> ents = manifestConsumerClient.consumers()
+            .listEntitlements(manifestConsumer.getUuid());
+
+        // system2 is a consumer in a different org (owner),
+        // trying to regenerate manifestConsumer's entitlement
+        ConsumerDTO system2 = client.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(system2);
+        ConsumerClient consumerApi2 = consumerClient.consumers();
+
+        // Using system2's uuid, but manifestConsumer's entitlement id on the same call: not allowed
+        assertNotFound(() -> consumerApi2.regenerateEntitlementCertificates(
+            system2.getUuid(), ents.get(0).getId(), false, false));
     }
 
     @Test

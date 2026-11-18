@@ -1490,10 +1490,6 @@ public class OwnerResource implements OwnerApi {
         // Product is cleared, use it.
         pool.setProduct(product);
 
-        if (inputPoolDTO.getSourceEntitlement() != null) {
-            pool.setSourceEntitlement(findEntitlement(inputPoolDTO.getSourceEntitlement().getId()));
-        }
-
         pool = poolManager.createAndEnrichPools(pool);
 
         log.debug("Synchronizing last content update for org: {}", owner);
