@@ -160,6 +160,7 @@ public class UndoImportsJob implements AsyncJob {
             iup.setType(uc.getType());
             iup.setWebUrl(uc.getWebUrl());
             iup.setApiUrl(uc.getApiUrl());
+            iup.setCdnUrl(uc.getCdnUrl());
         }
 
         return iup;

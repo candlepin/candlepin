@@ -3093,7 +3093,7 @@ public class ConsumerResource implements ConsumerApi {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         HttpServletResponse response = ResteasyContext.getContextData(HttpServletResponse.class);
         try {
-            File archive = manifestManager.generateManifest(consumerUuid, cdnLabel, webAppPrefix, apiUrl);
+            File archive = manifestManager.generateManifest(consumerUuid, cdnLabel, webAppPrefix);
             response.addHeader("Content-Disposition", "attachment; filename=" + archive.getName());
             return archive;
         }
@@ -3127,9 +3127,7 @@ public class ConsumerResource implements ConsumerApi {
 
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
 
-        JobConfig config = manifestManager.generateManifestAsync(consumerUuid, owner, cdnLabel,
-            webAppPrefix, apiUrl);
-
+        JobConfig config = manifestManager.generateManifestAsync(consumerUuid, owner, cdnLabel, webAppPrefix);
         AsyncJobStatus job = null;
 
         try {

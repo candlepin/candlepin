@@ -18,11 +18,18 @@ candlepin.crypto.scheme.rsa.key=/etc/candlepin/certs/candlepin-ca.key
 candlepin.crypto.scheme.rsa.signature_algorithm=SHA256withRSA
 candlepin.crypto.scheme.rsa.key_algorithm=RSA
 candlepin.crypto.scheme.rsa.key_size=4096
+candlepin.crypto.scheme.rsa.apiurl=https://subscription.rhsm.redhat.com/subscription/consumers/
+candlepin.crypto.scheme.rsa.cdnurl=https://cdn.redhat.com
 
 candlepin.crypto.scheme.mldsa65.cert=/etc/candlepin/certs/candlepin-mldsa-65-ca.crt
 candlepin.crypto.scheme.mldsa65.key=/etc/candlepin/certs/candlepin-mldsa-65-ca.key
 candlepin.crypto.scheme.mldsa65.signature_algorithm=ML-DSA-65
 candlepin.crypto.scheme.mldsa65.key_algorithm=ML-DSA-65
+candlepin.crypto.scheme.mldsa65.apiurl=https://subscription-pqc.rhsm.redhat.com/subscription/consumers/
+candlepin.crypto.scheme.mldsa65.cdnurl=https://cdn-pqc.redhat.com
+
+candlepin.crypto.scheme.legacy.apiurl=https://subscription.rhsm.redhat.com/subscription/consumers/
+candlepin.crypto.scheme.legacy.cdnurl=https://cdn.redhat.com
 
 # Turn down hibernate logging by default until we have a fix for HHH-12927
 log4j.logger.org.hibernate.internal.SessionImpl=ERROR

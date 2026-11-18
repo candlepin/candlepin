@@ -19,6 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
+import org.candlepin.test.TestUtil;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -94,6 +96,13 @@ public class UpstreamConsumerTest {
     public void apiUrl() {
         uc.setApiUrl("some-fake-url");
         assertEquals("some-fake-url", uc.getApiUrl());
+    }
+
+    @Test
+    public void cdnUrl() {
+        String expectedCdnUrl = TestUtil.randomString("cdn-");
+        uc.setCdnUrl(expectedCdnUrl);
+        assertEquals(expectedCdnUrl, uc.getCdnUrl());
     }
 
     @Test

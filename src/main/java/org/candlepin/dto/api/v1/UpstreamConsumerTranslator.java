@@ -74,6 +74,7 @@ public class UpstreamConsumerTranslator implements ObjectTranslator<UpstreamCons
             .updated(Util.toDateTime(source.getUpdated()))
             .ownerId(source.getOwnerId())
             .apiUrl(source.getApiUrl())
+            .cdnUrl(source.getCdnUrl())
             .webUrl(source.getWebUrl())
             .contentAccessMode(source.getContentAccessMode());
 

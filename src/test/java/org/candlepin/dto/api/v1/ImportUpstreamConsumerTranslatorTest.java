@@ -58,6 +58,7 @@ public class ImportUpstreamConsumerTranslatorTest extends
         consumer.setUuid("consumer_uuid");
         consumer.setName("consumer_name");
         consumer.setApiUrl("http://www.url.com");
+        consumer.setCdnUrl("http://www.cdn.url.com");
         consumer.setWebUrl("http://www.url.com");
         consumer.setOwnerId("owner_id");
         consumer.setType(this.consumerTypeTranslatorTest.initSourceObject());

@@ -1519,8 +1519,7 @@ public class ConsumerResourceTest {
 
         consumerResource.exportDataAsync(consumer.getUuid(), cdn.getLabel(),
             "prefix", cdn.getUrl());
-        verify(manifestManager).generateManifestAsync(consumer.getUuid(), owner,
-            cdn.getLabel(), "prefix", cdn.getUrl());
+        verify(manifestManager).generateManifestAsync(consumer.getUuid(), owner, cdn.getLabel(), "prefix");
     }
 
     @Test

@@ -228,6 +228,7 @@ public class ExporterTest {
     @Test
     public void exportProducts() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
         Entitlement ent = mock(Entitlement.class);
 
         Rules mrules = mock(Rules.class);
@@ -294,7 +295,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter exporter = this.buildExporter();
-        File export = exporter.getFullExport(consumer, null, null, null);
+        File export = exporter.getFullExport(consumer, null, null);
 
         // VERIFY
         assertNotNull(export);
@@ -317,6 +318,7 @@ public class ExporterTest {
     @Test
     public void doNotExportDirtyEntitlements() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
         Entitlement ent = mock(Entitlement.class);
         Principal principal = mock(Principal.class);
         IdentityCertificate idcert = new IdentityCertificate();
@@ -341,12 +343,13 @@ public class ExporterTest {
         when(consumerTypeCurator.listAll()).thenReturn(List.of(new ConsumerType("system")));
 
         Exporter exporter = this.buildExporter();
-        assertThrows(ExportCreationException.class, () -> exporter.getFullExport(consumer, null, null, null));
+        assertThrows(ExportCreationException.class, () -> exporter.getFullExport(consumer, null, null));
     }
 
     @Test
     public void exportMetadata() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
         Instant start = Instant.now().minusSeconds(1L);
         Rules mrules = mock(Rules.class);
         Principal principal = mock(Principal.class);
@@ -374,7 +377,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter exporter = this.buildExporter();
-        File export = exporter.getFullExport(consumer, null, null, null);
+        File export = exporter.getFullExport(consumer, null, null);
 
         // VERIFY
         assertNotNull(export);
@@ -392,6 +395,7 @@ public class ExporterTest {
     @Test
     public void exportIdentityCertificate() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
         Rules mrules = mock(Rules.class);
         Principal principal = mock(Principal.class);
 
@@ -419,7 +423,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter exporter = this.buildExporter();
-        File export = exporter.getFullExport(consumer, null, null, null);
+        File export = exporter.getFullExport(consumer, null, null);
 
         // VERIFY
         assertNotNull(export);
@@ -429,11 +433,16 @@ public class ExporterTest {
         verifySignatureFile(export, null);
     }
 
-    @Test
     public void exportConsumer() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
         config.setProperty(ConfigProperties.PREFIX_WEBURL, "localhost:8443/weburl");
-        config.setProperty(ConfigProperties.PREFIX_APIURL, "localhost:8443/apiurl");
+
+        String expectedApiUrl = TestUtil.randomString("api-");
+        String expectedCdnUrl = TestUtil.randomString("cdn-");
+        String prefix = ConfigProperties.schemePrefix("default");
+        config.setProperty(prefix + ConfigProperties.CRYPTO_SCHEME_API_URL, expectedApiUrl);
+        config.setProperty(prefix + ConfigProperties.CRYPTO_SCHEME_CDN_URL, expectedCdnUrl);
+
         Rules mrules = mock(Rules.class);
         Principal principal = mock(Principal.class);
 
@@ -470,18 +479,79 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter exporter = this.buildExporter();
-        File export = exporter.getFullExport(consumer, null, null, null);
+        File export = exporter.getFullExport(consumer, null, null);
 
-        verifyContent(export, "export/consumer.json", new VerifyConsumer("consumer.json"));
+        VerifyConsumer verifyConsumer = new VerifyConsumer("consumer.json")
+            .setApiUrl(expectedApiUrl)
+            .setCdnUrl(expectedCdnUrl);
+        verifyContent(export, "export/consumer.json", verifyConsumer);
 
         verifySignatureFile(export, null);
+    }
+
+    @Test
+    public void testExportConsumerWithUnconfiguredSchemeUrls() throws Exception {
+        this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        this.config.setProperty(ConfigProperties.PREFIX_WEBURL, "localhost:8443/weburl");
+
+        // Clear the API URL and the CDN URL configurations for the RSA scheme and then set the crypto
+        // capabilities for the consumer to RSA.
+        Scheme scheme = CryptoUtil.generateRsaScheme();
+        String prefix = ConfigProperties.schemePrefix(scheme.name());
+        String apiUrlKey = prefix + ConfigProperties.CRYPTO_SCHEME_API_URL;
+        String cdnUrlKey = prefix + ConfigProperties.CRYPTO_SCHEME_CDN_URL;
+        config.clearProperty(apiUrlKey);
+        config.clearProperty(cdnUrlKey);
+
+        // Reconstruct the crypto manager with the new configurations
+        this.cryptoManager = CryptoUtil.getCryptoManager(this.config);
+
+        Rules mockRules = mock(Rules.class);
+        Principal principal = mock(Principal.class);
+
+        when(mockRules.getRules()).thenReturn("rules");
+        when(this.rulesCurator.getRules()).thenReturn(mockRules);
+        when(principalProvider.get()).thenReturn(principal);
+        when(principal.getUsername()).thenReturn("username");
+
+        IdentityCertificate idcert = new IdentityCertificate();
+        idcert.setSerial(new CertificateSerial(10L, new Date()));
+        idcert.setKey(TestUtil.randomString());
+        idcert.setCert(TestUtil.randomString());
+        idcert.setCreated(new Date());
+        idcert.setUpdated(new Date());
+
+        ConsumerType consumerType = new ConsumerType(ConsumerTypeEnum.CANDLEPIN)
+            .setId(TestUtil.randomString("type-"));
+        KeyPairData keyPairData = this.generateConsumerKeyPairData(null);
+
+        Consumer consumer = CryptoUtil.configureConsumerForSchemes(new Consumer()
+            .setUuid("8auuid")
+            .setName("consumer_name")
+            .setContentAccessMode("access_mode")
+            .setType(consumerType)
+            .setIdCert(idcert)
+            .setKeyPairData(keyPairData), scheme);
+
+        when(consumerTypeCurator.getConsumerType(consumer)).thenReturn(consumerType);
+        when(consumerTypeCurator.get(consumerType.getId())).thenReturn(consumerType);
+        when(consumerTypeCurator.listAll()).thenReturn(List.of(new ConsumerType("system")));
+        when(cdnCurator.listAll()).thenReturn(new LinkedList<>());
+
+        Exporter exporter = this.buildExporter();
+        File export = exporter.getFullExport(consumer, null, null);
+
+        VerifyConsumer verifyConsumer = new VerifyConsumer("consumer.json")
+            .setApiUrl(null)
+            .setCdnUrl(null);
+        verifyContent(export, "export/consumer.json", verifyConsumer);
     }
 
     @Test
     public void exportDistributorVersions() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
         config.setProperty(ConfigProperties.PREFIX_WEBURL, "localhost:8443/weburl");
-        config.setProperty(ConfigProperties.PREFIX_APIURL, "localhost:8443/apiurl");
+
         Rules mrules = mock(Rules.class);
         Principal principal = mock(Principal.class);
 
@@ -530,7 +600,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter exporter = this.buildExporter();
-        File export = exporter.getFullExport(consumer, null, null, null);
+        File export = exporter.getFullExport(consumer, null, null);
 
         verifyContent(export, "export/distributor_version/test-dist-ver.json",
             new VerifyDistributorVersion("test-dist-ver.json"));
@@ -803,7 +873,7 @@ public class ExporterTest {
         Exporter exporter = this.buildExporter();
 
         assertThrows(CryptoCapabilitiesException.class, () -> exporter.getFullExport(consumer,
-            TestUtil.randomString(), TestUtil.randomString(), TestUtil.randomString()));
+            TestUtil.randomString(), TestUtil.randomString()));
     }
 
     @ParameterizedTest
@@ -833,8 +903,7 @@ public class ExporterTest {
         when(entitlementCertService.listForConsumer(consumer)).thenReturn(List.of());
 
         Exporter exporter = this.buildExporter();
-        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
-            TestUtil.randomString());
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString());
 
         assertNotNull(export);
         assertTrue(export.exists());
@@ -1114,8 +1183,21 @@ public class ExporterTest {
     public static class VerifyConsumer implements Verify {
         private final String filename;
 
+        private String apiUrl = "localhost:8443/apiurl";
+        private String cdnUrl = "localhost:8334/cdnurl";
+
         public VerifyConsumer(String filename) {
             this.filename = filename;
+        }
+
+        public VerifyConsumer setApiUrl(String url) {
+            this.apiUrl = url;
+            return this;
+        }
+
+        public VerifyConsumer setCdnUrl(String url) {
+            this.cdnUrl = url;
+            return this;
         }
 
         public void verify(ZipInputStream zis, byte[] buf) throws IOException {
@@ -1134,7 +1216,8 @@ public class ExporterTest {
 
             ConsumerDTO c = mapper.readValue(new FileInputStream("/tmp/" + filename), ConsumerDTO.class);
 
-            assertEquals("localhost:8443/apiurl", c.getUrlApi());
+            assertEquals(this.apiUrl, c.getUrlApi());
+            assertEquals(this.cdnUrl, c.getUrlCdn());
             assertEquals("localhost:8443/weburl", c.getUrlWeb());
             assertEquals("8auuid", c.getUuid());
             assertEquals("consumer_name", c.getName());

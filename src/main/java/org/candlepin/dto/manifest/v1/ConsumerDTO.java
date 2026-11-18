@@ -33,6 +33,7 @@ public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
     protected ConsumerTypeDTO type;
     protected String urlWeb;
     protected String urlApi;
+    protected String urlCdn;
 
     /**
      * Initializes a new ConsumerDTO instance with null values.
@@ -200,6 +201,27 @@ public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
     }
 
     /**
+     * Retrieves the CDN URL field of this ConsumerDTO object.
+     *
+     * @return the CDN URL of the consumer.
+     */
+    public String getUrlCdn() {
+        return this.urlCdn;
+    }
+
+    /**
+     * Sets the CDN URL to set on this ConsumerDTO object.
+     *
+     * @param cdnUrl the CDN URL to set on this ConsumerDTO object.
+     *
+     * @return a reference to this DTO object.
+     */
+    public ConsumerDTO setUrlCdn(String cdnUrl) {
+        this.urlCdn = cdnUrl;
+        return this;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -230,7 +252,8 @@ public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
                 .append(this.getContentAccessMode(), that.getContentAccessMode())
                 .append(this.getType(), that.getType())
                 .append(this.getUrlWeb(), that.getUrlWeb())
-                .append(this.getUrlApi(), that.getUrlApi());
+                .append(this.getUrlApi(), that.getUrlApi())
+                .append(this.getUrlCdn(), that.getUrlCdn());
 
             return builder.isEquals();
         }
@@ -250,7 +273,8 @@ public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
             .append(this.getContentAccessMode())
             .append(this.getType() != null ? this.getType().getId() : null)
             .append(this.getUrlWeb())
-            .append(this.getUrlApi());
+            .append(this.getUrlApi())
+            .append(this.getUrlCdn());
 
         return builder.toHashCode();
     }
@@ -285,6 +309,7 @@ public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
         this.setType(source.getType());
         this.setUrlWeb(source.getUrlWeb());
         this.setUrlApi(source.getUrlApi());
+        this.setUrlCdn(source.getUrlCdn());
 
         return this;
     }
