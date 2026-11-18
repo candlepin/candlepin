@@ -14,6 +14,7 @@
  */
 package org.candlepin.exceptions.mappers;
 
+import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.util.JaxRsExceptionResponseBuilder;
 
 import jakarta.inject.Inject;
@@ -44,8 +45,9 @@ public class NotFoundExceptionMapper extends CandlepinExceptionMapper
             return badQueryParamHandler.getResponse(exception);
         }
 
-        return getDefaultBuilder(exception, Response.Status.NOT_FOUND,
-                determineBestMediaType()).build();
+        return this.getDefaultBuilder(exception, Response.Status.NOT_FOUND, this.determineBestMediaType())
+            .entity(new ExceptionMessage(this.i18n.get().tr("Requested resource was not found.")))
+            .build();
     }
 
 }
