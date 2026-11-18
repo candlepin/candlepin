@@ -15,6 +15,7 @@
 package org.candlepin.sync;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
@@ -75,7 +76,7 @@ public class ConsumerExporterTest {
 
         when(mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
-        exporter.export(mapper, writer, consumer, "/subscriptions", "/candlepin");
+        exporter.export(mapper, writer, consumer, "/subscriptions", "/candlepin", "/cdn-url");
 
         StringBuffer json = new StringBuffer();
         json.append("{\"uuid\":\"").append(consumer.getUuid()).append("\",");
@@ -87,6 +88,7 @@ public class ConsumerExporterTest {
         json.append("\"owner\":null,");
         json.append("\"urlWeb\":\"/subscriptions\",");
         json.append("\"urlApi\":\"/candlepin\",");
+        json.append("\"urlCdn\":\"/cdn-url\",");
         json.append("\"contentAccessMode\":\"access_mode\"}");
         assertTrue(TestUtil.isJsonEqual(json.toString(), writer.toString()),
             json.toString() + "\n" + writer.toString());
@@ -101,6 +103,7 @@ public class ConsumerExporterTest {
         json.append("\"owner\":null,");
         json.append("\"name\":\"").append(consumer.getName()).append("\",");
         json.append("\"urlApi\":\"/candlepin\",");
+        json.append("\"urlCdn\":\"/cdn-url\",");
         json.append("\"urlWeb\":\"/subscriptions\",");
         json.append("\"contentAccessMode\":\"access_mode\"}");
         assertTrue(TestUtil.isJsonEqual(json.toString(), writer.toString()));

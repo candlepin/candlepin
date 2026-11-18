@@ -48,6 +48,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         this.values.put("Type", type);
         this.values.put("UrlWeb", "test-url-web");
         this.values.put("UrlApi", "test-url-api)");
+        this.values.put("UrlCdn", "test-url-cdn");
     }
 
     /**

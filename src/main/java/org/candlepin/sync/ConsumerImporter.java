@@ -127,6 +127,7 @@ public class ConsumerImporter {
         UpstreamConsumer uc = new UpstreamConsumer(consumer.getName(), ownerToUse, type, consumer.getUuid());
         uc.setWebUrl(consumer.getUrlWeb());
         uc.setApiUrl(consumer.getUrlApi());
+        uc.setCdnUrl(consumer.getUrlCdn());
         uc.setIdCert(idcert);
         uc.setContentAccessMode(consumer.getContentAccessMode());
         owner.setUpstreamConsumer(uc);

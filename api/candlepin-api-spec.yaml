@@ -2223,7 +2223,8 @@ paths:
             type: string
         - name: api_url
           in: query
-          description: The URL pointing to the manifest's originating candlepin API.
+          deprecated: true
+          description: The api_url query parameter is deprecated and will be silently ignored.
           required: false
           schema:
             type: string
@@ -9713,6 +9714,8 @@ components:
               type: string
             apiUrl:
               type: string
+            cdnUrl:
+              type: string
             webUrl:
               type: string
             ownerId:
@@ -10324,6 +10327,8 @@ components:
             apiUrl:
               type: string
             webUrl:
+              type: string
+            cdnUrl:
               type: string
             ownerId:
               type: string

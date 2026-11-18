@@ -36,6 +36,7 @@ import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.ObjectMapperFactory;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -114,11 +115,13 @@ public class ConsumerImporterTest {
         Owner owner = mock(Owner.class);
         ConsumerDTO consumer = mock(ConsumerDTO.class);
         ConsumerTypeDTO type = mock(ConsumerTypeDTO.class);
+        String expectedCdnUrl = TestUtil.randomString("cdn-");
 
         when(ownerDTO.getId()).thenReturn("test-owner-id");
         when(consumer.getUuid()).thenReturn("test-uuid");
         when(consumer.getOwner()).thenReturn(ownerDTO);
         when(consumer.getType()).thenReturn(type);
+        when(consumer.getUrlCdn()).thenReturn(expectedCdnUrl);
 
         IdentityCertificate idCert = new IdentityCertificate();
         idCert.setSerial(new CertificateSerial());
@@ -130,6 +133,7 @@ public class ConsumerImporterTest {
 
         verify(owner).setUpstreamConsumer(arg.capture());
         assertEquals("test-uuid", arg.getValue().getUuid());
+        assertEquals(expectedCdnUrl, arg.getValue().getCdnUrl());
         verify(curator).merge(owner);
     }
 

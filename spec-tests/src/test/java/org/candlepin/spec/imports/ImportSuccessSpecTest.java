@@ -20,6 +20,7 @@ import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.BrandingDTO;
@@ -46,13 +47,13 @@ import org.candlepin.spec.bootstrap.data.builder.Cdns;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.CryptoCapabilities;
-import org.candlepin.spec.bootstrap.data.builder.ExportCdn;
 import org.candlepin.spec.bootstrap.data.builder.ExportGenerator;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
+import org.candlepin.spec.bootstrap.data.util.ExportUtil;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -61,14 +62,22 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 
 @SpecTest
@@ -81,6 +90,29 @@ public class ImportSuccessSpecTest {
             .stream()
             .map(Arguments::of);
     }
+
+    private static Stream<Arguments> capabilityToAlgorithmSource() {
+        return Stream.of(
+            arguments("rsa", CryptoCapabilities.rsa()),
+            arguments("mldsa65", CryptoCapabilities.mldsa())
+        );
+    }
+
+    /**
+     * These scheme API URLs correspond to the candlepin.crypto.scheme.<scheme name>.apiurl configurations in
+     * candlepin.conf.template.
+     */
+    private static final Map<String, String> SCHEME_API_URLS = Map.of(
+        "rsa", "https://subscription.rhsm.redhat.com/subscription/consumers/",
+        "mldsa65", "https://subscription-pqc.rhsm.redhat.com/subscription/consumers/");
+
+    /**
+     * These scheme CDN URLs correspond to the candlepin.crypto.scheme.<scheme name>.cdnurl configurations in
+     * candlepin.conf.template.
+     */
+    private static final Map<String, String> SCHEME_CDN_URLS = Map.of(
+        "rsa", "https://cdn.redhat.com",
+        "mldsa65", "https://cdn-pqc.redhat.com");
 
     private static ApiClient adminClient;
 
@@ -263,37 +295,6 @@ public class ImportSuccessSpecTest {
 
     @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
     @MethodSource("capabilitiesSource")
-    public void shouldPopulateUpstreamConsumerWithCdnDetails(CryptographicCapabilitiesDTO capabilities)
-        throws Exception {
-
-        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
-
-        CdnDTO cdn = adminClient.cdns().createCdn(Cdns.random());
-        ExportCdn exportCdn = Cdns.toExport(cdn);
-
-        assertThat(owner)
-            .extracting(OwnerDTO::getUpstreamConsumer)
-            .isNull();
-
-        File manifest = new ExportGenerator()
-            .usingCryptographicCapabilities(capabilities)
-            .addProduct(Products.random())
-            .export(exportCdn);
-
-        this.importAsync(owner, manifest);
-
-        OwnerDTO updatedOwner = adminClient.owners().getOwner(owner.getKey());
-        assertThat(updatedOwner)
-            .isNotNull()
-            .extracting(OwnerDTO::getUpstreamConsumer)
-            .returns(exportCdn.apiUrl(), UpstreamConsumerDTO::getApiUrl)
-            .returns(exportCdn.webUrl(), UpstreamConsumerDTO::getWebUrl)
-            .extracting(UpstreamConsumerDTO::getIdCert)
-            .isNotNull();
-    }
-
-    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
-    @MethodSource("capabilitiesSource")
     public void shouldPopulateSubscriptionsWithCdnDetails(CryptographicCapabilitiesDTO capabilities)
         throws Exception {
 
@@ -336,10 +337,10 @@ public class ImportSuccessSpecTest {
             .containsOnly("SUCCESS");
     }
 
-    @ParameterizedTest(name = "[{index}] CryptographicCapabilitiesDTO")
-    @MethodSource("capabilitiesSource")
-    public void shouldPopulateOriginInfoOfTheImportRecord(CryptographicCapabilitiesDTO capabilities)
-        throws Exception {
+    @ParameterizedTest(name = "[{index}] algorithm={0}, CryptographicCapabilitiesDTO")
+    @MethodSource("capabilityToAlgorithmSource")
+    public void shouldPopulateOriginInfoOfTheImportRecord(String algorithm,
+        CryptographicCapabilitiesDTO capabilities) throws Exception {
 
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
@@ -359,6 +360,8 @@ public class ImportSuccessSpecTest {
             .isNotNull()
             .isNotEmpty();
 
+        String expectedApiUrl = SCHEME_API_URLS.get(algorithm);
+        String expectedCdnUrl = SCHEME_CDN_URLS.get(algorithm);
         for (ImportRecordDTO importRecord : importRecords) {
             assertThat(importRecord)
                 .isNotNull()
@@ -371,6 +374,8 @@ public class ImportSuccessSpecTest {
                 .isNotNull()
                 .returns(upstreamConsumer.getUuid(), ImportUpstreamConsumerDTO::getUuid)
                 .returns(upstreamConsumer.getName(), ImportUpstreamConsumerDTO::getName)
+                .returns(expectedApiUrl, ImportUpstreamConsumerDTO::getApiUrl)
+                .returns(expectedCdnUrl, ImportUpstreamConsumerDTO::getCdnUrl)
                 .returns(owner.getId(), ImportUpstreamConsumerDTO::getOwnerId);
         }
     }
@@ -570,6 +575,137 @@ public class ImportSuccessSpecTest {
             .hasSize(4)
             .map(ContentDTO::getMetadataExpire)
             .containsOnly(1L);
+    }
+
+    @ParameterizedTest(name = "[{index}] algorithm={0}, CryptographicCapabilitiesDTO")
+    @MethodSource("capabilityToAlgorithmSource")
+    public void shouldPopulateUpstreamConsumerWithCdnUrlAndApiUrl(String algorithm,
+        CryptographicCapabilitiesDTO capabilities) throws Exception {
+
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        assertThat(owner)
+            .extracting(OwnerDTO::getUpstreamConsumer)
+            .isNull();
+
+        File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(capabilities)
+            .addProduct(Products.random())
+            .export();
+
+        this.importAsync(owner, manifest);
+
+        String expectedApiUrl = SCHEME_API_URLS.get(algorithm);
+        String expectedCdnUrl = SCHEME_CDN_URLS.get(algorithm);
+        OwnerDTO updatedOwner = adminClient.owners().getOwner(owner.getKey());
+        assertThat(updatedOwner)
+            .isNotNull()
+            .extracting(OwnerDTO::getUpstreamConsumer)
+            .isNotNull()
+            .returns(expectedApiUrl, UpstreamConsumerDTO::getApiUrl)
+            .returns(expectedCdnUrl, UpstreamConsumerDTO::getCdnUrl);
+    }
+
+    @Test
+    public void shouldImportManifestWithoutCdnUrl() throws Exception {
+        // To remain backwards compatible we must be able to import older manifests that are missing a urlCdn value.
+
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        assertThat(owner)
+            .extracting(OwnerDTO::getUpstreamConsumer)
+            .isNull();
+
+        File manifest = new ExportGenerator()
+            .usingCryptographicCapabilities(CryptoCapabilities.rsa())
+            .addProduct(Products.random())
+            .export();
+
+        File modifiedManifest = this.removeCdnUrlFromManifest(manifest);
+
+        // Removing the CDN URL out of the consumer export invalidates the manifest signature, so we must
+        // include the SIGNATURE_CONFLICT to force the import to be successful.
+        this.importAsync(owner, modifiedManifest, "SIGNATURE_CONFLICT");
+
+        OwnerDTO updatedOwner = adminClient.owners().getOwner(owner.getKey());
+        assertThat(updatedOwner).isNotNull();
+        assertThat(updatedOwner.getUpstreamConsumer())
+            .isNotNull()
+            .returns(SCHEME_API_URLS.get("rsa"), UpstreamConsumerDTO::getApiUrl)
+            .returns(null, UpstreamConsumerDTO::getCdnUrl);
+    }
+
+    /**
+     * Repackages the given manifest, removing the "urlCdn" field from the consumer.json file in the
+     * consumer export archive. Since the consumer export archive is rebuilt, the signature of the
+     * resulting manifest will no longer be valid.
+     *
+     * @param manifest
+     *  the manifest to repackage; cannot be null
+     *
+     * @throws IOException
+     *  if the manifest cannot be read or the repackaged manifest cannot be written
+     *
+     * @return
+     *  a reference to a temporary file containing the repackaged manifest
+     */
+    private File removeCdnUrlFromManifest(File manifest) throws IOException {
+        String consumerPath = "export/consumer.json";
+
+        File modifiedExport = File.createTempFile("consumer_export-", ".zip");
+        modifiedExport.deleteOnExit();
+
+        File modifiedManifest = File.createTempFile("manifest-", ".zip");
+        modifiedManifest.deleteOnExit();
+
+        // Rebuild the inner consumer export archive without the consumer's CDN URL
+        try (ZipFile export = ExportUtil.getExportArchive(manifest);
+            ZipOutputStream zostream = new ZipOutputStream(new FileOutputStream(modifiedExport))) {
+
+            for (ZipEntry entry : export.stream().toList()) {
+                zostream.putNextEntry(new ZipEntry(entry.getName()));
+
+                if (consumerPath.equals(entry.getName())) {
+                    ObjectNode consumer;
+
+                    try (InputStream istream = export.getInputStream(entry)) {
+                        consumer = (ObjectNode) ApiClient.MAPPER.readTree(istream);
+                    }
+
+                    assertNotNull(consumer.remove("urlCdn"), "consumer.json does not define a CDN URL");
+                    zostream.write(ApiClient.MAPPER.writeValueAsBytes(consumer));
+                }
+                else if (!entry.isDirectory()) {
+                    try (InputStream istream = export.getInputStream(entry)) {
+                        istream.transferTo(zostream);
+                    }
+                }
+
+                zostream.closeEntry();
+            }
+        }
+
+        // Rebuild the outer manifest archive, swapping in the modified consumer export
+        try (ZipFile outer = new ZipFile(manifest);
+            ZipOutputStream outputStream = new ZipOutputStream(new FileOutputStream(modifiedManifest))) {
+
+            for (ZipEntry entry : outer.stream().toList()) {
+                outputStream.putNextEntry(new ZipEntry(entry.getName()));
+
+                if (ExportUtil.EXPORT_NAME.equals(entry.getName())) {
+                    try (InputStream istream = new FileInputStream(modifiedExport)) {
+                        istream.transferTo(outputStream);
+                    }
+                }
+                else if (!entry.isDirectory()) {
+                    try (InputStream istream = outer.getInputStream(entry)) {
+                        istream.transferTo(outputStream);
+                    }
+                }
+
+                outputStream.closeEntry();
+            }
+        }
+
+        return modifiedManifest;
     }
 
     private ContentDTO createContent() {

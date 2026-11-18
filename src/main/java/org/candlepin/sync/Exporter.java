@@ -163,9 +163,6 @@ public class Exporter {
      * @param webUrl
      *  the URL pointing to the manifest's originating web application.
      *
-     * @param apiUrl
-     *  the API URL pointing to the manifest's originating candlepin API.
-     *
      * @throws ExportCreationException
      *  when an error occurs while creating the manifest file.
      *
@@ -174,8 +171,8 @@ public class Exporter {
      *
      * @return a newly created manifest file for the target consumer.
      */
-    public File getFullExport(Consumer consumer, String cdnLabel, String webUrl,
-        String apiUrl) throws ExportCreationException, CryptoCapabilitiesException {
+    public File getFullExport(Consumer consumer, String cdnLabel, String webUrl)
+        throws ExportCreationException, CryptoCapabilitiesException {
 
         try {
             File tmpDir = this.syncUtils.makeTempDir("export");
@@ -183,7 +180,7 @@ public class Exporter {
             baseDir.mkdir();
 
             this.exportMeta(baseDir, cdnLabel);
-            this.exportConsumer(baseDir, consumer, webUrl, apiUrl);
+            this.exportConsumer(baseDir, consumer, webUrl);
             this.exportIdentityCertificate(baseDir, consumer);
             this.exportEntitlements(baseDir, consumer);
             this.exportEntitlementsCerts(baseDir, consumer, null, true);
@@ -388,31 +385,27 @@ public class Exporter {
         return prefixWebUrl;
     }
 
-    private String getPrefixApiUrl(String override) {
-        String prefixApiUrl = config.getString(ConfigProperties.PREFIX_APIURL);
-        if (!StringUtils.isBlank(override)) {
-            return override;
-        }
-
-        if (StringUtils.isBlank(prefixApiUrl)) {
-            return null;
-        }
-
-        return prefixApiUrl;
-    }
-
     private String getVersion() {
         Map<String, String> map = VersionUtil.getVersionMap();
         return map.get("version") + "-" + map.get("release");
     }
 
-    private void exportConsumer(File baseDir, Consumer consumer, String webAppPrefix, String apiUrl)
-        throws IOException {
+    private void exportConsumer(File baseDir, Consumer consumer, String webAppPrefix)
+        throws CryptoCapabilitiesException, IOException {
+
+        Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);
+        String apiUrlConfigKey = ConfigProperties
+            .schemeConfig(scheme.name(), ConfigProperties.CRYPTO_SCHEME_API_URL);
+        String cdnUrlConfigKey = ConfigProperties
+            .schemeConfig(scheme.name(), ConfigProperties.CRYPTO_SCHEME_CDN_URL);
+
+        String apiUrl = this.config.getString(apiUrlConfigKey);
+        String cdnUrl = this.config.getString(cdnUrlConfigKey);
 
         File file = new File(baseDir.getCanonicalPath(), "consumer.json");
         try (FileWriter writer = new FileWriter(file)) {
             this.consumerExporter.export(mapper, writer, consumer,
-                getPrefixWebUrl(webAppPrefix), getPrefixApiUrl(apiUrl));
+                getPrefixWebUrl(webAppPrefix), apiUrl, cdnUrl);
         }
     }
 

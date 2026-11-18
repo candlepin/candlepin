@@ -76,6 +76,7 @@ public class ImportUpstreamConsumerTranslator implements
             .ownerId(source.getOwnerId())
             .apiUrl(source.getApiUrl())
             .webUrl(source.getWebUrl())
+            .cdnUrl(source.getCdnUrl())
             .contentAccessMode(source.getContentAccessMode())
             .created(Util.toDateTime(source.getCreated()))
             .updated(Util.toDateTime(source.getUpdated()));
