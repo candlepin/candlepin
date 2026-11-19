@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 09:22+0000\n"
+"POT-Creation-Date: 2026-11-19 07:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -341,14 +341,18 @@ msgstr ""
 msgid "Bad Request"
 msgstr ""
 
-#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:102
-#, java-format
-msgid "Runtime Error {0} at {1}.{2}:{3}"
-msgstr ""
-
-#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:107
+#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:92
 #, java-format
 msgid "Runtime Error {0}"
+msgstr ""
+
+#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:103
+#, java-format
+msgid " at {0}.{1}:{2}"
+msgstr ""
+
+#: src/main/java/org/candlepin/exceptions/mappers/NotFoundExceptionMapper.java:49
+msgid "Requested resource was not found."
 msgstr ""
 
 #: src/main/java/org/candlepin/exceptions/util/JaxRsExceptionResponseBuilder.java:126
@@ -796,7 +800,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:127
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:157
 #: src/main/java/org/candlepin/resource/JobResource.java:365
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:731
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:730
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1968
 #, java-format
 msgid "An unexpected exception occurred while scheduling job \"{0}\""
@@ -1163,7 +1167,7 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/ContentResource.java:95
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:432
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:757
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:756
 #: src/main/java/org/candlepin/resource/ProductResource.java:131
 #, java-format
 msgid "Owner with key \"{0}\" was not found."
