@@ -3064,6 +3064,14 @@ public class ConsumerResource implements ConsumerApi {
         String entitlementId, Boolean lazyRegen, Boolean cleanupEntitlements) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        Entitlement entitlement = null;
+        if (entitlementId != null) {
+            entitlement = this.verifyAndLookupEntitlement(entitlementId);
+            if (!consumer.getId().equals(entitlement.getConsumer().getId())) {
+                throw new NotFoundException(i18n.tr("Entitlement with ID \"{0}\" could not be found.",
+                    entitlementId));
+            }
+        }
 
         // Normalize boxed flags to avoid any NPEs during unboxing
         lazyRegen = lazyRegen == null || lazyRegen;
@@ -3077,12 +3085,12 @@ public class ConsumerResource implements ConsumerApi {
             // skipping the recalculation during revocation.
             log.info("Cleaning up entitlements for consumer: {}", consumer);
             this.poolService.revokeAllEntitlements(consumer, false);
+            if (entitlement != null) {
+                return;
+            }
         }
 
-        if (entitlementId != null) {
-            // TODO: This should probably verify that the consumer in the path is related to it,
-            // otherwise this belongs in another endpoint.
-            Entitlement entitlement = this.verifyAndLookupEntitlement(entitlementId);
+        if (entitlement != null) {
             this.entCertService.regenerateCertificatesOf(entitlement, lazyRegen);
         }
         else {

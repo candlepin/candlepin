@@ -1190,7 +1190,9 @@ paths:
           in: query
           description: |
             Whether or not to remove unnecessary or unused entitlements for the consumer before regenerating
-            certificates
+            certificates. This field takes precedence over regenerating the entitlement passed with the
+            'entitlement' field during SCA mode (meaning, that entitlement will be revoked/deleted along all
+            others instead of regenerated).
           schema:
             type: boolean
             default: false

@@ -76,6 +76,7 @@ import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.CandlepinException;
+import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.GoneException;
@@ -645,6 +646,7 @@ public class ConsumerResourceTest {
     @Test
     public void testExceptionFromCertGen() throws Exception {
         Consumer consumer = createConsumer(createOwner());
+        consumer.setId("randomid");
 
         Entitlement e = Mockito.mock(Entitlement.class);
         Pool p = Mockito.mock(Pool.class);
@@ -652,9 +654,10 @@ public class ConsumerResourceTest {
         when(e.getPool()).thenReturn(p);
         when(p.getSubscriptionId()).thenReturn("4444");
 
-        doThrow(RuntimeException.class).when(entCertService)
+        doThrow(ConflictException.class).when(entCertService)
             .regenerateCertificatesOf(any(Entitlement.class), anyBoolean());
         when(entitlementCurator.get("9999")).thenReturn(e);
+        when(e.getConsumer()).thenReturn(consumer);
         when(subscriptionServiceAdapter.getSubscription("4444")).thenReturn(s);
         when(entitlementCertServiceAdapter.generateEntitlementCert(
             any(Entitlement.class), any(Product.class)))
@@ -708,8 +711,7 @@ public class ConsumerResourceTest {
             this.consumerCloudDataBuilder
         );
 
-        // Fixme throw custom exception from generator instead of generic RuntimeException
-        assertThrows(RuntimeException.class, () -> consumerResource
+        assertThrows(ConflictException.class, () -> consumerResource
             .regenerateEntitlementCertificates(consumer.getUuid(), "9999", false, false));
     }
 
@@ -799,6 +801,26 @@ public class ConsumerResourceTest {
         // The consumer is operating in SCA mode and we've specified entitlement cleanup, so we
         // expect that the revocation step is invoked.
         verify(this.poolService, Mockito.times(1)).revokeAllEntitlements(eq(consumer), anyBoolean());
+        verify(this.entCertService).regenerateCertificatesOf(consumer, lazyRegen == null || lazyRegen);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void testRegenerateEntitlementCertificatesDoesNotRegenerateRevokedEntitlement(boolean lazyRegen) {
+        Owner owner = this.createOwner();
+        owner.setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+        Consumer consumer = this.createConsumer(owner);
+        consumer.setId("consumer-id");
+        Entitlement entitlement = new Entitlement();
+        entitlement.setConsumer(consumer);
+        entitlement.setId("entitlement-id");
+        when(this.entitlementCurator.get(entitlement.getId())).thenReturn(entitlement);
+
+        this.consumerResource.regenerateEntitlementCertificates(consumer.getUuid(), entitlement.getId(),
+            lazyRegen, true);
+
+        verify(this.poolService).revokeAllEntitlements(consumer, false);
+        verify(this.entCertService, never()).regenerateCertificatesOf(entitlement, lazyRegen);
     }
 
     public static Stream<Arguments> entitlementModeConfigurationProvider() {
