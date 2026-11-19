@@ -20,6 +20,9 @@ services:
       dockerfile: ./containers/active-dev/cs10.Containerfile
       args:
       - WAR_FILE=${WAR_FILE}
+    environment:
+      # JVM options for Tomcat (e.g. JAVA_OPTS=-Xmx2g); empty by default
+      - JAVA_OPTS=${JAVA_OPTS:-}
     ports:
       - "${CP_PORT:-8443}:8443"
       - "${CP_DEBUG_PORT:-8000}:8000"
