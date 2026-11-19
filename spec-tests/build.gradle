@@ -61,7 +61,10 @@ tasks.register('spec', Test) {
         host = '*'
     }
 
-    useJUnitPlatform()
+    useJUnitPlatform {
+        // Performance tests seed large datasets and must run via the dedicated perf task
+        excludeTags 'performance'
+    }
     // maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
     reports.html.required = false
     reports.junitXml.required = false
@@ -71,6 +74,55 @@ tasks.register('spec', Test) {
         def properyKey = key.toString()
         // Propagate spec config
         if (properyKey.startsWith("spec.test.client")) {
+            systemProperty properyKey, System.getProperty(properyKey)
+        }
+
+        // Propagate current working directory
+        if (properyKey == "user.dir") {
+            systemProperty properyKey, System.getProperty(properyKey)
+        }
+    }
+}
+
+tasks.register('perf', Test) {
+    description = 'Run performance spec tests'
+    group = 'Verification'
+    outputs.upToDateWhen { false }
+
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
+    debugOptions {
+        host = '*'
+    }
+
+    // The measured responses are tens of megabytes; give the client room to deserialize
+    maxHeapSize = '2g'
+
+    useJUnitPlatform {
+        includeTags 'performance'
+    }
+
+    // The performance results are reported via the test's log output; make them visible.
+    // The shared testlogger conventions hide standard streams for passed tests.
+    testlogger {
+        showStandardStreams = true
+        showPassedStandardStreams = true
+    }
+
+    reports.html.required = false
+    reports.junitXml.required = false
+
+    // We have to propagate the -D params if we want them available in tests
+    System.properties.keys().each { key ->
+        def properyKey = key.toString()
+        // Propagate spec config
+        if (properyKey.startsWith("spec.test.client")) {
+            systemProperty properyKey, System.getProperty(properyKey)
+        }
+
+        // Propagate performance test config
+        if (properyKey.startsWith("perf.test.")) {
             systemProperty properyKey, System.getProperty(properyKey)
         }
 
