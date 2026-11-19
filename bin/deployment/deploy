@@ -188,6 +188,10 @@ autoconf() {
 
   local CONF_ARGS=""
 
+  if [ "$USE_MYSQL" == "1" ]; then
+    local -x ORG_GRADLE_PROJECT_db_ssl_mode="${ORG_GRADLE_PROJECT_db_ssl_mode:-trust}"
+  fi
+
   if [ "$HOSTEDTEST" == "1" ]; then
     CONF_ARGS="${CONF_ARGS} -Phostedtest=true"
   fi
