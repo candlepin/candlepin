@@ -230,12 +230,12 @@ public class SCACertificateGenerator {
      * @param content
      *     the content links selected for the product export; cannot be null
      * @throws IllegalArgumentException
-     *     if the consumer or content is null
+     *     if the consumer or content is null, or if the consumer lacks an owner
      * @throws CertificateCreationException
-     *     if the consumer doesn't support SCA or v3 certificates
+     *     if the export certificate cannot be created
      * @return a separate export artifact containing the supplied content
      */
-    public SCACertificate generateScaCertificate(Consumer consumer, Collection<ProductContent> content)
+    public SCACertificate generateForContent(Consumer consumer, Collection<ProductContent> content)
         throws ConcurrentContentPayloadCreationException, CryptoCapabilitiesException {
 
         if (consumer == null || content == null) {
@@ -243,7 +243,7 @@ public class SCACertificateGenerator {
         }
         Owner owner = consumer.getOwner();
         if (owner == null) {
-            throw new CertificateCreationException("Consumer doesn't support SCA or v3 certificates");
+            throw new IllegalArgumentException("Owner must not be null");
         }
 
         Scheme scheme = this.cryptoManager.getCryptoScheme(consumer);

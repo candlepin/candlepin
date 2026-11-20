@@ -276,7 +276,7 @@ class ExporterV2Test {
 
     private void verifyCertificateContent(Consumer consumer, Content sharedContent) throws Exception {
         ArgumentCaptor<List<ProductContent>> contentCaptor = ArgumentCaptor.captor();
-        verify(this.scaCertificateGenerator).generateScaCertificate(eq(consumer), contentCaptor.capture());
+        verify(this.scaCertificateGenerator).generateForContent(eq(consumer), contentCaptor.capture());
 
         List<ProductContent> content = contentCaptor.getValue();
         assertEquals(3, content.size());
@@ -486,7 +486,7 @@ class ExporterV2Test {
             "-----BEGIN ENTITLEMENT DATA-----\npayload\n-----END ENTITLEMENT DATA-----\n" +
             "-----BEGIN SIGNATURE-----\nsignature\n-----END SIGNATURE-----\n");
         certificate.setKey("-----BEGIN PRIVATE KEY-----\nkey\n-----END PRIVATE KEY-----\n");
-        when(this.scaCertificateGenerator.generateScaCertificate(eq(consumer), anyList())).thenReturn(certificate);
+        when(this.scaCertificateGenerator.generateForContent(eq(consumer), anyList())).thenReturn(certificate);
         return certificate;
     }
 
@@ -505,7 +505,7 @@ class ExporterV2Test {
             "-----BEGIN ENTITLEMENT DATA-----\npayload\n-----END ENTITLEMENT DATA-----\n" +
             "-----BEGIN SIGNATURE-----\nsignature\n-----END SIGNATURE-----\n");
         certificate.setKey("-----BEGIN PRIVATE KEY-----\nkey\n-----END PRIVATE KEY-----\n");
-        when(this.scaCertificateGenerator.generateScaCertificate(eq(consumer), anyList())).thenReturn(certificate);
+        when(this.scaCertificateGenerator.generateForContent(eq(consumer), anyList())).thenReturn(certificate);
 
         Path export = this.createExporter()
             .getFullExport(consumer);
@@ -526,7 +526,7 @@ class ExporterV2Test {
             assertTrue(Files.exists(archive.getPath(ExporterV2.META_JSON)));
             assertTrue(Files.exists(archive.getPath(ExporterV2.UPSTREAM_CONSUMER, ExporterV2.CONSUMER_JSON)));
         }
-        verify(this.scaCertificateGenerator).generateScaCertificate(eq(consumer), anyList());
+        verify(this.scaCertificateGenerator).generateForContent(eq(consumer), anyList());
         assertSame(storedCertificate, consumer.getContentAccessCert());
         assertEquals("stored consumer certificate", storedCertificate.getCert());
     }
@@ -535,7 +535,7 @@ class ExporterV2Test {
     void omitsCertificateDirectoryWhenGeneratorReturnsNull() throws Exception {
         Owner owner = TestUtil.createOwner("Example-Corporation");
         Consumer consumer = this.createCertificateConsumer(owner);
-        when(this.scaCertificateGenerator.generateScaCertificate(eq(consumer), anyList()))
+        when(this.scaCertificateGenerator.generateForContent(eq(consumer), anyList()))
             .thenThrow(CertificateCreationException.class);
 
         assertThrows(ExportCreationException.class,
@@ -555,7 +555,7 @@ class ExporterV2Test {
     void removesArchiveWhenCertificateGenerationFails(Exception failure) throws Exception {
         Owner owner = TestUtil.createOwner("Example-Corporation");
         Consumer consumer = this.createCertificateConsumer(owner);
-        when(this.scaCertificateGenerator.generateScaCertificate(eq(consumer), anyList())).thenThrow(failure);
+        when(this.scaCertificateGenerator.generateForContent(eq(consumer), anyList())).thenThrow(failure);
 
         ExportCreationException actual = assertThrows(ExportCreationException.class,
             () -> this.createExporter()
@@ -563,7 +563,7 @@ class ExporterV2Test {
 
         assertSame(failure, actual.getCause());
         assertEquals("Unable to create SCA certificate", actual.getMessage());
-        verify(this.scaCertificateGenerator).generateScaCertificate(eq(consumer), anyList());
+        verify(this.scaCertificateGenerator).generateForContent(eq(consumer), anyList());
         try (Stream<Path> files = Files.list(this.workDirectory)) {
             assertFalse(files.findAny()
                 .isPresent());

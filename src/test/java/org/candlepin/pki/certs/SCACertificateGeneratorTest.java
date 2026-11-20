@@ -663,7 +663,7 @@ public class SCACertificateGeneratorTest extends DatabaseTestFixture {
         consumer.setFact(Consumer.Facts.ARCHITECTURE, "x86_64");
         this.contentCurator.flush();
 
-        SCACertificate exported = this.generator.generateScaCertificate(consumer, List.of(link));
+        SCACertificate exported = this.generator.generateForContent(consumer, List.of(link));
         assertThat(consumer.getContentAccessCert().getSerial()).isEqualTo(original.getSerial());
         assertThat(exported.getSerial()).isNotEqualTo(original.getSerial());
         assertThat(exported.getKey()).isEqualTo(original.getKey());
@@ -686,7 +686,7 @@ public class SCACertificateGeneratorTest extends DatabaseTestFixture {
         Consumer consumer = this.createConsumer(this.createOwner());
         doReturn(true).when(this.v3CapabilityCheck).isCertV3Capable(consumer);
 
-        SCACertificate certificate = this.generator.generateScaCertificate(consumer, List.of());
+        SCACertificate certificate = this.generator.generateForContent(consumer, List.of());
 
         JsonNode repositories = this.mapper.readTree(this.extractEntitlementDataJson(certificate.getCert()))
             .get("products")
@@ -698,7 +698,7 @@ public class SCACertificateGeneratorTest extends DatabaseTestFixture {
     @Test
     public void testGenerateScaCertificateWithNullConsumer() {
         assertThrows(IllegalArgumentException.class,
-            () -> this.generator.generateScaCertificate(null, List.of()));
+            () -> this.generator.generateForContent(null, List.of()));
     }
 
     @Test
@@ -706,15 +706,15 @@ public class SCACertificateGeneratorTest extends DatabaseTestFixture {
         Consumer consumer = this.createConsumer(this.createOwner());
 
         assertThrows(IllegalArgumentException.class,
-            () -> this.generator.generateScaCertificate(consumer, null));
+            () -> this.generator.generateForContent(consumer, null));
     }
 
     @Test
     public void testGenerateScaCertificateWithNullOwner() {
         Consumer consumer = new Consumer();
 
-        assertThrows(CertificateCreationException.class,
-            () -> this.generator.generateScaCertificate(consumer, List.of()));
+        assertThrows(IllegalArgumentException.class,
+            () -> this.generator.generateForContent(consumer, List.of()));
     }
 
     @Test

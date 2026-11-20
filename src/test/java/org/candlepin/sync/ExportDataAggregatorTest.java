@@ -192,7 +192,7 @@ class ExportDataAggregatorTest {
         SCACertificate certificate = new SCACertificate();
         certificate.setCert("certificate");
         certificate.setKey("private key");
-        when(generator.generateScaCertificate(any(Consumer.class), anyList())).thenAnswer(invocation -> {
+        when(generator.generateForContent(any(Consumer.class), anyList())).thenAnswer(invocation -> {
             certificateContent.addAll(invocation.<List<ProductContent>>getArgument(1));
             return certificate;
         });
@@ -228,7 +228,7 @@ class ExportDataAggregatorTest {
         ExportData data = this.createExportData(List.of(pool), List.of(product), true, generator);
 
         ArgumentCaptor<List<ProductContent>> captor = ArgumentCaptor.captor();
-        verify(generator).generateScaCertificate(any(Consumer.class), captor.capture());
+        verify(generator).generateForContent(any(Consumer.class), captor.capture());
         assertEquals(Set.of("content"), data.getProducts().get("product").getProductContent().keySet());
         assertEquals("Last", data.getProducts().get("product").getProductContent().get("content").getName());
         assertEquals(1, captor.getValue().size());
@@ -247,7 +247,7 @@ class ExportDataAggregatorTest {
         ExportData data = this.createExportData(List.of(pool), List.of(product, product), true, generator);
 
         ArgumentCaptor<List<ProductContent>> captor = ArgumentCaptor.captor();
-        verify(generator).generateScaCertificate(any(Consumer.class), captor.capture());
+        verify(generator).generateForContent(any(Consumer.class), captor.capture());
         assertEquals(Set.of("content"), data.getProducts().get("product").getProductContent().keySet());
         assertEquals(1, captor.getValue().size());
         assertSame(content, captor.getValue().get(0).getContent());
@@ -271,7 +271,7 @@ class ExportDataAggregatorTest {
         ExportData data = this.createExportData(List.of(pool), List.of(original, replacement), true, generator);
 
         ArgumentCaptor<List<ProductContent>> captor = ArgumentCaptor.captor();
-        verify(generator).generateScaCertificate(any(Consumer.class), captor.capture());
+        verify(generator).generateForContent(any(Consumer.class), captor.capture());
         assertEquals("Replacement", data.getProducts().get("product").getName());
         assertEquals(replacementHasContent ? Set.of("replacement-content") : Set.of(),
             data.getProducts().get("product").getProductContent().keySet());
@@ -288,13 +288,13 @@ class ExportDataAggregatorTest {
         SCACertificate certificate = new SCACertificate();
         certificate.setCert("certificate");
         certificate.setKey("private key");
-        when(generator.generateScaCertificate(any(Consumer.class), anyList())).thenReturn(certificate);
+        when(generator.generateForContent(any(Consumer.class), anyList())).thenReturn(certificate);
 
         ExportData data = this.createExportData(List.of(), List.of(), true, generator);
 
         assertEquals(certificate.getCert(), data.getScaCertificate().getCertificate());
         assertEquals(certificate.getKey(), data.getScaCertificate().getKey());
-        verify(generator).generateScaCertificate(any(Consumer.class), eq(List.of()));
+        verify(generator).generateForContent(any(Consumer.class), eq(List.of()));
     }
 
     @Test
@@ -438,7 +438,7 @@ class ExportDataAggregatorTest {
             scaCertificateGenerator)
             .aggregate(consumer);
 
-        verify(scaCertificateGenerator).generateScaCertificate(eq(consumer), anyList());
+        verify(scaCertificateGenerator).generateForContent(eq(consumer), anyList());
         verify(poolCurator).listByOwnerTypeWithNamespaceFilter("owner-id", filterNamespaces, Pool.PoolType.NORMAL);
         verify(productCurator).getProductsByIdsRecursive(filterNamespaces, productUuids);
         return data;

@@ -200,7 +200,7 @@ public class ExportDataAggregator {
 
         try {
             SCACertificate scaCertificate = this.scaCertificateGenerator
-                .generateScaCertificate(consumer, certificateContent);
+                .generateForContent(consumer, certificateContent);
             return new ExportData(metaDTO, consumerDTO, products, subscriptions, identityCertificate, workDirectory,
                 this.modelTranslator.translate(scaCertificate, CertificateDTO.class));
         }

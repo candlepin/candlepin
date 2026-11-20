@@ -100,6 +100,7 @@ public class ScaCertificateDataProvider {
     }
 
     private String buildPath(String ownerKey, String environmentName) {
+        // FIXME: TODO: Why are we not using the same path-building logic in every cert generator?
         return Stream.of(ownerKey, environmentName)
             .filter(Objects::nonNull)
             .flatMap(component -> Arrays.stream(component.split("/")))
