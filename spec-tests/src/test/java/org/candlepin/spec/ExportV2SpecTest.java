@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.BrandingDTO;
+import org.candlepin.dto.api.client.v1.CapabilityDTO;
 import org.candlepin.dto.api.client.v1.CloudAuthenticationResultDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
@@ -65,9 +66,11 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -77,12 +80,14 @@ import java.security.cert.X509Certificate;
 import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.InflaterInputStream;
 
 @SpecTest
 @OnlyInHosted
@@ -90,6 +95,7 @@ public class ExportV2SpecTest {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Test
+    @SuppressWarnings("checkstyle:methodlength")
     public void shouldCreateExportAsync() throws ApiException, IOException {
 
         ApiClient adminClient = ApiClients.admin();
@@ -111,6 +117,8 @@ public class ExportV2SpecTest {
                 .contractNumber("active-contract")
                 .accountNumber("active-account"));
         ProductDTO futureProduct = this.createProductGraph(adminClient);
+        ContentDTO futureContent = adminClient.hosted().createContent(Contents.random().arches("aarch64"));
+        adminClient.hosted().addContentToProduct(futureProduct.getId(), futureContent.getId(), false);
         ProductDTO expiredProduct = this.createProductGraph(adminClient);
         // future subscription
         OffsetDateTime futureStart = OffsetDateTime.now()
@@ -142,7 +150,7 @@ public class ExportV2SpecTest {
         ConsumerDTO consumer = adminClient.consumers()
             .createConsumer(Consumers.random(owner, ConsumerTypes.Candlepin)
                 .putFactsItem("distributor_version", "sat-6.19")
-                .capabilities(null));
+                .capabilities(Set.of(new CapabilityDTO().name("cert_v3"))));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
         ProductDTO expectedProduct = adminClient.ownerProducts()
@@ -193,11 +201,102 @@ public class ExportV2SpecTest {
             for (PoolDTO pool : expectedPools) {
                 this.assertSubscription(archive, pool);
             }
+
+            Path certificateDirectory = archive.getPath("content_access_certificates");
+            try (Stream<Path> certificates = Files.list(certificateDirectory)) {
+                List<Path> certificatePaths = certificates.toList();
+                assertEquals(1, certificatePaths.size());
+                Path certificatePath = certificatePaths.get(0);
+                assertTrue(certificatePath.getFileName().toString().matches("[0-9]+\\.json"));
+                JsonNode exportedCertificate = this.mapper.readTree(Files.readString(certificatePath));
+                String certificate = exportedCertificate.get("cert").asText();
+                assertEquals(certificatePath.getFileName().toString(),
+                    exportedCertificate.get("serial").get("id").asText() + ".json");
+                assertTrue(certificate.contains("-----BEGIN CERTIFICATE-----"));
+                assertTrue(exportedCertificate.get("key").asText().contains("-----BEGIN PRIVATE KEY-----"));
+                String start = "-----BEGIN ENTITLEMENT DATA-----";
+                String encoded = certificate.substring(certificate.indexOf(start) + start.length(),
+                    certificate.indexOf("-----END ENTITLEMENT DATA-----"));
+                byte[] compressed = Base64.getMimeDecoder().decode(encoded);
+                try (InflaterInputStream data = new InflaterInputStream(new ByteArrayInputStream(compressed))) {
+                    JsonNode payload = this.mapper.readTree(new String(data.readAllBytes(), StandardCharsets.UTF_8));
+                    this.assertCertificateContent(payload, expectedProduct, expectedFutureProduct);
+                }
+            }
         }
     }
 
     private static Stream<CryptographicCapabilitiesDTO> capabilitiesSource() {
         return CryptoCapabilities.getSupportedCapabilities().stream();
+    }
+
+    private void assertCertificateContent(JsonNode payload, ProductDTO... products) {
+        Map<String, ProductContentDTO> expected = new HashMap<>();
+        for (ProductDTO product : products) {
+            this.collectCertificateContent(product, expected);
+        }
+
+        JsonNode repositories = payload.get("products").get(0).get("content");
+        assertEquals(expected.size(), repositories.size());
+        Map<String, Boolean> actual = new HashMap<>();
+        for (JsonNode repository : repositories) {
+            String id = repository.get("id").asString();
+            ProductContentDTO expectedEntry = expected.get(id);
+            assertNotNull(expectedEntry, "Unexpected certificate content: " + id);
+            ContentDTO content = expectedEntry.getContent();
+            this.assertField(repository, "type", content.getType());
+            this.assertField(repository, "name", content.getName());
+            this.assertField(repository, "label", content.getLabel());
+            this.assertField(repository, "vendor", content.getVendor());
+            this.assertField(repository, "path", content.getContentUrl());
+            this.assertOptionalCertificateField(repository, "gpg_url", content.getGpgUrl());
+            this.assertOptionalCertificateField(repository, "metadata_expire", content.getMetadataExpire());
+            List<String> tags = content.getRequiredTags() == null ? null :
+                List.of(content.getRequiredTags().split(","));
+            this.assertOptionalCertificateField(repository, "required_tags", tags);
+            Set<String> arches = content.getArches() == null ? Set.of() :
+                Set.of(content.getArches().split(","));
+            assertEquals(arches, Set.of(this.mapper.convertValue(repository.get("arches"), String[].class)),
+                "Architectures for certificate content " + id);
+            // Enabled content omits the flag; disabled content explicitly sets it to false.
+            JsonNode enabled = repository.get("enabled");
+            if (enabled != null) {
+                assertTrue(enabled.isBoolean());
+            }
+            actual.put(id, enabled == null || enabled.asBoolean());
+        }
+        Map<String, Boolean> expectedEnabled = expected.entrySet().stream()
+            .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getEnabled()));
+        assertEquals(expectedEnabled, actual);
+    }
+
+    private void assertOptionalCertificateField(JsonNode actual, String field, Object expected) {
+        if (expected == null) {
+            assertFalse(actual.has(field), "Unexpected certificate content field: " + field);
+        }
+        else if (expected instanceof Long number) {
+            JsonNode value = actual.get(field);
+            assertNotNull(value, field);
+            assertTrue(value.isIntegralNumber(), field);
+            assertEquals(number.longValue(), value.asLong(), field);
+        }
+        else {
+            this.assertField(actual, field, expected);
+        }
+    }
+
+    private void collectCertificateContent(ProductDTO product, Map<String, ProductContentDTO> content) {
+        for (ProductContentDTO entry : product.getProductContent()) {
+            content.merge(entry.getContent().getId(), entry, (first, second) ->
+                new ProductContentDTO().content(second.getContent())
+                    .enabled(first.getEnabled() || second.getEnabled()));
+        }
+        if (product.getDerivedProduct() != null) {
+            this.collectCertificateContent(product.getDerivedProduct(), content);
+        }
+        for (ProductDTO provided : product.getProvidedProducts()) {
+            this.collectCertificateContent(provided, content);
+        }
     }
 
     @ParameterizedTest
@@ -207,6 +306,7 @@ public class ExportV2SpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         ConsumerDTO consumer = adminClient.consumers()
             .createConsumer(Consumers.random(owner, ConsumerTypes.Candlepin)
+                .capabilities(Set.of(new CapabilityDTO().name("cert_v3")))
                 .cryptographicCapabilities(capabilities));
 
         File export = this.createExportAsync(ApiClients.ssl(consumer), consumer.getUuid());
@@ -249,6 +349,7 @@ public class ExportV2SpecTest {
                 .requiredTags("tag-one,tag-two")
                 .releaseVer("9.4")
                 .gpgUrl("https://example.com/export/RPM-GPG-KEY")
+                .metadataExpire(3600L)
                 .arches("x86_64,aarch64"));
         ContentDTO derivedContent = adminClient.hosted()
             .createContent(Contents.random());
@@ -569,7 +670,8 @@ public class ExportV2SpecTest {
             .waitForJob(jobStatus.getId());
         if (!jobStatus.getState()
             .equals("FINISHED")) {
-            throw new ApiException("Unable to create export.");
+            throw new ApiException("Unable to create export: job " + jobStatus.getId() +
+                " ended with state " + jobStatus.getState() + ", result: " + jobStatus.getResultData());
         }
 
         ExportResultDTO result = ApiClient.MAPPER
