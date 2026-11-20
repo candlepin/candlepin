@@ -1075,6 +1075,9 @@ public class OwnerResource implements OwnerApi {
 
         Owner owner = this.findOwnerByKey(ownerKey);
 
+        // Impl note: the curator returns detached models populated from scalar projections
+        // (avoiding entity hydration); translation to DTOs happens through the standard
+        // translator below.
         List<ActivationKey> keys = this.activationKeyCurator.listByOwner(owner, keyName);
         return keys.stream()
             .map(this.translator.getStreamMapper(ActivationKey.class, ActivationKeyDTO.class));

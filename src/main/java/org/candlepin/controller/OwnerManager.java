@@ -31,7 +31,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.UeberCertificateCurator;
-import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 
 import com.google.inject.persist.Transactional;
@@ -125,10 +124,8 @@ public class OwnerManager {
             }
         }
 
-        for (ActivationKey key : activationKeyCurator.listByOwner(owner)) {
-            log.info("Deleting activation key: {}", key);
-            activationKeyCurator.delete(key);
-        }
+        log.debug("Deleting activation keys for owner: {}", owner);
+        activationKeyCurator.deleteByOwner(owner);
 
         log.debug("Deleting environments for owner: {}", owner);
         envCurator.deleteEnvironmentsForOwner(owner);

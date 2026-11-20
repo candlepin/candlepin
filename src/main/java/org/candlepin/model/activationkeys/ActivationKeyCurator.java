@@ -16,6 +16,11 @@ package org.candlepin.model.activationkeys;
 
 import org.candlepin.model.AbstractHibernateCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.activationkeys.ActivationKeyProjection.ActivationKeyRow;
+import org.candlepin.model.activationkeys.ActivationKeyProjection.AddOnRow;
+import org.candlepin.model.activationkeys.ActivationKeyProjection.ContentOverrideRow;
+import org.candlepin.model.activationkeys.ActivationKeyProjection.PoolRow;
+import org.candlepin.model.activationkeys.ActivationKeyProjection.ProductRow;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.hibernate.query.NativeQuery;
@@ -42,10 +47,18 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
         super(ActivationKey.class);
     }
 
+    public List<ActivationKey> listByOwner(Owner owner) {
+        return this.listByOwner(owner, null);
+    }
+
     /**
-     * Retrieves the activation keys for the owner. If the provided key name is non-null and non-blank, then
-     * activation keys will be filtered based on that key name. If the provided {@link Owner} is null, then an
-     * empty list is returned. This method does not return null.
+     * Retrieves the activation keys for the owner as detached model instances populated from
+     * typed JPQL projections. If the provided key name is non-null and non-blank, then
+     * activation keys will be filtered based on that key name. If the provided {@link Owner}
+     * is null, then an empty list is returned. This method does not return null.
+     *
+     * The returned entities are not managed by the persistence context and are intended for
+     * read-only use such as DTO translation; they must not be modified or persisted.
      *
      * @param owner
      *  the owner of the activation keys that should be returned
@@ -53,7 +66,7 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
      * @param keyName
      *  an optional parameter that will filter the activation keys based on the name
      *
-     * @return the activation keys for the owner
+     * @return the activation keys for the owner as detached model instances
      */
     public List<ActivationKey> listByOwner(Owner owner, String keyName) {
         if (owner == null) {
@@ -61,23 +74,75 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
         }
 
         boolean hasKeyName = keyName != null && !keyName.isBlank();
-        String nameCondition = "";
-        if (hasKeyName) {
-            nameCondition = " AND a.name = :name";
+        String nameCondition = hasKeyName ? " AND a.name = :name" : "";
+
+        // Impl note: building the models from typed projections avoids hydrating managed
+        // entities (and Hibernate keeping dirty-check snapshots of them) while still
+        // preventing the N + 1 problem during DTO translation. Each collection is fetched
+        // in its own query to keep the row count linear rather than producing a cartesian
+        // product of the collections joined in a single query.
+
+        String keyQuery = "SELECT a.id, a.name, a.description, a.created, a.updated, a.serviceLevel, " +
+            "a.autoAttach, a.usage, a.role, a.releaseVer " +
+            "FROM ActivationKey a WHERE a.owner = :owner" + nameCondition;
+
+        ActivationKeyProjection projection = new ActivationKeyProjection(owner,
+            this.runProjectionQuery(keyQuery, ActivationKeyRow.class, owner, keyName, hasKeyName));
+
+        if (projection.isEmpty()) {
+            return Collections.emptyList();
         }
 
-        // Eagerly fetch collections to avoid an N + 1 problem during DTO translation
+        String productQuery = "SELECT a.id, p FROM ActivationKey a " +
+            "LEFT JOIN a.productIds p WHERE a.owner = :owner" + nameCondition;
+        projection.addProducts(this.runProjectionQuery(productQuery, ProductRow.class, owner, keyName, hasKeyName));
 
-        String jpql = "SELECT DISTINCT a " +
+        String overrideQuery = "SELECT a.id, o.contentLabel, o.name, o.value, o.created, o.updated " +
             "FROM ActivationKey a " +
-            "LEFT JOIN FETCH a.productIds " +
-            "LEFT JOIN FETCH a.contentOverrides " +
-            "LEFT JOIN FETCH a.pools " +
-            "LEFT JOIN FETCH a.addOns " +
-            "WHERE a.owner = :owner" + nameCondition;
+            "LEFT JOIN a.contentOverrides o WHERE a.owner = :owner" + nameCondition;
+        projection.addContentOverrides(
+            this.runProjectionQuery(overrideQuery, ContentOverrideRow.class, owner, keyName, hasKeyName));
 
-        TypedQuery<ActivationKey> query = this.getEntityManager()
-            .createQuery(jpql, ActivationKey.class)
+        String poolQuery = "SELECT a.id, p.poolId, p.quantity FROM ActivationKey a " +
+            "LEFT JOIN a.pools p WHERE a.owner = :owner" + nameCondition;
+        projection.addPools(this.runProjectionQuery(poolQuery, PoolRow.class, owner, keyName, hasKeyName));
+
+        String addOnQuery = "SELECT a.id, ad FROM ActivationKey a " +
+            "LEFT JOIN a.addOns ad WHERE a.owner = :owner" + nameCondition;
+        projection.addAddOns(this.runProjectionQuery(addOnQuery, AddOnRow.class, owner, keyName, hasKeyName));
+
+        return projection.toActivationKeys();
+    }
+
+    /**
+     * Runs the provided typed projection query with the given owner and optional
+     * key name parameters, returning the resulting projection instances.
+     *
+     * @param <T>
+     *  the projection type produced by the query
+     *
+     * @param jpql
+     *  the projection query to run
+     *
+     * @param projectionType
+     *  the projection type produced by the query
+     *
+     * @param owner
+     *  the owner constraining the query
+     *
+     * @param keyName
+     *  the optional key name constraining the query
+     *
+     * @param hasKeyName
+     *  whether the key name parameter should be applied
+     *
+     * @return the projection instances produced by the query
+     */
+    private <T> List<T> runProjectionQuery(String jpql, Class<T> projectionType, Owner owner,
+        String keyName, boolean hasKeyName) {
+        // Hibernate maps the selected columns to the record constructor of the supplied result type.
+        TypedQuery<T> query = this.getEntityManager()
+            .createQuery(jpql, projectionType)
             .setParameter("owner", owner);
 
         if (hasKeyName) {
@@ -85,10 +150,6 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
         }
 
         return query.getResultList();
-    }
-
-    public List<ActivationKey> listByOwner(Owner owner) {
-        return this.listByOwner(owner, null);
     }
 
     public ActivationKey getByKeyName(Owner owner, String name) {
@@ -220,5 +281,47 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
         }
 
         return deleted;
+    }
+
+    /**
+     * Bulk deletes all activation keys owned by the given owner, along with
+     * their pool references. Content overrides and product references are
+     * removed by database-level cascades. Unlike deleting detached entities
+     * one by one, this does not reload each key, making it suitable for owner
+     * deletion where the number of keys can be large.
+     *
+     * @param owner
+     *  the owner whose activation keys should be deleted
+     *
+     * @return
+     *  the number of activation keys deleted
+     */
+    public int deleteByOwner(Owner owner) {
+        if (owner == null) {
+            return 0;
+        }
+
+        // Impl note: the FK from cp_activationkey_pool to cp_activation_key is
+        // ON DELETE NO ACTION, so the pool references must be removed explicitly
+        // before the keys themselves can be deleted.
+        String poolDelete = "DELETE FROM ActivationKeyPool akp " +
+            "WHERE akp.activationKey.owner.id = :owner_id";
+
+        int poolsDeleted = this.getEntityManager()
+            .createQuery(poolDelete)
+            .setParameter("owner_id", owner.getId())
+            .executeUpdate();
+
+        String keyDelete = "DELETE FROM ActivationKey ak WHERE ak.owner.id = :owner_id";
+
+        int keysDeleted = this.getEntityManager()
+            .createQuery(keyDelete)
+            .setParameter("owner_id", owner.getId())
+            .executeUpdate();
+
+        log.info("{} activation keys and {} pool references deleted for owner: {}",
+            keysDeleted, poolsDeleted, owner.getKey());
+
+        return keysDeleted;
     }
 }
