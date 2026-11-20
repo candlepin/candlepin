@@ -113,12 +113,9 @@ public class ManifestManager {
      * @param consumerUuid the target consumer's UUID.
      * @param cdnLabel the CDN label to store in the meta file.
      * @param webUrl the URL pointing to the manifest's originating web application.
-     * @param apiUrl the API URL pointing to the manifest's originating candlepin API.
      * @return the details of the async export job.
      */
-    public JobConfig generateManifestAsync(String consumerUuid, Owner owner, String cdnLabel,
-        String webUrl, String apiUrl) {
-
+    public JobConfig generateManifestAsync(String consumerUuid, Owner owner, String cdnLabel, String webUrl) {
         log.info("Scheduling Async Export for consumer {}", consumerUuid);
         Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
 
@@ -126,8 +123,7 @@ public class ManifestManager {
             .setConsumer(consumer)
             .setOwner(owner)
             .setCdnLabel(cdnLabel)
-            .setWebAppPrefix(webUrl)
-            .setApiUrl(apiUrl);
+            .setWebAppPrefix(webUrl);
     }
 
     /**
@@ -142,9 +138,6 @@ public class ManifestManager {
      * @param webUrl
      *  the URL pointing to the manifest's originating web application.
      *
-     * @param apiUrl
-     *  the API URL pointing to the manifest's originating candlepin API.
-     *
      * @throws ExportCreationException
      *  when an export fails.
      *
@@ -153,7 +146,7 @@ public class ManifestManager {
      *
      * @return an archive of the target consumer
      */
-    public File generateManifest(String consumerUuid, String cdnLabel, String webUrl, String apiUrl)
+    public File generateManifest(String consumerUuid, String cdnLabel, String webUrl)
         throws ExportCreationException, CryptoCapabilitiesException {
 
         log.info("Exporting consumer {}", consumerUuid);
@@ -161,7 +154,7 @@ public class ManifestManager {
         Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
         poolManager.regenerateDirtyEntitlements(consumer);
 
-        File export = exporter.getFullExport(consumer, cdnLabel, webUrl, apiUrl);
+        File export = exporter.getFullExport(consumer, cdnLabel, webUrl);
         sink.queueEvent(eventFactory.exportCreated(consumer));
 
         return export;
@@ -376,9 +369,6 @@ public class ManifestManager {
      * @param webUrl
      *  the URL pointing to the manifest's originating web application.
      *
-     * @param apiUrl
-     *  the API URL pointing to the manifest's originating candlepin API.
-     *
      * @throws ExportCreationException
      *  if there are any issues generating the manifest.
      *
@@ -387,15 +377,15 @@ public class ManifestManager {
      *
      * @return an {@link ExportResult} containing the details of the stored file.
      */
-    public ExportResult generateAndStoreManifest(String consumerUuid, String cdnLabel, String webUrl,
-        String apiUrl) throws ExportCreationException, CryptoCapabilitiesException {
+    public ExportResult generateAndStoreManifest(String consumerUuid, String cdnLabel, String webUrl)
+        throws ExportCreationException, CryptoCapabilitiesException {
 
         Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
 
         File export = null;
         try {
             poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
-            export = exporter.getFullExport(consumer, cdnLabel, webUrl, apiUrl);
+            export = exporter.getFullExport(consumer, cdnLabel, webUrl);
             ManifestFile manifestFile = storeExport(export, consumer);
             sink.queueEvent(eventFactory.exportCreated(consumer));
             return new ExportResult(consumer.getUuid(), manifestFile.getId());

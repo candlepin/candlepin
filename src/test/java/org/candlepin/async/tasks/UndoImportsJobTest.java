@@ -14,6 +14,7 @@
  */
 package org.candlepin.async.tasks;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
@@ -30,6 +31,7 @@ import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
+import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -86,13 +88,18 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         owner1.setId(null);
         owner2.setId(null);
 
+        String expectedApiUrl = TestUtil.randomString("api-");
+        String expectedCdnUrl = TestUtil.randomString("cdn-");
+
         ConsumerType type = this.createConsumerType();
         UpstreamConsumer uc1 = new UpstreamConsumer("uc1", null, type, "uc1");
+        uc1.setApiUrl(expectedApiUrl);
+        uc1.setCdnUrl(expectedCdnUrl);
         UpstreamConsumer uc2 = new UpstreamConsumer("uc2", null, type, "uc2");
         this.ownerCurator.create(owner1);
         this.ownerCurator.create(owner2);
         owner1.setUpstreamConsumer(uc1);
-        owner1.setUpstreamConsumer(uc2);
+        owner2.setUpstreamConsumer(uc2);
         this.ownerCurator.merge(owner1);
         this.ownerCurator.merge(owner2);
 
@@ -147,6 +154,10 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         List<ImportRecord> records = this.importRecordCurator.findRecords(owner1);
         assertEquals(1, records.size());
         assertEquals(ImportRecord.Status.DELETE, records.get(0).getStatus());
+
+        assertThat(records.get(0).getUpstreamConsumer())
+            .returns(expectedApiUrl, ImportUpstreamConsumer::getApiUrl)
+            .returns(expectedCdnUrl, ImportUpstreamConsumer::getCdnUrl);
 
         assertEquals(0, this.importRecordCurator.findRecords(owner2).size());
     }

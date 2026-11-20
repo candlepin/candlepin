@@ -77,6 +77,10 @@ public class UpstreamConsumer extends AbstractHibernateObject<UpstreamConsumer> 
     @Size(max = 255)
     private String prefixUrlApi;
 
+    @Column(name = "cdn_url")
+    @Size(max = 255)
+    private String cdnUrl;
+
     @Column(name = "content_access_mode")
     @Size(max = 255)
     private String contentAccessMode;
@@ -211,6 +215,27 @@ public class UpstreamConsumer extends AbstractHibernateObject<UpstreamConsumer> 
      */
     public void setApiUrl(String url) {
         prefixUrlApi = url;
+    }
+
+    /**
+     * @return the CDN URL for this upstream consumer
+     */
+    public String getCdnUrl() {
+        return this.cdnUrl;
+    }
+
+
+    /**
+     * Sets the CDN URL for this upstream consumer;
+     *
+     * @param cdnUrl
+     *  the CDN URL to set
+     *
+     * @return this instance
+     */
+    public UpstreamConsumer setCdnUrl(String cdnUrl) {
+        this.cdnUrl = cdnUrl;
+        return this;
     }
 
     /**

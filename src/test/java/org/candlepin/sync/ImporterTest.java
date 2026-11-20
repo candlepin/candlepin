@@ -908,8 +908,7 @@ public class ImporterTest extends DatabaseTestFixture {
         consumer = this.consumerCurator.update(consumer);
 
         Exporter exporter = this.createExporter();
-        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
-            TestUtil.randomString());
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString());
         assertNotNull(export);
         assertTrue(export.exists());
         export.deleteOnExit();
@@ -953,8 +952,7 @@ public class ImporterTest extends DatabaseTestFixture {
         consumer = this.consumerCurator.update(consumer);
 
         Exporter exporter = this.createExporter();
-        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
-            TestUtil.randomString());
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString());
         assertNotNull(export);
         assertTrue(export.exists());
         export.deleteOnExit();
@@ -989,6 +987,12 @@ public class ImporterTest extends DatabaseTestFixture {
         CryptoUtil.generateSchemeConfiguration(this.config, mldsaScheme, null);
         this.config.setProperty(ConfigProperties.CRYPTO_DEFAULT_SCHEME, mldsaScheme.name());
 
+        String prefix = ConfigProperties.schemePrefix(mldsaScheme.name());
+        String apiUrl = prefix + ConfigProperties.CRYPTO_SCHEME_API_URL;
+        String cdnUrl = prefix + ConfigProperties.CRYPTO_SCHEME_CDN_URL;
+        this.config.setProperty(apiUrl, TestUtil.randomString("api-"));
+        this.config.setProperty(cdnUrl, TestUtil.randomString("cdn-"));
+
         // We have to recreate this so it receives the config changes. This is why we shouldn't use globally
         // shared initializers in unit tests. :/
         this.cryptoManager = spy(CryptoUtil.getCryptoManager(this.config));
@@ -1009,8 +1013,7 @@ public class ImporterTest extends DatabaseTestFixture {
         consumer = this.consumerCurator.update(consumer);
 
         Exporter exporter = this.createExporter();
-        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
-            TestUtil.randomString());
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString());
         assertNotNull(export);
         assertTrue(export.exists());
         export.deleteOnExit();
@@ -1057,8 +1060,7 @@ public class ImporterTest extends DatabaseTestFixture {
         consumer = this.consumerCurator.update(consumer);
 
         Exporter exporter = this.createExporter();
-        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
-            TestUtil.randomString());
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString());
         assertNotNull(export);
         assertTrue(export.exists());
         export.deleteOnExit();
@@ -1113,8 +1115,7 @@ public class ImporterTest extends DatabaseTestFixture {
         consumer = this.consumerCurator.update(consumer);
 
         Exporter exporter = this.createExporter();
-        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
-            TestUtil.randomString());
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString());
         assertNotNull(export);
         assertTrue(export.exists());
         export.deleteOnExit();
@@ -1160,8 +1161,7 @@ public class ImporterTest extends DatabaseTestFixture {
         consumer = this.consumerCurator.update(consumer);
 
         Exporter exporter = this.createExporter();
-        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
-            TestUtil.randomString());
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString());
         assertNotNull(export);
         assertTrue(export.exists());
         export.deleteOnExit();
@@ -1215,8 +1215,7 @@ public class ImporterTest extends DatabaseTestFixture {
         consumer = this.consumerCurator.update(consumer);
 
         Exporter exporter = this.createExporter();
-        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
-            TestUtil.randomString());
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString());
         assertNotNull(export);
         assertTrue(export.exists());
         export.deleteOnExit();
@@ -1265,8 +1264,7 @@ public class ImporterTest extends DatabaseTestFixture {
         consumer = this.consumerCurator.update(consumer);
 
         Exporter exporter = this.createExporter();
-        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
-            TestUtil.randomString());
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString());
         export.deleteOnExit();
 
         assertNotNull(export);
@@ -1319,8 +1317,7 @@ public class ImporterTest extends DatabaseTestFixture {
         consumer = this.consumerCurator.update(consumer);
 
         Exporter exporter = this.createExporter();
-        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
-            TestUtil.randomString());
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString());
         assertNotNull(export);
         assertTrue(export.exists());
         export.deleteOnExit();
@@ -1380,8 +1377,7 @@ public class ImporterTest extends DatabaseTestFixture {
         consumer = this.consumerCurator.update(consumer);
 
         Exporter exporter = this.createExporter();
-        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
-            TestUtil.randomString());
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString());
         assertNotNull(export);
         assertTrue(export.exists());
         export.deleteOnExit();
@@ -1432,8 +1428,7 @@ public class ImporterTest extends DatabaseTestFixture {
         consumer = this.consumerCurator.update(consumer);
 
         Exporter exporter = this.createExporter();
-        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString(),
-            TestUtil.randomString());
+        File export = exporter.getFullExport(consumer, TestUtil.randomString(), TestUtil.randomString());
         assertNotNull(export);
         assertTrue(export.exists());
         export.deleteOnExit();

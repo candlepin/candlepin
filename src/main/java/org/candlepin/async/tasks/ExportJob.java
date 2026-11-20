@@ -51,7 +51,6 @@ public class ExportJob implements AsyncJob {
     protected static final String CONSUMER_KEY = "consumer_uuid";
     protected static final String CDN_LABEL = "cdn_label";
     protected static final String WEBAPP_PREFIX = "webapp_prefix";
-    protected static final String API_URL = "api_url";
     protected static final String EXTENSION_DATA = "extension_data";
 
     /**
@@ -112,20 +111,6 @@ public class ExportJob implements AsyncJob {
         }
 
         /**
-         * Sets the api url for this export job.
-         *
-         * @param url
-         *  the api url to set for this job
-         *
-         * @return
-         *  a reference to this job config
-         */
-        public ExportJobConfig setApiUrl(String url) {
-            this.setJobArgument(API_URL, url);
-            return this;
-        }
-
-        /**
          * Sets the extension data for this export job.
          *
          * @param extData
@@ -147,8 +132,6 @@ public class ExportJob implements AsyncJob {
                 JobArguments arguments = this.getJobArguments();
 
                 String consumerUuid = arguments.getAsString(CONSUMER_KEY);
-                String cdnLabel = arguments.getAsString(CDN_LABEL);
-
                 if (consumerUuid == null || consumerUuid.isEmpty()) {
                     String errmsg = "consumer has not been set, or the provided consumer lacks a UUID";
                     throw new JobConfigValidationException(errmsg);
@@ -175,12 +158,11 @@ public class ExportJob implements AsyncJob {
         String consumerUuid = args.getAsString(CONSUMER_KEY);
         String cdnLabel = args.getAsString(CDN_LABEL);
         String webAppPrefix = args.getAsString(WEBAPP_PREFIX);
-        String apiUrl = args.getAsString(API_URL);
 
         log.info("Starting async export for {}", consumerUuid);
         try {
-            ExportResult result = manifestManager.generateAndStoreManifest(consumerUuid, cdnLabel,
-                webAppPrefix, apiUrl);
+            ExportResult result = manifestManager
+                .generateAndStoreManifest(consumerUuid, cdnLabel, webAppPrefix);
 
             log.info("Async export complete");
 

@@ -116,19 +116,6 @@ public class ExportJobTest {
     }
 
     @Test
-    public void testJobConfigSetApiUrl() {
-        String url = "test_url";
-
-        JobConfig config = ExportJob.createJobConfig()
-            .setApiUrl(url);
-
-        JobArguments args = config.getJobArguments();
-
-        assertTrue(args.containsKey(ExportJob.API_URL));
-        assertEquals(url, args.getAsString(ExportJob.API_URL));
-    }
-
-    @Test
     public void testJobConfigSetExtensionData() {
         Map<String, String> data = new HashMap<>();
         data.put("key-1", "val-1");
@@ -186,19 +173,17 @@ public class ExportJobTest {
         String manifestId = "1234";
         String cdnLabel = "test_label";
         String appPrefix = "test_prefix";
-        String apiUrl = "test_url";
 
         ExportResult result = new ExportResult(distributor.getUuid(), manifestId);
 
         doReturn(result).when(manifestManager).generateAndStoreManifest(
-            eq(distributor.getUuid()), eq(cdnLabel), eq(appPrefix), eq(apiUrl));
+            eq(distributor.getUuid()), eq(cdnLabel), eq(appPrefix));
 
         JobConfig config = ExportJob.createJobConfig()
             .setConsumer(distributor)
             .setOwner(owner)
             .setCdnLabel(cdnLabel)
-            .setWebAppPrefix(appPrefix)
-            .setApiUrl(apiUrl);
+            .setWebAppPrefix(appPrefix);
 
         JobExecutionContext context = mock(JobExecutionContext.class);
         doReturn(config.getJobArguments()).when(context).getJobArguments();

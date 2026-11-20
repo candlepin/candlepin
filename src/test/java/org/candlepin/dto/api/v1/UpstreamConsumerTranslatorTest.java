@@ -58,6 +58,7 @@ public class UpstreamConsumerTranslatorTest extends
         consumer.setUuid("consumer_uuid");
         consumer.setName("consumer_name");
         consumer.setApiUrl("http://www.url.com");
+        consumer.setCdnUrl("http://cdn.testing.com");
         consumer.setWebUrl("http://www.url.com");
         consumer.setOwnerId("owner_id");
         consumer.setType(this.consumerTypeTranslatorTest.initSourceObject());
@@ -81,6 +82,7 @@ public class UpstreamConsumerTranslatorTest extends
             assertEquals(source.getUuid(), dest.getUuid());
             assertEquals(source.getName(), dest.getName());
             assertEquals(source.getApiUrl(), dest.getApiUrl());
+            assertEquals(source.getCdnUrl(), dest.getCdnUrl());
             assertEquals(source.getWebUrl(), dest.getWebUrl());
             assertEquals(source.getOwnerId(), dest.getOwnerId());
 

@@ -215,7 +215,6 @@ public class ConfigProperties {
     public static final String PREFIX_WEBURL = "candlepin.export.prefix.weburl";
     public static final String PREFIX_APIURL = "candlepin.export.prefix.apiurl";
     public static final String PASSPHRASE_SECRET_FILE = "candlepin.passphrase.path";
-
     public static final String PRODUCT_CACHE_MAX = "candlepin.cache.product_cache_max";
 
     public static final String CONSUMER_MIGRATION_BATCH_SIZE = "candlepin.consumer.migration.batch.size";
@@ -263,6 +262,8 @@ public class ConfigProperties {
     public static final String CRYPTO_SCHEME_SIGNATURE_ALGORITHM = "signature_algorithm";
     public static final String CRYPTO_SCHEME_KEY_ALGORITHM = "key_algorithm";
     public static final String CRYPTO_SCHEME_KEY_SIZE = "key_size";
+    public static final String CRYPTO_SCHEME_API_URL = "apiurl";
+    public static final String CRYPTO_SCHEME_CDN_URL = "cdnurl";
 
     /**
      * Fetches a string representing the prefix for all per-scheme configuration for the specified crypto
