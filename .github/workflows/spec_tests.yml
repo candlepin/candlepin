@@ -64,7 +64,7 @@ jobs:
         run: |
           CONF_ARGS="-Pdb_host=${{ matrix.database }} -Pmanifestgen=true -Pcpdb_password=candlepin"
           if [ "${{ matrix.database }}" == "mariadb" ]; then
-            CONF_ARGS="$CONF_ARGS -Pdatabase_server=mysql"
+            CONF_ARGS="$CONF_ARGS -Pdatabase_server=mysql -Pdb_ssl_mode=trust"
           fi
           if [ "${{ matrix.mode }}" == "hosted" ]; then
             CONF_ARGS="$CONF_ARGS -Phostedtest=true"

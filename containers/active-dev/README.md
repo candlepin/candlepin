@@ -14,3 +14,5 @@ Separate compose files are used for deploying with MariaDB or PostgreSQL.
 You can use the `/bin/deployment/deploy-container` script to easily deploy these containers.
 See `./bin/deployment/deploy-container --help` for all available options.
 
+If you are reusing a MariaDB config generated before the Connector/J 4 upgrade, add `-a` to your usual
+`deploy-container` command once to regenerate it with `sslMode=trust`.

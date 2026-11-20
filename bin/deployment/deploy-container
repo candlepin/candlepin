@@ -124,6 +124,10 @@ TEST_EXTS=()
 WAR_ARGS=()
 CONF_ARGS=()
 
+if [ "$USE_MYSQL" -eq 1 ]; then
+    CONF_ARGS+=("-Pdb_ssl_mode=trust")
+fi
+
 if [ "$HOSTEDTEST" -eq 1 ]; then
     TEST_EXTS+=("hostedtest")
     CONF_ARGS+=("-Phostedtest=true")
