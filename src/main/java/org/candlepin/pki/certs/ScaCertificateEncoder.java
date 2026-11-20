@@ -40,6 +40,8 @@ import jakarta.inject.Singleton;
  */
 @Singleton
 public class ScaCertificateEncoder {
+    public static final String ORGANIZATION_LEVEL = "OrgLevel";
+
     private final CryptoManager cryptoManager;
     private final PemEncoder pemEncoder;
     private final Huffman huffman;
@@ -111,7 +113,7 @@ public class ScaCertificateEncoder {
         try {
             Set<X509Extension> extensions = new HashSet<>();
             extensions.add(new X509StringExtension(OID.EntitlementVersion.namespace(), X509V3ExtensionUtil.CERT_VERSION));
-            extensions.add(new X509StringExtension(OID.EntitlementType.namespace(), "OrgLevel"));
+            extensions.add(new X509StringExtension(OID.EntitlementType.namespace(), ORGANIZATION_LEVEL));
             extensions.add(new X509ByteExtension(OID.EntitlementData.namespace(), this.huffman.retrieveContentValue(content)));
             return extensions;
         }
