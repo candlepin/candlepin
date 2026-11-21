@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-03 07:34+0000\n"
+"POT-Creation-Date: 2026-11-16 09:21+0000\n"
 "PO-Revision-Date: 2026-05-01 03:59+0000\n"
 "Last-Translator: Arif Budiman <arifpedia@gmail.com>\n"
 "Language-Team: Indonesian <https://translate.fedoraproject.org/projects/"
@@ -199,7 +199,7 @@ msgid "Compliance recalculated for consumer {1}"
 msgstr "Kepatuhan dihitung ulang untuk konsumen {1}"
 
 #: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:70
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1543
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1520
 #, java-format
 msgid "Organization {0} does not exist."
 msgstr "Organisasi {0} tidak ada."
@@ -209,12 +209,12 @@ msgid "None of the activation keys specified exist for this org."
 msgstr "Tidak ada kunci aktivasi yang ditentukan untuk organisasi ini."
 
 #: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:93
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1291
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1268
 msgid "Org required to register with activation keys."
 msgstr "Organisasi perlu untuk mendaftar dengan kunci aktivasi."
 
 #: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:97
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1295
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1272
 msgid "Cannot specify username with activation keys."
 msgstr "Tidak dapat menentukan nama pengguna dengan kunci aktivasi."
 
@@ -258,7 +258,7 @@ msgid "Invalid Certificate Type"
 msgstr "Jenis Sertifikat Tidak Valid"
 
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1468
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1445
 #: src/main/java/org/candlepin/resource/RoleResource.java:115
 #: src/main/java/org/candlepin/resource/UserResource.java:92
 #, java-format
@@ -318,18 +318,18 @@ msgstr ""
 msgid "A CDN with label {0} does not exist on this system."
 msgstr "CDN dengan label {0} tidak ada di sistem ini."
 
-#: src/main/java/org/candlepin/controller/PoolManager.java:328
+#: src/main/java/org/candlepin/controller/PoolManager.java:341
 msgid "No owner specified, or owner lacks identifying information"
 msgstr ""
 "Tidak ada pemilik yang ditentukan, atau pemilik tidak memiliki informasi "
 "identitas"
 
-#: src/main/java/org/candlepin/controller/PoolManager.java:337
+#: src/main/java/org/candlepin/controller/PoolManager.java:350
 #, java-format
 msgid "Unable to find an owner with the key \"{0}\""
 msgstr "Tidak dapat menemukan pemilik dengan kunci \"{0}\""
 
-#: src/main/java/org/candlepin/controller/PoolManager.java:345
+#: src/main/java/org/candlepin/controller/PoolManager.java:358
 #, java-format
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr "Tidak dapat menemukan pemilik dengan ID \"{0}\""
@@ -524,7 +524,7 @@ msgstr "Kolom sort-by tidak valid atau tidak didukung: {0}"
 msgid "Paging requested, but no sort-by field provided"
 msgstr "Paging diminta, tetapi tidak ada kolom sort-by yang diberikan"
 
-#: src/main/java/org/candlepin/pki/certs/EntitlementCertificateGenerator.java:448
+#: src/main/java/org/candlepin/pki/certs/EntitlementCertificateGenerator.java:447
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
@@ -917,8 +917,8 @@ msgid "Cloud account ID is null or empty"
 msgstr "ID akun cloud null atau kosong"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:287
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2774
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3134
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2772
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3131
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:682
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:127
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:157
@@ -949,7 +949,7 @@ msgstr "ID penawaran tidak dapat dipetakan"
 msgid "product IDs could not be resolved"
 msgstr "ID produk tidak dapat dipetakan"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:394
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:395
 #, java-format
 msgid "Organization {0} does not exist"
 msgstr "Organisasi {0} tidak ada"
@@ -958,11 +958,7 @@ msgstr "Organisasi {0} tidak ada"
 msgid "Consumer package profile uploads are not implemented"
 msgstr "Unggahan profil paket konsumen belum diimplementasikan"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:534
-msgid "Insufficient permissions"
-msgstr "Izin tidak mencukupi"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:666
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:643
 msgid ""
 "The 'environmentId' query parameter cannot be used without also specifying "
 "the 'owner' query parameter."
@@ -970,11 +966,11 @@ msgstr ""
 "Parameter kueri 'environmentId' tidak dapat digunakan tanpa juga menentukan "
 "parameter kueri 'owner'."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:679
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:656
 msgid "Must specify at least one search criteria."
 msgstr "Harus menentukan setidaknya satu kriteria pencarian."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:725
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:702
 #: src/main/java/org/candlepin/resource/DeletedConsumerResource.java:89
 #: src/main/java/org/candlepin/resource/JobResource.java:200
 #: src/main/java/org/candlepin/resource/OwnerResource.java:827
@@ -988,181 +984,183 @@ msgstr ""
 "Endpoint ini tidak mendukung pengembalian lebih dari {0} hasil dalam satu "
 "waktu, silakan gunakan paging."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:744
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:721
 #, java-format
 msgid "Consumer with id {0} could not be found."
 msgstr "Konsumen dengan id {0} tidak dapat ditemukan."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:764
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:741
 msgid "No UUIDs provided."
 msgstr "Tidak ada UUID yang disediakan."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1044
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1021
 msgid "Unit type must be specified."
 msgstr "Jenis unit harus ditentukan."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1049
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1026
 #, java-format
 msgid "Invalid unit type: {0}"
 msgstr "Jenis unit tidak valid: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1129
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1964
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1106
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1959
 msgid ""
 "Unable to persist consumer: cryptographic capabilities exceed data storage "
 "capabilities"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1193
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1170
 #, java-format
 msgid "Problem creating unit {0}"
 msgstr "Masalah saat membuat unit {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1274
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1251
 msgid "The consumer cannot use the supplied content access mode."
 msgstr "Konsumen tidak dapat menggunakan mode akses konten yang disediakan."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1283
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1260
 msgid "The consumer cannot be assigned a content access mode."
 msgstr "Konsumen tidak dapat ditetapkan mode akses konten."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1305
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1282
 msgid "A unit type of \"person\" cannot be used with activation keys"
 msgstr "Tipe unit \"person\" tidak dapat digunakan dengan kunci aktivasi"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1317
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1294
 msgid "You may not create a manifest consumer via Subscription Manager."
 msgstr ""
 "Anda tidak boleh membuat konsumen manifest melalui Subscription Manager."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1418
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1395
 msgid "System name cannot begin with # character"
 msgstr "Nama sistem tidak boleh diawali dengan # karakter"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1423
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1400
 #, java-format
 msgid "Name of the consumer should be shorter than {0} characters."
 msgstr "Nama konsumen harus lebih pendek dari {0} karakter."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1430
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1434
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1407
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1411
 msgid "System name cannot contain most special characters."
 msgstr "Nama sistem tidak boleh berisi sebagian besar karakter khusus."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1474
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1451
 #, java-format
 msgid "User \"{0}\" has no roles for organization \"{1}\""
 msgstr "Pengguna \"{0}\" tidak memiliki peran untuk organisasi \"{1}\""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1487
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1464
 #, java-format
 msgid "User \"{0}\" has already registered a personal consumer"
 msgstr "Pengguna \"{0}\" sudah mendaftarkan konsumen personal"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1517
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1494
 msgid "You must specify an organization for new units."
 msgstr "Anda harus menentukan organisasi untuk unit baru."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1534
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1511
 msgid "Client is not authorized to register with any organization"
 msgstr "Klien tidak diizinkan untuk mendaftar ke organisasi mana pun"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1564
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1538
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1544
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1559
 #, java-format
 msgid "{0} is not authorized to register with organization {1}"
 msgstr "{0} tidak diizinkan untuk mendaftar ke organisasi {1}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1568
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1563
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:171
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1438
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "pemilik dengan kunci: {0} tidak ditemukan."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1649
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1644
 #, java-format
 msgid "Error occurred while queueing job: {0}"
 msgstr "Terjadi kesalahan saat memasukkan pekerjaan ke antrean: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1700
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1695
 #, java-format
 msgid "Problem updating unit {0}"
 msgstr "Masalah saat memperbarui unit {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1789
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1784
 msgid "This consumer cannot be assigned a content access mode"
 msgstr "Konsumen ini tidak dapat ditetapkan mode akses konten"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1795
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1790
 #, java-format
 msgid "This consumer cannot use the supplied content access mode: {0}"
 msgstr ""
 "Konsumen ini tidak dapat menggunakan mode akses konten yang diberikan: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1884
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1879
 #, java-format
 msgid "Environment with ID \"{0}\" could not be found."
 msgstr "Lingkungan dengan ID \"{0}\" tidak dapat ditemukan."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1893
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1888
 #, java-format
 msgid "Environment with name \"{0}\" could not be found."
 msgstr "Lingkungan dengan nama \"{0}\" tidak dapat ditemukan."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1897
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1892
 msgid "Environment could not be found using provided details."
 msgstr "Lingkungan tidak dapat ditemukan menggunakan detail yang diberikan."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1902
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1897
 #, java-format
 msgid "Environment \"{0}\" specified more than once."
 msgstr "Lingkungan \"{0}\" ditentukan lebih dari sekali."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2034
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2029
 #, java-format
 msgid "Problem updating unit {0}. Hypervisor id: {1} is already used."
 msgstr "Masalah saat memperbarui unit {0}. ID hypervisor: {1} sudah digunakan."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2246
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2259
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2241
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2254
 #, java-format
 msgid "Consumer with UUID {0} was already deleted."
 msgstr "Konsumen dengan UUID {0} sudah dihapus."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2276
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2271
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:224
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
 msgstr "Tidak dapat membatalkan pendaftaran {0} {1} karena: {2}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2313
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2308
 msgid ""
 "Invalid certificate serial; serials may only contain numeric characters: {}"
 msgstr ""
 "Serial sertifikat tidak valid; serial hanya boleh berisi karakter numerik: {}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2362
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2357
 msgid "Content access mode does not allow this request."
 msgstr "Mode akses konten tidak mengizinkan permintaan ini."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2371
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2366
 #, java-format
 msgid "Cannot retrieve content access certificate for consumer: {0}"
 msgstr "Tidak dapat mengambil sertifikat akses konten untuk konsumen: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2408
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2406
 #, java-format
 msgid "Unable to generate usable content access payload for consumer: {0}"
 msgstr ""
 "Tidak dapat menghasilkan payload akses konten yang dapat digunakan untuk "
 "konsumen: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2420
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2603
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2418
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2601
 msgid "Unable to create content access payload"
 msgstr "Tidak dapat membuat payload akses konten"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2472
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2470
 msgid ""
 "Unable to retrieve or create anonymous content access certificate for "
 "consumer"
@@ -1170,56 +1168,56 @@ msgstr ""
 "Tidak dapat mengambil atau membuat sertifikat akses konten anonim untuk "
 "konsumen"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2504
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2644
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2502
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2642
 #, java-format
 msgid "Unable to generate usable certificates for consumer: {0}"
 msgstr ""
 "Tidak dapat menghasilkan sertifikat yang dapat digunakan untuk konsumen: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2536
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2534
 msgid "Cannot create export for anonymous cloud consumer"
 msgstr "Tidak dapat membuat ekspor untuk konsumen cloud anonim"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2553
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2551
 msgid "Unable to create entitlement certificate archive"
 msgstr "Tidak dapat membuat arsip sertifikat entitlement"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2556
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2554
 #, java-format
 msgid "Unable to generate usable export for consumer: {0}"
 msgstr ""
 "Tidak dapat menghasilkan ekspor yang dapat digunakan untuk konsumen: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2664
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2662
 msgid "Cannot bind by multiple parameters."
 msgstr "Tidak dapat melakukan bind dengan beberapa parameter."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2668
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2666
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "Tidak dapat menentukan kuantitas saat melakukan auto-binding."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2704
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2702
 msgid ""
 "Attach operations are ignored in organizations using simple content access"
 msgstr ""
 "Operasi attach diabaikan di organisasi yang menggunakan simple content access"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2724
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2722
 #, java-format
 msgid "You must first accept Red Hat''s Terms and conditions. Please visit {0}"
 msgstr ""
 "Anda harus terlebih dahulu menerima syarat dan ketentuan Red Hat. Silakan "
 "kunjungi {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2813
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2811
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 "Mengabaikan permintaan untuk auto-attach. Ini dinonaktifkan untuk org "
 "\"{0}\"."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2818
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2816
 #, java-format
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
@@ -1228,13 +1226,13 @@ msgstr ""
 "Mengabaikan permintaan untuk auto-attach. Ini dinonaktifkan untuk org "
 "\"{0}\" karena pengaturan autobind hypervisor."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2860
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2858
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr "Organisasi \"{0}\" menonaktifkan auto-attach."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2993
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3032
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2990
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3029
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:191
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:209
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:239
@@ -1244,45 +1242,45 @@ msgstr "Organisasi \"{0}\" menonaktifkan auto-attach."
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr "Entitlement dengan ID \"{0}\" tidak dapat ditemukan."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3008
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3005
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 "Sertifikat Entitlement dengan nomor seri \"{0}\" tidak dapat ditemukan."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3025
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3022
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr "Tidak ada entitlement untuk konsumen \"{0}\" dengan id pool \"{1}\""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3096
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3093
 msgid "Unable to create export archive"
 msgstr "Tidak dapat membuat arsip ekspor"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3099
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3096
 #: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:261
 #, java-format
 msgid "Unable to determine the signature scheme for consumer: {0}"
 msgstr "Tidak dapat menentukan skema tanda tangan untuk konsumen: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3252
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3257
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3249
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3254
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "Masalah saat menghasilkan ulang sertifikat ID untuk unit {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3260
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3257
 #: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:208
 #, java-format
 msgid "Unable to generate ID certificate for consumer: {0}"
 msgstr "Tidak dapat menghasilkan sertifikat ID untuk konsumen: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3297
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3294
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "Sistem dengan UUID {0} bukan guest virtual."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3379
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3384
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "Catatan penghapusan untuk hypervisor \"{0}\" tidak ditemukan."
@@ -1310,7 +1308,7 @@ msgstr "Jenis unit dengan id {0} tidak dapat ditemukan."
 #: src/main/java/org/candlepin/resource/ContentResource.java:95
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:433
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:758
-#: src/main/java/org/candlepin/resource/ProductResource.java:132
+#: src/main/java/org/candlepin/resource/ProductResource.java:131
 #, java-format
 msgid "Owner with key \"{0}\" was not found."
 msgstr "Pemilik dengan kunci \"{0}\" tidak ditemukan."
@@ -1318,7 +1316,7 @@ msgstr "Pemilik dengan kunci \"{0}\" tidak ditemukan."
 #: src/main/java/org/candlepin/resource/ContentResource.java:190
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:364
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:566
-#: src/main/java/org/candlepin/resource/ProductResource.java:150
+#: src/main/java/org/candlepin/resource/ProductResource.java:149
 #, java-format
 msgid "Invalid active inclusion type: {0}"
 msgstr "Tipe inklusi aktif tidak valid: {0}"
@@ -1326,7 +1324,7 @@ msgstr "Tipe inklusi aktif tidak valid: {0}"
 #: src/main/java/org/candlepin/resource/ContentResource.java:193
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:367
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:570
-#: src/main/java/org/candlepin/resource/ProductResource.java:154
+#: src/main/java/org/candlepin/resource/ProductResource.java:153
 #, java-format
 msgid "Invalid custom inclusion type: {0}"
 msgstr "Tipe inklusi kustom tidak valid: {0}"
@@ -1992,12 +1990,12 @@ msgstr "Pool dengan ID \"{0}\" tidak dapat ditemukan."
 msgid "A certificate was not found for pool \"{0}\""
 msgstr "Sertifikat tidak ditemukan untuk pool \"{0}\""
 
-#: src/main/java/org/candlepin/resource/ProductResource.java:106
+#: src/main/java/org/candlepin/resource/ProductResource.java:105
 #, java-format
 msgid "Product with UUID \"{0}\" could not be found."
 msgstr "Produk dengan UUID \"{0}\" tidak dapat ditemukan."
 
-#: src/main/java/org/candlepin/resource/ProductResource.java:180
+#: src/main/java/org/candlepin/resource/ProductResource.java:178
 msgid "No product IDs specified"
 msgstr "Tidak ada ID produk yang ditentukan"
 
@@ -2149,27 +2147,27 @@ msgstr "param \"{0}\" harus berupa bilangan bulat positif"
 msgid "the order parameter must be either \"ascending\" or \"descending\""
 msgstr "parameter order harus \"ascending\" atau \"descending\""
 
-#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:119
+#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:125
 msgid "Owner does not yet exist"
 msgstr "Pemilik belum ada"
 
-#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:123
+#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:129
 msgid "Owner is not yet entitled"
 msgstr "Pemilik belum berhak"
 
-#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:138
+#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:144
 msgid "Anonymous owner not yet created upstream of candlepin"
 msgstr "Pemilik anonim belum dibuat di upstream candlepin"
 
-#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:143
+#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:149
 msgid "Anonymous owner not yet entitled upstream of candlepin"
 msgstr "Pemilik anonim belum berhak di upstream candlepin"
 
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:266
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:281
 msgid "Organization"
 msgstr "Organisasi"
 
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:287
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:302
 #, java-format
 msgid "{0} with ID(s) {1} could not be found."
 msgstr "{0} dengan ID {1} tidak dapat ditemukan."
@@ -2200,103 +2198,104 @@ msgstr "Pemilik sudah pernah mengimpor dari aplikasi manajemen langganan lain."
 msgid "Unable to find product with ID: {0}"
 msgstr "Tidak dapat menemukan produk dengan ID: {0}"
 
-#: src/main/java/org/candlepin/sync/Importer.java:222
+#: src/main/java/org/candlepin/sync/Importer.java:227
 msgid "Uploaded manifest file does not exist."
 msgstr "File manifest yang diunggah tidak ada."
 
-#: src/main/java/org/candlepin/sync/Importer.java:292
+#: src/main/java/org/candlepin/sync/Importer.java:297
 #, java-format
 msgid "{0} file imported successfully."
 msgstr "File {0} berhasil diimpor."
 
-#: src/main/java/org/candlepin/sync/Importer.java:294
+#: src/main/java/org/candlepin/sync/Importer.java:299
 #, java-format
 msgid "{0} file imported forcibly."
 msgstr "File {0} dipaksa untuk diimpor."
 
-#: src/main/java/org/candlepin/sync/Importer.java:299
+#: src/main/java/org/candlepin/sync/Importer.java:304
 msgid "No active subscriptions found in the file."
 msgstr "Tidak ditemukan langganan aktif di dalam file."
 
-#: src/main/java/org/candlepin/sync/Importer.java:304
+#: src/main/java/org/candlepin/sync/Importer.java:309
 msgid "One or more inactive subscriptions found in the file."
 msgstr "Ditemukan satu atau lebih langganan tidak aktif di dalam file."
 
-#: src/main/java/org/candlepin/sync/Importer.java:366
+#: src/main/java/org/candlepin/sync/Importer.java:371
 msgid "Wrong metadata type"
 msgstr "Tipe metadata salah"
 
-#: src/main/java/org/candlepin/sync/Importer.java:375
+#: src/main/java/org/candlepin/sync/Importer.java:380
 msgid "Invalid owner"
 msgstr "Pemilik tidak valid"
 
-#: src/main/java/org/candlepin/sync/Importer.java:388
+#: src/main/java/org/candlepin/sync/Importer.java:393
 msgid "Import is older than existing data"
 msgstr "Impor lebih lama daripada data yang ada"
 
-#: src/main/java/org/candlepin/sync/Importer.java:407
+#: src/main/java/org/candlepin/sync/Importer.java:412
 msgid "Import is the same as existing data"
 msgstr "Impor sama dengan data yang ada"
 
-#: src/main/java/org/candlepin/sync/Importer.java:441
+#: src/main/java/org/candlepin/sync/Importer.java:452
 msgid "The provided manifest has no content in the exported consumer archive"
 msgstr ""
 "Manifest yang diberikan tidak memiliki konten dalam arsip konsumen yang "
 "diekspor"
 
-#: src/main/java/org/candlepin/sync/Importer.java:466
+#: src/main/java/org/candlepin/sync/Importer.java:477
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "Arsip tidak berisi file consumer_export.zip yang diperlukan"
 
-#: src/main/java/org/candlepin/sync/Importer.java:471
+#: src/main/java/org/candlepin/sync/Importer.java:482
 msgid "Unable to read certificates to validate manifest"
 msgstr "Tidak dapat membaca sertifikat untuk memvalidasi manifes"
 
-#: src/main/java/org/candlepin/sync/Importer.java:476
-#: src/main/java/org/candlepin/sync/Importer.java:480
+#: src/main/java/org/candlepin/sync/Importer.java:487
+#: src/main/java/org/candlepin/sync/Importer.java:491
 msgid "Failed to import archive"
 msgstr "Gagal mengimpor arsip"
 
-#: src/main/java/org/candlepin/sync/Importer.java:484
-#: src/main/java/org/candlepin/sync/Importer.java:941
+#: src/main/java/org/candlepin/sync/Importer.java:495
+#: src/main/java/org/candlepin/sync/Importer.java:984
 msgid "Unable to extract export archive"
 msgstr "Tidak dapat mengekstrak arsip ekspor"
 
-#: src/main/java/org/candlepin/sync/Importer.java:531
-#: src/main/java/org/candlepin/sync/Importer.java:856
+#: src/main/java/org/candlepin/sync/Importer.java:542
+#: src/main/java/org/candlepin/sync/Importer.java:899
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "Arsip {0} bukan file yang terkompresi dengan benar atau kosong"
 
-#: src/main/java/org/candlepin/sync/Importer.java:541
+#: src/main/java/org/candlepin/sync/Importer.java:554
 msgid "Archive signed by an untrusted certificate"
 msgstr "Arsip ditandatangani oleh sertifikat yang tidak tepercaya"
 
-#: src/main/java/org/candlepin/sync/Importer.java:572
+#: src/main/java/org/candlepin/sync/Importer.java:578
+#: src/main/java/org/candlepin/sync/Importer.java:616
 msgid "Archive failed signature check"
 msgstr "Arsip gagal pemeriksaan tanda tangan"
 
-#: src/main/java/org/candlepin/sync/Importer.java:586
+#: src/main/java/org/candlepin/sync/Importer.java:629
 msgid "The archive does not contain the required signature file"
 msgstr "Arsip tidak berisi file tanda tangan yang diperlukan"
 
-#: src/main/java/org/candlepin/sync/Importer.java:615
+#: src/main/java/org/candlepin/sync/Importer.java:658
 msgid "The archive does not contain the required meta.json file"
 msgstr "Arsip tidak berisi file meta.json yang diperlukan"
 
-#: src/main/java/org/candlepin/sync/Importer.java:620
+#: src/main/java/org/candlepin/sync/Importer.java:663
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "Arsip tidak berisi direktori consumer_types yang diperlukan"
 
-#: src/main/java/org/candlepin/sync/Importer.java:625
+#: src/main/java/org/candlepin/sync/Importer.java:668
 msgid "The archive does not contain the required consumer.json file"
 msgstr "Arsip tidak berisi file consumer.json yang diperlukan"
 
-#: src/main/java/org/candlepin/sync/Importer.java:631
+#: src/main/java/org/candlepin/sync/Importer.java:674
 msgid "The archive does not contain the required entitlements directory"
 msgstr "Arsip tidak berisi direktori entitlements yang diperlukan"
 
-#: src/main/java/org/candlepin/sync/Importer.java:869
+#: src/main/java/org/candlepin/sync/Importer.java:912
 #, java-format
 msgid "Entry is outside of the target directory: {0}"
 msgstr "Entri berada di luar direktori target: {0}"
@@ -2448,6 +2447,9 @@ msgstr "ekspresi skrip \"{0}\" tidak dievaluasi menjadi true"
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
 msgid "must be a valid URL"
 msgstr "harus berupa URL yang valid"
+
+#~ msgid "Insufficient permissions"
+#~ msgstr "Izin tidak mencukupi"
 
 #, java-format
 #~ msgid "Unable to find an owner with key: {0}"
