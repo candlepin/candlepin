@@ -247,11 +247,7 @@ public class ManifestGeneratorResource {
 
             this.poolManager.entitleByPools(consumer, poolQuantities);
 
-            // Build manifest file
-            File manifest = this.manifestManager.generateManifest(consumer.getUuid(),
-                cdnLabel, webAppPrefix, apiUrl);
-
-            return manifest;
+            return this.manifestManager.generateManifest(consumer.getUuid(), cdnLabel, webAppPrefix);
         }
         catch (EntitlementRefusedException e) {
             log.error("Unable to entitle pool for manifest generation", e);

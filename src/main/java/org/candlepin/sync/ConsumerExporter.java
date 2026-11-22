@@ -39,11 +39,12 @@ public class ConsumerExporter {
     }
 
     void export(ObjectMapper mapper, Writer writer, Consumer consumer,
-        String weburl, String apiurl) throws IOException {
+        String webUrl, String apiUrl, String cdnUrl) throws IOException {
         ConsumerDTO consumerDTO = this.translator.translate(consumer, ConsumerDTO.class);
 
-        consumerDTO.setUrlApi(apiurl);
-        consumerDTO.setUrlWeb(weburl);
+        consumerDTO.setUrlApi(apiUrl);
+        consumerDTO.setUrlWeb(webUrl);
+        consumerDTO.setUrlCdn(cdnUrl);
         mapper.writeValue(writer, consumerDTO);
     }
 }

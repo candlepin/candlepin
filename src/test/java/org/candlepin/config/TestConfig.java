@@ -51,7 +51,18 @@ public final class TestConfig {
             // Generate configuration for each scheme
             for (Scheme scheme : CryptoUtil.SUPPORTED_SCHEMES.values()) {
                 CryptoUtil.generateSchemeConfiguration(config, scheme, null);
+
+                String prefix = ConfigProperties.schemePrefix(scheme.name());
+                String apiUrlKey = prefix + ConfigProperties.CRYPTO_SCHEME_API_URL;
+                String cdnUrlKey = prefix + ConfigProperties.CRYPTO_SCHEME_CDN_URL;
+                config.setProperty(apiUrlKey, "https://api.testing.com");
+                config.setProperty(cdnUrlKey, "https://cdn.testing.com");
             }
+
+            config.setProperty(ConfigProperties.CRYPTO_DEFAULT_SCHEME, "legacy");
+            String prefix = ConfigProperties.schemePrefix("legacy");
+            config.setProperty(prefix + ConfigProperties.CRYPTO_SCHEME_API_URL, "https://api.testing.com");
+            config.setProperty(prefix + ConfigProperties.CRYPTO_SCHEME_CDN_URL, "https://cdn.testing.com");
 
             // Write the standard crypto config
             config.setProperty(ConfigProperties.CRYPTO_SCHEMES, String.join(", ",

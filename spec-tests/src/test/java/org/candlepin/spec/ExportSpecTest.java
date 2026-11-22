@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.CdnDTO;
@@ -129,6 +130,22 @@ class ExportSpecTest {
     private static final String CDN_PATH = "export/content_delivery_network/";
     private static final String RULES_PATH = "export/rules2/";
     private static final String UPSTREAM_CONSUMER_PATH = "export/upstream_consumer/";
+
+    /**
+     * These scheme API URLs correspond to the candlepin.crypto.scheme.<scheme name>.apiurl configurations in
+     * candlepin.conf.template.
+     */
+    private static final Map<String, String> SCHEME_API_URLS = Map.of(
+        "rsa", "https://subscription.rhsm.redhat.com/subscription/consumers/",
+        "mldsa65", "https://subscription-pqc.rhsm.redhat.com/subscription/consumers/");
+
+    /**
+     * These scheme CDN URLs correspond to the candlepin.crypto.scheme.<scheme name>.cdnurl configurations in
+     * candlepin.conf.template.
+     */
+    private static final Map<String, String> SCHEME_CDN_URLS = Map.of(
+        "rsa", "https://cdn.redhat.com",
+        "mldsa65", "https://cdn-pqc.redhat.com");
 
     private static Stream<Arguments> capabilitiesSource() {
         return CryptoCapabilities.getSupportedCapabilities()
@@ -329,6 +346,59 @@ class ExportSpecTest {
         // Verify that the upstream consumer ID certificate can establish a mTLS connection
         ConsumerDTO actual = ApiClients.ssl(idCert).consumers().getConsumer(consumer.getUuid());
         assertNotNull(actual);
+    }
+
+    private static Stream<Arguments> capabilityToAlgorithmSource() {
+        return Stream.of(
+            arguments("rsa", CryptoCapabilities.rsa()),
+            arguments("mldsa65", CryptoCapabilities.mldsa()),
+            arguments("mldsa65", CryptoCapabilities.standard()),
+            arguments("rsa", null)
+        );
+    }
+
+    @ParameterizedTest(name = "[{index}] algorithm={0}, CryptographicCapabilitiesDTO")
+    @MethodSource("capabilityToAlgorithmSource")
+    public void shouldExportCdnUrlAndApiUrlInConsumerJson(String expectedAlgorithm,
+        CryptographicCapabilitiesDTO capabilities) throws Exception {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProduct(ownerKey, Products.random());
+        ContentDTO cont = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        adminClient.ownerProducts().addContentToProduct(ownerKey, prod.getId(), cont.getId(), true);
+        PoolDTO pool = adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers
+            .random(owner, ConsumerTypes.Candlepin)
+            .cryptographicCapabilities(capabilities));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
+
+        File manifest = this.createExportAsync(consumerClient, consumer.getUuid(), null);
+        ZipFile export = ExportUtil.getExportArchive(manifest);
+
+        ZipEntry entry = export.getEntry(EXPORT_PATH + "consumer.json");
+        assertNotNull(entry, "consumer.json is not found in archive");
+
+        JsonNode consumerJson = null;
+        try (InputStream istream = export.getInputStream(entry)) {
+            consumerJson = ApiClient.MAPPER.readTree(istream);
+        }
+
+        String expectedApiUrl = SCHEME_API_URLS.get(expectedAlgorithm);
+        String expectedCdnUrl = SCHEME_CDN_URLS.get(expectedAlgorithm);
+        JsonNode apiUrlNode = consumerJson.get("urlApi");
+        assertNotNull(apiUrlNode, "urlApi field does not exist");
+        assertThat(apiUrlNode.asString())
+            .isEqualTo(expectedApiUrl);
+
+        JsonNode cdnUrlNode = consumerJson.get("urlCdn");
+        assertNotNull(cdnUrlNode, "urlCdn field does not exist");
+        assertThat(cdnUrlNode.asString())
+            .isEqualTo(expectedCdnUrl);
     }
 
     private void assertSignature(File manifest, X509Certificate cert, String sigAlgo)

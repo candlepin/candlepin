@@ -58,6 +58,7 @@ public class UpstreamConsumerArrayElementTranslatorTest extends
         consumer.setName("consumer_name");
         consumer.setApiUrl("http://www.url.com");
         consumer.setWebUrl("http://www.url.com");
+        consumer.setCdnUrl("http://www.cdn.url.com");
         consumer.setOwnerId("owner_id");
         consumer.setType(this.consumerTypeTranslatorTest.initSourceObject());
         consumer.setCreated(new Date());
@@ -82,6 +83,7 @@ public class UpstreamConsumerArrayElementTranslatorTest extends
             assertEquals(source.getName(), dest.getName());
             assertEquals(source.getApiUrl(), dest.getApiUrl());
             assertEquals(source.getWebUrl(), dest.getWebUrl());
+            assertEquals(source.getCdnUrl(), dest.getCdnUrl());
             assertEquals(source.getOwnerId(), dest.getOwnerId());
             assertEquals(Util.toDateTime(source.getCreated()), dest.getCreated());
             assertEquals(Util.toDateTime(source.getUpdated()), dest.getUpdated());
