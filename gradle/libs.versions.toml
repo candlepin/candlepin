@@ -115,7 +115,7 @@ slf4j-log4j = { module = "org.slf4j:log4j-over-slf4j", version.ref = "slf4j" }
 smallrye-config = { module = "io.smallrye.config:smallrye-config", version = "4.2.2" }
 spotbugs = { module = "com.github.spotbugs:spotbugs-annotations", version = "4.10.5" }
 tomcat-annotations = { module = "org.apache.tomcat:tomcat-annotations-api", version = "11.0.29" }
-swagger = { module = "io.swagger:swagger-annotations", version = "1.6.16" }
+swagger = { module = "io.swagger:swagger-annotations", version = "1.6.17" }
 test-logger-plugin = { module = "com.adarshr:gradle-test-logger-plugin", version.ref = "test-logger" }
 
 # These library entries exist solely so Dependabot can map the version aliases above to real Maven
