@@ -1,0 +1,2407 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Rihards Prieditis <rprieditis@gmail.com>, 2026.
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-19 07:02+0000\n"
+"PO-Revision-Date: 2026-11-21 18:18+0000\n"
+"Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
+"Language-Team: Latvian <https://translate.fedoraproject.org/projects/"
+"candlepin/master/lv/>\n"
+"Language: lv\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n % 10 == 0 || n % 100 >= 11 && n % 100 <= "
+"19) ? 0 : ((n % 10 == 1 && n % 100 != 11) ? 1 : 2);\n"
+"X-Generator: Weblate 2026.11.2\n"
+
+#: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
+msgid "Healing attempted against non-existent org key \"{}\""
+msgstr "Mēģināta labošana neeksistējošai organizācijas atslēgai \"{}\""
+
+#: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:90
+#: src/main/java/org/candlepin/controller/Entitler.java:211
+#, java-format
+msgid "Auto-attach is disabled for owner {0}"
+msgstr "Automātiskā pievienošana ir atspējota īpašniekam {0}"
+
+#: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:95
+#, java-format
+msgid "Auto-attach is disabled for owner {0} while using simple content access"
+msgstr ""
+"Automātiskā pievienošana ir atspējota īpašniekam {0}, kamēr tiek izmantota "
+"vienkāršā satura piekļuve"
+
+#: src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:141
+#, java-format
+msgid "Subscriptions deleted by {0}"
+msgstr "{0} izdzēsa abonementus"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:110
+#, java-format
+msgid "Unknown event for user {0} and target {1}"
+msgstr "Nezināms notikums lietotājam {0} un mērķim {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:122
+#, java-format
+msgid "{0} created new unit {1}"
+msgstr "{0} izveidoja jaunu vienību {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:123
+#, java-format
+msgid "{0} modified the unit {1}"
+msgstr "{0} mainīja vienību {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:124
+#, java-format
+msgid "{0} deleted the unit {1}"
+msgstr "{0} izdzēsa vienību {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
+#, java-format
+msgid "{0} updated multiple consumers"
+msgstr "{0} atjaunināja vairākus patērētājus"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
+#, java-format
+msgid "{0} created new owner {1}"
+msgstr "{0} izveidoja jaunu īpašnieku {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
+#, java-format
+msgid "{0} modified the owner {1}"
+msgstr "{0} mainīja īpašnieku {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
+#, java-format
+msgid "{0} deleted the owner {1}"
+msgstr "{0} izdzēsa īpašnieku {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
+#, java-format
+msgid "{0} attached a subscription for product {1}"
+msgstr "{0} pievienoja abonementu produktam {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
+#, java-format
+msgid "{0} modified a subscription for product {1}"
+msgstr "{0} mainīja produkta {1} abonementu"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:131
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
+#, java-format
+msgid "{0} returned the subscription for {1}"
+msgstr "{0} atgrieza abonementu {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
+#, java-format
+msgid "{0} created a pool for product {1}"
+msgstr "{0} izveidoja krājumu produktam {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
+#, java-format
+msgid "{0} modified a pool for product {1}"
+msgstr "{0} mainīja produkta {1} krājumu"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
+#, java-format
+msgid "{0} deleted a pool for product {1}"
+msgstr "{0} izdzēsa produkta {1} krājumu"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
+#, java-format
+msgid "{0} created an export for unit {1}"
+msgstr "{0} izveidoja eksportu vienībai {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
+#, java-format
+msgid "{0} imported a manifest for owner {1}"
+msgstr "{0} importēja manifestu īpašniekam {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
+#, java-format
+msgid "{0} created new user {1}"
+msgstr "{0} izveidoja jaunu lietotāju {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
+#, java-format
+msgid "{0} modified the user {1}"
+msgstr "{0} mainīja lietotāju {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:140
+#, java-format
+msgid "{0} deleted the user {1}"
+msgstr "{0} izdzēsa lietotāju {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
+#, java-format
+msgid "{0} created new role {1}"
+msgstr "{0} izveidoja jaunu lomu {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
+#, java-format
+msgid "{0} modified the role {1}"
+msgstr "{0} mainīja lomu {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
+#, java-format
+msgid "{0} deleted the role {1}"
+msgstr "{0} izdzēsa lomu {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
+#, java-format
+msgid "{0} created new subscription for product {1}"
+msgstr "{0} izveidoja jaunu abonementu produktam {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
+#, java-format
+msgid "{0} deleted a subscription for product {1}"
+msgstr "{0} izdzēsa produkta {1} abonementu"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
+#, java-format
+msgid "{0} created the activation key {1}"
+msgstr "{0} izveidoja aktivizācijas atslēgu {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
+#, java-format
+msgid "{0} deleted the activation key {1}"
+msgstr "{0} izdzēsa aktivizācijas atslēgu {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
+#, java-format
+msgid "{0} created the guest id {1}"
+msgstr "{0} izveidoja viesa id {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
+#, java-format
+msgid "{0} deleted the guest id {1}"
+msgstr "{0} izdzēsa viesa id {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
+#, java-format
+msgid "{0} updated the rules in the database to version {1}"
+msgstr "{0} atjaunināja kārtulas datubāzē uz versiju {1}"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
+#, java-format
+msgid "{0} removed the rules from the database"
+msgstr "{0} noņēma kārtulas no datubāzes"
+
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:153
+#, java-format
+msgid "Compliance recalculated for consumer {1}"
+msgstr "Atbilstība pārrēķināta patērētājam {1}"
+
+#: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:70
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1526
+#, java-format
+msgid "Organization {0} does not exist."
+msgstr "Organizācija {0} neeksistē."
+
+#: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:77
+msgid "None of the activation keys specified exist for this org."
+msgstr ""
+"Neviena no norādītajām aktivizācijas atslēgām šai organizācijai neeksistē."
+
+#: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:93
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1271
+msgid "Org required to register with activation keys."
+msgstr "Reģistrācijai ar aktivizācijas atslēgām nepieciešama organizācija."
+
+#: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:97
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1275
+msgid "Cannot specify username with activation keys."
+msgstr "Ar aktivizācijas atslēgām nevar norādīt lietotājvārdu."
+
+#: src/main/java/org/candlepin/auth/BasicAuth.java:77
+#: src/main/java/org/candlepin/resource/GuestIdResource.java:222
+#: src/main/java/org/candlepin/resteasy/filter/AuthenticationFilter.java:170
+msgid "Invalid Credentials"
+msgstr "Nederīgi akreditācijas dati"
+
+#: src/main/java/org/candlepin/auth/BasicAuth.java:94
+#: src/main/java/org/candlepin/resource/util/UserServiceExceptionTranslator.java:102
+msgid "Error contacting user service"
+msgstr "Kļūda, sazinoties ar lietotāju pakalpojumu"
+
+#: src/main/java/org/candlepin/auth/ConsumerAuth.java:69
+#: src/main/java/org/candlepin/resteasy/filter/StoreFactory.java:169
+#, java-format
+msgid "Unit {0} has been deleted"
+msgstr "Vienība {0} ir izdzēsta"
+
+#: src/main/java/org/candlepin/auth/OAuth.java:116
+#: src/main/java/org/candlepin/auth/OAuth.java:149
+msgid "Invalid OAuth unit or secret"
+msgstr "Nederīga OAuth vienība vai noslēpums"
+
+#: src/main/java/org/candlepin/auth/OAuth.java:120
+#, java-format
+msgid "OAuth problem encountered. Internal message is: {0}"
+msgstr "Radās OAuth problēma. Iekšējais ziņojums: {0}"
+
+#: src/main/java/org/candlepin/auth/OAuth.java:126
+#, java-format
+msgid "OAuth error encountered. Internal message is: {0}"
+msgstr "Radās OAuth kļūda. Iekšējais ziņojums: {0}"
+
+#: src/main/java/org/candlepin/auth/OAuth.java:155
+msgid "Error getting OAuth unit key"
+msgstr "Kļūda, iegūstot OAuth vienības atslēgu"
+
+#: src/main/java/org/candlepin/auth/SSLAuth.java:97
+msgid "Invalid Certificate Type"
+msgstr "Nederīgs sertifikāta tips"
+
+#: src/main/java/org/candlepin/auth/UserAuth.java:83
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1451
+#: src/main/java/org/candlepin/resource/RoleResource.java:121
+#: src/main/java/org/candlepin/resource/UserResource.java:96
+#, java-format
+msgid "User not found: {0}"
+msgstr "Lietotājs nav atrasts: {0}"
+
+#: src/main/java/org/candlepin/bind/BindContext.java:118
+#, java-format
+msgid "Subscription pool(s) {0} do not exist."
+msgstr "Abonementu krājums(-i) {0} neeksistē."
+
+#: src/main/java/org/candlepin/controller/ConsumerMigration.java:124
+#, java-format
+msgid "Failed to migrate {0} consumers"
+msgstr "Neizdevās migrēt {0} patērētājus"
+
+#: src/main/java/org/candlepin/controller/ContentAccessManager.java:194
+msgid "Unable to create revoke entitlements job"
+msgstr "Nevar izveidot piešķīrumu atsaukšanas darbu"
+
+#: src/main/java/org/candlepin/controller/EntitlementCertificateService.java:127
+msgid ""
+"Unable to generate a usable certificate from Entitlement Certificate Service"
+msgstr ""
+"Nevar ģenerēt lietojamu sertifikātu no piešķīrumu sertifikātu pakalpojuma"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:219
+#, java-format
+msgid "Auto-attach is disabled for hypervisors of owner {0}"
+msgstr "Automātiskā pievienošana ir atspējota īpašnieka {0} hipervizoriem"
+
+#: src/main/java/org/candlepin/controller/ManifestManager.java:256
+#, java-format
+msgid "The requested manifest file was not found: {0}"
+msgstr "Pieprasītais manifesta fails netika atrasts: {0}"
+
+#: src/main/java/org/candlepin/controller/ManifestManager.java:312
+#, java-format
+msgid "Unable to find specified manifest by id: {0}"
+msgstr "Nevar atrast norādīto manifestu pēc id: {0}"
+
+#: src/main/java/org/candlepin/controller/ManifestManager.java:318
+#, java-format
+msgid "Could not validate export against specified consumer: {0}"
+msgstr "Nevarēja validēt eksportu pret norādīto patērētāju: {0}"
+
+#: src/main/java/org/candlepin/controller/ManifestManager.java:343
+#, java-format
+msgid "Unable to download manifest: {0}"
+msgstr "Nevar lejupielādēt manifestu: {0}"
+
+#: src/main/java/org/candlepin/controller/ManifestManager.java:354
+#, java-format
+msgid ""
+"Unit {0} cannot be exported. A manifest cannot be made for units of type "
+"\"{1}\"."
+msgstr ""
+"Vienību {0} nevar eksportēt. Manifestu nevar izveidot tipa \"{1}\" vienībām."
+
+#: src/main/java/org/candlepin/controller/ManifestManager.java:360
+#, java-format
+msgid "A CDN with label {0} does not exist on this system."
+msgstr "CDN ar etiķeti {0} šajā sistēmā neeksistē."
+
+#: src/main/java/org/candlepin/controller/PoolManager.java:341
+msgid "No owner specified, or owner lacks identifying information"
+msgstr ""
+"Īpašnieks nav norādīts, vai īpašniekam trūkst identificējošas informācijas"
+
+#: src/main/java/org/candlepin/controller/PoolManager.java:350
+#, java-format
+msgid "Unable to find an owner with the key \"{0}\""
+msgstr "Nevar atrast īpašnieku ar atslēgu \"{0}\""
+
+#: src/main/java/org/candlepin/controller/PoolManager.java:358
+#, java-format
+msgid "Unable to find an owner with the ID \"{0}\""
+msgstr "Nevar atrast īpašnieku ar ID \"{0}\""
+
+#: src/main/java/org/candlepin/controller/PoolService.java:779
+msgid ""
+"Unmapped guest entitlement expired without establishing a host/guest mapping."
+msgstr ""
+"Nekartēta viesa piešķīruma derīgums beidzās, neizveidojot resursdatora/viesa "
+"kartējumu."
+
+#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:71
+msgid "Bad Request"
+msgstr "Nepareizs pieprasījums"
+
+#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:92
+#, java-format
+msgid "Runtime Error {0}"
+msgstr "Izpildlaika kļūda {0}"
+
+#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:103
+#, java-format
+msgid " at {0}.{1}:{2}"
+msgstr " vietā {0}.{1}:{2}"
+
+#: src/main/java/org/candlepin/exceptions/mappers/NotFoundExceptionMapper.java:49
+msgid "Requested resource was not found."
+msgstr "Pieprasītais resurss netika atrasts."
+
+#: src/main/java/org/candlepin/exceptions/util/JaxRsExceptionResponseBuilder.java:126
+#, java-format
+msgid "{0} is not a valid value for {1}"
+msgstr "{0} nav derīga vērtība parametram {1}"
+
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:823
+msgid "Request failed due to concurrent modification, please re-try."
+msgstr ""
+"Pieprasījums neizdevās vienlaicīgu izmaiņu dēļ, lūdzu, mēģiniet vēlreiz."
+
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:865
+#, java-format
+msgid "The system with UUID {0} is a virtual guest. It does not have guests."
+msgstr "Sistēma ar UUID {0} ir virtuāls viesis. Tai nav viesu."
+
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1393
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1403
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:166
+#, java-format
+msgid "Unit with ID \"{0}\" could not be found."
+msgstr "Vienību ar ID \"{0}\" nevarēja atrast."
+
+#: src/main/java/org/candlepin/model/Pool.java:158
+msgid "Other"
+msgstr "Cits"
+
+#: src/main/java/org/candlepin/model/Pool.java:159
+msgid "Standard"
+msgstr "Standarta"
+
+#: src/main/java/org/candlepin/model/Pool.java:160
+msgid "Instance Based"
+msgstr "Uz instancēm balstīts"
+
+#: src/main/java/org/candlepin/model/Pool.java:161
+msgid "Stackable"
+msgstr "Apvienojams"
+
+#: src/main/java/org/candlepin/model/Pool.java:162
+msgid "Stackable only with other subscriptions"
+msgstr "Apvienojams tikai ar citiem abonementiem"
+
+#: src/main/java/org/candlepin/model/Pool.java:163
+msgid "Multi-Entitleable"
+msgstr "Vairākkārt piešķirams"
+
+#: src/main/java/org/candlepin/model/RulesCurator.java:116
+msgid "No rules file found in the database"
+msgstr "Datubāzē nav atrasts kārtulu fails"
+
+#: src/main/java/org/candlepin/paging/PagingUtil.java:84
+#, java-format
+msgid ""
+"This endpoint does not support returning {0} elements in a single request; "
+"please apply paging with a page size no larger than {1}"
+msgstr ""
+"Šis galapunkts neatbalsta {0} elementu atgriešanu vienā pieprasījumā; lūdzu, "
+"izmantojiet lapošanu ar lapas izmēru, kas nepārsniedz {1}"
+
+#: src/main/java/org/candlepin/paging/PagingUtil.java:133
+#: src/main/java/org/candlepin/paging/PagingUtil.java:269
+#, java-format
+msgid "Invalid or unsupported sort-by field: {0}"
+msgstr "Nederīgs vai neatbalstīts kārtošanas lauks: {0}"
+
+#: src/main/java/org/candlepin/paging/PagingUtil.java:134
+msgid "Paging requested, but no sort-by field provided"
+msgstr "Pieprasīta lapošana, bet nav norādīts kārtošanas lauks"
+
+#: src/main/java/org/candlepin/pki/certs/AnonymousCertificateGenerator.java:310
+#, java-format
+msgid "Unable to retrieve product \"{0}\" from ProductService"
+msgstr "Nevar izgūt produktu \"{0}\" no ProductService"
+
+#: src/main/java/org/candlepin/pki/certs/EntitlementCertificateGenerator.java:447
+#, java-format
+msgid ""
+"Too many content sets for certificate {0}. A newer client may be available "
+"to address this problem. See knowledge database https://access.redhat.com/"
+"knowledge/node/129003 for more information."
+msgstr ""
+"Pārāk daudz satura kopu sertifikātam {0}. Šīs problēmas risināšanai var būt "
+"pieejams jaunāks klients. Plašāku informāciju skatiet zināšanu datubāzē "
+"https://access.redhat.com/knowledge/node/129003."
+
+#: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:93
+#, java-format
+msgid ""
+"The requested role \"{0}\" is not provided by a currently consumed "
+"subscription."
+msgstr ""
+"Pieprasīto lomu \"{0}\" nenodrošina neviens pašlaik patērēts abonements."
+
+#: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:133
+#, java-format
+msgid ""
+"The requested add-on \"{0}\" is not provided by a currently consumed "
+"subscription."
+msgstr ""
+"Pieprasīto papildinājumu \"{0}\" nenodrošina neviens pašlaik patērēts "
+"abonements."
+
+#: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:187
+#, java-format
+msgid ""
+"The service level preference \"{0}\" is not provided by a currently consumed "
+"subscription."
+msgstr ""
+"Pakalpojuma līmeņa preferenci \"{0}\" nenodrošina neviens pašlaik patērēts "
+"abonements."
+
+#: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:204
+#, java-format
+msgid ""
+"The requested usage preference \"{0}\" is not provided by a currently "
+"consumed subscription."
+msgstr ""
+"Pieprasīto lietojuma preferenci \"{0}\" nenodrošina neviens pašlaik patērēts "
+"abonements."
+
+#: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:241
+#, java-format
+msgid ""
+"The requested service type preference \"{0}\" is not provided by a currently "
+"consumed subscription."
+msgstr ""
+"Pieprasīto pakalpojuma tipa preferenci \"{0}\" nenodrošina neviens pašlaik "
+"patērēts abonements."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:53
+msgid "Not supported by a valid subscription."
+msgstr "Neatbalsta derīgs abonements."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:55
+#, java-format
+msgid "Supports architecture {1} but the system is {2}."
+msgstr "Atbalsta arhitektūru {1}, bet sistēma ir {2}."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:57
+#, java-format
+msgid "Only supports {1} of {2} sockets."
+msgstr "Atbalsta tikai {1} no {2} ligzdām."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:59
+#, java-format
+msgid "Only supports {1} of {2} cores."
+msgstr "Atbalsta tikai {1} no {2} kodoliem."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:61
+#, java-format
+msgid "Only supports {1}GB of {2}GB of RAM."
+msgstr "Atbalsta tikai {1}GB no {2}GB RAM."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:63
+#, java-format
+msgid "Only supports {1} of {2} virtual guests."
+msgstr "Atbalsta tikai {1} no {2} virtuālajiem viesiem."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:65
+#, java-format
+msgid "Only supports {1} of {2} vCPUs."
+msgstr "Atbalsta tikai {1} no {2} vCPU."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
+msgid ""
+"Guest has not been reported on any host and is using a temporary unmapped "
+"guest subscription. For more information, please see https://"
+"access.redhat.com/solutions/1592573"
+msgstr ""
+"Viesis nav ziņots nevienā resursdatorā un izmanto pagaidu nekartēta viesa "
+"abonementu. Plašāku informāciju skatiet https://access.redhat.com/solutions/"
+"1592573"
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
+#, java-format
+msgid "Only supports {1}TB of {2}TB of storage."
+msgstr "Atbalsta tikai {1}TB no {2}TB krātuves."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:73
+#, java-format
+msgid "{0} COVERAGE PROBLEM.  Supports {1} of {2}"
+msgstr "{0} PĀRKLĀJUMA PROBLĒMA.  Atbalsta {1} no {2}"
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:247
+#, java-format
+msgid "Subscriptions for {0} expired on: {1}"
+msgstr "Abonementu {0} derīgums beidzās: {1}"
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:330
+#, java-format
+msgid "\"{0}\" Should contain name, priority and at least one attribute"
+msgstr "\"{0}\" jāsatur nosaukums, prioritāte un vismaz viens atribūts"
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:344
+msgid "second parameter should be the priority number."
+msgstr "otrajam parametram jābūt prioritātes numuram."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:149
+#, java-format
+msgid ""
+"This unit has already had the subscription matching pool ID \"{1}\" attached."
+msgstr ""
+"Šai vienībai jau ir pievienots abonements, kas atbilst krājuma ID \"{1}\"."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:151
+#, java-format
+msgid "No subscriptions are available from the pool with ID \"{1}\"."
+msgstr "No krājuma ar ID \"{1}\" nav pieejamu abonementu."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:153
+#, java-format
+msgid "Units of this type are not allowed to attach the pool with ID \"{1}\"."
+msgstr "Šī tipa vienībām nav atļauts pievienot krājumu ar ID \"{1}\"."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:155
+#, java-format
+msgid "Multi-entitlement not supported for pool with ID \"{1}\"."
+msgstr "Krājumam ar ID \"{1}\" netiek atbalstīta vairākkārtēja piešķiršana."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:157
+#, java-format
+msgid "Pool \"{1}\" is restricted to guests running on host: \"{4}\"."
+msgstr ""
+"Krājums \"{1}\" ir ierobežots viesiem, kas darbojas resursdatorā: \"{4}\"."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:159
+#, java-format
+msgid "Pool \"{1}\" is restricted to a specific consumer."
+msgstr "Krājums \"{1}\" ir ierobežots konkrētam patērētājam."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:161
+msgid "Pool not available to subscription management applications."
+msgstr "Krājums nav pieejams abonementu pārvaldības lietotnēm."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:163
+#, java-format
+msgid "Pool is restricted to virtual guests: \"{1}\"."
+msgstr "Krājums ir ierobežots virtuālajiem viesiem: \"{1}\"."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:165
+#, java-format
+msgid "Pool is restricted to physical systems: \"{1}\"."
+msgstr "Krājums ir ierobežots fiziskām sistēmām: \"{1}\"."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:167
+#, java-format
+msgid ""
+"Subscription \"{2}\" must be attached using a quantity evenly divisible by "
+"{3}"
+msgstr "Abonements \"{2}\" jāpievieno daudzumā, kas bez atlikuma dalās ar {3}"
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:169
+#, java-format
+msgid ""
+"Unit does not support instance based calculation required by pool \"{1}\""
+msgstr ""
+"Vienība neatbalsta krājuma \"{1}\" pieprasīto uz instancēm balstīto aprēķinu"
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:171
+#, java-format
+msgid "Unit does not support band calculation required by pool \"{1}\""
+msgstr "Vienība neatbalsta krājuma \"{1}\" pieprasīto joslu aprēķinu"
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:173
+#, java-format
+msgid "Unit does not support core calculation required by pool \"{1}\""
+msgstr "Vienība neatbalsta krājuma \"{1}\" pieprasīto kodolu aprēķinu"
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:175
+#, java-format
+msgid "Unit does not support RAM calculation required by pool \"{1}\""
+msgstr "Vienība neatbalsta krājuma \"{1}\" pieprasīto RAM aprēķinu"
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:177
+#, java-format
+msgid "Unit does not support derived products data required by pool \"{1}\""
+msgstr ""
+"Vienība neatbalsta krājuma \"{1}\" pieprasītos atvasināto produktu datus"
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:179
+#, java-format
+msgid "Pool is restricted to unmapped virtual guests: \"{1}\""
+msgstr "Krājums ir ierobežots nekartētiem virtuālajiem viesiem: \"{1}\""
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:181
+#, java-format
+msgid ""
+"Pool is restricted to virtual guests in their first day of existence: \"{1}\""
+msgstr ""
+"Krājums ir ierobežots virtuālajiem viesiem to pirmajā pastāvēšanas dienā: \""
+"{1}\""
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:183
+#, java-format
+msgid ""
+"Pool is restricted when it is temporary and begins in the future: \"{1}\""
+msgstr "Krājums ir ierobežots, ja tas ir pagaidu un sākas nākotnē: \"{1}\""
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:185
+#, java-format
+msgid "Unable to attach pool with ID \"{1}\".: {0}."
+msgstr "Nevar pievienot krājumu ar ID \"{1}\".: {0}."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:193
+#, java-format
+msgid ""
+"This system already has a subscription for the product \"{1}\" attached."
+msgstr "Šai sistēmai jau ir pievienots abonements produktam \"{1}\"."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:195
+#, java-format
+msgid ""
+"There are not enough free subscriptions available for the product \"{1}\""
+msgstr "Produktam \"{1}\" nav pietiekami daudz brīvu abonementu"
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:197
+#, java-format
+msgid "Units of this type are not allowed for the product \"{1}\"."
+msgstr "Šī tipa vienības nav atļautas produktam \"{1}\"."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:199
+#, java-format
+msgid "Only virtual systems can have subscription \"{1}\" attached."
+msgstr "Abonementu \"{1}\" var pievienot tikai virtuālām sistēmām."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:201
+#, java-format
+msgid "Unable to attach subscription for the product \"{1}\": {0}."
+msgstr "Nevar pievienot abonementu produktam \"{1}\": {0}."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:209
+#, java-format
+msgid ""
+"Insufficient pool quantity available for adjustment to entitlement \"{1}\"."
+msgstr "Krājumā nav pietiekama daudzuma, lai pielāgotu piešķīrumu \"{1}\"."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:211
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:213
+#, java-format
+msgid ""
+"Multi-entitlement not supported for pool connected with entitlement \"{1}\"."
+msgstr ""
+"Krājumam, kas saistīts ar piešķīrumu \"{1}\", netiek atbalstīta "
+"vairākkārtēja piešķiršana."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:215
+#, java-format
+msgid "Unable to adjust quantity for the entitlement with id \"{1}\": {0}"
+msgstr "Nevar pielāgot daudzumu piešķīrumam ar id \"{1}\": {0}"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:112
+msgid "Activation key ID is null or empty"
+msgstr "Aktivizācijas atslēgas ID ir null vai tukšs"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:119
+#, java-format
+msgid "Activation key with ID \"{0}\" could not be found."
+msgstr "Aktivizācijas atslēgu ar ID \"{0}\" nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:156
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1100
+#, java-format
+msgid ""
+"The activation key name \"{0}\" must be alphanumeric or include the "
+"characters \"-\" or \"_\""
+msgstr ""
+"Aktivizācijas atslēgas nosaukumam \"{0}\" jābūt burtciparu vai jāietver "
+"rakstzīmes \"-\" vai \"_\""
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:213
+msgid ""
+"Pools cannot be added to activation keys while the org is operating in "
+"simple content access mode"
+msgstr ""
+"Krājumus nevar pievienot aktivizācijas atslēgām, kamēr organizācija darbojas "
+"vienkāršās satura piekļuves režīmā"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:227
+#, java-format
+msgid "Pool ID \"{0}\" has already been registered with this activation key"
+msgstr "Krājuma ID \"{0}\" jau ir reģistrēts ar šo aktivizācijas atslēgu"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:274
+#, java-format
+msgid "Product ID \"{0}\" has already been registered with this activation key"
+msgstr "Produkta ID \"{0}\" jau ir reģistrēts ar šo aktivizācijas atslēgu"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:433
+#: src/main/java/org/candlepin/resource/OwnerResource.java:457
+#, java-format
+msgid "Pool with id {0} could not be found."
+msgstr "Krājumu ar id {0} nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:443
+#, java-format
+msgid "Product with id {0} could not be found."
+msgstr "Produktu ar id {0} nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/CdnResource.java:83
+#, java-format
+msgid "A CDN with the label {0} already exists"
+msgstr "CDN ar etiķeti {0} jau eksistē"
+
+#: src/main/java/org/candlepin/resource/CdnResource.java:164
+msgid "CDN certificate has null key or cert."
+msgstr "CDN sertifikātam ir null atslēga vai sertifikāts."
+
+#: src/main/java/org/candlepin/resource/CdnResource.java:173
+#, java-format
+msgid "No such content delivery network: {0}"
+msgstr "Nav šāda satura piegādes tīkla: {0}"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:121
+msgid "No cloud registration information provided"
+msgstr "Nav sniegta mākoņa reģistrācijas informācija"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:126
+msgid "Request is missing cloud provider type (e.g. amazon, gcp, azure)"
+msgstr ""
+"Pieprasījumā trūkst mākoņa nodrošinātāja tipa (piem., amazon, gcp, azure)"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:145
+msgid ""
+"Unable to process authorization request: cryptographic capabilities exceed "
+"data storage capabilities"
+msgstr ""
+"Nevar apstrādāt autorizācijas pieprasījumu: kriptogrāfiskās spējas pārsniedz "
+"datu krātuves spējas"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:162
+msgid ""
+"cloud provider or account details could not be resolved to an organization"
+msgstr ""
+"mākoņa nodrošinātāja vai konta informāciju nevarēja atrisināt uz organizāciju"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:191
+msgid "unknown cloud authorization version"
+msgstr "nezināma mākoņa autorizācijas versija"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:196
+msgid "Cloud registration is not supported by this Candlepin instance"
+msgstr "Šī Candlepin instance neatbalsta mākoņa reģistrāciju"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:200
+msgid ""
+"Cloud provider or account details could not be resolved to an organization"
+msgstr ""
+"Mākoņa nodrošinātāja vai konta informāciju nevarēja atrisināt uz organizāciju"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:205
+msgid "Unable to complete Cloud Registration with provided data"
+msgstr "Ar sniegtajiem datiem nevar pabeigt mākoņa reģistrāciju"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:214
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:395
+msgid ""
+"Cloud registration is not supported for the type of offering the client is "
+"using"
+msgstr ""
+"Mākoņa reģistrācija netiek atbalstīta klienta izmantotā piedāvājuma tipam"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:220
+#, java-format
+msgid "Unexpected error from Cloud Registration Service: {0}"
+msgstr "Negaidīta kļūda no mākoņa reģistrācijas pakalpojuma: {0}"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:222
+msgid "Error contacting cloud registration service"
+msgstr "Kļūda, sazinoties ar mākoņa reģistrācijas pakalpojumu"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:236
+msgid "Cloud account ID is null or empty"
+msgstr "Mākoņa konta ID ir null vai tukšs"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:310
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2796
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3152
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:682
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:127
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:157
+#: src/main/java/org/candlepin/resource/JobResource.java:365
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:730
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1968
+#, java-format
+msgid "An unexpected exception occurred while scheduling job \"{0}\""
+msgstr "Plānojot darbu \"{0}\", radās negaidīts izņēmums"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:406
+msgid "cloud account ID could not be resolved"
+msgstr "mākoņa konta ID nevarēja atrisināt"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:413
+msgid "cloud instance ID could not be resolved"
+msgstr "mākoņa instances ID nevarēja atrisināt"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:420
+msgid "cloud provider could not be resolved"
+msgstr "mākoņa nodrošinātāju nevarēja atrisināt"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:427
+msgid "offer ID could not be resolved"
+msgstr "piedāvājuma ID nevarēja atrisināt"
+
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:434
+msgid "product IDs could not be resolved"
+msgstr "produktu ID nevarēja atrisināt"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:398
+#, java-format
+msgid "Organization {0} does not exist"
+msgstr "Organizācija {0} neeksistē"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:427
+msgid "Consumer package profile uploads are not implemented"
+msgstr "Patērētāju pakotņu profilu augšupielāde nav realizēta"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:645
+msgid ""
+"The 'environmentId' query parameter cannot be used without also specifying "
+"the 'owner' query parameter."
+msgstr ""
+"Vaicājuma parametru 'environmentId' nevar izmantot, nenorādot arī vaicājuma "
+"parametru 'owner'."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:658
+msgid "Must specify at least one search criteria."
+msgstr "Jānorāda vismaz viens meklēšanas kritērijs."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:704
+#: src/main/java/org/candlepin/resource/DeletedConsumerResource.java:89
+#: src/main/java/org/candlepin/resource/JobResource.java:200
+#: src/main/java/org/candlepin/resource/OwnerResource.java:827
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1245
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1902
+#, java-format
+msgid ""
+"This endpoint does not support returning more than {0} results at a time, "
+"please use paging."
+msgstr ""
+"Šis galapunkts neatbalsta vairāk nekā {0} rezultātu atgriešanu vienlaikus, "
+"lūdzu, izmantojiet lapošanu."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:723
+#, java-format
+msgid "Consumer with id {0} could not be found."
+msgstr "Patērētāju ar id {0} nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:743
+msgid "No UUIDs provided."
+msgstr "Nav norādīti UUID."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1002
+msgid "Consumer UUID must be in UUID format."
+msgstr "Patērētāja UUID jābūt UUID formātā."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1026
+msgid "Unit type must be specified."
+msgstr "Jānorāda vienības tips."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1031
+#, java-format
+msgid "Invalid unit type: {0}"
+msgstr "Nederīgs vienības tips: {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1109
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1981
+msgid ""
+"Unable to persist consumer: cryptographic capabilities exceed data storage "
+"capabilities"
+msgstr ""
+"Nevar saglabāt patērētāju: kriptogrāfiskās spējas pārsniedz datu krātuves "
+"spējas"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1173
+#, java-format
+msgid "Problem creating unit {0}"
+msgstr "Problēma, veidojot vienību {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1254
+msgid "The consumer cannot use the supplied content access mode."
+msgstr "Patērētājs nevar izmantot norādīto satura piekļuves režīmu."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1263
+msgid "The consumer cannot be assigned a content access mode."
+msgstr "Patērētājam nevar piešķirt satura piekļuves režīmu."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1285
+msgid "A unit type of \"person\" cannot be used with activation keys"
+msgstr "Vienības tipu \"person\" nevar izmantot ar aktivizācijas atslēgām"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1297
+msgid "You may not create a manifest consumer via Subscription Manager."
+msgstr "Manifesta patērētāju nevar izveidot ar Subscription Manager."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1398
+msgid "System name cannot begin with # character"
+msgstr "Sistēmas nosaukums nedrīkst sākties ar rakstzīmi #"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1403
+#, java-format
+msgid "Name of the consumer should be shorter than {0} characters."
+msgstr "Patērētāja nosaukumam jābūt īsākam par {0} rakstzīmēm."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1410
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1414
+msgid "System name cannot contain most special characters."
+msgstr "Sistēmas nosaukumā nedrīkst būt vairums speciālo rakstzīmju."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1457
+#, java-format
+msgid "User \"{0}\" has no roles for organization \"{1}\""
+msgstr "Lietotājam \"{0}\" nav lomu organizācijā \"{1}\""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1470
+#, java-format
+msgid "User \"{0}\" has already registered a personal consumer"
+msgstr "Lietotājs \"{0}\" jau ir reģistrējis personisku patērētāju"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1500
+msgid "You must specify an organization for new units."
+msgstr "Jaunām vienībām jānorāda organizācija."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1517
+msgid "Client is not authorized to register with any organization"
+msgstr "Klients nav autorizēts reģistrēties nevienā organizācijā"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1544
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1550
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1565
+#, java-format
+msgid "{0} is not authorized to register with organization {1}"
+msgstr "{0} nav autorizēts reģistrēties organizācijā {1}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1569
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:171
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1438
+#, java-format
+msgid "owner with key: {0} was not found."
+msgstr "īpašnieks ar atslēgu: {0} netika atrasts."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1650
+#, java-format
+msgid "Error occurred while queueing job: {0}"
+msgstr "Ievietojot darbu rindā, radās kļūda: {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1688
+#, java-format
+msgid "Problem updating unit {0}"
+msgstr "Problēma, atjauninot vienību {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1778
+msgid "This consumer cannot be assigned a content access mode"
+msgstr "Šim patērētājam nevar piešķirt satura piekļuves režīmu"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1784
+#, java-format
+msgid "This consumer cannot use the supplied content access mode: {0}"
+msgstr "Šis patērētājs nevar izmantot norādīto satura piekļuves režīmu: {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1901
+#, java-format
+msgid "Environment with ID \"{0}\" could not be found."
+msgstr "Vidi ar ID \"{0}\" nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1910
+#, java-format
+msgid "Environment with name \"{0}\" could not be found."
+msgstr "Vidi ar nosaukumu \"{0}\" nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1914
+msgid "Environment could not be found using provided details."
+msgstr "Vidi nevarēja atrast, izmantojot sniegto informāciju."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1919
+#, java-format
+msgid "Environment \"{0}\" specified more than once."
+msgstr "Vide \"{0}\" norādīta vairāk nekā vienreiz."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2051
+#, java-format
+msgid "Problem updating unit {0}. Hypervisor id: {1} is already used."
+msgstr ""
+"Problēma, atjauninot vienību {0}. Hipervizora id: {1} jau tiek izmantots."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2262
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2275
+#, java-format
+msgid "Consumer with UUID {0} was already deleted."
+msgstr "Patērētājs ar UUID {0} jau ir izdzēsts."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2292
+#: src/main/java/org/candlepin/resource/GuestIdResource.java:221
+#, java-format
+msgid "Cannot unregister {0} {1} because: {2}"
+msgstr "Nevar atreģistrēt {0} {1}, jo: {2}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2329
+msgid ""
+"Invalid certificate serial; serials may only contain numeric characters: {}"
+msgstr ""
+"Nederīgs sertifikāta sērijas numurs; sērijas numuros var būt tikai cipari: {}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2378
+msgid "Content access mode does not allow this request."
+msgstr "Satura piekļuves režīms neatļauj šo pieprasījumu."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2387
+#, java-format
+msgid "Cannot retrieve content access certificate for consumer: {0}"
+msgstr "Nevar izgūt satura piekļuves sertifikātu patērētājam: {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2427
+#, java-format
+msgid "Unable to generate usable content access payload for consumer: {0}"
+msgstr "Nevar ģenerēt lietojamu satura piekļuves saturu patērētājam: {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2439
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2622
+msgid "Unable to create content access payload"
+msgstr "Nevar izveidot satura piekļuves saturu"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2491
+msgid ""
+"Unable to retrieve or create anonymous content access certificate for "
+"consumer"
+msgstr ""
+"Nevar izgūt vai izveidot anonīmu satura piekļuves sertifikātu patērētājam"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2523
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2663
+#, java-format
+msgid "Unable to generate usable certificates for consumer: {0}"
+msgstr "Nevar ģenerēt lietojamus sertifikātus patērētājam: {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2555
+msgid "Cannot create export for anonymous cloud consumer"
+msgstr "Nevar izveidot eksportu anonīmam mākoņa patērētājam"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2572
+msgid "Unable to create entitlement certificate archive"
+msgstr "Nevar izveidot piešķīrumu sertifikātu arhīvu"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2575
+#, java-format
+msgid "Unable to generate usable export for consumer: {0}"
+msgstr "Nevar ģenerēt lietojamu eksportu patērētājam: {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2683
+msgid "Cannot bind by multiple parameters."
+msgstr "Nevar piesaistīt pēc vairākiem parametriem."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2687
+msgid "Cannot specify a quantity when auto-binding."
+msgstr "Automātiski piesaistot, nevar norādīt daudzumu."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2723
+msgid ""
+"Attach operations are ignored in organizations using simple content access"
+msgstr ""
+"Pievienošanas darbības tiek ignorētas organizācijās, kas izmanto vienkāršo "
+"satura piekļuvi"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2743
+#, java-format
+msgid "You must first accept Red Hat''s Terms and conditions. Please visit {0}"
+msgstr ""
+"Vispirms jāpieņem Red Hat noteikumi un nosacījumi. Lūdzu, apmeklējiet {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2835
+#, java-format
+msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
+msgstr ""
+"Automātiskās pievienošanas pieprasījums tiek ignorēts. Tā ir atspējota "
+"organizācijai \"{0}\"."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2840
+#, java-format
+msgid ""
+"Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
+"the hypervisor auto-attach setting."
+msgstr ""
+"Automātiskās pievienošanas pieprasījums tiek ignorēts. Tā ir atspējota "
+"organizācijai \"{0}\" hipervizora automātiskās pievienošanas iestatījuma dēļ."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2882
+#, java-format
+msgid "Organization \"{0}\" has auto-attach disabled."
+msgstr "Organizācijai \"{0}\" automātiskā pievienošana ir atspējota."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3014
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3053
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:191
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:209
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:239
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:275
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:364
+#, java-format
+msgid "Entitlement with ID \"{0}\" could not be found."
+msgstr "Piešķīrumu ar ID \"{0}\" nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3029
+#, java-format
+msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
+msgstr "Piešķīruma sertifikātu ar sērijas numuru \"{0}\" nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3046
+#, java-format
+msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
+msgstr "Patērētājam \"{0}\" nav piešķīrumu ar krājuma id \"{1}\""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3116
+msgid "Unable to create export archive"
+msgstr "Nevar izveidot eksporta arhīvu"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3119
+#: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:261
+#, java-format
+msgid "Unable to determine the signature scheme for consumer: {0}"
+msgstr "Nevar noteikt paraksta shēmu patērētājam: {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3268
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3273
+#, java-format
+msgid "Problem regenerating ID cert for unit {0}"
+msgstr "Problēma, atkārtoti ģenerējot vienības {0} ID sertifikātu"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3276
+#: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:208
+#, java-format
+msgid "Unable to generate ID certificate for consumer: {0}"
+msgstr "Nevar ģenerēt ID sertifikātu patērētājam: {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3312
+#, java-format
+msgid "The system with UUID {0} is not a virtual guest."
+msgstr "Sistēma ar UUID {0} nav virtuāls viesis."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3401
+#, java-format
+msgid "Deletion record for hypervisor \"{0}\" not found."
+msgstr "Hipervizora \"{0}\" dzēšanas ieraksts nav atrasts."
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:105
+#, java-format
+msgid "Unit type with id \"{0}\" could not be found."
+msgstr "Vienības tipu ar id \"{0}\" nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:127
+#, java-format
+msgid "Problem creating unit type: {0}"
+msgstr "Problēma, veidojot vienības tipu: {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:140
+#, java-format
+msgid "Unit type with label {0} could not be found."
+msgstr "Vienības tipu ar etiķeti {0} nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:159
+#, java-format
+msgid "Unit type with id {0} could not be found."
+msgstr "Vienības tipu ar id {0} nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/ContentResource.java:95
+#: src/main/java/org/candlepin/resource/OwnerContentResource.java:432
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:756
+#: src/main/java/org/candlepin/resource/ProductResource.java:131
+#, java-format
+msgid "Owner with key \"{0}\" was not found."
+msgstr "Īpašnieks ar atslēgu \"{0}\" netika atrasts."
+
+#: src/main/java/org/candlepin/resource/ContentResource.java:190
+#: src/main/java/org/candlepin/resource/OwnerContentResource.java:363
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:565
+#: src/main/java/org/candlepin/resource/ProductResource.java:149
+#, java-format
+msgid "Invalid active inclusion type: {0}"
+msgstr "Nederīgs aktīvās iekļaušanas tips: {0}"
+
+#: src/main/java/org/candlepin/resource/ContentResource.java:193
+#: src/main/java/org/candlepin/resource/OwnerContentResource.java:366
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:569
+#: src/main/java/org/candlepin/resource/ProductResource.java:153
+#, java-format
+msgid "Invalid custom inclusion type: {0}"
+msgstr "Nederīgs pielāgotās iekļaušanas tips: {0}"
+
+#: src/main/java/org/candlepin/resource/ContentResource.java:215
+#, java-format
+msgid "Content with UUID \"{0}\" could not be found."
+msgstr "Saturu ar UUID \"{0}\" nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/DistributorVersionResource.java:137
+#, java-format
+msgid "A distributor version with name {0} already exists"
+msgstr "Izplatītāja versija ar nosaukumu {0} jau eksistē"
+
+#: src/main/java/org/candlepin/resource/DistributorVersionResource.java:169
+#, java-format
+msgid "No such distributor version: {0}"
+msgstr "Nav šādas izplatītāja versijas: {0}"
+
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:115
+#, java-format
+msgid "Object with ID \"{0}\" could not found."
+msgstr "Objektu ar ID \"{0}\" nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:141
+#, java-format
+msgid "Unit \"{0}\" has no subscription for product \"{1}\"."
+msgstr "Vienībai \"{0}\" nav abonementa produktam \"{1}\"."
+
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:216
+msgid "Quantity value must be greater than 0"
+msgstr "Daudzuma vērtībai jābūt lielākai par 0"
+
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:260
+#, java-format
+msgid "Unable to find upstream certificate for entitlement: {0}"
+msgstr "Nevar atrast augšteces sertifikātu piešķīrumam: {0}"
+
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:318
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:324
+#, java-format
+msgid "Entitlement migration is not permissible for units of type \"{0}\""
+msgstr "Piešķīrumu migrācija nav atļauta tipa \"{0}\" vienībām"
+
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:330
+msgid "Source and destination units must belong to the same organization"
+msgstr "Avota un mērķa vienībām jāpieder vienai organizācijai"
+
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:339
+msgid "The entitlement cannot be utilized by the destination unit: "
+msgstr "Mērķa vienība nevar izmantot piešķīrumu: "
+
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:359
+msgid ""
+"The quantity specified must be greater than zero and less than or equal to "
+"the total for this entitlement"
+msgstr ""
+"Norādītajam daudzumam jābūt lielākam par nulli un mazākam vai vienādam ar šī "
+"piešķīruma kopējo daudzumu"
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:190
+#, java-format
+msgid "No such environment: {0}"
+msgstr "Nav šādas vides: {0}"
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:208
+msgid "no environment update data provided"
+msgstr "nav sniegti vides atjaunināšanas dati"
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:220
+msgid "environment name must be a non-empty value"
+msgstr "vides nosaukumam jābūt netukšai vērtībai"
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:224
+#, java-format
+msgid "environment name cannot exceed {0} characters"
+msgstr "vides nosaukums nedrīkst pārsniegt {0} rakstzīmes"
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:232
+#, java-format
+msgid "environment type cannot exceed {0} characters"
+msgstr "vides tips nedrīkst pārsniegt {0} rakstzīmes"
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:240
+#, java-format
+msgid "environment description cannot exceed {0} characters"
+msgstr "vides apraksts nedrīkst pārsniegt {0} rakstzīmes"
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:250
+#, java-format
+msgid "environment content prefix cannot exceed {0} characters"
+msgstr "vides satura priedēklis nedrīkst pārsniegt {0} rakstzīmes"
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:413
+#, java-format
+msgid "The content with id {0} has already been promoted in this environment."
+msgstr "Saturs ar id {0} šajā vidē jau ir paaugstināts."
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:427
+#, java-format
+msgid "Some of the content is already associated with Environment: {0}"
+msgstr "Daļa satura jau ir saistīta ar vidi: {0}"
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:453
+#, java-format
+msgid "Content does not exist in environment: {0}"
+msgstr "Saturs vidē neeksistē: {0}"
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:466
+#, java-format
+msgid "One of the content does not exist in the environment anymore: {0}"
+msgstr "Kāds no satura vienumiem vidē vairs neeksistē: {0}"
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:502
+msgid "Two or more environments belong to different organizations"
+msgstr "Divas vai vairākas vides pieder dažādām organizācijām"
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:650
+msgid "No environment specified, or environment lacks owner information"
+msgstr "Vide nav norādīta, vai videi trūkst īpašnieka informācijas"
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:654
+msgid "No content ID specified"
+msgstr "Nav norādīts satura ID"
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:661
+#, java-format
+msgid "Unable to find a content with the ID \"{0}\""
+msgstr "Nevar atrast saturu ar ID \"{0}\""
+
+#: src/main/java/org/candlepin/resource/GuestIdResource.java:105
+msgid "Please supply a valid guest id"
+msgstr "Lūdzu, norādiet derīgu viesa id"
+
+#: src/main/java/org/candlepin/resource/GuestIdResource.java:121
+#, java-format
+msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
+msgstr "Viesa ID json \"{0}\" neatbilst ceļa viesa ID \"{1}\""
+
+#: src/main/java/org/candlepin/resource/GuestIdResource.java:205
+#, java-format
+msgid "Guest with UUID {0} could not be found."
+msgstr "Viesi ar UUID {0} nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:207
+msgid "Host to guest mapping was not provided for hypervisor update."
+msgstr ""
+"Hipervizora atjaunināšanai netika sniegts resursdatora un viesu kartējums."
+
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:215
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:221
+msgid "Invalid host to guest mapping was provided for hypervisor update."
+msgstr ""
+"Hipervizora atjaunināšanai sniegts nederīgs resursdatora un viesu kartējums."
+
+#: src/main/java/org/candlepin/resource/JobResource.java:130
+msgid "Error setting scheduler status"
+msgstr "Kļūda, iestatot plānotāja statusu"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:241
+#: src/main/java/org/candlepin/resource/JobResource.java:258
+msgid "Job ID is null or empty"
+msgstr "Darba ID ir null vai tukšs"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:247
+#: src/main/java/org/candlepin/resource/JobResource.java:267
+#, java-format
+msgid "No job status found associated with the given job ID: {0}"
+msgstr "Ar norādīto darba ID nav saistīta neviena darba statusa: {0}"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:277
+#, java-format
+msgid ""
+"Job {0} is already in a terminal state or otherwise cannot be canceled at "
+"this time"
+msgstr "Darbs {0} jau ir galīgajā stāvoklī vai citādi pašlaik nav atceļams"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:335
+msgid "Job key is null or empty"
+msgstr "Darba atslēga ir null vai tukša"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:343
+#, java-format
+msgid "Job \"{0}\" is not configured for manual scheduling"
+msgstr "Darbs \"{0}\" nav konfigurēts manuālai plānošanai"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:432
+#, java-format
+msgid "Unknown job states: {0}"
+msgstr "Nezināmi darbu stāvokļi: {0}"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:502
+#, java-format
+msgid "Invalid date range; start date occurs after the end date: {0} > {1}"
+msgstr "Nederīgs datumu diapazons; sākuma datums ir pēc beigu datuma: {0} > {1}"
+
+#: src/main/java/org/candlepin/resource/OwnerContentResource.java:114
+msgid "content label cannot be null or empty"
+msgstr "satura etiķete nedrīkst būt null vai tukša"
+
+#: src/main/java/org/candlepin/resource/OwnerContentResource.java:118
+msgid "content name cannot be null or empty"
+msgstr "satura nosaukums nedrīkst būt null vai tukšs"
+
+#: src/main/java/org/candlepin/resource/OwnerContentResource.java:122
+msgid "content type cannot be null or empty"
+msgstr "satura tips nedrīkst būt null vai tukšs"
+
+#: src/main/java/org/candlepin/resource/OwnerContentResource.java:126
+msgid "content vendor cannot be null or empty"
+msgstr "satura ražotājs nedrīkst būt null vai tukšs"
+
+#: src/main/java/org/candlepin/resource/OwnerContentResource.java:149
+msgid ""
+"Cannot modify or remove contents defined outside of the organization's "
+"namespace"
+msgstr ""
+"Nevar mainīt vai noņemt saturu, kas definēts ārpus organizācijas "
+"nosaukumtelpas"
+
+#: src/main/java/org/candlepin/resource/OwnerContentResource.java:191
+#, java-format
+msgid "Unable to find a content with the ID \"{0}\" for owner \"{1}\""
+msgstr "Nevar atrast saturu ar ID \"{0}\" īpašniekam \"{1}\""
+
+#: src/main/java/org/candlepin/resource/OwnerContentResource.java:326
+#, java-format
+msgid "One or more contents are already defined in the global namespace: {0}"
+msgstr ""
+"Viens vai vairāki satura vienumi jau ir definēti globālajā nosaukumtelpā: {0}"
+
+#: src/main/java/org/candlepin/resource/OwnerContentResource.java:406
+#, java-format
+msgid ""
+"Content \"{0}\" cannot be deleted while referenced by one or more products"
+msgstr ""
+"Saturu \"{0}\" nevar izdzēst, kamēr uz to atsaucas viens vai vairāki produkti"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:140
+msgid ""
+"Cannot modify or remove products defined outside of the organization's "
+"namespace"
+msgstr ""
+"Nevar mainīt vai noņemt produktus, kas definēti ārpus organizācijas "
+"nosaukumtelpas"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:182
+#: src/main/java/org/candlepin/resource/OwnerResource.java:497
+#, java-format
+msgid "Unable to find a product with the ID \"{0}\" for owner \"{1}\""
+msgstr "Nevar atrast produktu ar ID \"{0}\" īpašniekam \"{1}\""
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:233
+#, java-format
+msgid ""
+"Unable to find one or more contents in the namespace \"{0}\" with IDs: {1}"
+msgstr ""
+"Nosaukumtelpā \"{0}\" nevar atrast vienu vai vairākus satura vienumus ar ID: "
+"{1}"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:246
+#, java-format
+msgid ""
+"Cannot attach content defined outside of the organization''s namespace: {0}"
+msgstr ""
+"Nevar pievienot saturu, kas definēts ārpus organizācijas nosaukumtelpas: {0}"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:373
+msgid "provided products contains one or more null elements"
+msgstr "nodrošinātie produkti satur vienu vai vairākus null elementus"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:379
+msgid "one or more provided product references lacks a valid ID"
+msgstr "vienai vai vairākām nodrošināto produktu atsaucēm trūkst derīga ID"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:391
+msgid "derived product reference lacks a valid ID"
+msgstr "atvasinātā produkta atsaucei trūkst derīga ID"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:403
+#, java-format
+msgid ""
+"Unable to find one or more products in the namespace \"{0}\" with IDs: {1}"
+msgstr ""
+"Nosaukumtelpā \"{0}\" nevar atrast vienu vai vairākus produktus ar ID: {1}"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:416
+#, java-format
+msgid ""
+"Cannot attach product defined outside of the organization''s namespace: {0}"
+msgstr ""
+"Nevar pievienot produktu, kas definēts ārpus organizācijas nosaukumtelpas: "
+"{0}"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:448
+msgid "product contents contains one or more null elements"
+msgstr "produkta saturs satur vienu vai vairākus null elementus"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:454
+msgid "product content contains one or more malformed content references"
+msgstr ""
+"produkta saturs satur vienu vai vairākas nepareizi veidotas satura atsauces"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:460
+msgid "one or more content references lacks a valid ID"
+msgstr "vienai vai vairākām satura atsaucēm trūkst derīga ID"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:504
+msgid "product has a null or invalid ID"
+msgstr "produktam ir null vai nederīgs ID"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:508
+msgid "product has a null or invalid name"
+msgstr "produktam ir null vai nederīgs nosaukums"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:514
+#, java-format
+msgid "A product with ID \"{0}\" is already defined"
+msgstr "Produkts ar ID \"{0}\" jau ir definēts"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:545
+msgid "Only numeric product IDs are allowed."
+msgstr "Atļauti tikai skaitliski produktu ID."
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:610
+msgid "No content IDs provided"
+msgstr "Nav norādīti satura ID"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:662
+msgid "No content IDs provided, or provided content ID list contains null IDs"
+msgstr "Nav norādīti satura ID, vai norādītajā satura ID sarakstā ir null ID"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:699
+#, java-format
+msgid ""
+"Product \"{0}\" cannot be deleted while referenced by one or more "
+"subscriptions"
+msgstr ""
+"Produktu \"{0}\" nevar izdzēst, kamēr uz to atsaucas viens vai vairāki "
+"abonementi"
+
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:705
+#, java-format
+msgid ""
+"Product \"{0}\" cannot be deleted while referenced by one or more products"
+msgstr ""
+"Produktu \"{0}\" nevar izdzēst, kamēr uz to atsaucas viens vai vairāki "
+"produkti"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:304
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1782
+msgid "Owner key is null or empty"
+msgstr "Īpašnieka atslēga ir null vai tukša"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:309
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1793
+#, java-format
+msgid "Owner with key \"{0}\" was not found"
+msgstr "Īpašnieks ar atslēgu \"{0}\" netika atrasts"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:335
+msgid "Owner id is null or empty."
+msgstr "Īpašnieka id ir null vai tukšs."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:339
+#, java-format
+msgid "Owner with id \"{0}\" was not found"
+msgstr "Īpašnieks ar id \"{0}\" netika atrasts"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:368
+msgid "Owner lookup failed because id and key were null or empty."
+msgstr "Īpašnieka uzmeklēšana neizdevās, jo id un atslēga bija null vai tukši."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:392
+msgid "Entitlement id is null or empty."
+msgstr "Piešķīruma id ir null vai tukšs."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:397
+#, java-format
+msgid "Entitlement with id {0} could not be found."
+msgstr "Piešķīrumu ar id {0} nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:423
+msgid "Consumer id is null or empty."
+msgstr "Patērētāja id ir null vai tukšs."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:427
+#, java-format
+msgid "No such unit: {0}"
+msgstr "Nav šādas vienības: {0}"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:453
+msgid "Pool id is null or empty."
+msgstr "Krājuma id ir null vai tukšs."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:548
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:209
+#, java-format
+msgid "Unable to find parent owner: {0}"
+msgstr "Nevar atrast vecākīpašnieku: {0}"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:970
+#, java-format
+msgid "Content access mode list contains an unsupported mode: {0}"
+msgstr "Satura piekļuves režīmu saraksts satur neatbalstītu režīmu: {0}"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:990
+#, java-format
+msgid ""
+"Content access mode is not present in the content access mode list for this "
+"org: {0}"
+msgstr ""
+"Satura piekļuves režīms nav šīs organizācijas satura piekļuves režīmu "
+"sarakstā: {0}"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1093
+msgid "Must provide a name for activation key."
+msgstr "Jānorāda aktivizācijas atslēgas nosaukums."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1112
+#, java-format
+msgid "The activation key name \"{0}\" is already in use for owner {1}"
+msgstr ""
+"Aktivizācijas atslēgas nosaukums \"{0}\" jau tiek izmantots īpašniekam {1}"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1121
+msgid ""
+"Activation keys cannot be created with pools while the org is operating in "
+"simple content access mode"
+msgstr ""
+"Aktivizācijas atslēgas nevar veidot ar krājumiem, kamēr organizācija "
+"darbojas vienkāršās satura piekļuves režīmā"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1176
+#, java-format
+msgid "{0} is not a valid log level"
+msgstr "{0} nav derīgs žurnāla līmenis"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1305
+#: src/main/java/org/candlepin/resource/PoolResource.java:132
+#, java-format
+msgid "Unit: {0} not found"
+msgstr "Vienība: {0} nav atrasta"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1315
+#: src/main/java/org/candlepin/resource/PoolResource.java:220
+#, java-format
+msgid "User {0} cannot access consumer {1}"
+msgstr "Lietotājs {0} nevar piekļūt patērētājam {1}"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1325
+#, java-format
+msgid "ActivationKey with id {0} could not be found."
+msgstr "ActivationKey ar id {0} nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1331
+msgid "The flags add_future and only_future cannot be used at the same time."
+msgstr "Karogus add_future un only_future nevar izmantot vienlaikus."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1336
+msgid ""
+"The flags add_future and only_future cannot be used with the parameter after."
+msgstr "Karogus add_future un only_future nevar izmantot ar parametru after."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1479
+msgid "Pool product ID not specified"
+msgstr "Nav norādīts krājuma produkta ID"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1487
+msgid ""
+"Cannot create pools using products defined outside of the organization's "
+"namespace"
+msgstr ""
+"Nevar izveidot krājumus, izmantojot produktus, kas definēti ārpus "
+"organizācijas nosaukumtelpas"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1517
+#, java-format
+msgid "Unable to find a pool with the ID \"{0}\""
+msgstr "Nevar atrast krājumu ar ID \"{0}\""
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1525
+#, java-format
+msgid "Pool \"{0}\" does not belong to the specified owner \"{1}\""
+msgstr "Krājums \"{0}\" nepieder norādītajam īpašniekam \"{1}\""
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1532
+msgid "Cannot update bonus pools, as they are auto generated"
+msgstr "Bonusa krājumus nevar atjaunināt, jo tie tiek ģenerēti automātiski"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1626
+msgid "Unknown conflict to force"
+msgstr "Nezināms konflikts, ko piespiest"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1654
+msgid "Error reading export archive"
+msgstr "Kļūda, nolasot eksporta arhīvu"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1658
+msgid "Error storing uploaded archive for asynchronous processing"
+msgstr "Kļūda, saglabājot augšupielādēto arhīvu asinhronai apstrādei"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1771
+msgid ""
+"Unable to generate an uber certificate compatible with the provided "
+"cryptographic capabilities"
+msgstr ""
+"Nevar ģenerēt uber sertifikātu, kas saderīgs ar norādītajām "
+"kriptogrāfiskajām spējām"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1813
+#, java-format
+msgid "Problem generating uber cert for owner {0}"
+msgstr "Problēma, ģenerējot īpašnieka {0} uber sertifikātu"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1825
+#, java-format
+msgid "uber certificate for owner {0} was not found. Please generate one."
+msgstr "Īpašnieka {0} uber sertifikāts netika atrasts. Lūdzu, ģenerējiet to."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1912
+msgid "Claimant owner has to be present!"
+msgstr "Pieprasītājam īpašniekam jābūt norādītam!"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1917
+msgid "Origin owner has to be anonymous!"
+msgstr "Izcelsmes īpašniekam jābūt anonīmam!"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1935
+msgid "Claimant owner does not exist in Candlepin or upstream!"
+msgstr "Pieprasītājs īpašnieks neeksistē ne Candlepin, ne augštecē!"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1940
+msgid "Claimant owner cannot be anonymous!"
+msgstr "Pieprasītājs īpašnieks nedrīkst būt anonīms!"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1947
+msgid "Claimant owners don't match!"
+msgstr "Pieprasītāji īpašnieki nesakrīt!"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1977
+msgid "Owners must be created with a valid key"
+msgstr "Īpašnieki jāveido ar derīgu atslēgu"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1986
+msgid "The default service level cannot be specified during owner creation"
+msgstr "Veidojot īpašnieku, nevar norādīt noklusējuma pakalpojuma līmeni"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2026
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2038
+#, java-format
+msgid "Could not create the Owner: {0}"
+msgstr "Nevarēja izveidot īpašnieku: {0}"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2055
+msgid "No consumer UUIDs provided"
+msgstr "Nav norādīti patērētāju UUID"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2060
+msgid "The provided environment ID list cannot be null"
+msgstr "Norādītais vides ID saraksts nedrīkst būt null"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2066
+#, java-format
+msgid "Number of consumer UUIDs exceeds the max size of {0}"
+msgstr "Patērētāju UUID skaits pārsniedz maksimālo izmēru {0}"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2072
+#, java-format
+msgid "Number of environment IDs exceeds the max size of {0}"
+msgstr "Vides ID skaits pārsniedz maksimālo izmēru {0}"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2077
+msgid "Owner is not in SCA content access mode"
+msgstr "Īpašnieks nav SCA satura piekļuves režīmā"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2084
+#, java-format
+msgid "Unknown consumer UUIDs: {0}"
+msgstr "Nezināmi patērētāju UUID: {0}"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2093
+msgid "Environment IDs cannot be null"
+msgstr "Vides ID nedrīkst būt null"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2097
+msgid "Request contains duplicate environment IDs"
+msgstr "Pieprasījumā ir dublēti vides ID"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2102
+#, java-format
+msgid "Unknown environment IDs: {0}"
+msgstr "Nezināmi vides ID: {0}"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:117
+msgid "Cannot filter on both owner and unit"
+msgstr "Nevar filtrēt gan pēc īpašnieka, gan pēc vienības"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:120
+msgid "A unit or owner is needed to filter on product"
+msgstr "Lai filtrētu pēc produkta, vajadzīga vienība vai īpašnieks"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:137
+#, java-format
+msgid "User {0} cannot access unit {1}"
+msgstr "Lietotājs {0} nevar piekļūt vienībai {1}"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:149
+#, java-format
+msgid "owner: {0}"
+msgstr "īpašnieks: {0}"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:154
+#, java-format
+msgid "User {0} cannot access owner {1}"
+msgstr "Lietotājs {0} nevar piekļūt īpašniekam {1}"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:163
+#, java-format
+msgid "User {0} cannot access all pools."
+msgstr "Lietotājs {0} nevar piekļūt visiem krājumiem."
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:216
+#, java-format
+msgid "consumer: {0} not found"
+msgstr "patērētājs: {0} nav atrasts"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:239
+#: src/main/java/org/candlepin/resource/PoolResource.java:268
+#: src/main/java/org/candlepin/resource/PoolResource.java:288
+#, java-format
+msgid "Subscription Pool with ID \"{0}\" could not be found."
+msgstr "Abonementu krājumu ar ID \"{0}\" nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:247
+#, java-format
+msgid "Entitlement Pool with ID \"{0}\" could not be found."
+msgstr "Piešķīrumu krājumu ar ID \"{0}\" nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:251
+msgid "Cannot delete bonus pools, as they are auto generated"
+msgstr "Bonusa krājumus nevar izdzēst, jo tie tiek ģenerēti automātiski"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:317
+#, java-format
+msgid "Pool with ID \"{0}\" could not be found."
+msgstr "Krājumu ar ID \"{0}\" nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:322
+#, java-format
+msgid "A certificate was not found for pool \"{0}\""
+msgstr "Krājumam \"{0}\" netika atrasts sertifikāts"
+
+#: src/main/java/org/candlepin/resource/ProductResource.java:105
+#, java-format
+msgid "Product with UUID \"{0}\" could not be found."
+msgstr "Produktu ar UUID \"{0}\" nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/ProductResource.java:178
+msgid "No product IDs specified"
+msgstr "Nav norādīti produktu ID"
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:87
+msgid "role name is null or empty"
+msgstr "lomas nosaukums ir null vai tukšs"
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:92
+#, java-format
+msgid "Role not found: {0}"
+msgstr "Loma nav atrasta: {0}"
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:116
+#: src/main/java/org/candlepin/resource/UserResource.java:91
+msgid "username is null or empty"
+msgstr "lietotājvārds ir null vai tukšs"
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:134
+msgid "role data is null or empty"
+msgstr "lomas dati ir null vai tukši"
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:138
+msgid "role name not specified"
+msgstr "lomas nosaukums nav norādīts"
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:142
+#, java-format
+msgid "Role already exists: {0}"
+msgstr "Loma jau eksistē: {0}"
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:181
+msgid "Access type NONE not supported."
+msgstr "Piekļuves tips NONE netiek atbalstīts."
+
+#: src/main/java/org/candlepin/resource/RulesResource.java:69
+msgid "couldn''t read rules file"
+msgstr "nevarēja nolasīt kārtulu failu"
+
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:92
+msgid ""
+"Subscription activation through 'subscription-manager redeem' is no longer "
+"supported, please visit https://access.redhat.com/subscriptions/activate/"
+"dell to redeem your service tag."
+msgstr ""
+"Abonementu aktivizēšana ar 'subscription-manager redeem' vairs netiek "
+"atbalstīta; lai izpirktu savu servisa tagu, lūdzu, apmeklējiet https://"
+"access.redhat.com/subscriptions/activate/dell."
+
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:117
+#, java-format
+msgid "A subscription with the ID \"{0}\" could not be found."
+msgstr "Abonementu ar ID \"{0}\" nevarēja atrast."
+
+#: src/main/java/org/candlepin/resource/UserResource.java:146
+msgid "user data is null or empty"
+msgstr "lietotāja dati ir null vai tukši"
+
+#: src/main/java/org/candlepin/resource/UserResource.java:150
+msgid "Username not specified"
+msgstr "Lietotājvārds nav norādīts"
+
+#: src/main/java/org/candlepin/resource/UserResource.java:154
+#, java-format
+msgid "User already exists: {0}"
+msgstr "Lietotājs jau eksistē: {0}"
+
+#: src/main/java/org/candlepin/resource/util/CalculatedAttributesUtil.java:55
+#, java-format
+msgid "{0} (Temporary)"
+msgstr "{0} (pagaidu)"
+
+#: src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:159
+msgid ""
+"None of the subscriptions on the activation key were available for attaching."
+msgstr ""
+"Neviens no aktivizācijas atslēgas abonementiem nebija pieejams pievienošanai."
+
+#: src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:188
+#, java-format
+msgid "Cannot bind to pool \"{0}\" in activation key \"{1}\": {2}"
+msgstr "Nevar piesaistīt krājumam \"{0}\" aktivizācijas atslēgā \"{1}\": {2}"
+
+#: src/main/java/org/candlepin/resource/util/ConsumerCloudDataBuilder.java:92
+msgid "During consumer cloud creation more than one cloud provider facts found"
+msgstr ""
+"Patērētāja mākoņa izveides laikā atrasti vairāku mākoņa nodrošinātāju fakti"
+
+#: src/main/java/org/candlepin/resource/util/ConsumerTypeValidator.java:59
+#, java-format
+msgid "No such unit type(s): {0}"
+msgstr "Nav šāda(-u) vienību tipa(-u): {0}"
+
+#: src/main/java/org/candlepin/resource/util/KeyValueStringParser.java:107
+#, java-format
+msgid "Failed to parse parameter \"{0}\"; expected format: key:value"
+msgstr "Neizdevās parsēt parametru \"{0}\"; gaidītais formāts: atslēga:vērtība"
+
+#: src/main/java/org/candlepin/resource/util/SubscriptionServiceExceptionTranslator.java:58
+#, java-format
+msgid "No subscription was able to be activated with Dell service tag \"{0}\"."
+msgstr "Ar Dell servisa tagu \"{0}\" nevarēja aktivizēt nevienu abonementu."
+
+#: src/main/java/org/candlepin/resource/util/SubscriptionServiceExceptionTranslator.java:61
+#, java-format
+msgid ""
+"The Dell service tag \"{0}\" has already been used to redeem a subscription."
+msgstr "Dell servisa tags \"{0}\" jau ir izmantots abonementa izpirkšanai."
+
+#: src/main/java/org/candlepin/resource/util/SubscriptionServiceExceptionTranslator.java:64
+#, java-format
+msgid "The Dell service tag \"{0}\" is expired."
+msgstr "Dell servisa taga \"{0}\" derīgums ir beidzies."
+
+#: src/main/java/org/candlepin/resource/util/SubscriptionServiceExceptionTranslator.java:66
+#, java-format
+msgid ""
+"The Dell service tag \"{0}\" could not be used to retrieve a subscription."
+msgstr "Dell servisa tagu \"{0}\" nevarēja izmantot abonementa izgūšanai."
+
+#: src/main/java/org/candlepin/resource/util/SubscriptionServiceExceptionTranslator.java:69
+#, java-format
+msgid "Unexpected error from Subscription Service: {0}"
+msgstr "Negaidīta kļūda no abonementu pakalpojuma: {0}"
+
+#: src/main/java/org/candlepin/resource/util/SubscriptionServiceExceptionTranslator.java:72
+msgid "Error contacting subscription service"
+msgstr "Kļūda, sazinoties ar abonementu pakalpojumu"
+
+#: src/main/java/org/candlepin/resource/util/UserServiceExceptionTranslator.java:87
+#, java-format
+msgid "User \"{0}\" is not valid."
+msgstr "Lietotājs \"{0}\" nav derīgs."
+
+#: src/main/java/org/candlepin/resource/util/UserServiceExceptionTranslator.java:89
+#, java-format
+msgid ""
+"You must first accept Red Hat''s Terms and conditions. Please visit {0} . "
+"You may have to log out of and back into the  Customer Portal in order to "
+"see the terms."
+msgstr ""
+"Vispirms jāpieņem Red Hat noteikumi un nosacījumi. Lūdzu, apmeklējiet {0} . "
+"Lai redzētu noteikumus, iespējams, jāiziet no klientu portāla un jāpiesakās "
+"atkārtoti."
+
+#: src/main/java/org/candlepin/resource/util/UserServiceExceptionTranslator.java:93
+#, java-format
+msgid ""
+"The user \"{0}\" has been disabled, if this is a mistake, please contact "
+"customer service."
+msgstr ""
+"Lietotājs \"{0}\" ir atspējots; ja tā ir kļūda, lūdzu, sazinieties ar "
+"klientu apkalpošanu."
+
+#: src/main/java/org/candlepin/resource/util/UserServiceExceptionTranslator.java:96
+#, java-format
+msgid "Invalid username or password. To create a login, please visit {0}"
+msgstr ""
+"Nederīgs lietotājvārds vai parole. Lai izveidotu pieteikšanās kontu, lūdzu, "
+"apmeklējiet {0}"
+
+#: src/main/java/org/candlepin/resource/util/UserServiceExceptionTranslator.java:99
+#, java-format
+msgid "Unexpected error from User Service: {0}"
+msgstr "Negaidīta kļūda no lietotāju pakalpojuma: {0}"
+
+#: src/main/java/org/candlepin/resource/validation/DTOValidator.java:91
+msgid "collection contains null elements"
+msgstr "kolekcija satur null elementus"
+
+#: src/main/java/org/candlepin/resource/validation/DTOValidator.java:164
+msgid "map contains null elements"
+msgstr "kartējums satur null elementus"
+
+#: src/main/java/org/candlepin/resteasy/converter/OffsetDateTimeParamConverterProvider.java:92
+msgid "Unable to parse date parameter"
+msgstr "Nevar parsēt datuma parametru"
+
+#: src/main/java/org/candlepin/resteasy/filter/AuthenticationFilter.java:167
+msgid "Please use SSL when accessing protected resources"
+msgstr "Lūdzu, piekļūstot aizsargātiem resursiem, izmantojiet SSL"
+
+#: src/main/java/org/candlepin/resteasy/filter/CandlepinSuspendModeFilter.java:66
+msgid ""
+"Candlepin is in Suspend mode, please check /status resource to get more "
+"details"
+msgstr ""
+"Candlepin ir apturēšanas režīmā; sīkākai informācijai skatiet resursu /status"
+
+#: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:62
+#, java-format
+msgid "page size cannot exceed {0} elements"
+msgstr "lapas izmērs nedrīkst pārsniegt {0} elementus"
+
+#: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:67
+#, java-format
+msgid "param \"{0}\" must be a positive integer"
+msgstr "parametram \"{0}\" jābūt pozitīvam veselam skaitlim"
+
+#: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:123
+msgid "the order parameter must be either \"ascending\" or \"descending\""
+msgstr "parametram order jābūt vai nu \"ascending\", vai \"descending\""
+
+#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:125
+msgid "Owner does not yet exist"
+msgstr "Īpašnieks vēl neeksistē"
+
+#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:129
+msgid "Owner is not yet entitled"
+msgstr "Īpašniekam vēl nav piešķīrumu"
+
+#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:144
+msgid "Anonymous owner not yet created upstream of candlepin"
+msgstr "Anonīmais īpašnieks vēl nav izveidots candlepin augštecē"
+
+#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:149
+msgid "Anonymous owner not yet entitled upstream of candlepin"
+msgstr "Anonīmajam īpašniekam vēl nav piešķīrumu candlepin augštecē"
+
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:297
+msgid "Organization"
+msgstr "Organizācija"
+
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:318
+#, java-format
+msgid "{0} with ID(s) {1} could not be found."
+msgstr "{0} ar ID {1} nevarēja atrast."
+
+#: src/main/java/org/candlepin/servlet/filter/CandlepinContentTypeFilter.java:65
+#, java-format
+msgid "Invalid Content-Type {0}"
+msgstr "Nederīgs Content-Type {0}"
+
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:69
+msgid "No ID for upstream subscription management application."
+msgstr "Nav augšteces abonementu pārvaldības lietotnes ID."
+
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:83
+msgid ""
+"This subscription management application has already been imported by "
+"another owner."
+msgstr "Šo abonementu pārvaldības lietotni jau ir importējis cits īpašnieks."
+
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:90
+msgid ""
+"Owner has already imported from another subscription management application."
+msgstr "Īpašnieks jau ir importējis no citas abonementu pārvaldības lietotnes."
+
+#: src/main/java/org/candlepin/sync/EntitlementImporter.java:89
+#: src/main/java/org/candlepin/sync/ProductImporter.java:307
+#, java-format
+msgid "Unable to find product with ID: {0}"
+msgstr "Nevar atrast produktu ar ID: {0}"
+
+#: src/main/java/org/candlepin/sync/Importer.java:227
+msgid "Uploaded manifest file does not exist."
+msgstr "Augšupielādētais manifesta fails neeksistē."
+
+#: src/main/java/org/candlepin/sync/Importer.java:297
+#, java-format
+msgid "{0} file imported successfully."
+msgstr "Fails {0} veiksmīgi importēts."
+
+#: src/main/java/org/candlepin/sync/Importer.java:299
+#, java-format
+msgid "{0} file imported forcibly."
+msgstr "Fails {0} importēts piespiedu kārtā."
+
+#: src/main/java/org/candlepin/sync/Importer.java:304
+msgid "No active subscriptions found in the file."
+msgstr "Failā nav atrasts neviens aktīvs abonements."
+
+#: src/main/java/org/candlepin/sync/Importer.java:309
+msgid "One or more inactive subscriptions found in the file."
+msgstr "Failā atrasts viens vai vairāki neaktīvi abonementi."
+
+#: src/main/java/org/candlepin/sync/Importer.java:379
+msgid "Wrong metadata type"
+msgstr "Nepareizs metadatu tips"
+
+#: src/main/java/org/candlepin/sync/Importer.java:388
+msgid "Invalid owner"
+msgstr "Nederīgs īpašnieks"
+
+#: src/main/java/org/candlepin/sync/Importer.java:401
+msgid "Import is older than existing data"
+msgstr "Imports ir vecāks par esošajiem datiem"
+
+#: src/main/java/org/candlepin/sync/Importer.java:420
+msgid "Import is the same as existing data"
+msgstr "Imports ir tāds pats kā esošie dati"
+
+#: src/main/java/org/candlepin/sync/Importer.java:460
+msgid "The provided manifest has no content in the exported consumer archive"
+msgstr "Norādītajam manifestam eksportētajā patērētāja arhīvā nav satura"
+
+#: src/main/java/org/candlepin/sync/Importer.java:485
+msgid "The archive does not contain the required consumer_export.zip file"
+msgstr "Arhīvā nav vajadzīgā faila consumer_export.zip"
+
+#: src/main/java/org/candlepin/sync/Importer.java:490
+msgid "Unable to read certificates to validate manifest"
+msgstr "Nevar nolasīt sertifikātus manifesta validēšanai"
+
+#: src/main/java/org/candlepin/sync/Importer.java:495
+#: src/main/java/org/candlepin/sync/Importer.java:499
+msgid "Failed to import archive"
+msgstr "Neizdevās importēt arhīvu"
+
+#: src/main/java/org/candlepin/sync/Importer.java:503
+#: src/main/java/org/candlepin/sync/Importer.java:992
+msgid "Unable to extract export archive"
+msgstr "Nevar izvilkt eksporta arhīvu"
+
+#: src/main/java/org/candlepin/sync/Importer.java:550
+#: src/main/java/org/candlepin/sync/Importer.java:907
+#, java-format
+msgid "The archive {0} is not a properly compressed file or is empty"
+msgstr "Arhīvs {0} nav pareizi saspiests fails vai ir tukšs"
+
+#: src/main/java/org/candlepin/sync/Importer.java:562
+msgid "Archive signed by an untrusted certificate"
+msgstr "Arhīvs parakstīts ar neuzticamu sertifikātu"
+
+#: src/main/java/org/candlepin/sync/Importer.java:586
+#: src/main/java/org/candlepin/sync/Importer.java:624
+msgid "Archive failed signature check"
+msgstr "Arhīvs neizturēja paraksta pārbaudi"
+
+#: src/main/java/org/candlepin/sync/Importer.java:637
+msgid "The archive does not contain the required signature file"
+msgstr "Arhīvā nav vajadzīgā paraksta faila"
+
+#: src/main/java/org/candlepin/sync/Importer.java:666
+msgid "The archive does not contain the required meta.json file"
+msgstr "Arhīvā nav vajadzīgā faila meta.json"
+
+#: src/main/java/org/candlepin/sync/Importer.java:671
+msgid "The archive does not contain the required consumer_types directory"
+msgstr "Arhīvā nav vajadzīgās direktorijas consumer_types"
+
+#: src/main/java/org/candlepin/sync/Importer.java:676
+msgid "The archive does not contain the required consumer.json file"
+msgstr "Arhīvā nav vajadzīgā faila consumer.json"
+
+#: src/main/java/org/candlepin/sync/Importer.java:682
+msgid "The archive does not contain the required entitlements directory"
+msgstr "Arhīvā nav vajadzīgās direktorijas entitlements"
+
+#: src/main/java/org/candlepin/sync/Importer.java:920
+#, java-format
+msgid "Entry is outside of the target directory: {0}"
+msgstr "Ieraksts atrodas ārpus mērķa direktorijas: {0}"
+
+#: src/main/java/org/candlepin/util/ContentOverrideValidator.java:128
+#, java-format
+msgid "The following content labels are invalid: {0}"
+msgstr "Šīs satura etiķetes ir nederīgas: {0}"
+
+#: src/main/java/org/candlepin/util/ContentOverrideValidator.java:133
+#, java-format
+msgid "The following content properties cannot be overridden: {0}"
+msgstr "Šīs satura īpašības nevar pārdefinēt: {0}"
+
+#: src/main/java/org/candlepin/util/ContentOverrideValidator.java:138
+#, java-format
+msgid "The following override values are invalid: {0}"
+msgstr "Šīs pārdefinēšanas vērtības ir nederīgas: {0}"
+
+#: src/main/java/org/candlepin/util/ContentOverrideValidator.java:143
+#, java-format
+msgid ""
+"The following overrides have values longer than the maximum length of {0}: "
+"{1}"
+msgstr "Šo pārdefinējumu vērtības ir garākas par maksimālo garumu {0}: {1}"
+
+#: src/main/java/org/candlepin/util/PropertyValidator.java:79
+#, java-format
+msgid "The {0} name \"{1}\" must not exceed {2} characters in length"
+msgstr "{0} nosaukums \"{1}\" nedrīkst pārsniegt {2} rakstzīmes"
+
+#: src/main/java/org/candlepin/util/PropertyValidator.java:86
+#, java-format
+msgid "The value for {0} \"{1}\" must not exceed {2} characters in length"
+msgstr "{0} \"{1}\" vērtība nedrīkst pārsniegt {2} rakstzīmes"
+
+#: src/main/java/org/candlepin/util/PropertyValidator.java:107
+#, java-format
+msgid "The {0} \"{1}\" must be an integer value"
+msgstr "{0} \"{1}\" jābūt vesela skaitļa vērtībai"
+
+#: src/main/java/org/candlepin/util/PropertyValidator.java:126
+#: src/main/java/org/candlepin/util/PropertyValidator.java:131
+#, java-format
+msgid "The {0} \"{1}\" must be a positive, integer value"
+msgstr "{0} \"{1}\" jābūt pozitīvai vesela skaitļa vērtībai"
+
+#: src/main/java/org/candlepin/util/PropertyValidator.java:150
+#, java-format
+msgid "The {0} \"{1}\" must be a long-integer value"
+msgstr "{0} \"{1}\" jābūt garā vesela skaitļa vērtībai"
+
+#: src/main/java/org/candlepin/util/PropertyValidator.java:169
+#: src/main/java/org/candlepin/util/PropertyValidator.java:174
+#, java-format
+msgid "The {0} \"{1}\" must be a positive, long-integer value"
+msgstr "{0} \"{1}\" jābūt pozitīvai garā vesela skaitļa vērtībai"
+
+#: src/main/java/org/candlepin/util/PropertyValidator.java:193
+#, java-format
+msgid "The {0} \"{1}\" must be a Boolean value"
+msgstr "{0} \"{1}\" jābūt Būla vērtībai"
+
+#: src/main/java/org/candlepin/util/ServiceLevelValidator.java:72
+#, java-format
+msgid "Service level \"{0}\" is not available to units of organization {1}."
+msgstr "Pakalpojuma līmenis \"{0}\" nav pieejams organizācijas {1} vienībām."
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:44
+msgid "must be false"
+msgstr "jābūt false"
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:46
+msgid "must be true"
+msgstr "jābūt true"
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:48
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:58
+#, java-format
+msgid "must be less than or equal to {0}"
+msgstr "jābūt mazākam vai vienādam ar {0}"
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:50
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:60
+#, java-format
+msgid "must be greater than or equal to {0}"
+msgstr "jābūt lielākam vai vienādam ar {0}"
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:53
+msgid ""
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
+msgstr ""
+"skaitliskā vērtība ārpus robežām (gaidīts <{integer} cipari>.<{fraction} "
+"cipari>)"
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:56
+msgid "must be in the future"
+msgstr "jābūt nākotnē"
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:62
+msgid "may not be null"
+msgstr "nedrīkst būt null"
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:64
+msgid "must be null"
+msgstr "jābūt null"
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:66
+msgid "must be in the past"
+msgstr "jābūt pagātnē"
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:68
+msgid "must match \"{regexp}\""
+msgstr "jāatbilst \"{regexp}\""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:70
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:76
+#, java-format
+msgid "size must be between {0} and {1}"
+msgstr "izmēram jābūt starp {0} un {1}"
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:72
+msgid "invalid credit card number"
+msgstr "nederīgs kredītkartes numurs"
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:74
+msgid "not a well-formed email address"
+msgstr "nav pareizi veidota e-pasta adrese"
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:78
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:80
+msgid "may not be empty"
+msgstr "nedrīkst būt tukšs"
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:82
+msgid "must be between {min} and {max}"
+msgstr "jābūt starp {min} un {max}"
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:84
+msgid "may have unsafe HTML content"
+msgstr "var saturēt nedrošu HTML saturu"
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:86
+#, java-format
+msgid "script expression \"{0}\" didn''t evaluate to true"
+msgstr "skripta izteiksme \"{0}\" nedeva rezultātu true"
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
+msgid "must be a valid URL"
+msgstr "jābūt derīgam URL"

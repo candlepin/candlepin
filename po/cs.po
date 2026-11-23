@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-18 07:03+0000\n"
-"PO-Revision-Date: 2026-10-04 10:17+0000\n"
+"POT-Creation-Date: 2026-11-19 07:02+0000\n"
+"PO-Revision-Date: 2026-10-26 22:18+0000\n"
 "Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
 "Language-Team: Czech <https://translate.fedoraproject.org/projects/candlepin/"
 "master/cs/>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: Weblate 2026.10\n"
+"X-Generator: Weblate 2026.10.1\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:86
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -199,7 +199,7 @@ msgid "Compliance recalculated for consumer {1}"
 msgstr "Dodržování přepočítáno pro spotřebitele {1}"
 
 #: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:70
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1550
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1526
 #, java-format
 msgid "Organization {0} does not exist."
 msgstr "Organizace {0} neexistuje."
@@ -209,23 +209,22 @@ msgid "None of the activation keys specified exist for this org."
 msgstr "Žádný ze zadaných aktivačních klíčů neexistuje pro tuto organizaci."
 
 #: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:93
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1295
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1271
 msgid "Org required to register with activation keys."
 msgstr "Pro registraci pomocí aktivačních klíčů je zapotřebí organizace."
 
 #: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:97
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1299
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1275
 msgid "Cannot specify username with activation keys."
 msgstr "Není možné zadat uživateské jméno a nezadat aktivační klíče."
 
 #: src/main/java/org/candlepin/auth/BasicAuth.java:77
-#: src/main/java/org/candlepin/auth/BasicAuth.java:103
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:222
 #: src/main/java/org/candlepin/resteasy/filter/AuthenticationFilter.java:170
 msgid "Invalid Credentials"
 msgstr "Neplatné přihlašovací údaje"
 
-#: src/main/java/org/candlepin/auth/BasicAuth.java:95
+#: src/main/java/org/candlepin/auth/BasicAuth.java:94
 #: src/main/java/org/candlepin/resource/util/UserServiceExceptionTranslator.java:102
 msgid "Error contacting user service"
 msgstr "Chyba při kontaktování uživatelské služby"
@@ -259,8 +258,8 @@ msgstr "Chyba při získávání klíče OAuth jednotky"
 msgid "Invalid Certificate Type"
 msgstr "Neplatný typ certifikátu"
 
-#: src/main/java/org/candlepin/auth/UserAuth.java:84
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1475
+#: src/main/java/org/candlepin/auth/UserAuth.java:83
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1451
 #: src/main/java/org/candlepin/resource/RoleResource.java:121
 #: src/main/java/org/candlepin/resource/UserResource.java:96
 #, java-format
@@ -351,15 +350,21 @@ msgstr ""
 msgid "Bad Request"
 msgstr "Nesprávný požadavek"
 
-#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:102
-#, java-format
-msgid "Runtime Error {0} at {1}.{2}:{3}"
-msgstr "Běhová chyba {0} na {1}.{2}:{3}"
-
-#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:107
+#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:92
 #, java-format
 msgid "Runtime Error {0}"
 msgstr "Běhová chyba {0}"
+
+#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:103
+#, java-format
+msgid " at {0}.{1}:{2}"
+msgstr ""
+
+#: src/main/java/org/candlepin/exceptions/mappers/NotFoundExceptionMapper.java:49
+#, fuzzy
+#| msgid "The requested manifest file was not found: {0}"
+msgid "Requested resource was not found."
+msgstr "Požadovaný soubor manifestu nebyl nalezen: {0}"
 
 #: src/main/java/org/candlepin/exceptions/util/JaxRsExceptionResponseBuilder.java:126
 #, java-format
@@ -434,7 +439,7 @@ msgstr "Vyžádáno stránkování, ale neurčena kolonka, podle které řadit"
 msgid "Unable to retrieve product \"{0}\" from ProductService"
 msgstr "Nebylo možné získat produkt „{0}“ z ProductService"
 
-#: src/main/java/org/candlepin/pki/certs/EntitlementCertificateGenerator.java:448
+#: src/main/java/org/candlepin/pki/certs/EntitlementCertificateGenerator.java:447
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
@@ -831,23 +836,21 @@ msgid "Unexpected error from Cloud Registration Service: {0}"
 msgstr "Neočekávaná chyba ze služby cloudové registrace: {0}"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:222
-#, fuzzy
-#| msgid "Error contacting user service"
 msgid "Error contacting cloud registration service"
-msgstr "Chyba při kontaktování uživatelské služby"
+msgstr "Chyba při kontaktování cloudové registrační služby"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:236
 msgid "Cloud account ID is null or empty"
 msgstr "Identifikátor cloudového účtu je nulový nebo prázdný"
 
 #: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:310
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2799
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3155
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2796
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3152
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:682
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:127
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:157
 #: src/main/java/org/candlepin/resource/JobResource.java:365
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:731
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:730
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1968
 #, java-format
 msgid "An unexpected exception occurred while scheduling job \"{0}\""
@@ -873,20 +876,16 @@ msgstr "identifikátor nabídky nebylo možné přeložit"
 msgid "product IDs could not be resolved"
 msgstr "identifikátory produktů nebylo možné přeložit"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:397
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:398
 #, java-format
 msgid "Organization {0} does not exist"
 msgstr "Organizace {0} neexistuje"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:428
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:427
 msgid "Consumer package profile uploads are not implemented"
 msgstr "Nahrávání profilů balíčků spotřebitele nejsou implementována"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:537
-msgid "Insufficient permissions"
-msgstr "Nedostatečná oprávnění"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:669
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:645
 msgid ""
 "The 'environmentId' query parameter cannot be used without also specifying "
 "the 'owner' query parameter."
@@ -894,11 +893,11 @@ msgstr ""
 "Parametr dotazu „environmentId“ (identifikátor prostředí) nebylo možné "
 "použít, když zároveň nebyl zadán parametr dotazu „owner“ (vlastník)."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:682
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:658
 msgid "Must specify at least one search criteria."
 msgstr "Je třeba zadat alespoň jedno vyhledávací kritérium."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:728
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:704
 #: src/main/java/org/candlepin/resource/DeletedConsumerResource.java:89
 #: src/main/java/org/candlepin/resource/JobResource.java:200
 #: src/main/java/org/candlepin/resource/OwnerResource.java:827
@@ -912,30 +911,30 @@ msgstr ""
 "Tento koncový bod nepodporuje vracení více než {0} výsedků naráz – prosím "
 "použijte stránkování."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:747
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:723
 #, java-format
 msgid "Consumer with id {0} could not be found."
 msgstr "Spotřebitele s identiffikátorem {0} nebylo možné nalézt."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:767
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:743
 msgid "No UUIDs provided."
 msgstr "Nezadány žádné UUID identifikátory."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1026
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1002
 msgid "Consumer UUID must be in UUID format."
 msgstr "Je třeba, aby UUID spotřebitele bylo ve formátu UUID."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1050
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1026
 msgid "Unit type must be specified."
 msgstr "Je třeba zadat typ jednotky."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1055
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1031
 #, java-format
 msgid "Invalid unit type: {0}"
 msgstr "Neplatný typ jednotky: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1133
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1987
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1109
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1981
 msgid ""
 "Unable to persist consumer: cryptographic capabilities exceed data storage "
 "capabilities"
@@ -943,158 +942,160 @@ msgstr ""
 "Nebylo možné trvale uložit konzumenta: kryptografické schopnosti překračují "
 "možnosti ukládání dat"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1197
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1173
 #, java-format
 msgid "Problem creating unit {0}"
 msgstr "Problém při vytváření jednotky {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1278
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1254
 msgid "The consumer cannot use the supplied content access mode."
 msgstr "Spotřebitel nemůže použít zadaný režim přístupu k obsahu."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1287
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1263
 msgid "The consumer cannot be assigned a content access mode."
 msgstr "Spotřebiteli nemůže být přiřazen režim přístupu k obsahu."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1309
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1285
 msgid "A unit type of \"person\" cannot be used with activation keys"
 msgstr "Jednotka typu „osoba“ nemůže být použita s aktivačními klíči"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1321
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1297
 msgid "You may not create a manifest consumer via Subscription Manager."
 msgstr ""
 "Nemůžete vytvářet spotřebitele manifestu prostřednictvím správy předplatného."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1422
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1398
 msgid "System name cannot begin with # character"
 msgstr "Název systému nemůže začínat na znak #"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1427
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1403
 #, java-format
 msgid "Name of the consumer should be shorter than {0} characters."
 msgstr "Název spotřebitele by měl být kratší než {0} znaků."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1434
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1438
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1410
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1414
 msgid "System name cannot contain most special characters."
 msgstr "Název systému nemůže obsahovat téměř žádné ze speciálních znaků."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1481
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1457
 #, java-format
 msgid "User \"{0}\" has no roles for organization \"{1}\""
 msgstr "Uživatel „{0}“ nemá pro organizaci „{1}“ žádnou roli"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1494
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1470
 #, java-format
 msgid "User \"{0}\" has already registered a personal consumer"
 msgstr "Uživatel „{0}“ už má zaregistrovaného osobního spotřebitele"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1524
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1500
 msgid "You must specify an organization for new units."
 msgstr "U nových jednotek je zapotřebí uvést organizaci."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1541
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1517
 msgid "Client is not authorized to register with any organization"
 msgstr "Klient není pověřen pro zaregistrování se u žádné organizace"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1571
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1544
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1550
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1565
 #, java-format
 msgid "{0} is not authorized to register with organization {1}"
 msgstr "{0} není pověřen/a pro zaregistrování se u organizace {1}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1575
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1569
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:171
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1438
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "vlastník s klíčem: {0} nenalezen."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1656
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1650
 #, java-format
 msgid "Error occurred while queueing job: {0}"
 msgstr "Při zařazování úlohy do fronty došlo k chybě: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1694
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1688
 #, java-format
 msgid "Problem updating unit {0}"
 msgstr "Problém při aktualizaci jednotky {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1784
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1778
 msgid "This consumer cannot be assigned a content access mode"
 msgstr "Tomuto spotřebiteli nemůže být přiřazen režim přístupu k obsahu"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1790
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1784
 #, java-format
 msgid "This consumer cannot use the supplied content access mode: {0}"
 msgstr "Tento spotřebitel nemůže použít zadaný režim přístupu k obsahu: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1907
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1901
 #, java-format
 msgid "Environment with ID \"{0}\" could not be found."
 msgstr "Prostředí s identifikátorem „{0}“ nebylo možné najít."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1916
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1910
 #, java-format
 msgid "Environment with name \"{0}\" could not be found."
 msgstr "Prostředí nazvané „{0}“ nebylo nalezeno."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1920
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1914
 msgid "Environment could not be found using provided details."
 msgstr "Pro zadané podrobnosti nebylo možné najít prostředí."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1925
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1919
 #, java-format
 msgid "Environment \"{0}\" specified more than once."
 msgstr "Prostředí „{0}“ zadáno více než jednou."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2057
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2051
 #, java-format
 msgid "Problem updating unit {0}. Hypervisor id: {1} is already used."
 msgstr ""
 "Problém při aktualizaci jednotky {0}. Identifikátor hypervizoru: {1} už je "
 "používán."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2268
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2281
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2262
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2275
 #, java-format
 msgid "Consumer with UUID {0} was already deleted."
 msgstr "Spotřebitel s UUID {0} už byl smazán."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2298
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2292
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:221
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
 msgstr "Nebylo možné odregistrovat {0} {1} protože: {2}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2335
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2329
 msgid ""
 "Invalid certificate serial; serials may only contain numeric characters: {}"
 msgstr ""
 "Neplatný sériové číslo certifikátu – ta mohou obsahovat pouze číslice: {}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2384
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2378
 msgid "Content access mode does not allow this request."
 msgstr "Režim přístupu k obsahu nepovoluje tento požadavek."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2393
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2387
 #, java-format
 msgid "Cannot retrieve content access certificate for consumer: {0}"
 msgstr ""
 "Nebylo možné získat certifikát pro přístup k obsahu pro spotřebitele: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2430
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2427
 #, java-format
 msgid "Unable to generate usable content access payload for consumer: {0}"
 msgstr ""
 "Nebylo možné vytvořit použitelný náklad přístupu k obsahu pro spotřebitele: "
 "{0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2442
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2625
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2439
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2622
 msgid "Unable to create content access payload"
 msgstr "Nebylo možné vytvořit náklad přístupu k obsahu"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2494
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2491
 msgid ""
 "Unable to retrieve or create anonymous content access certificate for "
 "consumer"
@@ -1102,55 +1103,55 @@ msgstr ""
 "Nebylo možné získat nebo vytvořit certifikát pro anonymní přístup k obsahu "
 "pro spotřebitele"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2526
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2666
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2523
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2663
 #, java-format
 msgid "Unable to generate usable certificates for consumer: {0}"
 msgstr "Nebylo možné vytvořit použitelný certifikát pro spotřebitele: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2558
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2555
 msgid "Cannot create export for anonymous cloud consumer"
 msgstr "Nebylo možné vytvořit export pro anonymního cloudového spotřebitele"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2575
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2572
 msgid "Unable to create entitlement certificate archive"
 msgstr "Nebylo možné vytvořit archiv s certifikátem nároku"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2578
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2575
 #, java-format
 msgid "Unable to generate usable export for consumer: {0}"
 msgstr "Nebylo možné vytvořit použitelný export pro spotřebitele: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2686
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2683
 msgid "Cannot bind by multiple parameters."
 msgstr "Nebylo možné navázat na vícero parametry."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2690
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2687
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "Při auto-binding není možné zadat množství."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2726
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2723
 msgid ""
 "Attach operations are ignored in organizations using simple content access"
 msgstr ""
 "Operace připojení jsou ignorovány v organizacích používajících jednoduchý "
 "přístup k obsahu"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2746
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2743
 #, java-format
 msgid "You must first accept Red Hat''s Terms and conditions. Please visit {0}"
 msgstr ""
 "Nejprve je třeba přijmout všeobecné podmínky společnosti Red Hat. Navštivte "
 "{0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2838
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2835
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 "Ignoruje se požadavek na automatické připojení. Je vypnuté pro organizaci "
 "„{0}“."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2843
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2840
 #, java-format
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
@@ -1159,13 +1160,13 @@ msgstr ""
 "Ignoruje se požadavek pro automatické přidělení. Pro organizaci „{0}“ je "
 "vypnuté kvůli nastavením automatického přidávání hypervizoru."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2885
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2882
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr "Organizace „{0}“ má auto-attach vypnuté."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3017
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3056
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3014
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3053
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:191
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:209
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:239
@@ -1175,45 +1176,45 @@ msgstr "Organizace „{0}“ má auto-attach vypnuté."
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr "Nárok s identifikátorem „{0}“ nebylo možné nalézt."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3032
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3029
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr "Certifikát nároku se sériovým číslem „{0}“ nebylo možné najít."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3049
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3046
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr "Žádné nároky pro spotřebitele „{0}“ s identifikátorem fondu „{1}“"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3119
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3116
 msgid "Unable to create export archive"
 msgstr "Nebylo možné vytvořit archiv s exportem"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3122
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3119
 #: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:261
 #, java-format
 msgid "Unable to determine the signature scheme for consumer: {0}"
 msgstr "Nebylo možné zjistit schéma signatury pro spotřebitele: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3271
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3276
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3268
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3273
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr ""
 "Problém při znovuvytváření identifikačního certifikátu pro jednotku {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3279
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3276
 #: src/main/java/org/candlepin/testext/manifestgen/ManifestGeneratorResource.java:208
 #, java-format
 msgid "Unable to generate ID certificate for consumer: {0}"
 msgstr "Nebylo možné vytvořit identifikační certifikát pro spotřebitele: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3315
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3312
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "Systém s UUID {0} není virtuální host."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3404
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3401
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "Záznam mazání pro hypervizora „{0}“ nenalezen."
@@ -1240,8 +1241,8 @@ msgstr "Typ jednotky s identifikátorem {0} nebylo možné nalézt."
 
 #: src/main/java/org/candlepin/resource/ContentResource.java:95
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:432
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:757
-#: src/main/java/org/candlepin/resource/ProductResource.java:132
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:756
+#: src/main/java/org/candlepin/resource/ProductResource.java:131
 #, java-format
 msgid "Owner with key \"{0}\" was not found."
 msgstr "Vlastník s klíčem „{0}“ nenalezen."
@@ -1249,7 +1250,7 @@ msgstr "Vlastník s klíčem „{0}“ nenalezen."
 #: src/main/java/org/candlepin/resource/ContentResource.java:190
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:363
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:565
-#: src/main/java/org/candlepin/resource/ProductResource.java:150
+#: src/main/java/org/candlepin/resource/ProductResource.java:149
 #, java-format
 msgid "Invalid active inclusion type: {0}"
 msgstr "Neplatný typ aktivního obsažení: {0}"
@@ -1257,7 +1258,7 @@ msgstr "Neplatný typ aktivního obsažení: {0}"
 #: src/main/java/org/candlepin/resource/ContentResource.java:193
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:366
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:569
-#: src/main/java/org/candlepin/resource/ProductResource.java:154
+#: src/main/java/org/candlepin/resource/ProductResource.java:153
 #, java-format
 msgid "Invalid custom inclusion type: {0}"
 msgstr "Neplatný typ uživatelsky určeného obsažení: {0}"
@@ -1921,12 +1922,12 @@ msgstr "Fond s identifikátorem „{0}“ nebylo možné nalézt."
 msgid "A certificate was not found for pool \"{0}\""
 msgstr "Pro fond „{0}“ nenalezen certifikát"
 
-#: src/main/java/org/candlepin/resource/ProductResource.java:106
+#: src/main/java/org/candlepin/resource/ProductResource.java:105
 #, java-format
 msgid "Product with UUID \"{0}\" could not be found."
 msgstr "Produkt s UUID „{0}“ nebylo možné nalézt."
 
-#: src/main/java/org/candlepin/resource/ProductResource.java:180
+#: src/main/java/org/candlepin/resource/ProductResource.java:178
 msgid "No product IDs specified"
 msgstr "Nezadány žádné identifikátory produktů"
 
@@ -2053,10 +2054,8 @@ msgid "Unexpected error from Subscription Service: {0}"
 msgstr "Neočekávaná chyba ze služby předplatného: {0}"
 
 #: src/main/java/org/candlepin/resource/util/SubscriptionServiceExceptionTranslator.java:72
-#, fuzzy
-#| msgid "Error contacting user service"
 msgid "Error contacting subscription service"
-msgstr "Chyba při kontaktování uživatelské služby"
+msgstr "Chyba při kontaktování služby předplatného"
 
 #: src/main/java/org/candlepin/resource/util/UserServiceExceptionTranslator.java:87
 #, java-format
@@ -2135,19 +2134,19 @@ msgstr ""
 "je třeba, aby parametr order (pořadí) byl buď „ascending“ (vzestupně) nebo "
 "„descending“ (sestupně)"
 
-#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:119
+#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:125
 msgid "Owner does not yet exist"
 msgstr "Vlastník zatím ještě neexistuje"
 
-#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:123
+#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:129
 msgid "Owner is not yet entitled"
 msgstr "Vlastník zatím ještě nemá nárok"
 
-#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:138
+#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:144
 msgid "Anonymous owner not yet created upstream of candlepin"
 msgstr "Anonymní vlastník zatím ještě nevytvořil nadřazené pro candlepin"
 
-#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:143
+#: src/main/java/org/candlepin/resteasy/filter/SecurityHoleAuthorizationFilter.java:149
 msgid "Anonymous owner not yet entitled upstream of candlepin"
 msgstr "Anonymní vlastník zatím ještě nenárokoval nadřazené pro candlepin"
 
@@ -2209,80 +2208,80 @@ msgstr "V souboru nenalezena žádná aktivní předplatná."
 msgid "One or more inactive subscriptions found in the file."
 msgstr "V souboru nalezena jedna nebo více neplatných předplatných."
 
-#: src/main/java/org/candlepin/sync/Importer.java:372
+#: src/main/java/org/candlepin/sync/Importer.java:379
 msgid "Wrong metadata type"
 msgstr "Nesprávný typ metadat"
 
-#: src/main/java/org/candlepin/sync/Importer.java:381
+#: src/main/java/org/candlepin/sync/Importer.java:388
 msgid "Invalid owner"
 msgstr "Neplatný vlastník"
 
-#: src/main/java/org/candlepin/sync/Importer.java:394
+#: src/main/java/org/candlepin/sync/Importer.java:401
 msgid "Import is older than existing data"
 msgstr "Import je starší než stávající data"
 
-#: src/main/java/org/candlepin/sync/Importer.java:413
+#: src/main/java/org/candlepin/sync/Importer.java:420
 msgid "Import is the same as existing data"
 msgstr "Import je stejný jako stávající data"
 
-#: src/main/java/org/candlepin/sync/Importer.java:453
+#: src/main/java/org/candlepin/sync/Importer.java:460
 msgid "The provided manifest has no content in the exported consumer archive"
 msgstr "Poskytnutý manifest nemá žádný obsah v exportovaném archivu konzumenta"
 
-#: src/main/java/org/candlepin/sync/Importer.java:478
+#: src/main/java/org/candlepin/sync/Importer.java:485
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "Archiv neobsahuje požadovaný soubor consumer_export.zip"
 
-#: src/main/java/org/candlepin/sync/Importer.java:483
+#: src/main/java/org/candlepin/sync/Importer.java:490
 msgid "Unable to read certificates to validate manifest"
 msgstr "Nebylo možné číst certifikáty pro ověření manifestu"
 
-#: src/main/java/org/candlepin/sync/Importer.java:488
-#: src/main/java/org/candlepin/sync/Importer.java:492
+#: src/main/java/org/candlepin/sync/Importer.java:495
+#: src/main/java/org/candlepin/sync/Importer.java:499
 msgid "Failed to import archive"
 msgstr "Archiv se nepodařilo naimportovat"
 
-#: src/main/java/org/candlepin/sync/Importer.java:496
-#: src/main/java/org/candlepin/sync/Importer.java:985
+#: src/main/java/org/candlepin/sync/Importer.java:503
+#: src/main/java/org/candlepin/sync/Importer.java:992
 msgid "Unable to extract export archive"
 msgstr "Nebylo možné rozbalit archiv s exportem"
 
-#: src/main/java/org/candlepin/sync/Importer.java:543
-#: src/main/java/org/candlepin/sync/Importer.java:900
+#: src/main/java/org/candlepin/sync/Importer.java:550
+#: src/main/java/org/candlepin/sync/Importer.java:907
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "Archiv {0} není správně komprimovaný soubor nebo je prázdný"
 
-#: src/main/java/org/candlepin/sync/Importer.java:555
+#: src/main/java/org/candlepin/sync/Importer.java:562
 msgid "Archive signed by an untrusted certificate"
 msgstr "Archiv podepsán nedůvěryhodným certifikátem"
 
-#: src/main/java/org/candlepin/sync/Importer.java:579
-#: src/main/java/org/candlepin/sync/Importer.java:617
+#: src/main/java/org/candlepin/sync/Importer.java:586
+#: src/main/java/org/candlepin/sync/Importer.java:624
 msgid "Archive failed signature check"
 msgstr "Nepodařila se kontrola signatury archivu"
 
-#: src/main/java/org/candlepin/sync/Importer.java:630
+#: src/main/java/org/candlepin/sync/Importer.java:637
 msgid "The archive does not contain the required signature file"
 msgstr "Archiv neobsahuje potřebný soubor signatury"
 
-#: src/main/java/org/candlepin/sync/Importer.java:659
+#: src/main/java/org/candlepin/sync/Importer.java:666
 msgid "The archive does not contain the required meta.json file"
 msgstr "Archiv neobsahuje potřebný soubor meta.json"
 
-#: src/main/java/org/candlepin/sync/Importer.java:664
+#: src/main/java/org/candlepin/sync/Importer.java:671
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "Archiv neobsahuje potřebnou složku consumer_types"
 
-#: src/main/java/org/candlepin/sync/Importer.java:669
+#: src/main/java/org/candlepin/sync/Importer.java:676
 msgid "The archive does not contain the required consumer.json file"
 msgstr "Archiv neobsahuje potřebný soubor consumer.json"
 
-#: src/main/java/org/candlepin/sync/Importer.java:675
+#: src/main/java/org/candlepin/sync/Importer.java:682
 msgid "The archive does not contain the required entitlements directory"
 msgstr "Archiv neobsahuje potřebnou složku entitlements"
 
-#: src/main/java/org/candlepin/sync/Importer.java:913
+#: src/main/java/org/candlepin/sync/Importer.java:920
 #, java-format
 msgid "Entry is outside of the target directory: {0}"
 msgstr "Položka se nachází mimo cílovou složku: {0}"
@@ -2433,6 +2432,13 @@ msgstr "výraz skriptu „{0}“ nebyl vyhodnocen na true"
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
 msgid "must be a valid URL"
 msgstr "je třeba, aby bylo platné URL"
+
+#, java-format
+#~ msgid "Runtime Error {0} at {1}.{2}:{3}"
+#~ msgstr "Běhová chyba {0} na {1}.{2}:{3}"
+
+#~ msgid "Insufficient permissions"
+#~ msgstr "Nedostatečná oprávnění"
 
 #~ msgid "Unknown service exception"
 #~ msgstr "Neznámá výjimka služby"
