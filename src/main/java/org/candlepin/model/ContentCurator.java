@@ -33,7 +33,6 @@ import java.util.TreeSet;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Query;
@@ -684,8 +683,6 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
      *  a list of active content and their respective enabled state for the given owner
      */
     public List<ProductContent> getActiveContentByOwner(String ownerId) {
-        EntityManager entityManager = this.getEntityManager();
-
         // Use CTEs to fetch the graph of active products from which we will pull content
 
         // Impl note:

@@ -89,10 +89,9 @@ public class ContentAccessPayloadBuilderTest extends DatabaseTestFixture {
 
     private ContentAccessPayloadBuilder buildContentAccessPayloadBuilder() {
         return new ContentAccessPayloadBuilder(
-            this.cryptoManager,
-            this.buildEntitlementPayloadGenerator(),
-            this.buildV3ExtensionUtil(),
-            this.contentCurator,
+            new ScaContentDataProvider(this.config, this.contentCurator,
+                this.buildV3ExtensionUtil()),
+            new ScaPayloadEncoder(this.cryptoManager, this.buildEntitlementPayloadGenerator()),
             this.caPayloadCurator);
     }
 
