@@ -15,9 +15,6 @@
 package org.candlepin.pki.certs;
 
 import org.candlepin.model.ContentAccessPayloadCurator;
-import org.candlepin.model.ContentCurator;
-import org.candlepin.pki.CryptoManager;
-import org.candlepin.util.X509V3ExtensionUtil;
 
 import java.util.Objects;
 
@@ -31,31 +28,22 @@ import jakarta.inject.Provider;
  */
 public class ContentAccessPayloadBuilderProvider implements Provider<ContentAccessPayloadBuilder> {
 
-    private final CryptoManager cryptoManager;
-    private final EntitlementPayloadGenerator entitlementPayloadGenerator;
-    private final X509V3ExtensionUtil v3ExtensionUtil;
-    private final ContentCurator contentCurator;
+    private final ScaContentDataProvider dataProvider;
+    private final ScaPayloadEncoder encoder;
     private final ContentAccessPayloadCurator contentAccessPayloadCurator;
 
     @Inject
-    public ContentAccessPayloadBuilderProvider(
-        CryptoManager cryptoManager,
-        EntitlementPayloadGenerator entitlementPayloadGenerator,
-        X509V3ExtensionUtil v3ExtensionUtil,
-        ContentCurator contentCurator,
+    public ContentAccessPayloadBuilderProvider(ScaContentDataProvider dataProvider, ScaPayloadEncoder encoder,
         ContentAccessPayloadCurator contentAccessPayloadCurator) {
 
-        this.cryptoManager = Objects.requireNonNull(cryptoManager);
-        this.entitlementPayloadGenerator = Objects.requireNonNull(entitlementPayloadGenerator);
-        this.v3ExtensionUtil = Objects.requireNonNull(v3ExtensionUtil);
-        this.contentCurator = Objects.requireNonNull(contentCurator);
+        this.dataProvider = Objects.requireNonNull(dataProvider);
+        this.encoder = Objects.requireNonNull(encoder);
         this.contentAccessPayloadCurator = Objects.requireNonNull(contentAccessPayloadCurator);
     }
 
     @Override
     public ContentAccessPayloadBuilder get() {
-        return new ContentAccessPayloadBuilder(this.cryptoManager, this.entitlementPayloadGenerator,
-            this.v3ExtensionUtil, this.contentCurator, this.contentAccessPayloadCurator);
+        return new ContentAccessPayloadBuilder(this.dataProvider, this.encoder, this.contentAccessPayloadCurator);
     }
 
 }
