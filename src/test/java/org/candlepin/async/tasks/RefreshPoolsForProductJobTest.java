@@ -15,14 +15,11 @@
 package org.candlepin.async.tasks;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -32,20 +29,14 @@ import org.candlepin.async.AsyncJob;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
-import org.candlepin.async.JobExecutionException;
 import org.candlepin.controller.Refresher;
 import org.candlepin.controller.RefresherFactory;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.test.TestUtil;
 
-import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.exception.LockAcquisitionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
 
@@ -72,7 +63,8 @@ public class RefreshPoolsForProductJobTest {
         final Product product = new Product(INVALID_ID, VALID_NAME);
         product.setUuid(VALID_ID);
         final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
-            .setProduct(product);
+            .setProduct(product)
+            .setLazy(false);
         final JobExecutionContext context = mock(JobExecutionContext.class);
         doReturn(jobConfig.getJobArguments()).when(context).getJobArguments();
         doReturn(product).when(productCurator).get(eq(VALID_ID));
@@ -98,7 +90,8 @@ public class RefreshPoolsForProductJobTest {
         product.setUuid(VALID_ID);
 
         final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
-            .setProduct(product);
+            .setProduct(product)
+            .setLazy(false);
 
         try {
             jobConfig.validate();
@@ -113,7 +106,8 @@ public class RefreshPoolsForProductJobTest {
         final AsyncJob job = new RefreshPoolsForProductJob(productCurator, subAdapter, refresherFactory);
         final Product product = new Product(INVALID_ID, VALID_NAME);
         final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
-            .setProduct(product);
+            .setProduct(product)
+            .setLazy(false);
         final JobExecutionContext context = mock(JobExecutionContext.class);
         doReturn(jobConfig.getJobArguments()).when(context).getJobArguments();
 
@@ -131,7 +125,8 @@ public class RefreshPoolsForProductJobTest {
 
     @Test
     public void productMustBePresent() {
-        final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig();
+        final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
+            .setLazy(false);
 
         assertThrows(JobConfigValidationException.class, jobConfig::validate);
     }
@@ -141,57 +136,21 @@ public class RefreshPoolsForProductJobTest {
         final Product product = new Product(INVALID_ID, VALID_NAME);
 
         final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
-            .setProduct(product);
+            .setProduct(product)
+            .setLazy(false);
 
         assertThrows(JobConfigValidationException.class, jobConfig::validate);
     }
 
     @Test
-    public void testExceptionIsTerminalWhenNotCausedByTransientRace() {
-        final AsyncJob job = new RefreshPoolsForProductJob(productCurator, subAdapter, refresherFactory);
-        final Product product = new Product(INVALID_ID, VALID_NAME);
+    public void lazyFlagMustBePresent() {
+        final Product product = new Product(VALID_ID, VALID_NAME);
         product.setUuid(VALID_ID);
+
         final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
             .setProduct(product);
-        final JobExecutionContext context = mock(JobExecutionContext.class);
-        doReturn(jobConfig.getJobArguments()).when(context).getJobArguments();
-        doReturn(product).when(productCurator).get(eq(VALID_ID));
 
-        Refresher mockRefresher = mock(Refresher.class);
-        doReturn(mockRefresher).when(this.refresherFactory).getRefresher(any());
-        doReturn(mockRefresher).when(mockRefresher).add(any(Product.class));
-        doReturn(mockRefresher).when(mockRefresher).setLazyCertificateRegeneration(anyBoolean());
-        doThrow(new RuntimeException("unexpected failure")).when(mockRefresher).run();
-
-        JobExecutionException e = assertThrows(JobExecutionException.class, () -> job.execute(context));
-        assertTrue(e.isTerminal());
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(classes = {ConstraintViolationException.class, LockAcquisitionException.class})
-    public void testExceptionIsNonTerminalWhenCausedByTransientRace(
-        Class<? extends Exception> exceptionClass) {
-
-        final AsyncJob job = new RefreshPoolsForProductJob(productCurator, subAdapter, refresherFactory);
-        final Product product = new Product(INVALID_ID, VALID_NAME);
-        product.setUuid(VALID_ID);
-        final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
-            .setProduct(product);
-        final JobExecutionContext context = mock(JobExecutionContext.class);
-        doReturn(jobConfig.getJobArguments()).when(context).getJobArguments();
-        doReturn(product).when(productCurator).get(eq(VALID_ID));
-
-        Refresher mockRefresher = mock(Refresher.class);
-        doReturn(mockRefresher).when(this.refresherFactory).getRefresher(any());
-        doReturn(mockRefresher).when(mockRefresher).add(any(Product.class));
-        doReturn(mockRefresher).when(mockRefresher).setLazyCertificateRegeneration(anyBoolean());
-
-        Exception cause = TestUtil.createTransientRaceException(exceptionClass, "race");
-
-        doThrow(new RuntimeException("transient failure", cause)).when(mockRefresher).run();
-
-        JobExecutionException e = assertThrows(JobExecutionException.class, () -> job.execute(context));
-        assertFalse(e.isTerminal());
+        assertThrows(JobConfigValidationException.class, jobConfig::validate);
     }
 
 }
