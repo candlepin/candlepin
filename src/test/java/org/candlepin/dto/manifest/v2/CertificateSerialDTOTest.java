@@ -35,7 +35,6 @@ public class CertificateSerialDTOTest extends AbstractDTOTest<CertificateSerialD
         this.values = new HashMap<>();
         this.values.put("Id", 12345L);
         this.values.put("Serial", BigInteger.TEN);
-        this.values.put("Collected", true);
         this.values.put("Revoked", true);
         this.values.put("Expiration", new Date());
         this.values.put("Created", new Date());
@@ -55,6 +54,6 @@ public class CertificateSerialDTOTest extends AbstractDTOTest<CertificateSerialD
      */
     @Override
     protected Object getOutputValueForAccessor(String field, Object input) {
-        return "Collected".equals(field) && input == null ? Boolean.FALSE : input;
+        return input;
     }
 }

@@ -84,6 +84,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
@@ -513,11 +514,21 @@ class ExporterV2Test {
         try (FileSystem signedArchive = FileSystems.newFileSystem(export);
             FileSystem archive = FileSystems.newFileSystem(signedArchive.getPath(ExporterV2.CONSUMER_EXPORT_ZIP))) {
             Path directory = archive.getPath(ExporterV2.CERTIFICATES_DIRECTORY);
-            CertificateDTO exported = this.mapper.readValue(
-                Files.readString(directory.resolve("42.json")), CertificateDTO.class);
+            String certificateJson = Files.readString(directory.resolve("42.json"));
+            CertificateDTO exported = this.mapper.readValue(certificateJson, CertificateDTO.class);
             assertEquals(certificate.getCert(), exported.getCertificate());
             assertEquals(certificate.getKey(), exported.getKey());
             assertEquals(certificate.getSerial().getId(), exported.getSerial().getId());
+            assertTrue(this.mapper.readTree(certificateJson).at("/serial/collected").isMissingNode(),
+                "SCA certificate serial must not include collected");
+
+            Path identityCertificatePath = archive.getPath(ExporterV2.UPSTREAM_CONSUMER,
+                consumer.getIdCert().getSerial().getId() + ".json");
+            JsonNode identitySerial = this.mapper.readTree(Files.readString(identityCertificatePath))
+                .path("serial");
+            assertTrue(identitySerial.isObject(), "Identity certificate must include a serial object");
+            assertFalse(identitySerial.has("collected"), "Identity certificate serial must not include collected");
+
             try (Stream<Path> files = Files.list(directory)) {
                 assertEquals(List.of("42.json"), files.map(path -> path.getFileName()
                         .toString())
