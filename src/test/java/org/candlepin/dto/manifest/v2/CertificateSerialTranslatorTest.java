@@ -16,15 +16,10 @@ package org.candlepin.dto.manifest.v2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.CertificateSerial;
-
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Date;
 
@@ -36,19 +31,6 @@ public class CertificateSerialTranslatorTest extends
     AbstractTranslatorTest<CertificateSerial, CertificateSerialDTO, CertificateSerialTranslator> {
 
     private CertificateSerialTranslator translator = new CertificateSerialTranslator();
-
-    @ParameterizedTest
-    @NullSource
-    @ValueSource(booleans = {true, false})
-    void testPopulateResetsCollectedState(Boolean collected) {
-        CertificateSerialDTO destination = new CertificateSerialDTO().setCollected(collected);
-        assertSame(destination, this.translator.populate(this.source, destination));
-        this.verifyOutput(this.source, destination, false);
-
-        destination.setCollected(collected);
-        assertSame(destination, this.translator.populate(this.modelTranslator, this.source, destination));
-        this.verifyOutput(this.source, destination, true);
-    }
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
@@ -91,7 +73,6 @@ public class CertificateSerialTranslatorTest extends
             assertEquals(source.getSerial(), dest.getSerial());
             assertEquals(source.getExpiration(), dest.getExpiration());
             assertEquals(source.isRevoked(), dest.isRevoked());
-            assertEquals(false, dest.isCollected()); // we export this to false by default now
         }
         else {
             assertNull(dest);
