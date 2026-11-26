@@ -12,6 +12,7 @@ concurrency:
 
 env:
   ATLASSIAN_API_VERSION: 5.0.5
+  AUTHLIB_VERSION: 1.9.10
 
 jobs:
   target_version_validation:
@@ -25,7 +26,7 @@ jobs:
         run: sudo apt-get install -y python3 python3-pip python3-requests git-core
 
       - name: Install python dependencies
-        run: pip install atlassian-python-api==$ATLASSIAN_API_VERSION --only-binary ':all:'
+        run: pip install atlassian-python-api==$ATLASSIAN_API_VERSION Authlib==$AUTHLIB_VERSION --only-binary ':all:'
 
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -41,7 +42,8 @@ jobs:
           chmod +x ./.github/scripts/jira_target_version_check.py
           ./.github/scripts/jira_target_version_check.py
         env:
-          JIRA_TOKEN: ${{ secrets.CANDLEPIN_JIRA_TOKEN }}
-          JIRA_USERNAME: ${{ secrets.CANDLEPIN_JIRA_USERNAME }}
+          CANDLEPIN_JIRA_CLIENT_ID: ${{ secrets.CANDLEPIN_JIRA_CLIENT_ID }}
+          CANDLEPIN_JIRA_CLIENT_SECRET: ${{ secrets.CANDLEPIN_JIRA_CLIENT_SECRET }}
+          CANDLEPIN_JIRA_CLOUD_ID: ${{ vars.CANDLEPIN_JIRA_CLOUD_ID }}
           GITHUB_TOKEN_PSW: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
