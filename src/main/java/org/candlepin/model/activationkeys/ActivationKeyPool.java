@@ -116,6 +116,21 @@ public class ActivationKeyPool extends AbstractHibernateObject implements Compar
     }
 
     /**
+     * Sets the pool ID directly, without requiring a Pool instance. Intended for populating
+     * detached read models built from query projections; not intended for general use.
+     *
+     * @param poolId
+     *  the ID of the pool referenced by this activation key pool
+     *
+     * @return
+     *  a reference to this activation key pool
+     */
+    ActivationKeyPool setPoolId(String poolId) {
+        this.poolId = poolId;
+        return this;
+    }
+
+    /**
      * @return the quantity
      */
     public Long getQuantity() {

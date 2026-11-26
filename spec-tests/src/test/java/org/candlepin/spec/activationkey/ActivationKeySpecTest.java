@@ -16,6 +16,7 @@ package org.candlepin.spec.activationkey;
 
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
@@ -1662,6 +1663,40 @@ public class ActivationKeySpecTest {
 
             processed.add(activationKey.getId());
         }
+    }
+
+    @Test
+    public void shouldListActivationKeysWithPopulatedAddOnsAndContentOverrides() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+
+        Set<String> addOns = Set.of(
+            StringUtil.random("test-addon1"),
+            StringUtil.random("test-addon2"));
+        ContentOverrideDTO override1 = ContentOverrides.random();
+        ContentOverrideDTO override2 = ContentOverrides.random();
+
+        ActivationKeyDTO activationKey = createActivationKey(adminClient, owner,
+            ActivationKeys.random(owner).addOns(addOns));
+        adminClient.activationKeys()
+            .addActivationKeyContentOverrides(activationKey.getId(), List.of(override1, override2));
+
+        List<ActivationKeyDTO> listOfActivationKeys = adminClient.owners()
+            .ownerActivationKeys(owner.getKey(), null);
+
+        assertThat(listOfActivationKeys)
+            .singleElement()
+            .satisfies(key -> {
+                assertThat(key.getAddOns())
+                    .containsExactlyInAnyOrderElementsOf(addOns);
+
+                assertThat(key.getContentOverrides())
+                    .extracting(ContentOverrideDTO::getContentLabel, ContentOverrideDTO::getName,
+                        ContentOverrideDTO::getValue)
+                    .containsExactlyInAnyOrder(
+                        tuple(override1.getContentLabel(), override1.getName(), override1.getValue()),
+                        tuple(override2.getContentLabel(), override2.getName(), override2.getValue()));
+            });
     }
 
 }
