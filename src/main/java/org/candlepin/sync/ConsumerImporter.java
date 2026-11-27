@@ -36,6 +36,8 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.Reader;
 
+import jakarta.inject.Inject;
+
 
 /**
  * ConsumerImporter
@@ -48,6 +50,7 @@ public class ConsumerImporter {
     private I18n i18n;
     private CertificateSerialCurator serialCurator;
 
+    @Inject
     public ConsumerImporter(OwnerCurator curator, IdentityCertificateCurator idCertCurator, I18n i18n,
         CertificateSerialCurator serialCurator) {
 

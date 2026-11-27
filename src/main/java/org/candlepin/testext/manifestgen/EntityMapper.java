@@ -54,6 +54,7 @@ public class EntityMapper {
     private static final Logger log = LoggerFactory.getLogger(EntityMapper.class);
 
     private final Owner owner;
+    private final boolean useGlobalNamespace;
 
     private final PoolCurator poolCurator;
     private final ProductCurator productCurator;
@@ -66,8 +67,14 @@ public class EntityMapper {
 
     public EntityMapper(Owner owner, PoolCurator poolCurator, ProductCurator productCurator,
         ContentCurator contentCurator) {
+        this(owner, poolCurator, productCurator, contentCurator, false);
+    }
+
+    public EntityMapper(Owner owner, PoolCurator poolCurator, ProductCurator productCurator,
+        ContentCurator contentCurator, boolean useGlobalNamespace) {
 
         this.owner = Objects.requireNonNull(owner);
+        this.useGlobalNamespace = useGlobalNamespace;
 
         this.poolCurator = Objects.requireNonNull(poolCurator);
         this.productCurator = Objects.requireNonNull(productCurator);
@@ -107,16 +114,18 @@ public class EntityMapper {
             return null;
         }
 
+        String namespace = this.useGlobalNamespace ? null : this.owner.getKey();
+
         // Fetch mapped entity
         Content entity = this.contentMap.computeIfAbsent(cdto.getId(), (cid) -> {
             if (cid == null || cid.isBlank()) {
                 throw new IllegalStateException("content lacks an id: " + cdto);
             }
 
-            Content fetched = this.contentCurator.getContentById(this.owner.getKey(), cid);
+            Content fetched = this.contentCurator.getContentById(namespace, cid);
             if (fetched == null) {
                 fetched = new Content(cid)
-                    .setNamespace(this.owner.getKey());
+                    .setNamespace(namespace);
             }
 
             return fetched;
@@ -155,6 +164,8 @@ public class EntityMapper {
             return null;
         }
 
+        String namespace = this.useGlobalNamespace ? null : this.owner.getKey();
+
         // Fetch mapped entity
         Product entity = this.productMap.computeIfAbsent(pdto.getId(), (pid) -> {
             if (pid == null || pid.isBlank()) {
@@ -164,11 +175,11 @@ public class EntityMapper {
             // Impl note:
             // We won't namespace stuff here since it'll be vanishing in a moment anyway, and at the
             // time of writing, this best reflects how export works and is used today.
-            Product fetched = this.productCurator.getProductById(this.owner.getKey(), pid);
+            Product fetched = this.productCurator.getProductById(namespace, pid);
             if (fetched == null) {
                 fetched = new Product()
                     .setId(pid)
-                    .setNamespace(this.owner.getKey());
+                    .setNamespace(namespace);
             }
 
             return fetched;

@@ -153,6 +153,7 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<SC
 
     /**
      * Lists all expired content access certificates that are not revoked.
+     * Upstream consumer certificates are excluded.
      *
      * @return a list of expired certificates
      */
@@ -161,7 +162,9 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<SC
         String hql = "SELECT new org.candlepin.model.CertSerial(c.id, s.id)" +
             " FROM SCACertificate c" +
             " INNER JOIN c.serial s " +
-            " WHERE s.expiration < :nowDate";
+            " LEFT JOIN UpstreamConsumer uc ON uc.contentAccessCert = c " +
+            " WHERE s.expiration < :nowDate" +
+            " AND uc.id IS NULL";
 
         Query query = this.getEntityManager().createQuery(hql, CertSerial.class);
 

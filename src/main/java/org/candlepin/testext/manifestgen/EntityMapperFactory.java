@@ -44,4 +44,9 @@ public class EntityMapperFactory {
         return new EntityMapper(owner, this.poolCurator, this.productCurator, this.contentCurator);
     }
 
+    public EntityMapper getForOwner(Owner owner, boolean useGlobalNamespace) {
+        return new EntityMapper(owner, this.poolCurator, this.productCurator, this.contentCurator,
+            useGlobalNamespace);
+    }
+
 }

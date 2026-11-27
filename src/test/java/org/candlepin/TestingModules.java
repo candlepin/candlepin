@@ -94,6 +94,15 @@ import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
+import org.candlepin.sync.DefaultManifestV2CertificateInstaller;
+import org.candlepin.sync.DefaultManifestV2IdentityCertificateReader;
+import org.candlepin.sync.DefaultManifestV2ScaCertificateReader;
+import org.candlepin.sync.DefaultManifestV2SignatureVerifier;
+import org.candlepin.sync.ImporterV2;
+import org.candlepin.sync.ManifestV2CertificateInstaller;
+import org.candlepin.sync.ManifestV2IdentityCertificateReader;
+import org.candlepin.sync.ManifestV2ScaCertificateReader;
+import org.candlepin.sync.ManifestV2SignatureVerifier;
 import org.candlepin.sync.file.DBManifestService;
 import org.candlepin.sync.file.ManifestFileService;
 import org.candlepin.test.DateSourceForTesting;
@@ -265,6 +274,11 @@ public class TestingModules {
 
         @Override
         public void configure() {
+            bind(ManifestV2SignatureVerifier.class).to(DefaultManifestV2SignatureVerifier.class);
+            bind(ManifestV2IdentityCertificateReader.class).to(DefaultManifestV2IdentityCertificateReader.class);
+            bind(ManifestV2ScaCertificateReader.class).to(DefaultManifestV2ScaCertificateReader.class);
+            bind(ManifestV2CertificateInstaller.class).to(DefaultManifestV2CertificateInstaller.class);
+            bind(ImporterV2.class);
             CandlepinCache mockedCandlepinCache = mock(CandlepinCache.class);
             when(mockedCandlepinCache.getStatusCache()).thenReturn(mock(StatusCache.class));
             bind(Configuration.class).toInstance(config);
