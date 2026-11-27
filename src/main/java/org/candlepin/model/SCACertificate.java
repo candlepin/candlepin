@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import java.util.Objects;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -67,15 +69,12 @@ public class SCACertificate extends RevocableCertificate<SCACertificate> {
         if (this == obj) {
             return true;
         }
-        if (obj == null || (getClass() != obj.getClass())) {
+        if (obj == null || (this.getClass() != obj.getClass())) {
             return false;
         }
         SCACertificate other = (SCACertificate) obj;
-        if (id == other.id &&
-            other.getConsumer().getId().equals(this.getConsumer().getId())) {
-
-            return true;
-        }
-        return false;
+        String thisConsumerId = this.getConsumer() != null ? this.getConsumer().getId() : null;
+        String otherConsumerId = other.getConsumer() != null ? other.getConsumer().getId() : null;
+        return Objects.equals(this.id, other.id) && Objects.equals(thisConsumerId, otherConsumerId);
     }
 }

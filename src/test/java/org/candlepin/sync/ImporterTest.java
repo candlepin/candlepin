@@ -286,7 +286,7 @@ public class ImporterTest extends DatabaseTestFixture {
             this.mockExporterMetadataCurator, this.mockCertSerialCurator, this.mockEventSink, this.i18n,
             this.mockDistributorVersionCurator, this.mockCdnCurator, this.syncUtils, this.mapper,
             this.mockImportRecordCurator, this.mockSubscriptionReconciler, this.modelTranslator,
-            this.certificateReader);
+            this.certificateReader, mock(ImporterV2.class));
     }
 
     private File createTempDirectory(String prefix) throws IOException {

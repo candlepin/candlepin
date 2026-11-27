@@ -164,6 +164,10 @@ public class ContentAccessCertificateCuratorTest extends DatabaseTestFixture {
         expiredSerial.setExpiration(TestUtil.createDateOffset(0, 0, -7));
         certSerialCurator.save(expiredSerial);
 
+        CertificateSerial upstreamExpiredSerial = new CertificateSerial();
+        upstreamExpiredSerial.setExpiration(TestUtil.createDateOffset(0, 0, -7));
+        certSerialCurator.save(upstreamExpiredSerial);
+
         SCACertificate cert = new SCACertificate();
         cert.setKey(TestUtil.randomString());
         cert.setCert(TestUtil.randomString());
@@ -174,8 +178,22 @@ public class ContentAccessCertificateCuratorTest extends DatabaseTestFixture {
         expiredCert.setCert(TestUtil.randomString());
         expiredCert.setSerial(expiredSerial);
 
+        SCACertificate upstreamExpiredCert = new SCACertificate();
+        upstreamExpiredCert.setKey(TestUtil.randomString());
+        upstreamExpiredCert.setCert(TestUtil.randomString());
+        upstreamExpiredCert.setSerial(upstreamExpiredSerial);
+
         caCertCurator.create(cert);
         caCertCurator.create(expiredCert);
+        upstreamExpiredCert = caCertCurator.create(upstreamExpiredCert);
+
+        Owner owner = this.createOwner();
+        ConsumerType ctype = this.createConsumerType(true);
+        UpstreamConsumer upstream = new UpstreamConsumer("upstream", owner, ctype, TestUtil.randomString())
+            .setContentAccessCert(upstreamExpiredCert);
+        owner.setUpstreamConsumer(upstream);
+        this.ownerCurator.merge(owner);
+        this.ownerCurator.flush();
 
         List<CertSerial> actual = caCertCurator.listAllExpired();
 

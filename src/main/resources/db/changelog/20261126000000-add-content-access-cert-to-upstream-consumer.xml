@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="20261126000000-1" author="kvaigl">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="cp_upstream_consumer" columnName="cont_acc_cert_id"/>
+            </not>
+        </preConditions>
+
+        <comment>Adds cont_acc_cert_id column to cp_upstream_consumer table.</comment>
+        <addColumn tableName="cp_upstream_consumer">
+            <column name="cont_acc_cert_id" type="VARCHAR(32)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20261126000000-2" author="kvaigl">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_upstream_consumer_cont_acc_cert"/>
+            </not>
+        </preConditions>
+
+        <comment>Foreign key for upstream consumer content access cert</comment>
+        <addForeignKeyConstraint
+            baseTableName="cp_upstream_consumer"
+            baseColumnNames="cont_acc_cert_id"
+            constraintName="fk_upstream_consumer_cont_acc_cert"
+            referencedColumnNames="id"
+            referencedTableName="cp_cont_access_cert"/>
+    </changeSet>
+
+    <changeSet id="20261126000000-3" author="kvaigl">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="cp_upstream_consumer_cont_acc_cert_id_idx"/>
+            </not>
+        </preConditions>
+
+        <createIndex tableName="cp_upstream_consumer" indexName="cp_upstream_consumer_cont_acc_cert_id_idx">
+            <column name="cont_acc_cert_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

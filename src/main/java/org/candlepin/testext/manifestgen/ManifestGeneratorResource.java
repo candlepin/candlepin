@@ -37,6 +37,7 @@ import org.candlepin.pki.certs.IdentityCertificateGenerator;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.resource.util.AttachedFile;
 import org.candlepin.sync.ExportCreationException;
+import org.candlepin.sync.ExporterV2;
 
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
@@ -86,6 +87,7 @@ public class ManifestGeneratorResource {
 
     private final EntityMapperFactory entityMapperFactory;
     private final ManifestManager manifestManager;
+    private final ExporterV2 exporterV2;
     private final PoolManager poolManager;
     private final IdentityCertificateGenerator identityCertificateGenerator;
     private final I18n i18n;
@@ -95,8 +97,9 @@ public class ManifestGeneratorResource {
     @Inject
     public ManifestGeneratorResource(OwnerCurator ownerCurator,
         ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator, PoolCurator poolCurator,
-        EntityMapperFactory entityMapperFactory, ManifestManager manifestManager, PoolManager poolManager,
-        IdentityCertificateGenerator identityCertificateGenerator, I18n i18n, ObjectMapper objectMapper) {
+        EntityMapperFactory entityMapperFactory, ManifestManager manifestManager, ExporterV2 exporterV2,
+        PoolManager poolManager, IdentityCertificateGenerator identityCertificateGenerator, I18n i18n,
+        ObjectMapper objectMapper) {
 
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
@@ -105,6 +108,7 @@ public class ManifestGeneratorResource {
 
         this.entityMapperFactory = Objects.requireNonNull(entityMapperFactory);
         this.manifestManager = Objects.requireNonNull(manifestManager);
+        this.exporterV2 = Objects.requireNonNull(exporterV2);
         this.poolManager = Objects.requireNonNull(poolManager);
         this.identityCertificateGenerator = Objects.requireNonNull(identityCertificateGenerator);
         this.i18n = Objects.requireNonNull(i18n);
@@ -263,6 +267,61 @@ public class ManifestGeneratorResource {
         }
         finally {
             transaction.rollback();
+        }
+    }
+
+    private File generateManifestV2(List<SubscriptionDTO> subscriptions,
+        CryptographicCapabilitiesDTO cryptoCapabilities, String consumerUuid) throws ExportCreationException {
+
+        long rnd = System.currentTimeMillis();
+
+        EntityTransaction transaction = this.beginTransaction();
+        transaction.setRollbackOnly();
+
+        try {
+            Owner owner = this.createManifestOwner(rnd);
+
+            this.entityMapperFactory.getForOwner(owner, true)
+                .addSubscriptions(subscriptions)
+                .persist();
+
+            Consumer consumer = this.createManifestConsumer(owner, consumerUuid, rnd, cryptoCapabilities);
+
+            return this.exporterV2.getFullExport(consumer).toFile();
+        }
+        finally {
+            transaction.rollback();
+        }
+    }
+
+    @POST
+    @Path("export/v2")
+    @Produces("application/zip")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response generateManifestV2FromJSON(
+        @QueryParam("consumer_uuid") String consumerUuid,
+        Map<String, Object> body) {
+
+        try {
+            TypeReference<List<SubscriptionDTO>> poolsTyperef = new TypeReference<List<SubscriptionDTO>>() {};
+            Object serializedSubs = body.get("subscriptions");
+            List<SubscriptionDTO> pools = serializedSubs != null ?
+                this.objectMapper.convertValue(serializedSubs, poolsTyperef) :
+                null;
+
+            Object serializedCapabilities = body.get("crypto_capabilities");
+            CryptographicCapabilitiesDTO cryptoCapabilities = serializedCapabilities != null ?
+                this.objectMapper.convertValue(serializedCapabilities, CryptographicCapabilitiesDTO.class) :
+                null;
+
+            File manifest = this.generateManifestV2(pools, cryptoCapabilities, consumerUuid);
+
+            return Response.ok(manifest, "application/zip")
+                .header("Content-Disposition", "attachment; filename=" + manifest.getName())
+                .build();
+        }
+        catch (ExportCreationException e) {
+            throw new IseException("Unable to generate manifest from provided data", e);
         }
     }
 

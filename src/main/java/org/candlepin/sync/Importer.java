@@ -54,11 +54,11 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayInputStream;
@@ -70,6 +70,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -154,6 +156,7 @@ public class Importer {
     private final SubscriptionReconciler subscriptionReconciler;
     private final ModelTranslator translator;
     private final CertificateReader certificateReader;
+    private final ImporterV2 importerV2;
 
     @Inject
     public Importer(
@@ -174,7 +177,8 @@ public class Importer {
         ImportRecordCurator importRecordCurator,
         SubscriptionReconciler subscriptionReconciler,
         ModelTranslator translator,
-        CertificateReader certificateReader) {
+        CertificateReader certificateReader,
+        ImporterV2 importerV2) {
 
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.rulesImporter = Objects.requireNonNull(rulesImporter);
@@ -194,6 +198,7 @@ public class Importer {
         this.translator = Objects.requireNonNull(translator);
         this.cryptoManager = Objects.requireNonNull(cryptoManager);
         this.certificateReader = Objects.requireNonNull(certificateReader);
+        this.importerV2 = Objects.requireNonNull(importerV2);
     }
 
     /**
@@ -375,61 +380,8 @@ public class Importer {
         ConflictOverrides forcedConflicts) throws IOException, ImporterException {
 
         Meta m = mapper.readValue(meta, Meta.class);
-        if (type == null) {
-            throw new ImporterException(i18n.tr("Wrong metadata type"));
-        }
-
-        ExporterMetadata lastrun = null;
-        if (ExporterMetadata.TYPE_SYSTEM.equals(type)) {
-            lastrun = expMetaCurator.getByType(type);
-        }
-        else if (ExporterMetadata.TYPE_PER_USER.equals(type)) {
-            if (owner == null) {
-                throw new ImporterException(i18n.tr("Invalid owner"));
-            }
-
-            lastrun = expMetaCurator.getByTypeAndOwner(type, owner);
-        }
-
-        if (lastrun == null) {
-            // this is our first import, let's create a new entry
-            lastrun = new ExporterMetadata(type, m.getCreated(), owner);
-        }
-        else {
-            if (lastrun.getExported().after(m.getCreated())) {
-                if (!forcedConflicts.isForced(Importer.Conflict.MANIFEST_OLD)) {
-                    throw new ImportConflictException(i18n.tr("Import is older than existing data"),
-                        Importer.Conflict.MANIFEST_OLD);
-                }
-                else {
-                    log.warn("Manifest older than existing data.");
-                }
-            }
-            else {
-                /*
-                 *  Prior to 5.6.4, MySQL did not store fractions of a second in
-                 *  temporal values.  Consequently, the manifest metadata can end up
-                 *  with a created date that is a fraction of a second ahead of
-                 *  the created date in the cp_export_metadata table.  So we throw away
-                 *  the fractions of a second.
-                 */
-                long exported = lastrun.getExported().getTime() / 1000;
-                long created = m.getCreated().getTime() / 1000;
-                if (exported == created) {
-                    if (!forcedConflicts.isForced(Importer.Conflict.MANIFEST_SAME)) {
-                        throw new ImportConflictException(i18n.tr("Import is the same as existing data"),
-                            Importer.Conflict.MANIFEST_SAME);
-                    }
-                    else {
-                        log.warn("Manifest same as existing data.");
-                    }
-                }
-            }
-
-            lastrun.setExported(m.getCreated());
-        }
-
-        return lastrun;
+        return new ManifestMetadataValidator(this.expMetaCurator, this.i18n)
+            .validate(type, owner, m, forcedConflicts);
     }
 
     private ImportRecord loadFromExportFile(Owner owner, File exportDir, ConflictOverrides overrides,
@@ -437,38 +389,53 @@ public class Importer {
 
         Map<String, Object> result = new HashMap<>();
         try {
-            File consumerExport = this.getConsumerExport(exportDir);
-            Optional<Scheme> scheme = this.loadSchemeFromManifest(consumerExport);
+            File payload = new File(exportDir, "payload");
+            File originalArchive = new File(exportDir, "archive.zip");
+            List<SubscriptionDTO> importSubs;
+            Meta meta;
 
-            if (scheme.isPresent()) {
-                // Use modern "trust cert + validate signature" scheme
-                this.verifySignature(scheme.get(), exportDir, overrides);
+            Optional<Path> v2Payload = this.importerV2.extractPayload(
+                exportDir.toPath(), payload.toPath(), originalArchive.toPath());
+            if (v2Payload.isPresent()) {
+                ManifestV2Data data = this.importerV2.importObjects(
+                    owner, originalArchive.toPath(), v2Payload.get(), overrides);
+                importSubs = data.getSubscriptions();
+                meta = data.getMeta();
             }
             else {
-                // No scheme present in the manifest; fall back to the legacy validation logic where we check
-                // all known schemes and upstream certs
-                this.verifyLegacySignature(exportDir, overrides);
+                File consumerExport = this.getConsumerExport(payload);
+                Optional<Scheme> scheme = this.loadSchemeFromManifest(consumerExport);
+
+                if (scheme.isPresent()) {
+                    // Use modern "trust cert + validate signature" scheme
+                    this.verifySignature(scheme.get(), payload, overrides);
+                }
+                else {
+                    // No scheme present in the manifest; fall back to the legacy validation logic where we check
+                    // all known schemes and upstream certs
+                    this.verifyLegacySignature(payload, overrides);
+                }
+
+                File consumerExportDir = extractArchive(payload, consumerExport.getName(),
+                    new FileInputStream(consumerExport));
+
+                Map<String, File> importFiles = new HashMap<>();
+                File[] listFiles = consumerExportDir.listFiles();
+                if (listFiles == null || listFiles.length == 0) {
+                    throw new ImportExtractionException(
+                        i18n.tr("The provided manifest has no content in the exported consumer archive"));
+                }
+                for (File file : listFiles) {
+                    importFiles.put(file.getName(), file);
+                }
+
+                // Need the rules file as well which is in a nested dir:
+                File rulesFile = new File(consumerExportDir, ImportFile.RULES_FILE.fileName());
+                importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFile);
+
+                importSubs = importObjects(owner, importFiles, overrides);
+                meta = mapper.readValue(importFiles.get(ImportFile.META.fileName()), Meta.class);
             }
-
-            File consumerExportDir = extractArchive(exportDir, consumerExport.getName(),
-                new FileInputStream(consumerExport));
-
-            Map<String, File> importFiles = new HashMap<>();
-            File[] listFiles = consumerExportDir.listFiles();
-            if (listFiles == null || listFiles.length == 0) {
-                throw new ImportExtractionException(
-                    i18n.tr("The provided manifest has no content in the exported consumer archive"));
-            }
-            for (File file : listFiles) {
-                importFiles.put(file.getName(), file);
-            }
-
-            // Need the rules file as well which is in a nested dir:
-            File rulesFile = new File(consumerExportDir, ImportFile.RULES_FILE.fileName());
-            importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFile);
-
-            List<SubscriptionDTO> importSubs = importObjects(owner, importFiles, overrides);
-            Meta meta = mapper.readValue(importFiles.get(ImportFile.META.fileName()), Meta.class);
 
             result.put("subscriptions", importSubs);
             result.put("meta", meta);
@@ -485,14 +452,13 @@ public class Importer {
             throw new ImportExtractionException(i18n.tr("The archive does not contain " +
                 "the required consumer_export.zip file"));
         }
+        catch (JacksonException e) {
+            throw new SyncDataFormatException(this.i18n.tr("Malformed manifest metadata or payload"));
+        }
         catch (CertificateException e) {
             log.error("Unable to load upstream certificates to validate manifest", e);
             throw new ImporterException(i18n.tr("Unable to read certificates to validate manifest"),
                 e, result);
-        }
-        catch (ConstraintViolationException cve) {
-            log.error("Failed to import archive", cve);
-            throw new ImporterException(i18n.tr("Failed to import archive"), cve, result);
         }
         catch (PersistenceException pe) {
             log.error("Failed to import archive", pe);
@@ -887,10 +853,20 @@ public class Importer {
     }
 
     /**
-     * Create a tar.gz archive of the exported directory.
+     * Extraction of ZIP entries confined to the target directory
      *
-     * @param tempDir Directory where Candlepin data was exported.
-     * @return File reference to the new archive tar.gz.
+     * @param tempDir
+     *     the extraction root
+     * @param exportFileName
+     *     the archive name used in error messages
+     * @param exportFileStream
+     *     the archive stream, closed by this method
+     * @throws IOException
+     *     if entries cannot be read or written
+     * @throws ImportExtractionException
+     *     if the archive is empty or an entry escapes the extraction root
+     * @return
+     *     the v1 export subdirectory; callers extracting a flat v2 archive use tempDir instead
      */
     private File extractArchive(File tempDir, String exportFileName, InputStream exportFileStream)
         throws IOException, ImportExtractionException {
@@ -915,9 +891,16 @@ public class Importer {
                 File newFile = new File(tempDir, entryName).getCanonicalFile();
 
                 // Check if the file is outside of the target directory
-                if (!newFile.getPath().startsWith(tempDir.getCanonicalPath())) {
+                if (!newFile.toPath().startsWith(tempDir.getCanonicalFile().toPath())) {
                     throw new ImportExtractionException(i18n.tr(
                         "Entry is outside of the target directory: {0}", entryName));
+                }
+
+                if (zipentry.isDirectory()) {
+                    Files.createDirectories(newFile.toPath());
+                    zipinputstream.closeEntry();
+                    zipentry = zipinputstream.getNextEntry();
+                    continue;
                 }
 
                 String directory = newFile.getParent();
@@ -982,14 +965,30 @@ public class Importer {
 
     private File unpackExportFile(String fileName, InputStream exportInputStream)
         throws ImportExtractionException {
-        try {
-            File tmpDir = syncUtils.makeTempDir("import");
-            extractArchive(tmpDir, fileName, exportInputStream);
+        File tmpDir = null;
+        try (InputStream input = exportInputStream) {
+            tmpDir = this.syncUtils.makeTempDir("import");
+            File archive = new File(tmpDir, "archive.zip");
+            Files.copy(input, archive.toPath());
+            File payload = new File(tmpDir, "payload");
+            Files.createDirectories(payload.toPath());
+            this.extractArchive(payload, fileName, new FileInputStream(archive));
             return tmpDir;
         }
-        catch (IOException e) {
+        catch (IOException | ImportExtractionException e) {
+            if (tmpDir != null) {
+                try {
+                    FileUtils.deleteDirectory(tmpDir);
+                }
+                catch (IOException cleanupError) {
+                    e.addSuppressed(cleanupError);
+                }
+            }
+            if (e instanceof ImportExtractionException extractionError) {
+                throw extractionError;
+            }
             log.error("Unable to extract export archive", e);
-            throw new ImportExtractionException(i18n.tr("Unable to extract export archive"), e);
+            throw new ImportExtractionException(this.i18n.tr("Unable to extract export archive"), e);
         }
     }
 

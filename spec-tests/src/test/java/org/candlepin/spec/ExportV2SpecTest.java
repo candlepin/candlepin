@@ -203,33 +203,25 @@ public class ExportV2SpecTest {
                 this.assertSubscription(archive, pool);
             }
 
-            Path certificateDirectory = archive.getPath("content_access_certificates");
-            try (Stream<Path> certificates = Files.list(certificateDirectory)) {
-                List<Path> certificatePaths = certificates.toList();
-                assertEquals(1, certificatePaths.size());
-                Path certificatePath = certificatePaths.get(0);
-                assertTrue(certificatePath.getFileName().toString().matches("[0-9]+\\.json"));
-                JsonNode exportedCertificate = this.mapper.readTree(Files.readString(certificatePath));
-                String certificate = exportedCertificate.get("cert").asText();
-                assertThatCert(X509Cert.from(certificate))
-                        .hasEntitlementType("OrgLevel")
-                        .hasVersion("3.4")
-                        .extractingEntitlementPayload()
-                        .containsOnly(contentUrl(ownerKey));
+            Path certificatePath = archive.getPath("sca_cert.json");
+            JsonNode exportedCertificate = this.mapper.readTree(Files.readString(certificatePath));
+            String certificate = exportedCertificate.get("cert").asText();
+            assertThatCert(X509Cert.from(certificate))
+                    .hasEntitlementType("OrgLevel")
+                    .hasVersion("3.4")
+                    .extractingEntitlementPayload()
+                    .containsOnly(contentUrl(ownerKey));
 
-                assertEquals(certificatePath.getFileName().toString(),
-                    exportedCertificate.get("serial").get("id").asText() + ".json");
-                assertTrue(certificate.contains("-----BEGIN CERTIFICATE-----"));
-                assertTrue(certificate.contains("-----BEGIN SIGNATURE-----"));
-                assertTrue(exportedCertificate.get("key").asText().contains("-----BEGIN PRIVATE KEY-----"));
-                String start = "-----BEGIN ENTITLEMENT DATA-----";
-                String encoded = certificate.substring(certificate.indexOf(start) + start.length(),
-                    certificate.indexOf("-----END ENTITLEMENT DATA-----"));
-                byte[] compressed = Base64.getMimeDecoder().decode(encoded);
-                try (InflaterInputStream data = new InflaterInputStream(new ByteArrayInputStream(compressed))) {
-                    JsonNode payload = this.mapper.readTree(new String(data.readAllBytes(), StandardCharsets.UTF_8));
-                    this.assertCertificateContent(payload, expectedProduct, expectedFutureProduct);
-                }
+            assertTrue(certificate.contains("-----BEGIN CERTIFICATE-----"));
+            assertTrue(certificate.contains("-----BEGIN SIGNATURE-----"));
+            assertTrue(exportedCertificate.get("key").asText().contains("-----BEGIN PRIVATE KEY-----"));
+            String start = "-----BEGIN ENTITLEMENT DATA-----";
+            String encoded = certificate.substring(certificate.indexOf(start) + start.length(),
+                certificate.indexOf("-----END ENTITLEMENT DATA-----"));
+            byte[] compressed = Base64.getMimeDecoder().decode(encoded);
+            try (InflaterInputStream data = new InflaterInputStream(new ByteArrayInputStream(compressed))) {
+                JsonNode payload = this.mapper.readTree(new String(data.readAllBytes(), StandardCharsets.UTF_8));
+                this.assertCertificateContent(payload, expectedProduct, expectedFutureProduct);
             }
         }
     }

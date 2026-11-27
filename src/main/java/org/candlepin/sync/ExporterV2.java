@@ -59,36 +59,6 @@ import jakarta.inject.Named;
  */
 public class ExporterV2 {
     private static final Logger log = LoggerFactory.getLogger(ExporterV2.class);
-    /**
-     * Filename for manifest metadata at the archive root
-     */
-    public static final String META_JSON = "meta.json";
-    /**
-     * Directory containing the upstream consumer representation
-     */
-    public static final String UPSTREAM_CONSUMER = "upstream_consumer";
-    /**
-     * Filename for the upstream consumer JSON representation
-     */
-    public static final String CONSUMER_JSON = "consumer.json";
-    /**
-     * Directory for subscription JSON files keyed by pool ID
-     */
-    public static final String SUBSCRIPTIONS_DIRECTORY = "subscriptions";
-    /**
-     * Directory for product JSON files keyed by public product ID
-     */
-    public static final String PRODUCTS_DIRECTORY = "products";
-    /**
-     * JSON filename pattern with an identifier placeholder
-     */
-    public static final String ID_JSON = "%s.json";
-    /**
-     * Directory for SCA certificate and private key JSON files
-     */
-    public static final String CERTIFICATES_DIRECTORY = "content_access_certificates";
-    public static final String CONSUMER_EXPORT_ZIP = "consumer_export.zip";
-    public static final String SIGNATURE = "signature";
 
     private final ObjectMapper mapper;
     private final ExportDataAggregator exportDataAggregator;
@@ -125,7 +95,7 @@ public class ExporterV2 {
      * existing identity certificate, private key, and serial metadata are serialized to
      * {@code upstream_consumer/<identity-certificate-serial-id>.json} for upstream authentication. The SCA
      * certificate, content payload, private key, and serial metadata are serialized as JSON to
-     * {@code content_access_certificates/<certificate-serial-id>.json}.
+     * {@code sca_cert.json}.
      * <p>
      * Selects a cryptographic scheme before aggregation, using the consumer's capabilities and the
      * crypto manager's negotiation and default-scheme rules. Unsupported capabilities prevent aggregation
@@ -157,22 +127,23 @@ public class ExporterV2 {
         try {
             CertificateDTO certificate = data.getScaCertificate();
             try (FileSystem archive = createArchive(archivePath)) {
-                writeFile(archive.getPath(SchemeFile.FILENAME), SchemeFile.from(scheme));
-                writeFile(certificatePath(archive, certificate), certificate);
-                writeFile(archive.getPath(META_JSON), data.getMetaDTO());
-                writeFile(archive.getPath(UPSTREAM_CONSUMER, CONSUMER_JSON), data.getConsumerDTO());
+                writeFile(archive.getPath(ManifestConstants.SCHEME_JSON), SchemeFile.from(scheme));
+                writeFile(archive.getPath(ManifestConstants.SCA_CERTIFICATE_JSON), certificate);
+                writeFile(archive.getPath(ManifestConstants.META_JSON), data.getMetaDTO());
+                writeFile(archive.getPath(ManifestConstants.UPSTREAM_CONSUMER, ManifestConstants.CONSUMER_JSON),
+                    data.getConsumerDTO());
                 CertificateDTO identityCertificate = data.getIdentityCertificate();
-                writeFile(pathBasedOnId(archive, UPSTREAM_CONSUMER,
+                writeFile(pathBasedOnId(archive, ManifestConstants.UPSTREAM_CONSUMER,
                     identityCertificate.getSerial().getId().toString()), identityCertificate);
                 for (Map.Entry<String, SubscriptionDTO> entry : data.getSubscriptions().entrySet()) {
                     writeFile(
-                        pathBasedOnId(archive, SUBSCRIPTIONS_DIRECTORY, entry.getKey()),
+                        pathBasedOnId(archive, ManifestConstants.SUBSCRIPTIONS, entry.getKey()),
                         entry.getValue());
                 }
                 for (ProductDTO entry : data.getProducts()
                     .values()) {
                     writeFile(
-                        pathBasedOnId(archive, PRODUCTS_DIRECTORY, entry.getId()),
+                        pathBasedOnId(archive, ManifestConstants.PRODUCTS, entry.getId()),
                         entry);
                 }
             }
@@ -185,11 +156,6 @@ public class ExporterV2 {
         finally {
             deleteArchive(archivePath);
         }
-    }
-
-    private Path certificatePath(FileSystem archive, CertificateDTO certificateDTO) {
-        return pathBasedOnId(archive, CERTIFICATES_DIRECTORY,
-            certificateDTO.getSerial().getId().toString());
     }
 
     private Scheme getCryptoScheme(Consumer consumer) throws ExportCreationException {
@@ -207,8 +173,8 @@ public class ExporterV2 {
         try (FileSystem signedArchive = this.createArchive(signedArchivePath);
              InputStream input = Files.newInputStream(archivePath)) {
             byte[] signature = this.cryptoManager.getSigner(scheme).sign(input);
-            Files.copy(archivePath, signedArchive.getPath(CONSUMER_EXPORT_ZIP));
-            Files.write(signedArchive.getPath(SIGNATURE), signature, StandardOpenOption.CREATE_NEW);
+            Files.copy(archivePath, signedArchive.getPath(ManifestConstants.CONSUMER_EXPORT_ZIP));
+            Files.write(signedArchive.getPath(ManifestConstants.SIGNATURE), signature, StandardOpenOption.CREATE_NEW);
             return signedArchivePath;
         }
         catch (IOException | SignatureException e) {
@@ -232,7 +198,7 @@ public class ExporterV2 {
         if (id.contains(fs.getSeparator())) {
             throw new IllegalArgumentException("id cannot contain path separator");
         }
-        return fs.getPath(directory, String.format(ExporterV2.ID_JSON, id));
+        return fs.getPath(directory, String.format(ManifestConstants.ID_JSON, id));
     }
 
     /**

@@ -85,6 +85,13 @@ public class UpstreamConsumerTest {
     }
 
     @Test
+    public void contentAccessCert() {
+        SCACertificate sca = mock(SCACertificate.class);
+        uc.setContentAccessCert(sca);
+        assertEquals(sca, uc.getContentAccessCert());
+    }
+
+    @Test
     public void webUrl() {
         uc.setWebUrl("some-fake-url");
         assertEquals("some-fake-url", uc.getWebUrl());

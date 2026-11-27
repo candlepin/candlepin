@@ -56,6 +56,10 @@ public class UpstreamConsumer extends AbstractHibernateObject<UpstreamConsumer> 
     @JoinColumn(name = "consumer_idcert_id")
     private IdentityCertificate idCert;
 
+    @OneToOne
+    @JoinColumn(name = "cont_acc_cert_id")
+    private SCACertificate contentAccessCert;
+
     @ManyToOne
     @JoinColumn(nullable = false)
     @NotNull
@@ -134,6 +138,15 @@ public class UpstreamConsumer extends AbstractHibernateObject<UpstreamConsumer> 
 
     public void setIdCert(IdentityCertificate idCert) {
         this.idCert = idCert;
+    }
+
+    public SCACertificate getContentAccessCert() {
+        return this.contentAccessCert;
+    }
+
+    public UpstreamConsumer setContentAccessCert(SCACertificate contentAccessCert) {
+        this.contentAccessCert = contentAccessCert;
+        return this;
     }
 
     /**

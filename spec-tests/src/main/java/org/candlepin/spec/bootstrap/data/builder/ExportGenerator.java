@@ -47,6 +47,7 @@ import java.util.Objects;
 public class ExportGenerator {
 
     private static final String MANIFEST_GENERATOR_ENDPOINT = "/testext/manifestgen/export";
+    private static final String MANIFEST_GENERATOR_V2_ENDPOINT = "/testext/manifestgen/export/v2";
 
     private final ApiClient client;
     private final List<SubscriptionDTO> subscriptions;
@@ -328,6 +329,51 @@ public class ExportGenerator {
      */
     public File export() throws IOException {
         return this.export(null);
+    }
+
+    /**
+     * Generates a version 2 manifest by exporting the previously provided subscription data from
+     * the target Candlepin instance using the manifest generator test extension.
+     *
+     * @throws IOException
+     *  if writing the temporary manifest file fails
+     *
+     * @return
+     *  a reference to the temporary file containing the exported v2 manifest
+     */
+    public File exportV2() throws IOException {
+        Map<String, Object> body = new HashMap<>();
+        body.put("subscriptions", this.subscriptions);
+
+        if (this.cryptoCapabilities != null) {
+            body.put("crypto_capabilities", this.cryptoCapabilities);
+        }
+
+        Request request = Request.from(this.client)
+            .setPath(MANIFEST_GENERATOR_V2_ENDPOINT)
+            .setMethod(Request.Method.POST)
+            .setBody(body);
+
+        if (this.consumerUuid != null && !this.consumerUuid.isBlank()) {
+            request.addQueryParam("consumer_uuid", this.consumerUuid);
+        }
+
+        Response response = request.execute();
+        if (response.getCode() != 200) {
+            String errmsg = String.format("manifest v2 generation request failed with HTTP response code %d: %s",
+                response.getCode(), response.getBodyAsString());
+            throw new IllegalStateException(errmsg);
+        }
+
+        File manifest = File.createTempFile("manifest-v2", ".zip");
+        manifest.deleteOnExit();
+
+        try (OutputStream ostream = new FileOutputStream(manifest)) {
+            ostream.write(response.getBody());
+            ostream.flush();
+        }
+
+        return manifest;
     }
 
 }

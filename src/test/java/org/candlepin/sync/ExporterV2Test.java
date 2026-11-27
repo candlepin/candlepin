@@ -243,7 +243,7 @@ class ExporterV2Test {
         this.verifySignature(export, this.cryptoManager.getDefaultCryptoScheme());
 
         Verify.existsIn(export)
-            .verify(Paths.get(ExporterV2.CERTIFICATES_DIRECTORY, certificate.getSerial().getId() + ".json"));
+            .verify(Paths.get(ManifestConstants.SCA_CERTIFICATE_JSON));
 
         Path metaPath = Paths.get("meta.json");
         Verify.existsIn(export)
@@ -257,11 +257,11 @@ class ExporterV2Test {
         verifySubscription(export, pool);
         verifySubscription(export, secondPool);
         Verify.isMissing(export)
-            .verify(Paths.get(ExporterV2.SUBSCRIPTIONS_DIRECTORY, pool.getSubscriptionId() + ".json"));
+            .verify(Paths.get(ManifestConstants.SUBSCRIPTIONS, pool.getSubscriptionId() + ".json"));
 
         if (filterNamespaces) {
             Verify.isMissing(export)
-                .verify(Paths.get(ExporterV2.PRODUCTS_DIRECTORY, subNamespacedProduct.getId() + ".json"));
+                .verify(Paths.get(ManifestConstants.PRODUCTS, subNamespacedProduct.getId() + ".json"));
         }
         else {
             this.verifyProduct(export, subNamespacedProduct);
@@ -465,7 +465,7 @@ class ExporterV2Test {
             assertEquals(idcert.getSerial().getSerial(), dto.getSerial().getSerial());
             assertEquals(idcert.getSerial().getExpiration(), dto.getSerial().getExpiration());
             assertEquals(idcert.getSerial().isRevoked(), dto.getSerial().isRevoked());
-        }).verify(Paths.get(ExporterV2.UPSTREAM_CONSUMER, idcert.getSerial().getId() + ".json"));
+        }).verify(Paths.get(ManifestConstants.UPSTREAM_CONSUMER, idcert.getSerial().getId() + ".json"));
     }
 
     private void verifyMeta(MetaDTO metaDto) {
@@ -512,30 +512,25 @@ class ExporterV2Test {
             .getFullExport(consumer);
 
         try (FileSystem signedArchive = FileSystems.newFileSystem(export);
-            FileSystem archive = FileSystems.newFileSystem(signedArchive.getPath(ExporterV2.CONSUMER_EXPORT_ZIP))) {
-            Path directory = archive.getPath(ExporterV2.CERTIFICATES_DIRECTORY);
-            String certificateJson = Files.readString(directory.resolve("42.json"));
-            CertificateDTO exported = this.mapper.readValue(certificateJson, CertificateDTO.class);
+            FileSystem archive = FileSystems.newFileSystem(signedArchive.getPath(ManifestConstants.CONSUMER_EXPORT_ZIP))) {
+            Path scaCertificateFile = archive.getPath(ManifestConstants.SCA_CERTIFICATE_JSON);
+            CertificateDTO exported = this.mapper.readValue(Files.readString(scaCertificateFile), CertificateDTO.class);
             assertEquals(certificate.getCert(), exported.getCertificate());
             assertEquals(certificate.getKey(), exported.getKey());
             assertEquals(certificate.getSerial().getId(), exported.getSerial().getId());
-            assertTrue(this.mapper.readTree(certificateJson).at("/serial/collected").isMissingNode(),
+            assertTrue(this.mapper.readTree(scaCertificateFile).at("/serial/collected").isMissingNode(),
                 "SCA certificate serial must not include collected");
 
-            Path identityCertificatePath = archive.getPath(ExporterV2.UPSTREAM_CONSUMER,
+            Path identityCertificatePath = archive.getPath(ManifestConstants.UPSTREAM_CONSUMER,
                 consumer.getIdCert().getSerial().getId() + ".json");
             JsonNode identitySerial = this.mapper.readTree(Files.readString(identityCertificatePath))
                 .path("serial");
             assertTrue(identitySerial.isObject(), "Identity certificate must include a serial object");
-            assertFalse(identitySerial.has("collected"), "Identity certificate serial must not include collected");
+            assertFalse(identitySerial.has("collected"),
+                "Identity certificate serial must not include collected");
 
-            try (Stream<Path> files = Files.list(directory)) {
-                assertEquals(List.of("42.json"), files.map(path -> path.getFileName()
-                        .toString())
-                    .toList());
-            }
-            assertTrue(Files.exists(archive.getPath(ExporterV2.META_JSON)));
-            assertTrue(Files.exists(archive.getPath(ExporterV2.UPSTREAM_CONSUMER, ExporterV2.CONSUMER_JSON)));
+            assertTrue(Files.exists(archive.getPath(ManifestConstants.META_JSON)));
+            assertTrue(Files.exists(archive.getPath(ManifestConstants.UPSTREAM_CONSUMER, ManifestConstants.CONSUMER_JSON)));
         }
         verify(this.scaCertificateGenerator).generateForContent(eq(consumer), anyList());
         assertSame(storedCertificate, consumer.getContentAccessCert());
@@ -628,7 +623,7 @@ class ExporterV2Test {
     }
 
     private void verifyConsumer(Path archive, Consumer consumer) {
-        Path consumerPath = Paths.get(ExporterV2.UPSTREAM_CONSUMER, ExporterV2.CONSUMER_JSON);
+        Path consumerPath = Paths.get(ManifestConstants.UPSTREAM_CONSUMER, ManifestConstants.CONSUMER_JSON);
         Verify.existsIn(archive)
             .verify(consumerPath);
         Verify.content(archive, ConsumerDTO.class, createConsumerVerifier(consumer))
@@ -636,7 +631,7 @@ class ExporterV2Test {
     }
 
     private void verifySubscription(Path archive, Pool pool) {
-        Path subscriptionPath = Paths.get(ExporterV2.SUBSCRIPTIONS_DIRECTORY, pool.getId() + ".json");
+        Path subscriptionPath = Paths.get(ManifestConstants.SUBSCRIPTIONS, pool.getId() + ".json");
         Verify.existsIn(archive)
             .verify(subscriptionPath);
         Verify.content(archive, SubscriptionDTO.class, createSubscriptionVerifier(pool))
@@ -644,7 +639,7 @@ class ExporterV2Test {
     }
 
     private void verifyProduct(Path archive, Product product) {
-        Path productPath = Paths.get(ExporterV2.PRODUCTS_DIRECTORY, product.getId() + ".json");
+        Path productPath = Paths.get(ManifestConstants.PRODUCTS, product.getId() + ".json");
         Verify.existsIn(archive)
             .verify(productPath);
         Verify.content(archive, ProductDTO.class, createProductVerifier(product))
